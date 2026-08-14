@@ -1,0 +1,37 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
+scripts
+tools
+
+.codex/
+graphify-out/
+.graphifyignore
+.graphify/
+.graphify_python
+.graphify_*.json
+.graphify_semantic_parts/
+AGENTS.md
+docs-private
+
+# Files from Forge MDK
+forge*changelog.txt
