@@ -1,0 +1,21 @@
+{
+  "values": [
+    "createapparel:linen_fabric",
+    "createapparel:white_linen_fabric",
+    "createapparel:orange_linen_fabric",
+    "createapparel:magenta_linen_fabric",
+    "createapparel:light_blue_linen_fabric",
+    "createapparel:yellow_linen_fabric",
+    "createapparel:lime_linen_fabric",
+    "createapparel:pink_linen_fabric",
+    "createapparel:gray_linen_fabric",
+    "createapparel:light_gray_linen_fabric",
+    "createapparel:cyan_linen_fabric",
+    "createapparel:purple_linen_fabric",
+    "createapparel:blue_linen_fabric",
+    "createapparel:brown_linen_fabric",
+    "createapparel:green_linen_fabric",
+    "createapparel:red_linen_fabric",
+    "createapparel:black_linen_fabric"
+  ]
+}

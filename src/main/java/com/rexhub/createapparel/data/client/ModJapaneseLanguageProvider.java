@@ -1,0 +1,86 @@
+package com.rexhub.createapparel.data.client;
+
+import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.init.ModItems;
+import com.rexhub.createapparel.material.FabricAttribute;
+import com.rexhub.createapparel.material.FabricColor;
+import com.rexhub.createapparel.material.FabricMaterial;
+import net.minecraft.data.PackOutput;
+import net.minecraft.world.item.Item;
+import net.minecraftforge.common.data.LanguageProvider;
+import net.minecraftforge.registries.RegistryObject;
+
+public final class ModJapaneseLanguageProvider extends LanguageProvider {
+    public ModJapaneseLanguageProvider(PackOutput output) {
+        super(output, CreateApparel.MOD_ID, "ja_jp");
+    }
+
+    @Override
+    protected void addTranslations() {
+        add("itemGroup.createapparel", "Create: Apparel");
+
+        add(ModItems.COTTON_BOLL.get(), "綿花");
+        add(ModItems.COTTON_FIBER.get(), "綿繊維");
+        add(ModItems.COTTON_THREAD.get(), "綿糸");
+        add(ModItems.FLAX.get(), "亜麻");
+        add(ModItems.FLAX_FIBER.get(), "亜麻繊維");
+        add(ModItems.LINEN_THREAD.get(), "リネン糸");
+        add(ModItems.HEMP.get(), "ヘンプ");
+        add(ModItems.HEMP_FIBER.get(), "ヘンプ繊維");
+        add(ModItems.HEMP_THREAD.get(), "ヘンプ糸");
+        add(ModItems.WOOL_FIBER.get(), "羊毛繊維");
+        add(ModItems.WOOL_THREAD.get(), "毛糸");
+        add(ModItems.SILK_THREAD.get(), "絹糸");
+        add(ModItems.COCOON.get(), "繭");
+        add(ModItems.SYNTHETIC_FIBER.get(), "合成繊維");
+        add(ModItems.SYNTHETIC_THREAD.get(), "合成糸");
+
+        for (var entry : ModItems.fabricItems().entrySet()) {
+            add(entry.getKey(), fabricName(entry.getValue()));
+        }
+    }
+
+    private void add(RegistryObject<? extends Item> item, String translation) {
+        add(item.get().getDescriptionId(), translation);
+    }
+
+    private static String fabricName(FabricAttribute attribute) {
+        String fabric = materialName(attribute.material()) + "生地";
+        return attribute.color()
+                .map(color -> colorName(color) + "の" + fabric)
+                .orElse(fabric);
+    }
+
+    private static String materialName(FabricMaterial material) {
+        return switch (material) {
+            case COTTON -> "コットン";
+            case LINEN -> "リネン";
+            case HEMP -> "ヘンプ";
+            case WOOL -> "ウール";
+            case SILK -> "シルク";
+            case LEATHER -> "レザー";
+            case SYNTHETIC -> "合成";
+        };
+    }
+
+    private static String colorName(FabricColor color) {
+        return switch (color) {
+            case WHITE -> "白色";
+            case ORANGE -> "橙色";
+            case MAGENTA -> "赤紫色";
+            case LIGHT_BLUE -> "空色";
+            case YELLOW -> "黄色";
+            case LIME -> "黄緑色";
+            case PINK -> "桃色";
+            case GRAY -> "灰色";
+            case LIGHT_GRAY -> "薄灰色";
+            case CYAN -> "青緑色";
+            case PURPLE -> "紫色";
+            case BLUE -> "青色";
+            case BROWN -> "茶色";
+            case GREEN -> "緑色";
+            case RED -> "赤色";
+            case BLACK -> "黒色";
+        };
+    }
+}

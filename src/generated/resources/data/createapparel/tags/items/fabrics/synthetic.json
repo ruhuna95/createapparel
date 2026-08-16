@@ -1,0 +1,21 @@
+{
+  "values": [
+    "createapparel:synthetic_fabric",
+    "createapparel:white_synthetic_fabric",
+    "createapparel:orange_synthetic_fabric",
+    "createapparel:magenta_synthetic_fabric",
+    "createapparel:light_blue_synthetic_fabric",
+    "createapparel:yellow_synthetic_fabric",
+    "createapparel:lime_synthetic_fabric",
+    "createapparel:pink_synthetic_fabric",
+    "createapparel:gray_synthetic_fabric",
+    "createapparel:light_gray_synthetic_fabric",
+    "createapparel:cyan_synthetic_fabric",
+    "createapparel:purple_synthetic_fabric",
+    "createapparel:blue_synthetic_fabric",
+    "createapparel:brown_synthetic_fabric",
+    "createapparel:green_synthetic_fabric",
+    "createapparel:red_synthetic_fabric",
+    "createapparel:black_synthetic_fabric"
+  ]
+}

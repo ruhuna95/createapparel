@@ -1,0 +1,11 @@
+{
+  "values": [
+    "minecraft:string",
+    "#createapparel:threads/cotton",
+    "#createapparel:threads/linen",
+    "#createapparel:threads/hemp",
+    "#createapparel:threads/wool",
+    "#createapparel:threads/silk",
+    "#createapparel:threads/synthetic"
+  ]
+}

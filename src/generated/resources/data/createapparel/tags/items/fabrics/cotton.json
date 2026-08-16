@@ -1,0 +1,21 @@
+{
+  "values": [
+    "createapparel:cotton_fabric",
+    "createapparel:white_cotton_fabric",
+    "createapparel:orange_cotton_fabric",
+    "createapparel:magenta_cotton_fabric",
+    "createapparel:light_blue_cotton_fabric",
+    "createapparel:yellow_cotton_fabric",
+    "createapparel:lime_cotton_fabric",
+    "createapparel:pink_cotton_fabric",
+    "createapparel:gray_cotton_fabric",
+    "createapparel:light_gray_cotton_fabric",
+    "createapparel:cyan_cotton_fabric",
+    "createapparel:purple_cotton_fabric",
+    "createapparel:blue_cotton_fabric",
+    "createapparel:brown_cotton_fabric",
+    "createapparel:green_cotton_fabric",
+    "createapparel:red_cotton_fabric",
+    "createapparel:black_cotton_fabric"
+  ]
+}
