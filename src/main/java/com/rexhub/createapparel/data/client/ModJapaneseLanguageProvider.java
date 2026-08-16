@@ -1,6 +1,8 @@
 package com.rexhub.createapparel.data.client;
 
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.init.ModBlocks;
+import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.material.FabricAttribute;
 import com.rexhub.createapparel.material.FabricColor;
@@ -19,12 +21,20 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
 
+        addBlock(ModBlocks.COTTON_CROP, "綿花の作物");
+        addBlock(ModBlocks.FLAX_CROP, "亜麻の作物");
+        addBlock(ModBlocks.HEMP_CROP, "ヘンプの作物");
+        addEntityType(ModEntities.SILKWORM, "カイコ");
+
+        add(ModItems.COTTON_SEEDS.get(), "綿花の種");
         add(ModItems.COTTON_BOLL.get(), "綿花");
         add(ModItems.COTTON_FIBER.get(), "綿繊維");
         add(ModItems.COTTON_THREAD.get(), "綿糸");
+        add(ModItems.FLAX_SEEDS.get(), "亜麻の種");
         add(ModItems.FLAX.get(), "亜麻");
         add(ModItems.FLAX_FIBER.get(), "亜麻繊維");
         add(ModItems.LINEN_THREAD.get(), "リネン糸");
+        add(ModItems.HEMP_SEEDS.get(), "ヘンプの種");
         add(ModItems.HEMP.get(), "ヘンプ");
         add(ModItems.HEMP_FIBER.get(), "ヘンプ繊維");
         add(ModItems.HEMP_THREAD.get(), "ヘンプ糸");
@@ -32,6 +42,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.WOOL_THREAD.get(), "毛糸");
         add(ModItems.SILK_THREAD.get(), "絹糸");
         add(ModItems.COCOON.get(), "繭");
+        add(ModItems.SILKWORM_SPAWN_EGG.get(), "カイコのスポーンエッグ");
         add(ModItems.SYNTHETIC_FIBER.get(), "合成繊維");
         add(ModItems.SYNTHETIC_THREAD.get(), "合成糸");
 

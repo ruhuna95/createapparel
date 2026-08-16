@@ -4,7 +4,10 @@ import com.rexhub.createapparel.data.client.ModItemModelProvider;
 import com.rexhub.createapparel.data.client.ModJapaneseLanguageProvider;
 import com.rexhub.createapparel.data.client.ModLanguageProvider;
 import com.rexhub.createapparel.data.server.ModBlockTagProvider;
+import com.rexhub.createapparel.data.server.ModDatapackEntriesProvider;
+import com.rexhub.createapparel.data.server.ModGlobalLootModifierProvider;
 import com.rexhub.createapparel.data.server.ModItemTagProvider;
+import com.rexhub.createapparel.data.server.ModLootTableProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraftforge.data.event.GatherDataEvent;
@@ -17,6 +20,10 @@ public final class CreateApparelDataGenerators {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
 
+        generator.addProvider(
+                event.includeServer(),
+                new ModDatapackEntriesProvider(output, event.getLookupProvider())
+        );
         ModBlockTagProvider blockTags = generator.addProvider(
                 event.includeServer(),
                 new ModBlockTagProvider(output, event.getLookupProvider(), event.getExistingFileHelper())
@@ -33,6 +40,11 @@ public final class CreateApparelDataGenerators {
         generator.addProvider(
                 event.includeClient(),
                 new ModItemModelProvider(output, event.getExistingFileHelper())
+        );
+        generator.addProvider(event.includeServer(), ModLootTableProvider.create(output));
+        generator.addProvider(
+                event.includeServer(),
+                new ModGlobalLootModifierProvider(output)
         );
         generator.addProvider(event.includeClient(), new ModLanguageProvider(output));
         generator.addProvider(event.includeClient(), new ModJapaneseLanguageProvider(output));

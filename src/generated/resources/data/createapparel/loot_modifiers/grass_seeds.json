@@ -1,0 +1,5 @@
+{
+  "type": "createapparel:add_seeds",
+  "chance": 0.05,
+  "conditions": []
+}
