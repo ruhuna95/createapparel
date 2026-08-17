@@ -8,6 +8,7 @@ import com.rexhub.createapparel.data.server.ModDatapackEntriesProvider;
 import com.rexhub.createapparel.data.server.ModGlobalLootModifierProvider;
 import com.rexhub.createapparel.data.server.ModItemTagProvider;
 import com.rexhub.createapparel.data.server.ModLootTableProvider;
+import com.rexhub.createapparel.data.server.ModRecipeProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraftforge.data.event.GatherDataEvent;
@@ -46,6 +47,7 @@ public final class CreateApparelDataGenerators {
                 event.includeServer(),
                 new ModGlobalLootModifierProvider(output)
         );
+        generator.addProvider(event.includeServer(), new ModRecipeProvider(output));
         generator.addProvider(event.includeClient(), new ModLanguageProvider(output));
         generator.addProvider(event.includeClient(), new ModJapaneseLanguageProvider(output));
     }

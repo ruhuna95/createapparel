@@ -44,10 +44,8 @@ public final class ModItemTagProvider extends ItemTagsProvider {
                 .addTag(ModTags.Items.FIBERS_PLANT_FLAX)
                 .addTag(ModTags.Items.FIBERS_PLANT_HEMP);
 
-        tag(ModTags.Items.FIBERS_ANIMAL_WOOL).add(ModItems.WOOL_FIBER.get());
         tag(ModTags.Items.FIBERS_ANIMAL_SILK);
         tag(ModTags.Items.FIBERS_ANIMAL)
-                .addTag(ModTags.Items.FIBERS_ANIMAL_WOOL)
                 .addTag(ModTags.Items.FIBERS_ANIMAL_SILK);
 
         tag(ModTags.Items.FIBERS_SYNTHETIC).add(ModItems.SYNTHETIC_FIBER.get());

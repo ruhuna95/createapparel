@@ -38,7 +38,6 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.HEMP.get(), "ヘンプ");
         add(ModItems.HEMP_FIBER.get(), "ヘンプ繊維");
         add(ModItems.HEMP_THREAD.get(), "ヘンプ糸");
-        add(ModItems.WOOL_FIBER.get(), "羊毛繊維");
         add(ModItems.WOOL_THREAD.get(), "毛糸");
         add(ModItems.SILK_THREAD.get(), "絹糸");
         add(ModItems.COCOON.get(), "繭");

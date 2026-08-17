@@ -18,7 +18,6 @@ public final class ModTags {
         public static final TagKey<Item> FIBERS_PLANT_FLAX = create("fibers/plant/flax");
         public static final TagKey<Item> FIBERS_PLANT_HEMP = create("fibers/plant/hemp");
         public static final TagKey<Item> FIBERS_ANIMAL = create("fibers/animal");
-        public static final TagKey<Item> FIBERS_ANIMAL_WOOL = create("fibers/animal/wool");
         public static final TagKey<Item> FIBERS_ANIMAL_SILK = create("fibers/animal/silk");
         public static final TagKey<Item> FIBERS_SYNTHETIC = create("fibers/synthetic");
 

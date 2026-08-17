@@ -1,0 +1,14 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "item": "createapparel:flax"
+    }
+  ],
+  "processingTime": 100,
+  "results": [
+    {
+      "item": "createapparel:flax_fiber"
+    }
+  ]
+}

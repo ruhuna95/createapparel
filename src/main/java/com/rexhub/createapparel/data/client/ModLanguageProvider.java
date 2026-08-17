@@ -39,7 +39,6 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.HEMP.get(), "Hemp");
         add(ModItems.HEMP_FIBER.get(), "Hemp Fiber");
         add(ModItems.HEMP_THREAD.get(), "Hemp Thread");
-        add(ModItems.WOOL_FIBER.get(), "Wool Fiber");
         add(ModItems.WOOL_THREAD.get(), "Wool Thread");
         add(ModItems.SILK_THREAD.get(), "Silk Thread");
         add(ModItems.COCOON.get(), "Cocoon");

@@ -1,0 +1,14 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "item": "createapparel:cotton_boll"
+    }
+  ],
+  "processingTime": 100,
+  "results": [
+    {
+      "item": "createapparel:cotton_fiber"
+    }
+  ]
+}

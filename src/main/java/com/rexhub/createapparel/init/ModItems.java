@@ -41,7 +41,6 @@ public final class ModItems {
     public static final RegistryObject<Item> HEMP_THREAD = registerSimple("hemp_thread");
     public static final RegistryObject<Item> HEMP_FABRIC = registerUndyedFabric(FabricMaterial.HEMP);
 
-    public static final RegistryObject<Item> WOOL_FIBER = registerSimple("wool_fiber");
     public static final RegistryObject<Item> WOOL_THREAD = registerSimple("wool_thread");
     public static final RegistryObject<Item> WOOL_FABRIC = registerUndyedFabric(FabricMaterial.WOOL);
 
@@ -166,7 +165,7 @@ public final class ModItems {
                 FabricMaterial.HEMP,
                 List.of(HEMP_SEEDS, HEMP, HEMP_FIBER, HEMP_THREAD)
         );
-        addMaterialGroup(items, FabricMaterial.WOOL, List.of(WOOL_FIBER, WOOL_THREAD));
+        addMaterialGroup(items, FabricMaterial.WOOL, List.of(WOOL_THREAD));
         addMaterialGroup(items, FabricMaterial.SILK, List.of(SILKWORM_SPAWN_EGG, COCOON, SILK_THREAD));
         addMaterialGroup(items, FabricMaterial.LEATHER, List.of());
         addMaterialGroup(
@@ -201,8 +200,8 @@ public final class ModItems {
 
     private static void validateCreativeTabOrder() {
         Set<RegistryObject<Item>> uniqueItems = new HashSet<>(CREATIVE_TAB_ITEMS);
-        if (CREATIVE_TAB_ITEMS.size() != 138 || uniqueItems.size() != CREATIVE_TAB_ITEMS.size()) {
-            throw new IllegalStateException("The Phase 2 creative tab must contain 138 unique items");
+        if (CREATIVE_TAB_ITEMS.size() != 137 || uniqueItems.size() != CREATIVE_TAB_ITEMS.size()) {
+            throw new IllegalStateException("The Phase 2 creative tab must contain 137 unique items");
         }
     }
 }
