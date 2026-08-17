@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:spinning",
+  "ingredients": [
+    {
+      "tag": "createapparel:fibers/plant/flax"
+    }
+  ],
+  "processingTime": 400,
+  "results": [
+    {
+      "item": "createapparel:linen_thread"
+    }
+  ]
+}

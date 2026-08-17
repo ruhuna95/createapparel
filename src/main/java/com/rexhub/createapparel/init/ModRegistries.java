@@ -2,6 +2,7 @@ package com.rexhub.createapparel.init;
 
 import com.mojang.serialization.Codec;
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.recipe.ModRecipeTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.MenuType;
@@ -41,6 +42,8 @@ public final class ModRegistries {
 
     public static void register(IEventBus modEventBus) {
         ModBlocks.bootstrap();
+        ModBlockEntities.bootstrap();
+        ModRecipeTypes.bootstrap();
         ModEntities.bootstrap();
         ModLootModifiers.bootstrap();
         ModItems.bootstrap();

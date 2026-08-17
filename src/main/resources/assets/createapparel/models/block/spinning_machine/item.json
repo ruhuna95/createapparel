@@ -1,0 +1,62 @@
+{
+  "parent": "block/block",
+  "loader": "forge:obj",
+  "flip_v": false,
+  "model": "createapparel:models/block/spinning_machine/item.obj",
+  "textures": {
+    "gearbox_top": "create:block/gearbox_top",
+    "gearbox": "create:block/gearbox",
+    "rotating": "createapparel:block/spinning_machine/rotating",
+    "axis": "create:block/axis",
+    "axis_top": "create:block/axis_top",
+    "particle": "create:block/gearbox_top"
+  },
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.72,
+        0.72,
+        0.72
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  }
+}

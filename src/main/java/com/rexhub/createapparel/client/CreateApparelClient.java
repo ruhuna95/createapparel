@@ -3,7 +3,10 @@ package com.rexhub.createapparel.client;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.client.model.SilkwormCocoonModel;
 import com.rexhub.createapparel.client.model.SilkwormModel;
+import com.rexhub.createapparel.client.model.ModPartialModels;
 import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
+import com.rexhub.createapparel.client.renderer.SpinningMachineRenderer;
+import com.rexhub.createapparel.init.ModBlockEntities;
 import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.material.FabricAttributeMap;
@@ -11,6 +14,7 @@ import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -33,6 +37,14 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
+        ModPartialModels.bootstrap();
+    }
+
+    @SubscribeEvent
+    public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
+        ModPartialModels.bootstrap();
+        event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
+        event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
     }
 
     @SubscribeEvent
@@ -44,6 +56,7 @@ public final class CreateApparelClient {
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SILKWORM.get(), SilkwormRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.SPINNING_MACHINE.get(), SpinningMachineRenderer::new);
     }
 
     @SubscribeEvent

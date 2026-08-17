@@ -25,6 +25,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.COTTON_CROP, "Cotton Crop");
         addBlock(ModBlocks.FLAX_CROP, "Flax Crop");
         addBlock(ModBlocks.HEMP_CROP, "Hemp Crop");
+        addBlock(ModBlocks.SPINNING_MACHINE, "Spinning Machine");
         addEntityType(ModEntities.SILKWORM, "Silkworm");
 
         add(ModItems.COTTON_SEEDS.get(), "Cotton Seeds");

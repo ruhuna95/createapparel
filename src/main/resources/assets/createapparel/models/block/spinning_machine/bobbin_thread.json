@@ -1,0 +1,10 @@
+{
+  "parent": "block/block",
+  "loader": "forge:obj",
+  "flip_v": false,
+  "model": "createapparel:models/block/spinning_machine/bobbin_thread.obj",
+  "textures": {
+    "rotating": "createapparel:block/spinning_machine/rotating",
+    "particle": "createapparel:block/spinning_machine/rotating"
+  }
+}

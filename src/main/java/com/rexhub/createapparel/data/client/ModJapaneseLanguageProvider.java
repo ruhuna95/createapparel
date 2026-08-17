@@ -24,6 +24,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.COTTON_CROP, "綿花の作物");
         addBlock(ModBlocks.FLAX_CROP, "亜麻の作物");
         addBlock(ModBlocks.HEMP_CROP, "ヘンプの作物");
+        addBlock(ModBlocks.SPINNING_MACHINE, "紡績機");
         addEntityType(ModEntities.SILKWORM, "カイコ");
 
         add(ModItems.COTTON_SEEDS.get(), "綿花の種");

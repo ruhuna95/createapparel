@@ -4,6 +4,7 @@ import com.rexhub.createapparel.material.FabricAttribute;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.ForgeSpawnEggItem;
@@ -22,6 +23,11 @@ public final class ModItems {
     private static final Map<FabricMaterial, RegistryObject<Item>> UNDYED_FABRICS =
             new EnumMap<>(FabricMaterial.class);
     private static final Map<RegistryObject<Item>, FabricAttribute> FABRIC_ITEMS = new LinkedHashMap<>();
+
+    public static final RegistryObject<Item> SPINNING_MACHINE = ModRegistries.ITEMS.register(
+            "spinning_machine",
+            () -> new BlockItem(ModBlocks.SPINNING_MACHINE.get(), new Item.Properties())
+    );
 
     public static final RegistryObject<Item> COTTON_SEEDS = registerSeeds("cotton_seeds", ModBlocks.COTTON_CROP);
     public static final RegistryObject<Item> COTTON_BOLL = registerSimple("cotton_boll");
@@ -173,6 +179,7 @@ public final class ModItems {
                 FabricMaterial.SYNTHETIC,
                 List.of(SYNTHETIC_FIBER, SYNTHETIC_THREAD)
         );
+        items.add(SPINNING_MACHINE);
         return List.copyOf(items);
     }
 
@@ -200,8 +207,8 @@ public final class ModItems {
 
     private static void validateCreativeTabOrder() {
         Set<RegistryObject<Item>> uniqueItems = new HashSet<>(CREATIVE_TAB_ITEMS);
-        if (CREATIVE_TAB_ITEMS.size() != 137 || uniqueItems.size() != CREATIVE_TAB_ITEMS.size()) {
-            throw new IllegalStateException("The Phase 2 creative tab must contain 137 unique items");
+        if (CREATIVE_TAB_ITEMS.size() != 138 || uniqueItems.size() != CREATIVE_TAB_ITEMS.size()) {
+            throw new IllegalStateException("The Phase 4 creative tab must contain 138 unique items");
         }
     }
 }

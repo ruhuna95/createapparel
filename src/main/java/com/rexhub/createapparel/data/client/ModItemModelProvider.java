@@ -25,6 +25,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
                 generatedItem(item, "cotton_ball");
             } else if (item == ModItems.SILKWORM_SPAWN_EGG) {
                 withExistingParent(item.getId().getPath(), mcLoc("item/template_spawn_egg"));
+            } else if (item == ModItems.SPINNING_MACHINE) {
+                continue;
             } else {
                 basicItem(item.get());
             }

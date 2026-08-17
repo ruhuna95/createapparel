@@ -1,0 +1,12 @@
+{
+  "parent": "block/block",
+  "loader": "forge:obj",
+  "flip_v": false,
+  "model": "createapparel:models/block/spinning_machine/rotating_working.obj",
+  "textures": {
+    "rotating": "createapparel:block/spinning_machine/rotating",
+    "axis": "create:block/axis",
+    "axis_top": "create:block/axis_top",
+    "particle": "createapparel:block/spinning_machine/rotating"
+  }
+}

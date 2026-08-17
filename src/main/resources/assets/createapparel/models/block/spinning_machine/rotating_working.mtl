@@ -1,0 +1,17 @@
+newmtl metal
+map_Kd #rotating
+
+newmtl wood
+map_Kd #rotating
+
+newmtl yarn
+map_Kd #rotating
+
+newmtl brass
+map_Kd #rotating
+
+newmtl axis
+map_Kd #axis
+
+newmtl axis_top
+map_Kd #axis_top
