@@ -65,6 +65,10 @@ public final class SpinningMachineBlockEntity extends KineticBlockEntity {
             @Override
             protected void onContentsChanged(int slot) {
                 setChanged();
+                if (SpinningMachineBlockEntity.this.level != null
+                        && !SpinningMachineBlockEntity.this.level.isClientSide) {
+                    sendData();
+                }
             }
         };
     }
@@ -121,6 +125,10 @@ public final class SpinningMachineBlockEntity extends KineticBlockEntity {
 
     public boolean isProcessing() {
         return processing;
+    }
+
+    public boolean hasInput() {
+        return !inputInventory.getStackInSlot(0).isEmpty();
     }
 
     public InteractionResult interact(Player player, InteractionHand hand) {

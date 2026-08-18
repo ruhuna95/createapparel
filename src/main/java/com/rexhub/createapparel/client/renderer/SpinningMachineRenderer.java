@@ -38,7 +38,7 @@ public final class SpinningMachineRenderer extends SafeBlockEntityRenderer<Spinn
                 buffer,
                 light
         );
-        if (blockEntity.isProcessing()) {
+        if (blockEntity.hasInput()) {
             renderRotatingModel(
                     ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD,
                     blockEntity,
