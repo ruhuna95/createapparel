@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=south,working=false": {
+      "model": "createapparel:block/loom/block"
+    },
+    "facing=south,working=true": {
+      "model": "createapparel:block/loom/block_working"
+    },
+    "facing=west,working=false": {
+      "model": "createapparel:block/loom/block",
+      "y": 90
+    },
+    "facing=west,working=true": {
+      "model": "createapparel:block/loom/block_working",
+      "y": 90
+    },
+    "facing=north,working=false": {
+      "model": "createapparel:block/loom/block",
+      "y": 180
+    },
+    "facing=north,working=true": {
+      "model": "createapparel:block/loom/block_working",
+      "y": 180
+    },
+    "facing=east,working=false": {
+      "model": "createapparel:block/loom/block",
+      "y": 270
+    },
+    "facing=east,working=true": {
+      "model": "createapparel:block/loom/block_working",
+      "y": 270
+    }
+  }
+}

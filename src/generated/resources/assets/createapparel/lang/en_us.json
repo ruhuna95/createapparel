@@ -2,6 +2,7 @@
   "block.createapparel.cotton_crop": "Cotton Crop",
   "block.createapparel.flax_crop": "Flax Crop",
   "block.createapparel.hemp_crop": "Hemp Crop",
+  "block.createapparel.loom": "Loom",
   "block.createapparel.spinning_machine": "Spinning Machine",
   "entity.createapparel.silkworm": "Silkworm",
   "item.createapparel.black_cotton_fabric": "Black Cotton Fabric",
@@ -141,5 +142,6 @@
   "item.createapparel.yellow_silk_fabric": "Yellow Silk Fabric",
   "item.createapparel.yellow_synthetic_fabric": "Yellow Synthetic Fabric",
   "item.createapparel.yellow_wool_fabric": "Yellow Wool Fabric",
-  "itemGroup.createapparel": "Create: Apparel"
+  "itemGroup.createapparel": "Create: Apparel",
+  "tooltip.createapparel.machine.contents": "Contents: %s x%s"
 }

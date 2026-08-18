@@ -15,6 +15,7 @@ import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -129,6 +130,12 @@ public final class SpinningMachineBlockEntity extends KineticBlockEntity {
 
     public boolean hasInput() {
         return !inputInventory.getStackInSlot(0).isEmpty();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        boolean added = super.addToGoggleTooltip(tooltip, isPlayerSneaking);
+        return MachineGoggleTooltip.addContents(tooltip, inputInventory) || added;
     }
 
     public InteractionResult interact(Player player, InteractionHand hand) {

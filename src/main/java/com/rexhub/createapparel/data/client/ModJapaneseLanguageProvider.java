@@ -20,11 +20,13 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
+        add("tooltip.createapparel.machine.contents", "内容物: %s x%s");
 
         addBlock(ModBlocks.COTTON_CROP, "綿花の作物");
         addBlock(ModBlocks.FLAX_CROP, "亜麻の作物");
         addBlock(ModBlocks.HEMP_CROP, "ヘンプの作物");
         addBlock(ModBlocks.SPINNING_MACHINE, "紡績機");
+        addBlock(ModBlocks.LOOM, "織機");
         addEntityType(ModEntities.SILKWORM, "カイコ");
 
         add(ModItems.COTTON_SEEDS.get(), "綿花の種");

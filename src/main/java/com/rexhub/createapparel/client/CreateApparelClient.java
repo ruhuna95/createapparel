@@ -5,6 +5,7 @@ import com.rexhub.createapparel.client.model.SilkwormCocoonModel;
 import com.rexhub.createapparel.client.model.SilkwormModel;
 import com.rexhub.createapparel.client.model.ModPartialModels;
 import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
+import com.rexhub.createapparel.client.renderer.LoomRenderer;
 import com.rexhub.createapparel.client.renderer.SpinningMachineRenderer;
 import com.rexhub.createapparel.init.ModBlockEntities;
 import com.rexhub.createapparel.init.ModEntities;
@@ -45,6 +46,8 @@ public final class CreateApparelClient {
         ModPartialModels.bootstrap();
         event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
         event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
+        event.register(ModPartialModels.LOOM_SLIDE.modelLocation());
+        event.register(ModPartialModels.LOOM_SLIDE_WORKING.modelLocation());
     }
 
     @SubscribeEvent
@@ -57,6 +60,7 @@ public final class CreateApparelClient {
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SILKWORM.get(), SilkwormRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SPINNING_MACHINE.get(), SpinningMachineRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.LOOM.get(), LoomRenderer::new);
     }
 
     @SubscribeEvent

@@ -23,6 +23,9 @@ public final class ModBlockTagProvider extends BlockTagsProvider {
     @Override
     protected void addTags(HolderLookup.Provider provider) {
         tag(ModTags.Blocks.CITIZEN_WALK_SURFACES);
-        tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.SPINNING_MACHINE.get());
+        tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
+                ModBlocks.SPINNING_MACHINE.get(),
+                ModBlocks.LOOM.get()
+        );
     }
 }

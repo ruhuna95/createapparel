@@ -28,6 +28,10 @@ public final class ModItems {
             "spinning_machine",
             () -> new BlockItem(ModBlocks.SPINNING_MACHINE.get(), new Item.Properties())
     );
+    public static final RegistryObject<Item> LOOM = ModRegistries.ITEMS.register(
+            "loom",
+            () -> new BlockItem(ModBlocks.LOOM.get(), new Item.Properties())
+    );
 
     public static final RegistryObject<Item> COTTON_SEEDS = registerSeeds("cotton_seeds", ModBlocks.COTTON_CROP);
     public static final RegistryObject<Item> COTTON_BOLL = registerSimple("cotton_boll");
@@ -180,6 +184,7 @@ public final class ModItems {
                 List.of(SYNTHETIC_FIBER, SYNTHETIC_THREAD)
         );
         items.add(SPINNING_MACHINE);
+        items.add(LOOM);
         return List.copyOf(items);
     }
 
@@ -207,8 +212,8 @@ public final class ModItems {
 
     private static void validateCreativeTabOrder() {
         Set<RegistryObject<Item>> uniqueItems = new HashSet<>(CREATIVE_TAB_ITEMS);
-        if (CREATIVE_TAB_ITEMS.size() != 138 || uniqueItems.size() != CREATIVE_TAB_ITEMS.size()) {
-            throw new IllegalStateException("The Phase 4 creative tab must contain 138 unique items");
+        if (CREATIVE_TAB_ITEMS.size() != 139 || uniqueItems.size() != CREATIVE_TAB_ITEMS.size()) {
+            throw new IllegalStateException("The Phase 5 creative tab must contain 139 unique items");
         }
     }
 }

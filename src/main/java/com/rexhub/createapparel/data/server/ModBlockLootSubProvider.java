@@ -25,6 +25,7 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
         addCropDrops(ModBlocks.FLAX_CROP.get(), ModItems.FLAX.get(), ModItems.FLAX_SEEDS.get());
         addCropDrops(ModBlocks.HEMP_CROP.get(), ModItems.HEMP.get(), ModItems.HEMP_SEEDS.get());
         dropSelf(ModBlocks.SPINNING_MACHINE.get());
+        dropSelf(ModBlocks.LOOM.get());
     }
 
     private void addCropDrops(Block crop, Item produce, Item seeds) {

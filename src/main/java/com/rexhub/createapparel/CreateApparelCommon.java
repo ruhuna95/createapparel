@@ -1,5 +1,6 @@
 package com.rexhub.createapparel;
 
+import com.rexhub.createapparel.block.LoomBlock;
 import com.rexhub.createapparel.block.SpinningMachineBlock;
 import com.rexhub.createapparel.init.ModBlocks;
 import com.rexhub.createapparel.network.ModNetwork;
@@ -17,6 +18,7 @@ public final class CreateApparelCommon {
                     ModBlocks.SPINNING_MACHINE.get(),
                     () -> SpinningMachineBlock.STRESS_IMPACT
             );
+            BlockStressValues.IMPACTS.register(ModBlocks.LOOM.get(), () -> LoomBlock.STRESS_IMPACT);
         });
     }
 }

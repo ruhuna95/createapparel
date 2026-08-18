@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.rexhub.createapparel.block.entity.SpinningMachineBlockEntity;
 import com.rexhub.createapparel.client.model.ModPartialModels;
-import com.simibubi.create.content.kinetics.base.HorizontalAxisKineticBlock;
+import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
@@ -57,11 +57,12 @@ public final class SpinningMachineRenderer extends SafeBlockEntityRenderer<Spinn
             int light
     ) {
         BlockState state = blockEntity.getBlockState();
-        Direction.Axis axis = state.getValue(HorizontalAxisKineticBlock.HORIZONTAL_AXIS);
+        Direction facing = state.getValue(HorizontalKineticBlock.HORIZONTAL_FACING);
         SuperByteBuffer modelBuffer = CachedBuffers.partial(model, state);
         KineticBlockEntityRenderer.standardKineticRotationTransform(modelBuffer, blockEntity, light);
-        if (axis == Direction.Axis.Z) {
-            modelBuffer.rotateCentered(AngleHelper.rad(90), Direction.UP);
+        float yRotation = facing.toYRot();
+        if (yRotation != 0.0F) {
+            modelBuffer.rotateCentered(AngleHelper.rad(yRotation), Direction.UP);
         }
         modelBuffer.renderInto(poseStack, buffer);
     }

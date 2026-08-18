@@ -16,7 +16,8 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.Optional;
 
 public enum ModRecipeTypes implements IRecipeTypeInfo {
-    SPINNING(SpinningRecipe::new);
+    SPINNING(SpinningRecipe::new),
+    WEAVING(WeavingRecipe::new);
 
     private final ResourceLocation id;
     private final RegistryObject<RecipeSerializer<?>> serializer;

@@ -21,11 +21,13 @@ public final class ModLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
+        add("tooltip.createapparel.machine.contents", "Contents: %s x%s");
 
         addBlock(ModBlocks.COTTON_CROP, "Cotton Crop");
         addBlock(ModBlocks.FLAX_CROP, "Flax Crop");
         addBlock(ModBlocks.HEMP_CROP, "Hemp Crop");
         addBlock(ModBlocks.SPINNING_MACHINE, "Spinning Machine");
+        addBlock(ModBlocks.LOOM, "Loom");
         addEntityType(ModEntities.SILKWORM, "Silkworm");
 
         add(ModItems.COTTON_SEEDS.get(), "Cotton Seeds");

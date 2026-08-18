@@ -1,11 +1,19 @@
 {
   "variants": {
-    "axis=x": {
+    "facing=south": {
       "model": "createapparel:block/spinning_machine/block"
     },
-    "axis=z": {
+    "facing=west": {
       "model": "createapparel:block/spinning_machine/block",
       "y": 90
+    },
+    "facing=north": {
+      "model": "createapparel:block/spinning_machine/block",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "createapparel:block/spinning_machine/block",
+      "y": 270
     }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:weaving",
+  "ingredients": [
+    {
+      "tag": "createapparel:threads/cotton"
+    }
+  ],
+  "processingTime": 400,
+  "results": [
+    {
+      "item": "createapparel:cotton_fabric"
+    }
+  ]
+}

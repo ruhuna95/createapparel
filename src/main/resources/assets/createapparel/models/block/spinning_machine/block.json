@@ -4,7 +4,8 @@
   "ambientocclusion": false,
   "textures": {
     "2": "create:block/gearbox_top",
-    "3": "create:block/gearbox"
+    "3": "create:block/gearbox",
+    "particle": "create:block/gearbox_top"
   },
   "elements": [
     {

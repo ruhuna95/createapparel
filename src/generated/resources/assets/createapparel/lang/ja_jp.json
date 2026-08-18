@@ -2,6 +2,7 @@
   "block.createapparel.cotton_crop": "綿花の作物",
   "block.createapparel.flax_crop": "亜麻の作物",
   "block.createapparel.hemp_crop": "ヘンプの作物",
+  "block.createapparel.loom": "織機",
   "block.createapparel.spinning_machine": "紡績機",
   "entity.createapparel.silkworm": "カイコ",
   "item.createapparel.black_cotton_fabric": "黒色のコットン生地",
@@ -141,5 +142,6 @@
   "item.createapparel.yellow_silk_fabric": "黄色のシルク生地",
   "item.createapparel.yellow_synthetic_fabric": "黄色の合成生地",
   "item.createapparel.yellow_wool_fabric": "黄色のウール生地",
-  "itemGroup.createapparel": "Create: Apparel"
+  "itemGroup.createapparel": "Create: Apparel",
+  "tooltip.createapparel.machine.contents": "内容物: %s x%s"
 }

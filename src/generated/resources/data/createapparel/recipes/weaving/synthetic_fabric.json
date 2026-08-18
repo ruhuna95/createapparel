@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:weaving",
+  "ingredients": [
+    {
+      "tag": "createapparel:threads/synthetic"
+    }
+  ],
+  "processingTime": 400,
+  "results": [
+    {
+      "item": "createapparel:synthetic_fabric"
+    }
+  ]
+}

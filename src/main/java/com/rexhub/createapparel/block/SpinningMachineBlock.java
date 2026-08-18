@@ -2,7 +2,6 @@ package com.rexhub.createapparel.block;
 
 import com.rexhub.createapparel.block.entity.SpinningMachineBlockEntity;
 import com.rexhub.createapparel.init.ModBlockEntities;
-import com.simibubi.create.content.kinetics.base.HorizontalAxisKineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -13,7 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public final class SpinningMachineBlock extends HorizontalAxisKineticBlock
+public final class SpinningMachineBlock extends HorizontalShaftMachineBlock
         implements IBE<SpinningMachineBlockEntity> {
     public static final double STRESS_IMPACT = 4.0;
 
