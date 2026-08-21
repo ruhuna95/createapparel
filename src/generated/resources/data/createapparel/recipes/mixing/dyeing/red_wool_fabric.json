@@ -1,0 +1,71 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    [
+      {
+        "item": "createapparel:wool_fabric"
+      },
+      {
+        "item": "createapparel:white_wool_fabric"
+      },
+      {
+        "item": "createapparel:orange_wool_fabric"
+      },
+      {
+        "item": "createapparel:magenta_wool_fabric"
+      },
+      {
+        "item": "createapparel:light_blue_wool_fabric"
+      },
+      {
+        "item": "createapparel:yellow_wool_fabric"
+      },
+      {
+        "item": "createapparel:lime_wool_fabric"
+      },
+      {
+        "item": "createapparel:pink_wool_fabric"
+      },
+      {
+        "item": "createapparel:gray_wool_fabric"
+      },
+      {
+        "item": "createapparel:light_gray_wool_fabric"
+      },
+      {
+        "item": "createapparel:cyan_wool_fabric"
+      },
+      {
+        "item": "createapparel:purple_wool_fabric"
+      },
+      {
+        "item": "createapparel:blue_wool_fabric"
+      },
+      {
+        "item": "createapparel:brown_wool_fabric"
+      },
+      {
+        "item": "createapparel:green_wool_fabric"
+      },
+      {
+        "item": "createapparel:red_wool_fabric"
+      },
+      {
+        "item": "createapparel:black_wool_fabric"
+      }
+    ],
+    {
+      "item": "minecraft:red_dye"
+    },
+    {
+      "amount": 250,
+      "fluid": "minecraft:water",
+      "nbt": {}
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:red_wool_fabric"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    [
+      {
+        "item": "createapparel:cotton_fabric"
+      },
+      {
+        "item": "createapparel:white_cotton_fabric"
+      },
+      {
+        "item": "createapparel:orange_cotton_fabric"
+      },
+      {
+        "item": "createapparel:magenta_cotton_fabric"
+      },
+      {
+        "item": "createapparel:light_blue_cotton_fabric"
+      },
+      {
+        "item": "createapparel:yellow_cotton_fabric"
+      },
+      {
+        "item": "createapparel:lime_cotton_fabric"
+      },
+      {
+        "item": "createapparel:pink_cotton_fabric"
+      },
+      {
+        "item": "createapparel:gray_cotton_fabric"
+      },
+      {
+        "item": "createapparel:light_gray_cotton_fabric"
+      },
+      {
+        "item": "createapparel:cyan_cotton_fabric"
+      },
+      {
+        "item": "createapparel:purple_cotton_fabric"
+      },
+      {
+        "item": "createapparel:blue_cotton_fabric"
+      },
+      {
+        "item": "createapparel:brown_cotton_fabric"
+      },
+      {
+        "item": "createapparel:green_cotton_fabric"
+      },
+      {
+        "item": "createapparel:red_cotton_fabric"
+      },
+      {
+        "item": "createapparel:black_cotton_fabric"
+      }
+    ],
+    {
+      "item": "minecraft:gray_dye"
+    },
+    {
+      "amount": 250,
+      "fluid": "minecraft:water",
+      "nbt": {}
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:gray_cotton_fabric"
+    }
+  ]
+}

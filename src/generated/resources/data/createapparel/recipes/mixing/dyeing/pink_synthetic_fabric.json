@@ -1,0 +1,71 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    [
+      {
+        "item": "createapparel:synthetic_fabric"
+      },
+      {
+        "item": "createapparel:white_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:orange_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:magenta_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:light_blue_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:yellow_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:lime_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:pink_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:gray_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:light_gray_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:cyan_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:purple_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:blue_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:brown_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:green_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:red_synthetic_fabric"
+      },
+      {
+        "item": "createapparel:black_synthetic_fabric"
+      }
+    ],
+    {
+      "item": "minecraft:pink_dye"
+    },
+    {
+      "amount": 250,
+      "fluid": "minecraft:water",
+      "nbt": {}
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:pink_synthetic_fabric"
+    }
+  ]
+}
