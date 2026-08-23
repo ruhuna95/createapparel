@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.init;
 
 import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.item.SewingPatternItem;
 import com.rexhub.createapparel.material.FabricAttribute;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
@@ -32,6 +33,14 @@ public final class ModItems {
     public static final RegistryObject<Item> LOOM = ModRegistries.ITEMS.register(
             "loom",
             () -> new BlockItem(ModBlocks.LOOM.get(), new Item.Properties())
+    );
+    public static final RegistryObject<Item> SEWING_MACHINE = ModRegistries.ITEMS.register(
+            "sewing_machine",
+            () -> new BlockItem(ModBlocks.SEWING_MACHINE.get(), new Item.Properties())
+    );
+    public static final RegistryObject<Item> SEWING_PATTERN = ModRegistries.ITEMS.register(
+            "sewing_pattern",
+            () -> new SewingPatternItem(new Item.Properties().stacksTo(1))
     );
     public static final RegistryObject<Item> T_SHIRT = registerGarment("t_shirt");
     public static final RegistryObject<Item> T_SHIRT_U_NECK = registerGarment("t_shirt_u_neck");
@@ -176,6 +185,8 @@ public final class ModItems {
         List<RegistryObject<Item>> items = new ArrayList<>();
         items.add(SPINNING_MACHINE);
         items.add(LOOM);
+        items.add(SEWING_MACHINE);
+        items.add(SEWING_PATTERN);
         addMaterialGroup(
                 items,
                 FabricMaterial.COTTON,
@@ -229,12 +240,12 @@ public final class ModItems {
         Set<RegistryObject<Item>> uniqueGarmentItems = new HashSet<>(GARMENT_CREATIVE_TAB_ITEMS);
         Set<RegistryObject<Item>> uniqueItems = new HashSet<>(uniqueMainItems);
         uniqueItems.addAll(uniqueGarmentItems);
-        if (CREATIVE_TAB_ITEMS.size() != 139
+        if (CREATIVE_TAB_ITEMS.size() != 141
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
                 || GARMENT_CREATIVE_TAB_ITEMS.size() != 3
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 142) {
-            throw new IllegalStateException("The Phase 7 creative tabs must contain 142 unique items");
+                || uniqueItems.size() != 144) {
+            throw new IllegalStateException("The Phase 8 creative tabs must contain 144 unique items");
         }
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class SpinningMachineBlock extends HorizontalShaftMachineBlock
         implements IBE<SpinningMachineBlockEntity> {
@@ -44,5 +45,10 @@ public final class SpinningMachineBlock extends HorizontalShaftMachineBlock
     @Override
     public BlockEntityType<? extends SpinningMachineBlockEntity> getBlockEntityType() {
         return ModBlockEntities.SPINNING_MACHINE.get();
+    }
+
+    @Override
+    protected VoxelShape getMachineShape(BlockState state) {
+        return MachineVoxelShapes.spinningMachine(state.getValue(HORIZONTAL_FACING));
     }
 }

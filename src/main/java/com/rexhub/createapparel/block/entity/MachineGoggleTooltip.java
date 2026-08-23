@@ -3,7 +3,6 @@ package com.rexhub.createapparel.block.entity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.IItemHandler;
 
 import java.util.List;
 
@@ -11,20 +10,18 @@ public final class MachineGoggleTooltip {
     private MachineGoggleTooltip() {
     }
 
-    public static boolean addContents(List<Component> tooltip, IItemHandler inventory) {
-        boolean added = false;
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (stack.isEmpty()) {
-                continue;
-            }
-            tooltip.add(Component.translatable(
-                    "tooltip.createapparel.machine.contents",
-                    stack.getHoverName(),
-                    stack.getCount()
-            ).withStyle(ChatFormatting.GREEN));
-            added = true;
+    public static boolean addStack(List<Component> tooltip, String labelKey, ItemStack stack) {
+        if (stack.isEmpty()) {
+            return false;
         }
-        return added;
+        Component line = Component.translatable(labelKey, stack.getHoverName())
+                .append(Component.literal(" x" + stack.getCount()));
+        tooltip.add(line.copy().withStyle(ChatFormatting.GREEN));
+        return true;
+    }
+
+    public static boolean addValue(List<Component> tooltip, String labelKey, Component value) {
+        tooltip.add(Component.translatable(labelKey, value).withStyle(ChatFormatting.GREEN));
+        return true;
     }
 }

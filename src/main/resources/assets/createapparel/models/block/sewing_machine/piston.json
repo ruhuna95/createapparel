@@ -1,0 +1,159 @@
+{
+  "format_version": "1.9.0",
+  "credit": "Made with Blockbench; repackaged by ChatGPT",
+  "textures": {
+    "3": "createapparel:block/sewing_machine/sewing_machine",
+    "particle": "createapparel:block/sewing_machine/sewing_machine"
+  },
+  "elements": [
+    {
+      "from": [
+        7,
+        7,
+        10.5
+      ],
+      "to": [
+        9,
+        17,
+        12.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            1,
+            2,
+            11
+          ],
+          "texture": "#3"
+        },
+        "east": {
+          "uv": [
+            0,
+            1,
+            2,
+            11
+          ],
+          "texture": "#3"
+        },
+        "south": {
+          "uv": [
+            0,
+            1,
+            2,
+            11
+          ],
+          "texture": "#3"
+        },
+        "west": {
+          "uv": [
+            0,
+            1,
+            2,
+            11
+          ],
+          "texture": "#3"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#3"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#3"
+        }
+      }
+    },
+    {
+      "from": [
+        7.5,
+        3,
+        11.5
+      ],
+      "to": [
+        8.5,
+        7,
+        11.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            7,
+            3,
+            11
+          ],
+          "texture": "#3"
+        },
+        "south": {
+          "uv": [
+            2,
+            7,
+            3,
+            11
+          ],
+          "texture": "#3"
+        }
+      }
+    },
+    {
+      "from": [
+        8,
+        3,
+        11
+      ],
+      "to": [
+        8,
+        7,
+        12
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            2,
+            7,
+            3,
+            11
+          ],
+          "texture": "#3"
+        },
+        "west": {
+          "uv": [
+            2,
+            7,
+            3,
+            11
+          ],
+          "texture": "#3"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "piston",
+      "origin": [
+        8,
+        8,
+        8
+      ],
+      "scope": 0,
+      "color": 0,
+      "children": [
+        0,
+        1,
+        2
+      ]
+    }
+  ]
+}

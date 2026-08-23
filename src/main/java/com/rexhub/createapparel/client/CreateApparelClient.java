@@ -7,14 +7,18 @@ import com.rexhub.createapparel.client.model.ModPartialModels;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
 import com.rexhub.createapparel.client.renderer.LoomRenderer;
+import com.rexhub.createapparel.client.renderer.SewingMachineRenderer;
 import com.rexhub.createapparel.client.renderer.SpinningMachineRenderer;
+import com.rexhub.createapparel.client.screen.SewingPatternScreen;
 import com.rexhub.createapparel.init.ModBlockEntities;
 import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.material.FabricAttributeMap;
 import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.InteractionHand;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -38,6 +42,10 @@ public final class CreateApparelClient {
     private CreateApparelClient() {
     }
 
+    public static void openSewingPatternScreen(InteractionHand hand) {
+        Minecraft.getInstance().setScreen(new SewingPatternScreen(hand));
+    }
+
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         ModPartialModels.bootstrap();
@@ -50,6 +58,9 @@ public final class CreateApparelClient {
         event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
         event.register(ModPartialModels.LOOM_SLIDE.modelLocation());
         event.register(ModPartialModels.LOOM_SLIDE_WORKING.modelLocation());
+        event.register(ModPartialModels.SEWING_MACHINE_ROTATING.modelLocation());
+        event.register(ModPartialModels.SEWING_MACHINE_PISTON.modelLocation());
+        event.register(ModPartialModels.SEWING_MACHINE_THREAD.modelLocation());
     }
 
     @SubscribeEvent
@@ -63,6 +74,7 @@ public final class CreateApparelClient {
         event.registerEntityRenderer(ModEntities.SILKWORM.get(), SilkwormRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SPINNING_MACHINE.get(), SpinningMachineRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.LOOM.get(), LoomRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.SEWING_MACHINE.get(), SewingMachineRenderer::new);
     }
 
     @SubscribeEvent

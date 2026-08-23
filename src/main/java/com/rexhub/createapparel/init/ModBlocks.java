@@ -2,6 +2,7 @@ package com.rexhub.createapparel.init;
 
 import com.rexhub.createapparel.block.ApparelCropBlock;
 import com.rexhub.createapparel.block.LoomBlock;
+import com.rexhub.createapparel.block.SewingMachineBlock;
 import com.rexhub.createapparel.block.SpinningMachineBlock;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
@@ -31,6 +32,10 @@ public final class ModBlocks {
     public static final RegistryObject<Block> LOOM = ModRegistries.BLOCKS.register(
             "loom",
             () -> new LoomBlock(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion())
+    );
+    public static final RegistryObject<Block> SEWING_MACHINE = ModRegistries.BLOCKS.register(
+            "sewing_machine",
+            () -> new SewingMachineBlock(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion())
     );
 
     private ModBlocks() {

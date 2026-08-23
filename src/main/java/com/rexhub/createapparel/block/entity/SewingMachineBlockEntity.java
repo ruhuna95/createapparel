@@ -1,0 +1,620 @@
+package com.rexhub.createapparel.block.entity;
+
+import com.rexhub.createapparel.init.ModBlockEntities;
+import com.rexhub.createapparel.init.ModItems;
+import com.rexhub.createapparel.item.SewingPatternItem;
+import com.rexhub.createapparel.recipe.ModRecipeTypes;
+import com.rexhub.createapparel.recipe.SewingRecipe;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
+import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
+import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
+import com.simibubi.create.content.logistics.funnel.FunnelBlock;
+import com.simibubi.create.content.logistics.funnel.FunnelBlockEntity;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
+import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
+import com.simibubi.create.foundation.item.ItemHelper;
+import net.createmod.catnip.math.VecHelper;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.wrapper.CombinedInvWrapper;
+import net.minecraftforge.items.wrapper.RecipeWrapper;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
+
+public final class SewingMachineBlockEntity extends KineticBlockEntity {
+    public static final int DEFAULT_PROCESSING_DURATION = 2000;
+    public static final float PISTON_ANGLE_MULTIPLIER = 2.0F;
+    private static final float MINIMUM_SPEED = 1.0F;
+    private static final float PI = (float) Math.PI;
+    private static final float TWO_PI = PI * 2.0F;
+    private static final Direction[] OUTPUT_DIRECTIONS = Direction.values();
+    private static final int[] MANUAL_EXTRACTION_ORDER = {
+            SewingRecipe.THREAD_SLOT,
+            SewingRecipe.FABRIC_SLOT
+    };
+
+    private final ItemStackHandler materialInventory;
+    private final RecipeInventoryHandler recipeInventory;
+    private final SewingMachineInventoryHandler inventoryHandler;
+    private LazyOptional<IItemHandler> itemCapability;
+    private FilteringBehaviour patternFilter;
+
+    private int processingTicks;
+    private boolean processing;
+    private SewingRecipe lastRecipe;
+    private float lastAudioAngle = Float.NaN;
+
+    public SewingMachineBlockEntity(BlockPos pos, BlockState state) {
+        super(ModBlockEntities.SEWING_MACHINE.get(), pos, state);
+        materialInventory = createInventory();
+        recipeInventory = new RecipeInventoryHandler();
+        inventoryHandler = new SewingMachineInventoryHandler();
+        itemCapability = LazyOptional.of(() -> inventoryHandler);
+    }
+
+    private ItemStackHandler createInventory() {
+        return new ItemStackHandler(2) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                setChanged();
+                if (SewingMachineBlockEntity.this.level != null
+                        && !SewingMachineBlockEntity.this.level.isClientSide) {
+                    sendData();
+                }
+            }
+        };
+    }
+
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        behaviours.add(new DirectBeltInputBehaviour(this).allowingBeltFunnels());
+        patternFilter = new FilteringBehaviour(this, new SewingPatternValueBox())
+                .withPredicate(stack -> stack.is(ModItems.SEWING_PATTERN.get()))
+                .withCallback(this::onPatternChanged)
+                .forRecipes();
+        patternFilter.setLabel(Component.translatable("createapparel.sewing_machine.pattern"));
+        behaviours.add(patternFilter);
+        super.addBehaviours(behaviours);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void tickAudio() {
+        super.tickAudio();
+        if (level == null || !processing || Math.abs(getSpeed()) < MINIMUM_SPEED) {
+            lastAudioAngle = Float.NaN;
+            return;
+        }
+
+        Direction.Axis axis = KineticBlockEntityRenderer.getRotationAxisOf(this);
+        float angle = normalizeAngle(
+                KineticBlockEntityRenderer.getAngleForBe(this, worldPosition, axis) * PISTON_ANGLE_MULTIPLIER
+        );
+        if (!Float.isNaN(lastAudioAngle) && crossedContractionPoint(lastAudioAngle, angle)) {
+            float pitch = Mth.clamp((Math.abs(getSpeed()) / 256.0F) + 0.75F, 0.8F, 1.25F);
+            level.playLocalSound(
+                    worldPosition.getX() + 0.5D,
+                    worldPosition.getY() + 0.5D,
+                    worldPosition.getZ() + 0.5D,
+                    SoundEvents.PISTON_CONTRACT,
+                    SoundSource.BLOCKS,
+                    0.25F,
+                    pitch,
+                    false
+            );
+        }
+        lastAudioAngle = angle;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        Optional<SewingRecipe> recipe = findRecipe();
+        if (Math.abs(getSpeed()) < MINIMUM_SPEED || recipe.isEmpty()) {
+            setProcessing(false);
+            return;
+        }
+
+        SewingRecipe currentRecipe = recipe.get();
+        if (lastRecipe != null && !lastRecipe.getId().equals(currentRecipe.getId())) {
+            processingTicks = 0;
+        }
+        lastRecipe = currentRecipe;
+
+        if (processingTicks <= 0) {
+            processingTicks = DEFAULT_PROCESSING_DURATION;
+        }
+
+        setProcessing(true);
+        processingTicks -= getProcessingSpeed();
+        setChanged();
+
+        if (processingTicks <= 0) {
+            process(currentRecipe);
+        }
+    }
+
+    public boolean isProcessing() {
+        return processing;
+    }
+
+    public boolean hasThread() {
+        return !materialInventory.getStackInSlot(SewingRecipe.THREAD_SLOT).isEmpty();
+    }
+
+    public ItemStack getFabricForRendering() {
+        return materialInventory.getStackInSlot(SewingRecipe.FABRIC_SLOT);
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        boolean added = super.addToGoggleTooltip(tooltip, isPlayerSneaking);
+        boolean contentsAdded = MachineGoggleTooltip.addStack(
+                tooltip,
+                "tooltip.createapparel.machine.fabric",
+                recipeInventory.getStackInSlot(SewingRecipe.FABRIC_SLOT)
+        );
+        contentsAdded |= MachineGoggleTooltip.addStack(
+                tooltip,
+                "tooltip.createapparel.machine.thread",
+                recipeInventory.getStackInSlot(SewingRecipe.THREAD_SLOT)
+        );
+        ItemStack pattern = recipeInventory.getStackInSlot(SewingRecipe.PATTERN_SLOT);
+        if (!pattern.isEmpty()) {
+            contentsAdded |= MachineGoggleTooltip.addValue(
+                    tooltip,
+                    "tooltip.createapparel.machine.pattern",
+                    SewingPatternItem.getConfiguredGarmentName(pattern, level)
+            );
+        }
+        return contentsAdded || added;
+    }
+
+    public InteractionResult interact(Player player, InteractionHand hand) {
+        ItemStack heldItem = player.getItemInHand(hand);
+        if (!heldItem.isEmpty()) {
+            ItemStack remainder = heldItem.copy();
+            for (int slot = 0; slot < materialInventory.getSlots() && !remainder.isEmpty(); slot++) {
+                remainder = inventoryHandler.insertItem(slot, remainder, false);
+            }
+            int inserted = heldItem.getCount() - remainder.getCount();
+            if (inserted == 0) {
+                return InteractionResult.PASS;
+            }
+            if (!player.getAbilities().instabuild) {
+                heldItem.shrink(inserted);
+            }
+            sendData();
+            return InteractionResult.SUCCESS;
+        }
+
+        for (int slot : MANUAL_EXTRACTION_ORDER) {
+            ItemStack extracted = materialInventory.extractItem(slot, materialInventory.getSlotLimit(slot), false);
+            if (extracted.isEmpty()) {
+                continue;
+            }
+            processingTicks = 0;
+            lastRecipe = null;
+            setProcessing(false);
+            player.getInventory().placeItemBackInInventory(extracted);
+            sendData();
+            return InteractionResult.SUCCESS;
+        }
+        return InteractionResult.PASS;
+    }
+
+    private void process(SewingRecipe recipe) {
+        RecipeWrapper input = new RecipeWrapper(recipeInventory);
+        if (!recipe.matches(input, level)) {
+            resetProcessing();
+            return;
+        }
+
+        ItemStack result = recipe.assemble(input, level.registryAccess());
+        if (result.isEmpty()) {
+            resetProcessing();
+            return;
+        }
+
+        materialInventory.extractItem(SewingRecipe.FABRIC_SLOT, recipe.getFabricCount(), false);
+        materialInventory.extractItem(SewingRecipe.THREAD_SLOT, recipe.getThreadCount(), false);
+        ejectResult(result);
+
+        processingTicks = 0;
+        lastRecipe = null;
+        Optional<SewingRecipe> nextRecipe = findRecipe();
+        if (nextRecipe.isPresent()) {
+            lastRecipe = nextRecipe.get();
+            processingTicks = DEFAULT_PROCESSING_DURATION;
+            setProcessing(true);
+        } else {
+            setProcessing(false);
+        }
+        setChanged();
+        sendData();
+    }
+
+    private void resetProcessing() {
+        processingTicks = 0;
+        lastRecipe = null;
+        setProcessing(false);
+    }
+
+    private void ejectResult(ItemStack result) {
+        if (level == null || result.isEmpty()) {
+            return;
+        }
+
+        ItemStack remainder = ejectThroughAttachedFunnel(result.copy());
+        if (remainder.isEmpty()) {
+            return;
+        }
+
+        DirectBeltInputBehaviour ownBeltInput = getBehaviour(DirectBeltInputBehaviour.TYPE);
+        if (ownBeltInput != null) {
+            ItemStack beltFunnelRemainder = ownBeltInput.tryExportingToBeltFunnel(remainder, null, false);
+            if (beltFunnelRemainder != null) {
+                remainder = beltFunnelRemainder;
+            }
+        }
+        if (remainder.isEmpty()) {
+            return;
+        }
+
+        for (Direction direction : OUTPUT_DIRECTIONS) {
+            remainder = insertIntoReceivingFunnel(remainder, direction);
+            if (remainder.isEmpty()) {
+                return;
+            }
+        }
+        for (Direction direction : OUTPUT_DIRECTIONS) {
+            remainder = insertIntoDirectOutput(remainder, direction);
+            if (remainder.isEmpty()) {
+                return;
+            }
+        }
+        for (Direction direction : OUTPUT_DIRECTIONS) {
+            remainder = insertIntoItemHandler(remainder, direction);
+            if (remainder.isEmpty()) {
+                return;
+            }
+        }
+
+        spawnResult(remainder, Vec3.atBottomCenterOf(worldPosition.above()), Vec3.ZERO);
+    }
+
+    private ItemStack ejectThroughAttachedFunnel(ItemStack stack) {
+        for (Direction direction : OUTPUT_DIRECTIONS) {
+            BlockPos funnelPos = worldPosition.relative(direction);
+            BlockState funnelState = level.getBlockState(funnelPos);
+            if (!(funnelState.getBlock() instanceof FunnelBlock)
+                    || !funnelState.getValue(FunnelBlock.EXTRACTING)
+                    || funnelState.getOptionalValue(BlockStateProperties.POWERED).orElse(false)
+                    || FunnelBlock.getFunnelFacing(funnelState) != direction) {
+                continue;
+            }
+
+            FilteringBehaviour filter = BlockEntityBehaviour.get(level, funnelPos, FilteringBehaviour.TYPE);
+            if (filter != null && !filter.test(stack)) {
+                continue;
+            }
+
+            double outputOffset = direction.getAxis().isVertical()
+                    ? direction == Direction.UP ? 0.15D : 0.5D
+                    : 0.25D;
+            Vec3 outputPosition = Vec3.atCenterOf(funnelPos)
+                    .add(Vec3.atLowerCornerOf(direction.getNormal()).scale(outputOffset));
+            if (direction.getAxis().isHorizontal()) {
+                outputPosition = outputPosition.subtract(0.0D, 0.45D, 0.0D);
+            }
+            Vec3 outputMotion = direction == Direction.UP ? new Vec3(0.0D, 0.25D, 0.0D) : Vec3.ZERO;
+            spawnResult(stack, outputPosition, outputMotion);
+
+            BlockEntity blockEntity = level.getBlockEntity(funnelPos);
+            if (blockEntity instanceof FunnelBlockEntity funnelBlockEntity) {
+                funnelBlockEntity.flap(false);
+            }
+            return ItemStack.EMPTY;
+        }
+        return stack;
+    }
+
+    private ItemStack insertIntoReceivingFunnel(ItemStack stack, Direction direction) {
+        BlockPos funnelPos = worldPosition.relative(direction);
+        BlockState funnelState = level.getBlockState(funnelPos);
+        if (!(funnelState.getBlock() instanceof FunnelBlock)
+                || funnelState.getValue(FunnelBlock.EXTRACTING)
+                || funnelState.getOptionalValue(BlockStateProperties.POWERED).orElse(false)
+                || FunnelBlock.getFunnelFacing(funnelState) != direction.getOpposite()) {
+            return stack;
+        }
+        return FunnelBlock.tryInsert(level, funnelPos, stack.copy(), false);
+    }
+
+    private ItemStack insertIntoDirectOutput(ItemStack stack, Direction direction) {
+        DirectBeltInputBehaviour output = BlockEntityBehaviour.get(
+                level,
+                worldPosition.relative(direction),
+                DirectBeltInputBehaviour.TYPE
+        );
+        if (output == null || !output.canInsertFromSide(direction) || output.isOccupied(direction)) {
+            return stack;
+        }
+        return output.handleInsertion(stack.copy(), direction, false);
+    }
+
+    private ItemStack insertIntoItemHandler(ItemStack stack, Direction direction) {
+        BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
+        if (blockEntity == null) {
+            return stack;
+        }
+        IItemHandler handler = blockEntity.getCapability(
+                        ForgeCapabilities.ITEM_HANDLER,
+                        direction.getOpposite()
+                )
+                .orElse(null);
+        if (handler == null) {
+            return stack;
+        }
+        return ItemHandlerHelper.insertItemStacked(handler, stack.copy(), false);
+    }
+
+    private void spawnResult(ItemStack stack, Vec3 position, Vec3 motion) {
+        ItemEntity itemEntity = new ItemEntity(level, position.x, position.y, position.z, stack);
+        itemEntity.setDefaultPickUpDelay();
+        itemEntity.setDeltaMovement(motion);
+        level.addFreshEntity(itemEntity);
+    }
+
+    private int getProcessingSpeed() {
+        return Mth.clamp((int) Math.abs(getSpeed() / 16.0F), 1, 512);
+    }
+
+    private Optional<SewingRecipe> findRecipe() {
+        if (level == null) {
+            return Optional.empty();
+        }
+        return ModRecipeTypes.SEWING.find(new RecipeWrapper(recipeInventory), level);
+    }
+
+    private List<SewingRecipe> availableRecipes() {
+        if (level == null) {
+            return List.of();
+        }
+        return level.getRecipeManager().getAllRecipesFor(SewingRecipe.recipeType());
+    }
+
+    private boolean canInsert(int slot, ItemStack stack) {
+        if (stack.isEmpty()) {
+            return false;
+        }
+        return switch (slot) {
+            case SewingRecipe.FABRIC_SLOT -> availableRecipes().stream()
+                    .anyMatch(recipe -> recipe.matchesFabric(stack));
+            case SewingRecipe.THREAD_SLOT -> availableRecipes().stream()
+                    .anyMatch(recipe -> recipe.matchesThread(stack));
+            default -> false;
+        };
+    }
+
+    private void onPatternChanged(ItemStack stack) {
+        processingTicks = 0;
+        lastRecipe = null;
+        setProcessing(false);
+        setChanged();
+    }
+
+    private void setProcessing(boolean processing) {
+        if (this.processing == processing) {
+            return;
+        }
+        this.processing = processing;
+        setChanged();
+        sendData();
+    }
+
+    private static float normalizeAngle(float angle) {
+        float normalized = angle % TWO_PI;
+        return normalized < 0.0F ? normalized + TWO_PI : normalized;
+    }
+
+    private static boolean crossedContractionPoint(float previousAngle, float currentAngle) {
+        float delta = currentAngle - previousAngle;
+        if (delta > PI) {
+            delta -= TWO_PI;
+        } else if (delta < -PI) {
+            delta += TWO_PI;
+        }
+
+        if (delta > 0.0F) {
+            return previousAngle < PI && currentAngle >= PI;
+        }
+        if (delta < 0.0F) {
+            return previousAngle >= PI && currentAngle < PI;
+        }
+        return false;
+    }
+
+    @Override
+    protected void write(CompoundTag compound, boolean clientPacket) {
+        compound.put("MaterialInventory", materialInventory.serializeNBT());
+        compound.putInt("ProcessingTicks", processingTicks);
+        compound.putBoolean("Processing", processing);
+        super.write(compound, clientPacket);
+    }
+
+    @Override
+    protected void read(CompoundTag compound, boolean clientPacket) {
+        if (compound.contains("MaterialInventory", CompoundTag.TAG_COMPOUND)) {
+            materialInventory.deserializeNBT(compound.getCompound("MaterialInventory"));
+        } else {
+            ItemStackHandler legacyInventory = new ItemStackHandler();
+            legacyInventory.deserializeNBT(compound.getCompound("InputInventory"));
+            for (int slot = 0; slot < Math.min(materialInventory.getSlots(), legacyInventory.getSlots()); slot++) {
+                materialInventory.setStackInSlot(slot, legacyInventory.getStackInSlot(slot));
+            }
+        }
+        processingTicks = compound.getInt("ProcessingTicks");
+        processing = compound.getBoolean("Processing");
+        lastRecipe = null;
+        super.read(compound, clientPacket);
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        itemCapability.invalidate();
+    }
+
+    @Override
+    public void reviveCaps() {
+        super.reviveCaps();
+        itemCapability = LazyOptional.of(() -> inventoryHandler);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (level != null) {
+            ItemHelper.dropContents(level, worldPosition, materialInventory);
+        }
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
+        if (capability == ForgeCapabilities.ITEM_HANDLER) {
+            return itemCapability.cast();
+        }
+        return super.getCapability(capability, side);
+    }
+
+    private final class SewingMachineInventoryHandler extends CombinedInvWrapper {
+        private SewingMachineInventoryHandler() {
+            super(materialInventory);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return canInsert(slot, stack) && super.isItemValid(slot, stack);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (!isItemValid(slot, stack)) {
+                return stack;
+            }
+            return super.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+    }
+
+    private final class RecipeInventoryHandler implements IItemHandlerModifiable {
+        @Override
+        public int getSlots() {
+            return 3;
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            return switch (slot) {
+                case SewingRecipe.FABRIC_SLOT, SewingRecipe.THREAD_SLOT -> materialInventory.getStackInSlot(slot);
+                case SewingRecipe.PATTERN_SLOT -> patternFilter == null
+                        ? ItemStack.EMPTY
+                        : patternFilter.getFilter();
+                default -> throw new IllegalArgumentException("Invalid sewing recipe slot: " + slot);
+            };
+        }
+
+        @Override
+        public void setStackInSlot(int slot, ItemStack stack) {
+            switch (slot) {
+                case SewingRecipe.FABRIC_SLOT, SewingRecipe.THREAD_SLOT -> materialInventory.setStackInSlot(slot, stack);
+                case SewingRecipe.PATTERN_SLOT -> patternFilter.setFilter(stack);
+                default -> throw new IllegalArgumentException("Invalid sewing recipe slot: " + slot);
+            }
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return stack;
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return slot == SewingRecipe.PATTERN_SLOT ? 1 : materialInventory.getSlotLimit(slot);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return false;
+        }
+    }
+
+    private static final class SewingPatternValueBox extends ValueBoxTransform.Sided {
+        private static final Vec3 WEST_OFFSET = VecHelper.voxelSpace(5.95D, 12.0D, 11.5D);
+        private static final Vec3 EAST_OFFSET = VecHelper.voxelSpace(10.05D, 12.0D, 11.5D);
+
+        @Override
+        public Vec3 getLocalOffset(
+                LevelAccessor level,
+                BlockPos pos,
+                BlockState state
+        ) {
+            Direction facing = state.getValue(HorizontalKineticBlock.HORIZONTAL_FACING);
+            Vec3 offset = direction == facing.getClockWise() ? WEST_OFFSET : EAST_OFFSET;
+            return rotateHorizontally(state, offset);
+        }
+
+        @Override
+        protected Vec3 getSouthLocation() {
+            return WEST_OFFSET;
+        }
+
+        @Override
+        protected boolean isSideActive(BlockState state, Direction side) {
+            Direction facing = state.getValue(HorizontalKineticBlock.HORIZONTAL_FACING);
+            return side == facing.getClockWise() || side == facing.getCounterClockWise();
+        }
+    }
+}

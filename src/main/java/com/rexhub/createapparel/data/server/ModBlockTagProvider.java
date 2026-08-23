@@ -25,7 +25,8 @@ public final class ModBlockTagProvider extends BlockTagsProvider {
         tag(ModTags.Blocks.CITIZEN_WALK_SURFACES);
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 ModBlocks.SPINNING_MACHINE.get(),
-                ModBlocks.LOOM.get()
+                ModBlocks.LOOM.get(),
+                ModBlocks.SEWING_MACHINE.get()
         );
     }
 }

@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.init;
 
 import com.rexhub.createapparel.block.entity.LoomBlockEntity;
+import com.rexhub.createapparel.block.entity.SewingMachineBlockEntity;
 import com.rexhub.createapparel.block.entity.SpinningMachineBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.registries.RegistryObject;
@@ -20,6 +21,14 @@ public final class ModBlockEntities {
                     () -> BlockEntityType.Builder.of(
                             LoomBlockEntity::new,
                             ModBlocks.LOOM.get()
+                    ).build(null)
+            );
+    public static final RegistryObject<BlockEntityType<SewingMachineBlockEntity>> SEWING_MACHINE =
+            ModRegistries.BLOCK_ENTITY_TYPES.register(
+                    "sewing_machine",
+                    () -> BlockEntityType.Builder.of(
+                            SewingMachineBlockEntity::new,
+                            ModBlocks.SEWING_MACHINE.get()
                     ).build(null)
             );
 

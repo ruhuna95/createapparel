@@ -14,21 +14,27 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.RegistryObject;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public enum ModRecipeTypes implements IRecipeTypeInfo {
     SPINNING(SpinningRecipe::new),
-    WEAVING(WeavingRecipe::new);
+    WEAVING(WeavingRecipe::new),
+    SEWING(() -> new SewingRecipe.Serializer());
 
     private final ResourceLocation id;
     private final RegistryObject<RecipeSerializer<?>> serializer;
     private final RegistryObject<RecipeType<?>> type;
 
     ModRecipeTypes(ProcessingRecipeFactory<?> factory) {
+        this(() -> new ProcessingRecipeSerializer<>(factory));
+    }
+
+    ModRecipeTypes(Supplier<RecipeSerializer<?>> serializerFactory) {
         String name = name().toLowerCase(java.util.Locale.ROOT);
         id = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, name);
         serializer = ModRegistries.RECIPE_SERIALIZERS.register(
                 name,
-                () -> new ProcessingRecipeSerializer<>(factory)
+                serializerFactory
         );
         type = ModRegistries.RECIPE_TYPES.register(name, () -> RecipeType.simple(id));
     }

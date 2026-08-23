@@ -22,13 +22,17 @@ public final class ModLanguageProvider extends LanguageProvider {
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
         add("itemGroup.createapparel.garment", "Create: Apparel - Garment");
-        add("tooltip.createapparel.machine.contents", "Contents: %s x%s");
+        add("tooltip.createapparel.machine.fiber", "Fiber: %s");
+        add("tooltip.createapparel.machine.thread", "Thread: %s");
+        add("tooltip.createapparel.machine.fabric", "Fabric: %s");
+        add("tooltip.createapparel.machine.pattern", "Pattern: %s");
 
         addBlock(ModBlocks.COTTON_CROP, "Cotton Crop");
         addBlock(ModBlocks.FLAX_CROP, "Flax Crop");
         addBlock(ModBlocks.HEMP_CROP, "Hemp Crop");
         addBlock(ModBlocks.SPINNING_MACHINE, "Spinning Machine");
         addBlock(ModBlocks.LOOM, "Loom");
+        addBlock(ModBlocks.SEWING_MACHINE, "Sewing Machine");
         addEntityType(ModEntities.SILKWORM, "Silkworm");
 
         add(ModItems.COTTON_SEEDS.get(), "Cotton Seeds");
@@ -49,9 +53,45 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.SILKWORM_SPAWN_EGG.get(), "Silkworm Spawn Egg");
         add(ModItems.SYNTHETIC_FIBER.get(), "Synthetic Fiber");
         add(ModItems.SYNTHETIC_THREAD.get(), "Synthetic Thread");
+        add(ModItems.SEWING_PATTERN.get(), "Sewing Pattern");
         add(ModItems.T_SHIRT.get(), "T-Shirt");
         add(ModItems.T_SHIRT_U_NECK.get(), "U-Neck T-Shirt");
         add(ModItems.T_SHIRT_V_NECK.get(), "V-Neck T-Shirt");
+
+        add("tooltip.createapparel.sewing_pattern.unset", "Right-click to configure");
+        add("tooltip.createapparel.sewing_pattern.recipe", "Recipe: %s");
+        add("tooltip.createapparel.sewing_pattern.unknown_garment", "Unknown Garment");
+        add("tooltip.createapparel.sewing_pattern.design", "Design: %s");
+        add("tooltip.createapparel.sewing_pattern.secondary_color", "Secondary: %s");
+        add("tooltip.createapparel.sewing_pattern.accent_color", "Accent: %s");
+        add("screen.createapparel.sewing_pattern", "Sewing Pattern");
+        add("screen.createapparel.sewing_pattern.category", "Category: %s");
+        add("screen.createapparel.sewing_pattern.no_categories", "No garment categories available");
+        add("screen.createapparel.sewing_pattern.no_recipes", "No sewing recipes available");
+        add("screen.createapparel.sewing_pattern.no_designs", "No designs available");
+        add("screen.createapparel.sewing_pattern.recipe", "Garment: %s");
+        add("screen.createapparel.sewing_pattern.design", "Design: %s");
+        add("screen.createapparel.sewing_pattern.fabric_color", "Fabric color: %s");
+        add("screen.createapparel.sewing_pattern.secondary_color", "Secondary: %s");
+        add("screen.createapparel.sewing_pattern.accent_color", "Accent: %s");
+        add("screen.createapparel.sewing_pattern.preview", "Finished Preview");
+        add("createapparel.sewing_machine.pattern", "Sewing Pattern");
+        add("garment_slot.createapparel.inner_top", "Inner Tops");
+        add("garment_slot.createapparel.top", "Tops");
+        add("garment_slot.createapparel.outer", "Outerwear");
+        add("garment_slot.createapparel.inner_bottom", "Inner Bottoms");
+        add("garment_slot.createapparel.bottom", "Bottoms");
+        add("garment_slot.createapparel.legwear", "Legwear");
+        add("garment_slot.createapparel.feet", "Footwear");
+        add("garment_slot.createapparel.head", "Headwear");
+        add("garment_slot.createapparel.face", "Facewear");
+        add("garment_slot.createapparel.back", "Back");
+        add("garment_slot.createapparel.hands", "Hands");
+        add("garment_slot.createapparel.neck", "Neck");
+        add("design.createapparel.plain", "Plain");
+        add("design.createapparel.stripe", "Stripe");
+        add("design.createapparel.logo", "Logo");
+        add("design.createapparel.stripe_logo", "Stripe + Logo");
 
         for (var entry : ModItems.fabricItems().entrySet()) {
             add(entry.getKey(), fabricName(entry.getValue()));

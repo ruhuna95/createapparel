@@ -61,6 +61,41 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         INSTANCE.replaceDefinitions(synchronizedDefinitions);
     }
 
+    public static Optional<GarmentDefinition> getDefinition(ResourceLocation id) {
+        return Optional.ofNullable(INSTANCE.definitions.get(id))
+                .or(() -> GarmentDefinitionManager.get(id));
+    }
+
+    public static Optional<ColorChannels> getRequiredColorChannels(ResourceLocation garmentId, String design) {
+        GarmentDefinition definition = getDefinition(garmentId).orElse(null);
+        if (definition == null || !definition.designs().contains(design)) {
+            return Optional.empty();
+        }
+        GarmentModelTemplate template = INSTANCE.templates.get(definition.modelTemplate());
+        if (template == null) {
+            return Optional.empty();
+        }
+        Map<String, ResourceLocation> variant = template.variants().get(definition.modelVariant());
+        if (variant == null) {
+            return Optional.empty();
+        }
+
+        boolean secondary = false;
+        boolean accent = false;
+        for (ResourceLocation partId : new LinkedHashSet<>(variant.values())) {
+            GarmentPartModel part = INSTANCE.parts.get(partId);
+            if (part == null) {
+                continue;
+            }
+            DesignMasks masks = part.designs().get(design);
+            if (masks != null) {
+                secondary |= masks.secondary().isPresent();
+                accent |= masks.accent().isPresent();
+            }
+        }
+        return Optional.of(new ColorChannels(secondary, accent));
+    }
+
     @Override
     public void onResourceManagerReload(ResourceManager manager) {
         Map<ResourceLocation, GarmentModelTemplate> loadedTemplates = loadTemplates(manager);
@@ -570,6 +605,9 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
 
     public record DesignMasks(Optional<ResourceLocation> secondary, Optional<ResourceLocation> accent) {
         private static final DesignMasks NONE = new DesignMasks(Optional.empty(), Optional.empty());
+    }
+
+    public record ColorChannels(boolean secondary, boolean accent) {
     }
 
     public record ResolvedTextures(

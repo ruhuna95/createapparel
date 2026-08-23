@@ -9,6 +9,9 @@ public final class ModPartialModels {
     public static final PartialModel SPINNING_MACHINE_BOBBIN_THREAD = block("spinning_machine/bobbin_thread");
     public static final PartialModel LOOM_SLIDE = block("loom/slide");
     public static final PartialModel LOOM_SLIDE_WORKING = block("loom/slide_working");
+    public static final PartialModel SEWING_MACHINE_ROTATING = block("sewing_machine/rotating");
+    public static final PartialModel SEWING_MACHINE_PISTON = block("sewing_machine/piston");
+    public static final PartialModel SEWING_MACHINE_THREAD = block("sewing_machine/thread");
 
     private ModPartialModels() {
     }

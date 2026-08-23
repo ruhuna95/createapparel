@@ -135,7 +135,11 @@ public final class SpinningMachineBlockEntity extends KineticBlockEntity {
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         boolean added = super.addToGoggleTooltip(tooltip, isPlayerSneaking);
-        return MachineGoggleTooltip.addContents(tooltip, inputInventory) || added;
+        return MachineGoggleTooltip.addStack(
+                tooltip,
+                "tooltip.createapparel.machine.fiber",
+                inputInventory.getStackInSlot(0)
+        ) || added;
     }
 
     public InteractionResult interact(Player player, InteractionHand hand) {

@@ -5,8 +5,12 @@ import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public abstract class HorizontalShaftMachineBlock extends HorizontalKineticBlock {
     protected HorizontalShaftMachineBlock(Properties properties) {
@@ -32,5 +36,41 @@ public abstract class HorizontalShaftMachineBlock extends HorizontalKineticBlock
     @Override
     public boolean hasShaftTowards(LevelReader level, BlockPos pos, BlockState state, Direction face) {
         return face.getAxis() == getRotationAxis(state);
+    }
+
+    protected abstract VoxelShape getMachineShape(BlockState state);
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public VoxelShape getShape(
+            BlockState state,
+            BlockGetter level,
+            BlockPos pos,
+            CollisionContext context
+    ) {
+        return getMachineShape(state);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public VoxelShape getCollisionShape(
+            BlockState state,
+            BlockGetter level,
+            BlockPos pos,
+            CollisionContext context
+    ) {
+        return getMachineShape(state);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
+        return Shapes.empty();
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean propagatesSkylightDown(BlockState state, BlockGetter level, BlockPos pos) {
+        return true;
     }
 }

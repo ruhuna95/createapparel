@@ -21,13 +21,17 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
         add("itemGroup.createapparel.garment", "Create Apparel - 衣服");
-        add("tooltip.createapparel.machine.contents", "内容物: %s x%s");
+        add("tooltip.createapparel.machine.fiber", "繊維：%s");
+        add("tooltip.createapparel.machine.thread", "糸：%s");
+        add("tooltip.createapparel.machine.fabric", "生地：%s");
+        add("tooltip.createapparel.machine.pattern", "型紙：%s");
 
         addBlock(ModBlocks.COTTON_CROP, "綿花の作物");
         addBlock(ModBlocks.FLAX_CROP, "亜麻の作物");
         addBlock(ModBlocks.HEMP_CROP, "ヘンプの作物");
         addBlock(ModBlocks.SPINNING_MACHINE, "紡績機");
         addBlock(ModBlocks.LOOM, "織機");
+        addBlock(ModBlocks.SEWING_MACHINE, "ミシン");
         addEntityType(ModEntities.SILKWORM, "カイコ");
 
         add(ModItems.COTTON_SEEDS.get(), "綿花の種");
@@ -48,9 +52,45 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.SILKWORM_SPAWN_EGG.get(), "カイコのスポーンエッグ");
         add(ModItems.SYNTHETIC_FIBER.get(), "合成繊維");
         add(ModItems.SYNTHETIC_THREAD.get(), "合成糸");
+        add(ModItems.SEWING_PATTERN.get(), "型紙");
         add(ModItems.T_SHIRT.get(), "Tシャツ");
         add(ModItems.T_SHIRT_U_NECK.get(), "UネックTシャツ");
         add(ModItems.T_SHIRT_V_NECK.get(), "VネックTシャツ");
+
+        add("tooltip.createapparel.sewing_pattern.unset", "右クリックで設定");
+        add("tooltip.createapparel.sewing_pattern.recipe", "レシピ: %s");
+        add("tooltip.createapparel.sewing_pattern.unknown_garment", "不明な衣服");
+        add("tooltip.createapparel.sewing_pattern.design", "デザイン: %s");
+        add("tooltip.createapparel.sewing_pattern.secondary_color", "サブカラー: %s");
+        add("tooltip.createapparel.sewing_pattern.accent_color", "アクセント: %s");
+        add("screen.createapparel.sewing_pattern", "型紙の設定");
+        add("screen.createapparel.sewing_pattern.category", "カテゴリ: %s");
+        add("screen.createapparel.sewing_pattern.no_categories", "衣服カテゴリがありません");
+        add("screen.createapparel.sewing_pattern.no_recipes", "縫製レシピがありません");
+        add("screen.createapparel.sewing_pattern.no_designs", "デザインがありません");
+        add("screen.createapparel.sewing_pattern.recipe", "衣服: %s");
+        add("screen.createapparel.sewing_pattern.design", "デザイン: %s");
+        add("screen.createapparel.sewing_pattern.fabric_color", "生地の色：%s");
+        add("screen.createapparel.sewing_pattern.secondary_color", "サブカラー: %s");
+        add("screen.createapparel.sewing_pattern.accent_color", "アクセント: %s");
+        add("screen.createapparel.sewing_pattern.preview", "完成プレビュー");
+        add("createapparel.sewing_machine.pattern", "型紙");
+        add("garment_slot.createapparel.inner_top", "インナートップ");
+        add("garment_slot.createapparel.top", "トップス");
+        add("garment_slot.createapparel.outer", "アウター");
+        add("garment_slot.createapparel.inner_bottom", "インナーボトム");
+        add("garment_slot.createapparel.bottom", "ボトムス");
+        add("garment_slot.createapparel.legwear", "レッグウェア");
+        add("garment_slot.createapparel.feet", "フットウェア");
+        add("garment_slot.createapparel.head", "ヘッドウェア");
+        add("garment_slot.createapparel.face", "フェイスウェア");
+        add("garment_slot.createapparel.back", "バック");
+        add("garment_slot.createapparel.hands", "ハンド");
+        add("garment_slot.createapparel.neck", "ネック");
+        add("design.createapparel.plain", "無地");
+        add("design.createapparel.stripe", "ストライプ");
+        add("design.createapparel.logo", "ロゴ");
+        add("design.createapparel.stripe_logo", "ストライプ＋ロゴ");
 
         for (var entry : ModItems.fabricItems().entrySet()) {
             add(entry.getKey(), fabricName(entry.getValue()));

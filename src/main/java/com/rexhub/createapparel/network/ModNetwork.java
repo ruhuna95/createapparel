@@ -2,8 +2,10 @@ package com.rexhub.createapparel.network;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.garment.GarmentDefinition;
+import com.rexhub.createapparel.garment.PatternData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -12,7 +14,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
 
     private static SimpleChannel channel;
 
@@ -35,6 +37,21 @@ public final class ModNetwork {
                 .decoder(GarmentDefinitionsPacket::decode)
                 .consumerMainThread((packet, context) -> packet.handleClient())
                 .add();
+        channel.messageBuilder(OpenSewingPatternScreenPacket.class, 1, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(OpenSewingPatternScreenPacket::encode)
+                .decoder(OpenSewingPatternScreenPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient())
+                .add();
+        channel.messageBuilder(UpdateSewingPatternPacket.class, 2, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(UpdateSewingPatternPacket::encode)
+                .decoder(UpdateSewingPatternPacket::decode)
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null) {
+                        packet.handle(player);
+                    }
+                })
+                .add();
     }
 
     public static SimpleChannel channel() {
@@ -48,6 +65,23 @@ public final class ModNetwork {
         if (channel != null) {
             channel.send(PacketDistributor.PLAYER.with(() -> player), new GarmentDefinitionsPacket(definitions));
         }
+    }
+
+    public static void openSewingPatternEditor(ServerPlayer player, InteractionHand hand) {
+        channel().send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new OpenSewingPatternScreenPacket(hand)
+        );
+    }
+
+    public static void updateSewingPattern(InteractionHand hand, PatternData data) {
+        channel().sendToServer(new UpdateSewingPatternPacket(
+                hand,
+                data.recipe(),
+                data.design(),
+                data.secondaryColor(),
+                data.accentColor()
+        ));
     }
 
 }

@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Optional;
 
 public final class LoomBlockEntity extends KineticBlockEntity {
-    public static final int DEFAULT_PROCESSING_DURATION = 400;
+    public static final int DEFAULT_PROCESSING_DURATION = 1200;
     private static final float MINIMUM_SPEED = 1.0F;
     private static final float PI = (float) Math.PI;
     private static final float TWO_PI = PI * 2.0F;
@@ -157,7 +157,11 @@ public final class LoomBlockEntity extends KineticBlockEntity {
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         boolean added = super.addToGoggleTooltip(tooltip, isPlayerSneaking);
-        return MachineGoggleTooltip.addContents(tooltip, inputInventory) || added;
+        return MachineGoggleTooltip.addStack(
+                tooltip,
+                "tooltip.createapparel.machine.thread",
+                inputInventory.getStackInSlot(0)
+        ) || added;
     }
 
     public InteractionResult interact(Player player, InteractionHand hand) {

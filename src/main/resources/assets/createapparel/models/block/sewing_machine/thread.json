@@ -1,0 +1,84 @@
+{
+  "format_version": "1.9.0",
+  "credit": "Made with Blockbench; repackaged by ChatGPT",
+  "textures": {
+    "3": "createapparel:block/sewing_machine/sewing_machine",
+    "particle": "createapparel:block/sewing_machine/sewing_machine"
+  },
+  "elements": [
+    {
+      "from": [
+        7,
+        13,
+        2
+      ],
+      "to": [
+        9,
+        16,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            10,
+            1,
+            12,
+            4
+          ],
+          "texture": "#3"
+        },
+        "east": {
+          "uv": [
+            10,
+            1,
+            12,
+            4
+          ],
+          "texture": "#3"
+        },
+        "south": {
+          "uv": [
+            10,
+            1,
+            12,
+            4
+          ],
+          "texture": "#3"
+        },
+        "west": {
+          "uv": [
+            10,
+            1,
+            12,
+            4
+          ],
+          "texture": "#3"
+        },
+        "up": {
+          "uv": [
+            12,
+            2,
+            14,
+            4
+          ],
+          "texture": "#3"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "thread",
+      "origin": [
+        8,
+        8,
+        8
+      ],
+      "scope": 0,
+      "color": 0,
+      "children": [
+        0
+      ]
+    }
+  ]
+}

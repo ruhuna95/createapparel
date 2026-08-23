@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class LoomBlock extends HorizontalShaftMachineBlock implements IBE<LoomBlockEntity> {
     public static final double STRESS_IMPACT = 8.0;
@@ -54,5 +55,10 @@ public final class LoomBlock extends HorizontalShaftMachineBlock implements IBE<
     @Override
     public BlockEntityType<? extends LoomBlockEntity> getBlockEntityType() {
         return ModBlockEntities.LOOM.get();
+    }
+
+    @Override
+    protected VoxelShape getMachineShape(BlockState state) {
+        return MachineVoxelShapes.loom(state.getValue(HORIZONTAL_FACING));
     }
 }
