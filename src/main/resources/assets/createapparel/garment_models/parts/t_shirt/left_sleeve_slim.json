@@ -1,0 +1,94 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_sleeve",
+        "from": [
+          -1.75,
+          0,
+          -2.1875
+        ],
+        "to": [
+          1.8125,
+          5,
+          2.1875
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              0,
+              4,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              4,
+              0,
+              8,
+              5
+            ]
+          },
+          "left": {
+            "uv": [
+              8,
+              0,
+              12,
+              5
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              0,
+              16,
+              5
+            ]
+          },
+          "top": {
+            "uv": [
+              0,
+              5,
+              4,
+              9
+            ]
+          },
+          "bottom": {
+            "uv": [
+              4,
+              5,
+              8,
+              9
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/t_shirt/sleeve/base/default"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/t_shirt/sleeve/masks/stripe/secondary"
+      },
+      "stripe_logo": {
+        "secondary_mask": "createapparel:garment/t_shirt/sleeve/masks/stripe/secondary"
+      }
+    }
+  }
+}

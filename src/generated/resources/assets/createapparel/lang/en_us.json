@@ -126,6 +126,9 @@
   "item.createapparel.synthetic_fabric": "Synthetic Fabric",
   "item.createapparel.synthetic_fiber": "Synthetic Fiber",
   "item.createapparel.synthetic_thread": "Synthetic Thread",
+  "item.createapparel.t_shirt": "T-Shirt",
+  "item.createapparel.t_shirt_u_neck": "U-Neck T-Shirt",
+  "item.createapparel.t_shirt_v_neck": "V-Neck T-Shirt",
   "item.createapparel.white_cotton_fabric": "White Cotton Fabric",
   "item.createapparel.white_hemp_fabric": "White Hemp Fabric",
   "item.createapparel.white_leather_fabric": "White Leather Fabric",
@@ -143,5 +146,6 @@
   "item.createapparel.yellow_synthetic_fabric": "Yellow Synthetic Fabric",
   "item.createapparel.yellow_wool_fabric": "Yellow Wool Fabric",
   "itemGroup.createapparel": "Create: Apparel",
+  "itemGroup.createapparel.garment": "Create: Apparel - Garment",
   "tooltip.createapparel.machine.contents": "Contents: %s x%s"
 }

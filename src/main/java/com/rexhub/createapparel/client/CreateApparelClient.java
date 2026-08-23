@@ -4,6 +4,7 @@ import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.client.model.SilkwormCocoonModel;
 import com.rexhub.createapparel.client.model.SilkwormModel;
 import com.rexhub.createapparel.client.model.ModPartialModels;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
 import com.rexhub.createapparel.client.renderer.LoomRenderer;
 import com.rexhub.createapparel.client.renderer.SpinningMachineRenderer;
@@ -18,6 +19,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -74,5 +76,10 @@ public final class CreateApparelClient {
                         .map(entry -> entry.getKey().get())
                         .toArray(Item[]::new)
         );
+    }
+
+    @SubscribeEvent
+    public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(ClientGarmentAssets.INSTANCE);
     }
 }

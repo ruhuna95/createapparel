@@ -20,6 +20,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
+        add("itemGroup.createapparel.garment", "Create Apparel - 衣服");
         add("tooltip.createapparel.machine.contents", "内容物: %s x%s");
 
         addBlock(ModBlocks.COTTON_CROP, "綿花の作物");
@@ -47,6 +48,9 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.SILKWORM_SPAWN_EGG.get(), "カイコのスポーンエッグ");
         add(ModItems.SYNTHETIC_FIBER.get(), "合成繊維");
         add(ModItems.SYNTHETIC_THREAD.get(), "合成糸");
+        add(ModItems.T_SHIRT.get(), "Tシャツ");
+        add(ModItems.T_SHIRT_U_NECK.get(), "UネックTシャツ");
+        add(ModItems.T_SHIRT_V_NECK.get(), "VネックTシャツ");
 
         for (var entry : ModItems.fabricItems().entrySet()) {
             add(entry.getKey(), fabricName(entry.getValue()));

@@ -21,6 +21,7 @@ public final class ModLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
+        add("itemGroup.createapparel.garment", "Create: Apparel - Garment");
         add("tooltip.createapparel.machine.contents", "Contents: %s x%s");
 
         addBlock(ModBlocks.COTTON_CROP, "Cotton Crop");
@@ -48,6 +49,9 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.SILKWORM_SPAWN_EGG.get(), "Silkworm Spawn Egg");
         add(ModItems.SYNTHETIC_FIBER.get(), "Synthetic Fiber");
         add(ModItems.SYNTHETIC_THREAD.get(), "Synthetic Thread");
+        add(ModItems.T_SHIRT.get(), "T-Shirt");
+        add(ModItems.T_SHIRT_U_NECK.get(), "U-Neck T-Shirt");
+        add(ModItems.T_SHIRT_V_NECK.get(), "V-Neck T-Shirt");
 
         for (var entry : ModItems.fabricItems().entrySet()) {
             add(entry.getKey(), fabricName(entry.getValue()));

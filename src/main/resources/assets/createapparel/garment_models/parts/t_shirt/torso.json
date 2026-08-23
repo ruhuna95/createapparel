@@ -1,0 +1,107 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "torso",
+        "from": [
+          -4.25,
+          0,
+          -2.25
+        ],
+        "to": [
+          4.25,
+          13.0,
+          2.25
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              0,
+              8,
+              13
+            ]
+          },
+          "back": {
+            "uv": [
+              8,
+              0,
+              16,
+              13
+            ]
+          },
+          "left": {
+            "uv": [
+              16,
+              0,
+              20,
+              13
+            ]
+          },
+          "right": {
+            "uv": [
+              20,
+              0,
+              24,
+              13
+            ]
+          },
+          "top": {
+            "uv": [
+              0,
+              13,
+              8,
+              17
+            ]
+          },
+          "bottom": {
+            "uv": [
+              8,
+              13,
+              16,
+              17
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/t_shirt/torso/base/crew_neck"
+      },
+      "crew_neck": {
+        "base": "createapparel:garment/t_shirt/torso/base/crew_neck"
+      },
+      "u_neck": {
+        "base": "createapparel:garment/t_shirt/torso/base/u_neck"
+      },
+      "v_neck": {
+        "base": "createapparel:garment/t_shirt/torso/base/v_neck"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary"
+      },
+      "logo": {
+        "accent_mask": "createapparel:garment/t_shirt/torso/masks/logo/accent"
+      },
+      "stripe_logo": {
+        "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary",
+        "accent_mask": "createapparel:garment/t_shirt/torso/masks/logo/accent"
+      }
+    }
+  }
+}

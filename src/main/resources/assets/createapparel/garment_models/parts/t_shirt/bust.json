@@ -1,0 +1,108 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0.0,
+      12.5,
+      -2.25
+    ],
+    "elements": [
+      {
+        "name": "bust",
+        "from": [
+          -3.75,
+          9.25,
+          -2.5
+        ],
+        "to": [
+          3.75,
+          12.75,
+          0.0
+        ],
+        "rotation": {
+          "origin": [
+            0.0,
+            12.5,
+            -2.25
+          ],
+          "axis": "x",
+          "angle": 40.0
+        },
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              0,
+              7,
+              3
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              3,
+              2,
+              6
+            ]
+          },
+          "right": {
+            "uv": [
+              2,
+              3,
+              4,
+              6
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              3,
+              11,
+              5
+            ]
+          },
+          "bottom": {
+            "uv": [
+              4,
+              5,
+              11,
+              7
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/t_shirt/bust/base/crew_neck"
+      },
+      "crew_neck": {
+        "base": "createapparel:garment/t_shirt/bust/base/crew_neck"
+      },
+      "u_neck": {
+        "base": "createapparel:garment/t_shirt/bust/base/u_neck"
+      },
+      "v_neck": {
+        "base": "createapparel:garment/t_shirt/bust/base/v_neck"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/t_shirt/bust/masks/stripe/secondary"
+      },
+      "logo": {
+        "accent_mask": "createapparel:garment/t_shirt/bust/masks/logo/accent"
+      },
+      "stripe_logo": {
+        "secondary_mask": "createapparel:garment/t_shirt/bust/masks/stripe/secondary",
+        "accent_mask": "createapparel:garment/t_shirt/bust/masks/logo/accent"
+      }
+    }
+  }
+}

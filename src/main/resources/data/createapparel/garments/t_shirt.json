@@ -1,0 +1,18 @@
+{
+  "slot": "top",
+  "model_template": "createapparel:t_shirt",
+  "model_variant": "short_sleeve",
+  "texture_variant": "crew_neck",
+  "designs": [
+    "plain",
+    "stripe",
+    "logo",
+    "stripe_logo"
+  ],
+  "styles": {
+    "tuck": [
+      "untucked",
+      "tucked"
+    ]
+  }
+}

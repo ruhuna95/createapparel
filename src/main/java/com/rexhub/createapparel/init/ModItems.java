@@ -1,5 +1,6 @@
 package com.rexhub.createapparel.init;
 
+import com.rexhub.createapparel.garment.GarmentItem;
 import com.rexhub.createapparel.material.FabricAttribute;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
@@ -32,6 +33,9 @@ public final class ModItems {
             "loom",
             () -> new BlockItem(ModBlocks.LOOM.get(), new Item.Properties())
     );
+    public static final RegistryObject<Item> T_SHIRT = registerGarment("t_shirt");
+    public static final RegistryObject<Item> T_SHIRT_U_NECK = registerGarment("t_shirt_u_neck");
+    public static final RegistryObject<Item> T_SHIRT_V_NECK = registerGarment("t_shirt_v_neck");
 
     public static final RegistryObject<Item> COTTON_SEEDS = registerSeeds("cotton_seeds", ModBlocks.COTTON_CROP);
     public static final RegistryObject<Item> COTTON_BOLL = registerSimple("cotton_boll");
@@ -76,6 +80,8 @@ public final class ModItems {
     public static final Map<FabricMaterial, Map<FabricColor, RegistryObject<Item>>> DYED_FABRICS =
             registerDyedFabrics();
     private static final List<RegistryObject<Item>> CREATIVE_TAB_ITEMS = createCreativeTabOrder();
+    private static final List<RegistryObject<Item>> GARMENT_CREATIVE_TAB_ITEMS =
+            List.of(T_SHIRT, T_SHIRT_U_NECK, T_SHIRT_V_NECK);
 
     static {
         validateFabricCatalog();
@@ -112,8 +118,16 @@ public final class ModItems {
         return CREATIVE_TAB_ITEMS;
     }
 
+    public static List<RegistryObject<Item>> garmentCreativeTabItems() {
+        return GARMENT_CREATIVE_TAB_ITEMS;
+    }
+
     private static RegistryObject<Item> registerSimple(String name) {
         return ModRegistries.ITEMS.register(name, () -> new Item(new Item.Properties()));
+    }
+
+    private static RegistryObject<Item> registerGarment(String name) {
+        return ModRegistries.ITEMS.register(name, () -> new GarmentItem(new Item.Properties().stacksTo(1)));
     }
 
     private static RegistryObject<Item> registerSeeds(String name, RegistryObject<Block> crop) {
@@ -160,6 +174,8 @@ public final class ModItems {
 
     private static List<RegistryObject<Item>> createCreativeTabOrder() {
         List<RegistryObject<Item>> items = new ArrayList<>();
+        items.add(SPINNING_MACHINE);
+        items.add(LOOM);
         addMaterialGroup(
                 items,
                 FabricMaterial.COTTON,
@@ -183,8 +199,6 @@ public final class ModItems {
                 FabricMaterial.SYNTHETIC,
                 List.of(SYNTHETIC_FIBER, SYNTHETIC_THREAD)
         );
-        items.add(SPINNING_MACHINE);
-        items.add(LOOM);
         return List.copyOf(items);
     }
 
@@ -211,9 +225,16 @@ public final class ModItems {
     }
 
     private static void validateCreativeTabOrder() {
-        Set<RegistryObject<Item>> uniqueItems = new HashSet<>(CREATIVE_TAB_ITEMS);
-        if (CREATIVE_TAB_ITEMS.size() != 139 || uniqueItems.size() != CREATIVE_TAB_ITEMS.size()) {
-            throw new IllegalStateException("The Phase 5 creative tab must contain 139 unique items");
+        Set<RegistryObject<Item>> uniqueMainItems = new HashSet<>(CREATIVE_TAB_ITEMS);
+        Set<RegistryObject<Item>> uniqueGarmentItems = new HashSet<>(GARMENT_CREATIVE_TAB_ITEMS);
+        Set<RegistryObject<Item>> uniqueItems = new HashSet<>(uniqueMainItems);
+        uniqueItems.addAll(uniqueGarmentItems);
+        if (CREATIVE_TAB_ITEMS.size() != 139
+                || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 3
+                || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
+                || uniqueItems.size() != 142) {
+            throw new IllegalStateException("The Phase 7 creative tabs must contain 142 unique items");
         }
     }
 }

@@ -12,6 +12,14 @@ public final class ModCreativeModeTabs {
                     .displayItems((parameters, output) -> ModItems.creativeTabItems()
                             .forEach(item -> output.accept(item.get())))
                     .build());
+    public static final RegistryObject<CreativeModeTab> CREATE_APPAREL_GARMENT =
+            ModRegistries.CREATIVE_MODE_TABS.register("create_apparel_garment", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.createapparel.garment"))
+                    .icon(() -> ModItems.T_SHIRT.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> ModItems.garmentCreativeTabItems()
+                            .forEach(item -> output.accept(item.get())))
+                    .withTabsBefore(CREATE_APPAREL.getKey())
+                    .build());
 
     private ModCreativeModeTabs() {
     }

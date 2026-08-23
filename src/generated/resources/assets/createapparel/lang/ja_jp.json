@@ -126,6 +126,9 @@
   "item.createapparel.synthetic_fabric": "合成生地",
   "item.createapparel.synthetic_fiber": "合成繊維",
   "item.createapparel.synthetic_thread": "合成糸",
+  "item.createapparel.t_shirt": "Tシャツ",
+  "item.createapparel.t_shirt_u_neck": "UネックTシャツ",
+  "item.createapparel.t_shirt_v_neck": "VネックTシャツ",
   "item.createapparel.white_cotton_fabric": "白色のコットン生地",
   "item.createapparel.white_hemp_fabric": "白色のヘンプ生地",
   "item.createapparel.white_leather_fabric": "白色のレザー生地",
@@ -143,5 +146,6 @@
   "item.createapparel.yellow_synthetic_fabric": "黄色の合成生地",
   "item.createapparel.yellow_wool_fabric": "黄色のウール生地",
   "itemGroup.createapparel": "Create: Apparel",
+  "itemGroup.createapparel.garment": "Create Apparel - 衣服",
   "tooltip.createapparel.machine.contents": "内容物: %s x%s"
 }

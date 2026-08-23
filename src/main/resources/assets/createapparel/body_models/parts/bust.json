@@ -1,0 +1,35 @@
+{
+  "profile": "bust",
+  "texture_source": "body_base",
+  "geometry": {
+    "pivot": [
+      0.0,
+      12.5,
+      -2.25
+    ],
+    "elements": [
+      {
+        "name": "bust",
+        "from": [
+          -3.5,
+          9.5,
+          -2.25
+        ],
+        "to": [
+          3.5,
+          12.5,
+          -0.25
+        ],
+        "rotation": {
+          "origin": [
+            0.0,
+            12.5,
+            -2.25
+          ],
+          "axis": "x",
+          "angle": 40.0
+        }
+      }
+    ]
+  }
+}

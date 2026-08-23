@@ -1,0 +1,25 @@
+{
+  "short_sleeve": {
+    "torso": {
+      "model": "createapparel:t_shirt/torso"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:t_shirt/left_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:t_shirt/right_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:t_shirt/left_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:t_shirt/right_sleeve_slim"
+    },
+    "bust": {
+      "model": "createapparel:t_shirt/bust"
+    },
+    "tucked_torso": {
+      "model": "createapparel:t_shirt/tucked_torso"
+    }
+  }
+}
