@@ -20,12 +20,8 @@ public final class FabricAttributeMap {
         return get(stack.getItem());
     }
 
-    public static Optional<FabricAttribute> get(Item item) {
+    private static Optional<FabricAttribute> get(Item item) {
         return Optional.ofNullable(attributes().get(item));
-    }
-
-    public static Optional<FabricMaterial> material(ItemStack stack) {
-        return get(stack).map(FabricAttribute::material);
     }
 
     public static Optional<FabricColor> color(ItemStack stack) {

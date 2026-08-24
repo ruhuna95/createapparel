@@ -10,12 +10,13 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,7 +37,7 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
         return Optional.ofNullable(definitions.get(id));
     }
 
-    public static List<GarmentDefinition> all() {
+    private static List<GarmentDefinition> all() {
         return List.copyOf(definitions.values());
     }
 
@@ -57,8 +58,8 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
                     }
                     GarmentDefinition definition = GarmentDefinition.fromJson(id, entry.getValue().getAsJsonObject());
                     loaded.put(id, definition);
-        });
-        definitions = Map.copyOf(loaded);
+                });
+        definitions = Collections.unmodifiableMap(loaded);
     }
 
     @SubscribeEvent

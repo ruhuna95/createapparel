@@ -6,11 +6,11 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-public final class MachineGoggleTooltip {
+final class MachineGoggleTooltip {
     private MachineGoggleTooltip() {
     }
 
-    public static boolean addStack(List<Component> tooltip, String labelKey, ItemStack stack) {
+    static boolean addStack(List<Component> tooltip, String labelKey, ItemStack stack) {
         if (stack.isEmpty()) {
             return false;
         }
@@ -20,7 +20,7 @@ public final class MachineGoggleTooltip {
         return true;
     }
 
-    public static boolean addValue(List<Component> tooltip, String labelKey, Component value) {
+    static boolean addValue(List<Component> tooltip, String labelKey, Component value) {
         tooltip.add(Component.translatable(labelKey, value).withStyle(ChatFormatting.GREEN));
         return true;
     }

@@ -6,6 +6,8 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
 
 public final class SpinningRecipe extends ProcessingRecipe<RecipeWrapper> {
+    public static final int DEFAULT_PROCESSING_DURATION = 400;
+
     public SpinningRecipe(ProcessingRecipeParams params) {
         super(ModRecipeTypes.SPINNING, params);
     }

@@ -3,14 +3,12 @@ package com.rexhub.createapparel.data.server;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.rexhub.createapparel.CreateApparel;
-import com.rexhub.createapparel.block.entity.LoomBlockEntity;
-import com.rexhub.createapparel.block.entity.SpinningMachineBlockEntity;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModTags;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
-import com.rexhub.createapparel.recipe.SpinningRecipe;
 import com.rexhub.createapparel.recipe.ModRecipeTypes;
+import com.rexhub.createapparel.recipe.SpinningRecipe;
 import com.rexhub.createapparel.recipe.WeavingRecipe;
 import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
 import com.simibubi.create.content.kinetics.millstone.MillingRecipe;
@@ -30,8 +28,8 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.registries.RegistryObject;
 
-import java.util.function.Supplier;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -106,7 +104,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 SpinningRecipe::new,
                 asResource(recipeName)
         )
-                .duration(SpinningMachineBlockEntity.DEFAULT_PROCESSING_DURATION)
+                .duration(SpinningRecipe.DEFAULT_PROCESSING_DURATION)
                 .require(input)
                 .output(output.get())
                 .build(consumer));
@@ -121,7 +119,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 SpinningRecipe::new,
                 asResource(recipeName)
         )
-                .duration(SpinningMachineBlockEntity.DEFAULT_PROCESSING_DURATION)
+                .duration(SpinningRecipe.DEFAULT_PROCESSING_DURATION)
                 .require(input.get())
                 .output(output.get())
                 .build(consumer));
@@ -136,7 +134,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 WeavingRecipe::new,
                 asResource(recipeName)
         )
-                .duration(LoomBlockEntity.DEFAULT_PROCESSING_DURATION)
+                .duration(WeavingRecipe.DEFAULT_PROCESSING_DURATION)
                 .require(input)
                 .output(output.get())
                 .build(consumer));

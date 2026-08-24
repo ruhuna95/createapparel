@@ -9,8 +9,6 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
-import com.simibubi.create.content.logistics.funnel.FunnelBlock;
-import com.simibubi.create.content.logistics.funnel.FunnelBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
@@ -25,13 +23,10 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -40,7 +35,6 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
@@ -50,12 +44,9 @@ import java.util.List;
 import java.util.Optional;
 
 public final class SewingMachineBlockEntity extends KineticBlockEntity {
-    public static final int DEFAULT_PROCESSING_DURATION = 2000;
     public static final float PISTON_ANGLE_MULTIPLIER = 2.0F;
-    private static final float MINIMUM_SPEED = 1.0F;
     private static final float PI = (float) Math.PI;
     private static final float TWO_PI = PI * 2.0F;
-    private static final Direction[] OUTPUT_DIRECTIONS = Direction.values();
     private static final int[] MANUAL_EXTRACTION_ORDER = {
             SewingRecipe.THREAD_SLOT,
             SewingRecipe.FABRIC_SLOT
@@ -67,20 +58,20 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     private LazyOptional<IItemHandler> itemCapability;
     private FilteringBehaviour patternFilter;
 
-    private int processingTicks;
+    private int remainingProcessingTicks;
     private boolean processing;
-    private SewingRecipe lastRecipe;
-    private float lastAudioAngle = Float.NaN;
+    private SewingRecipe activeRecipe;
+    private float previousAudioAngle = Float.NaN;
 
     public SewingMachineBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.SEWING_MACHINE.get(), pos, state);
-        materialInventory = createInventory();
+        materialInventory = createMaterialInventory();
         recipeInventory = new RecipeInventoryHandler();
         inventoryHandler = new SewingMachineInventoryHandler();
         itemCapability = LazyOptional.of(() -> inventoryHandler);
     }
 
-    private ItemStackHandler createInventory() {
+    private ItemStackHandler createMaterialInventory() {
         return new ItemStackHandler(2) {
             @Override
             protected void onContentsChanged(int slot) {
@@ -96,7 +87,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         behaviours.add(new DirectBeltInputBehaviour(this).allowingBeltFunnels());
-        patternFilter = new FilteringBehaviour(this, new SewingPatternValueBox())
+        patternFilter = new FilteringBehaviour(this, new SewingPatternValueBoxTransform())
                 .withPredicate(stack -> stack.is(ModItems.SEWING_PATTERN.get()))
                 .withCallback(this::onPatternChanged)
                 .forRecipes();
@@ -109,8 +100,8 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     @OnlyIn(Dist.CLIENT)
     public void tickAudio() {
         super.tickAudio();
-        if (level == null || !processing || Math.abs(getSpeed()) < MINIMUM_SPEED) {
-            lastAudioAngle = Float.NaN;
+        if (level == null || !processing || !MachineProcessingSpeed.isSufficient(getSpeed())) {
+            previousAudioAngle = Float.NaN;
             return;
         }
 
@@ -118,7 +109,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         float angle = normalizeAngle(
                 KineticBlockEntityRenderer.getAngleForBe(this, worldPosition, axis) * PISTON_ANGLE_MULTIPLIER
         );
-        if (!Float.isNaN(lastAudioAngle) && crossedContractionPoint(lastAudioAngle, angle)) {
+        if (!Float.isNaN(previousAudioAngle) && crossedContractionPoint(previousAudioAngle, angle)) {
             float pitch = Mth.clamp((Math.abs(getSpeed()) / 256.0F) + 0.75F, 0.8F, 1.25F);
             level.playLocalSound(
                     worldPosition.getX() + 0.5D,
@@ -131,7 +122,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
                     false
             );
         }
-        lastAudioAngle = angle;
+        previousAudioAngle = angle;
     }
 
     @Override
@@ -142,32 +133,28 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         }
 
         Optional<SewingRecipe> recipe = findRecipe();
-        if (Math.abs(getSpeed()) < MINIMUM_SPEED || recipe.isEmpty()) {
+        if (!MachineProcessingSpeed.isSufficient(getSpeed()) || recipe.isEmpty()) {
             setProcessing(false);
             return;
         }
 
         SewingRecipe currentRecipe = recipe.get();
-        if (lastRecipe != null && !lastRecipe.getId().equals(currentRecipe.getId())) {
-            processingTicks = 0;
+        if (activeRecipe != null && !activeRecipe.getId().equals(currentRecipe.getId())) {
+            remainingProcessingTicks = 0;
         }
-        lastRecipe = currentRecipe;
+        activeRecipe = currentRecipe;
 
-        if (processingTicks <= 0) {
-            processingTicks = DEFAULT_PROCESSING_DURATION;
+        if (remainingProcessingTicks <= 0) {
+            remainingProcessingTicks = SewingRecipe.PROCESSING_DURATION;
         }
 
         setProcessing(true);
-        processingTicks -= getProcessingSpeed();
+        remainingProcessingTicks -= MachineProcessingSpeed.progressPerTick(getSpeed());
         setChanged();
 
-        if (processingTicks <= 0) {
+        if (remainingProcessingTicks <= 0) {
             process(currentRecipe);
         }
-    }
-
-    public boolean isProcessing() {
-        return processing;
     }
 
     public boolean hasThread() {
@@ -225,8 +212,8 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
             if (extracted.isEmpty()) {
                 continue;
             }
-            processingTicks = 0;
-            lastRecipe = null;
+            remainingProcessingTicks = 0;
+            activeRecipe = null;
             setProcessing(false);
             player.getInventory().placeItemBackInInventory(extracted);
             sendData();
@@ -250,14 +237,14 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
 
         materialInventory.extractItem(SewingRecipe.FABRIC_SLOT, recipe.getFabricCount(), false);
         materialInventory.extractItem(SewingRecipe.THREAD_SLOT, recipe.getThreadCount(), false);
-        ejectResult(result);
+        MachineOutputTransport.eject(this, result);
 
-        processingTicks = 0;
-        lastRecipe = null;
+        remainingProcessingTicks = 0;
+        activeRecipe = null;
         Optional<SewingRecipe> nextRecipe = findRecipe();
         if (nextRecipe.isPresent()) {
-            lastRecipe = nextRecipe.get();
-            processingTicks = DEFAULT_PROCESSING_DURATION;
+            activeRecipe = nextRecipe.get();
+            remainingProcessingTicks = SewingRecipe.PROCESSING_DURATION;
             setProcessing(true);
         } else {
             setProcessing(false);
@@ -267,139 +254,9 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     }
 
     private void resetProcessing() {
-        processingTicks = 0;
-        lastRecipe = null;
+        remainingProcessingTicks = 0;
+        activeRecipe = null;
         setProcessing(false);
-    }
-
-    private void ejectResult(ItemStack result) {
-        if (level == null || result.isEmpty()) {
-            return;
-        }
-
-        ItemStack remainder = ejectThroughAttachedFunnel(result.copy());
-        if (remainder.isEmpty()) {
-            return;
-        }
-
-        DirectBeltInputBehaviour ownBeltInput = getBehaviour(DirectBeltInputBehaviour.TYPE);
-        if (ownBeltInput != null) {
-            ItemStack beltFunnelRemainder = ownBeltInput.tryExportingToBeltFunnel(remainder, null, false);
-            if (beltFunnelRemainder != null) {
-                remainder = beltFunnelRemainder;
-            }
-        }
-        if (remainder.isEmpty()) {
-            return;
-        }
-
-        for (Direction direction : OUTPUT_DIRECTIONS) {
-            remainder = insertIntoReceivingFunnel(remainder, direction);
-            if (remainder.isEmpty()) {
-                return;
-            }
-        }
-        for (Direction direction : OUTPUT_DIRECTIONS) {
-            remainder = insertIntoDirectOutput(remainder, direction);
-            if (remainder.isEmpty()) {
-                return;
-            }
-        }
-        for (Direction direction : OUTPUT_DIRECTIONS) {
-            remainder = insertIntoItemHandler(remainder, direction);
-            if (remainder.isEmpty()) {
-                return;
-            }
-        }
-
-        spawnResult(remainder, Vec3.atBottomCenterOf(worldPosition.above()), Vec3.ZERO);
-    }
-
-    private ItemStack ejectThroughAttachedFunnel(ItemStack stack) {
-        for (Direction direction : OUTPUT_DIRECTIONS) {
-            BlockPos funnelPos = worldPosition.relative(direction);
-            BlockState funnelState = level.getBlockState(funnelPos);
-            if (!(funnelState.getBlock() instanceof FunnelBlock)
-                    || !funnelState.getValue(FunnelBlock.EXTRACTING)
-                    || funnelState.getOptionalValue(BlockStateProperties.POWERED).orElse(false)
-                    || FunnelBlock.getFunnelFacing(funnelState) != direction) {
-                continue;
-            }
-
-            FilteringBehaviour filter = BlockEntityBehaviour.get(level, funnelPos, FilteringBehaviour.TYPE);
-            if (filter != null && !filter.test(stack)) {
-                continue;
-            }
-
-            double outputOffset = direction.getAxis().isVertical()
-                    ? direction == Direction.UP ? 0.15D : 0.5D
-                    : 0.25D;
-            Vec3 outputPosition = Vec3.atCenterOf(funnelPos)
-                    .add(Vec3.atLowerCornerOf(direction.getNormal()).scale(outputOffset));
-            if (direction.getAxis().isHorizontal()) {
-                outputPosition = outputPosition.subtract(0.0D, 0.45D, 0.0D);
-            }
-            Vec3 outputMotion = direction == Direction.UP ? new Vec3(0.0D, 0.25D, 0.0D) : Vec3.ZERO;
-            spawnResult(stack, outputPosition, outputMotion);
-
-            BlockEntity blockEntity = level.getBlockEntity(funnelPos);
-            if (blockEntity instanceof FunnelBlockEntity funnelBlockEntity) {
-                funnelBlockEntity.flap(false);
-            }
-            return ItemStack.EMPTY;
-        }
-        return stack;
-    }
-
-    private ItemStack insertIntoReceivingFunnel(ItemStack stack, Direction direction) {
-        BlockPos funnelPos = worldPosition.relative(direction);
-        BlockState funnelState = level.getBlockState(funnelPos);
-        if (!(funnelState.getBlock() instanceof FunnelBlock)
-                || funnelState.getValue(FunnelBlock.EXTRACTING)
-                || funnelState.getOptionalValue(BlockStateProperties.POWERED).orElse(false)
-                || FunnelBlock.getFunnelFacing(funnelState) != direction.getOpposite()) {
-            return stack;
-        }
-        return FunnelBlock.tryInsert(level, funnelPos, stack.copy(), false);
-    }
-
-    private ItemStack insertIntoDirectOutput(ItemStack stack, Direction direction) {
-        DirectBeltInputBehaviour output = BlockEntityBehaviour.get(
-                level,
-                worldPosition.relative(direction),
-                DirectBeltInputBehaviour.TYPE
-        );
-        if (output == null || !output.canInsertFromSide(direction) || output.isOccupied(direction)) {
-            return stack;
-        }
-        return output.handleInsertion(stack.copy(), direction, false);
-    }
-
-    private ItemStack insertIntoItemHandler(ItemStack stack, Direction direction) {
-        BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
-        if (blockEntity == null) {
-            return stack;
-        }
-        IItemHandler handler = blockEntity.getCapability(
-                        ForgeCapabilities.ITEM_HANDLER,
-                        direction.getOpposite()
-                )
-                .orElse(null);
-        if (handler == null) {
-            return stack;
-        }
-        return ItemHandlerHelper.insertItemStacked(handler, stack.copy(), false);
-    }
-
-    private void spawnResult(ItemStack stack, Vec3 position, Vec3 motion) {
-        ItemEntity itemEntity = new ItemEntity(level, position.x, position.y, position.z, stack);
-        itemEntity.setDefaultPickUpDelay();
-        itemEntity.setDeltaMovement(motion);
-        level.addFreshEntity(itemEntity);
-    }
-
-    private int getProcessingSpeed() {
-        return Mth.clamp((int) Math.abs(getSpeed() / 16.0F), 1, 512);
     }
 
     private Optional<SewingRecipe> findRecipe() {
@@ -430,8 +287,8 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     }
 
     private void onPatternChanged(ItemStack stack) {
-        processingTicks = 0;
-        lastRecipe = null;
+        remainingProcessingTicks = 0;
+        activeRecipe = null;
         setProcessing(false);
         setChanged();
     }
@@ -470,7 +327,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     @Override
     protected void write(CompoundTag compound, boolean clientPacket) {
         compound.put("MaterialInventory", materialInventory.serializeNBT());
-        compound.putInt("ProcessingTicks", processingTicks);
+        compound.putInt("ProcessingTicks", remainingProcessingTicks);
         compound.putBoolean("Processing", processing);
         super.write(compound, clientPacket);
     }
@@ -486,9 +343,9 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
                 materialInventory.setStackInSlot(slot, legacyInventory.getStackInSlot(slot));
             }
         }
-        processingTicks = compound.getInt("ProcessingTicks");
+        remainingProcessingTicks = compound.getInt("ProcessingTicks");
         processing = compound.getBoolean("Processing");
-        lastRecipe = null;
+        activeRecipe = null;
         super.read(compound, clientPacket);
     }
 
@@ -591,7 +448,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         }
     }
 
-    private static final class SewingPatternValueBox extends ValueBoxTransform.Sided {
+    private static final class SewingPatternValueBoxTransform extends ValueBoxTransform.Sided {
         private static final Vec3 WEST_OFFSET = VecHelper.voxelSpace(5.95D, 12.0D, 11.5D);
         private static final Vec3 EAST_OFFSET = VecHelper.voxelSpace(10.05D, 12.0D, 11.5D);
 

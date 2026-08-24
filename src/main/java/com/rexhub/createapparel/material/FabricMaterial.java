@@ -2,6 +2,8 @@ package com.rexhub.createapparel.material;
 
 import net.minecraft.util.StringRepresentable;
 
+import java.util.Optional;
+
 public enum FabricMaterial implements StringRepresentable {
     COTTON("cotton", "Cotton"),
     LINEN("linen", "Linen"),
@@ -26,5 +28,14 @@ public enum FabricMaterial implements StringRepresentable {
 
     public String displayName() {
         return displayName;
+    }
+
+    public static Optional<FabricMaterial> fromSerializedName(String name) {
+        for (FabricMaterial material : values()) {
+            if (material.getSerializedName().equals(name)) {
+                return Optional.of(material);
+            }
+        }
+        return Optional.empty();
     }
 }

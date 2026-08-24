@@ -3,22 +3,14 @@ package com.rexhub.createapparel.config;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.commons.lang3.tuple.Pair;
 
 public final class ModConfigs {
-    public static final ForgeConfigSpec COMMON_SPEC;
-    public static final Common COMMON;
-    public static final ForgeConfigSpec CLIENT_SPEC;
-    public static final Client CLIENT;
+    private static final ForgeConfigSpec COMMON_SPEC;
+    private static final ForgeConfigSpec CLIENT_SPEC;
 
     static {
-        Pair<Common, ForgeConfigSpec> commonPair = new ForgeConfigSpec.Builder().configure(Common::new);
-        COMMON = commonPair.getLeft();
-        COMMON_SPEC = commonPair.getRight();
-
-        Pair<Client, ForgeConfigSpec> clientPair = new ForgeConfigSpec.Builder().configure(Client::new);
-        CLIENT = clientPair.getLeft();
-        CLIENT_SPEC = clientPair.getRight();
+        COMMON_SPEC = new ForgeConfigSpec.Builder().configure(Common::new).getRight();
+        CLIENT_SPEC = new ForgeConfigSpec.Builder().configure(Client::new).getRight();
     }
 
     private ModConfigs() {
@@ -29,12 +21,12 @@ public final class ModConfigs {
         context.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC, "createapparel-client.toml");
     }
 
-    public static final class Common {
+    private static final class Common {
         private Common(ForgeConfigSpec.Builder builder) {
         }
     }
 
-    public static final class Client {
+    private static final class Client {
         private Client(ForgeConfigSpec.Builder builder) {
         }
     }

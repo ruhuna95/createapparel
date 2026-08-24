@@ -8,7 +8,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(CreateApparel.MOD_ID)
-public class CreateApparel {
+public final class CreateApparel {
     public static final String MOD_ID = "createapparel";
 
     public CreateApparel(FMLJavaModLoadingContext context) {

@@ -18,11 +18,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class LoomBlock extends HorizontalShaftMachineBlock implements IBE<LoomBlockEntity> {
     public static final double STRESS_IMPACT = 8.0;
-    public static final BooleanProperty WORKING = BooleanProperty.create("working");
+    public static final BooleanProperty THREAD_VISIBLE = BooleanProperty.create("working");
 
     public LoomBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WORKING, false));
+        registerDefaultState(defaultBlockState().setValue(THREAD_VISIBLE, false));
     }
 
     @Override
@@ -43,7 +43,7 @@ public final class LoomBlock extends HorizontalShaftMachineBlock implements IBE<
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(WORKING);
+        builder.add(THREAD_VISIBLE);
         super.createBlockStateDefinition(builder);
     }
 

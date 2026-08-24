@@ -47,8 +47,8 @@ public final class LoomRenderer extends SafeBlockEntityRenderer<LoomBlockEntity>
                 light
         );
 
-        PartialModel slideModel = blockEntity.hasInput()
-                ? ModPartialModels.LOOM_SLIDE_WORKING
+        PartialModel slideModel = blockEntity.hasThread()
+                ? ModPartialModels.LOOM_SLIDE_WITH_THREAD
                 : ModPartialModels.LOOM_SLIDE;
         float angle = KineticBlockEntityRenderer.getAngleForBe(
                 blockEntity,

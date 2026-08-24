@@ -54,7 +54,7 @@ public final class ModNetwork {
                 .add();
     }
 
-    public static SimpleChannel channel() {
+    private static SimpleChannel channel() {
         if (channel == null) {
             throw new IllegalStateException("Create: Apparel network channel has not been initialized");
         }
@@ -83,5 +83,4 @@ public final class ModNetwork {
                 data.accentColor()
         ));
     }
-
 }

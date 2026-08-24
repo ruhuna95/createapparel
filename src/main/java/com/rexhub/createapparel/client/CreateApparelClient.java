@@ -1,32 +1,31 @@
 package com.rexhub.createapparel.client;
 
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
+import com.rexhub.createapparel.client.model.ModPartialModels;
 import com.rexhub.createapparel.client.model.SilkwormCocoonModel;
 import com.rexhub.createapparel.client.model.SilkwormModel;
-import com.rexhub.createapparel.client.model.ModPartialModels;
-import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
-import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
 import com.rexhub.createapparel.client.renderer.LoomRenderer;
 import com.rexhub.createapparel.client.renderer.SewingMachineRenderer;
+import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
 import com.rexhub.createapparel.client.renderer.SpinningMachineRenderer;
 import com.rexhub.createapparel.client.screen.SewingPatternScreen;
 import com.rexhub.createapparel.init.ModBlockEntities;
 import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.material.FabricAttributeMap;
-import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 @Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CreateApparelClient {
@@ -47,17 +46,11 @@ public final class CreateApparelClient {
     }
 
     @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        ModPartialModels.bootstrap();
-    }
-
-    @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
-        ModPartialModels.bootstrap();
         event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
         event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
         event.register(ModPartialModels.LOOM_SLIDE.modelLocation());
-        event.register(ModPartialModels.LOOM_SLIDE_WORKING.modelLocation());
+        event.register(ModPartialModels.LOOM_SLIDE_WITH_THREAD.modelLocation());
         event.register(ModPartialModels.SEWING_MACHINE_ROTATING.modelLocation());
         event.register(ModPartialModels.SEWING_MACHINE_PISTON.modelLocation());
         event.register(ModPartialModels.SEWING_MACHINE_THREAD.modelLocation());

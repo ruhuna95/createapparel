@@ -5,7 +5,6 @@ import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,12 +48,12 @@ public record GarmentData(
             return defaultFor(definition);
         }
         CompoundTag tag = root.getCompound(TAG_NAME);
-        FabricMaterial material = material(tag.getString("material"));
+        FabricMaterial material = parseMaterial(tag.getString("material"));
         String design = tag.getString("design");
         if (!definition.designs().contains(design)) {
             throw new IllegalArgumentException("Garment design is not allowed: " + definition.id() + " / " + design);
         }
-        FabricColor primary = color(tag.getString("primary_color"));
+        FabricColor primary = parseColor(tag.getString("primary_color"));
         Optional<FabricColor> secondary = optionalColor(tag, "secondary_color");
         Optional<FabricColor> accent = optionalColor(tag, "accent_color");
 
@@ -92,21 +91,17 @@ public record GarmentData(
 
     private static Optional<FabricColor> optionalColor(CompoundTag tag, String key) {
         return tag.contains(key, CompoundTag.TAG_STRING)
-                ? Optional.of(color(tag.getString(key)))
+                ? Optional.of(parseColor(tag.getString(key)))
                 : Optional.empty();
     }
 
-    private static FabricMaterial material(String name) {
-        return Arrays.stream(FabricMaterial.values())
-                .filter(material -> material.getSerializedName().equals(name))
-                .findFirst()
+    private static FabricMaterial parseMaterial(String name) {
+        return FabricMaterial.fromSerializedName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown garment material: " + name));
     }
 
-    private static FabricColor color(String name) {
-        return Arrays.stream(FabricColor.values())
-                .filter(color -> color.getSerializedName().equals(name))
-                .findFirst()
+    private static FabricColor parseColor(String name) {
+        return FabricColor.fromSerializedName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown garment color: " + name));
     }
 }

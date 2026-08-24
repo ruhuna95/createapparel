@@ -5,7 +5,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 public record PatternData(
@@ -63,9 +62,7 @@ public record PatternData(
             return Optional.empty();
         }
         String name = tag.getString(key);
-        FabricColor color = Arrays.stream(FabricColor.values())
-                .filter(candidate -> candidate.getSerializedName().equals(name))
-                .findFirst()
+        FabricColor color = FabricColor.fromSerializedName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown pattern color: " + name));
         return Optional.of(color);
     }

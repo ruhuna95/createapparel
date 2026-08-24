@@ -86,7 +86,7 @@ public final class ModItems {
     public static final RegistryObject<Item> SYNTHETIC_THREAD = registerSimple("synthetic_thread");
     public static final RegistryObject<Item> SYNTHETIC_FABRIC = registerUndyedFabric(FabricMaterial.SYNTHETIC);
 
-    public static final Map<FabricMaterial, Map<FabricColor, RegistryObject<Item>>> DYED_FABRICS =
+    private static final Map<FabricMaterial, Map<FabricColor, RegistryObject<Item>>> DYED_FABRICS =
             registerDyedFabrics();
     private static final List<RegistryObject<Item>> CREATIVE_TAB_ITEMS = createCreativeTabOrder();
     private static final List<RegistryObject<Item>> GARMENT_CREATIVE_TAB_ITEMS =

@@ -3,9 +3,8 @@ package com.rexhub.createapparel.material;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.DyeColor;
 
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.EnumSet;
+import java.util.Optional;
 
 public enum FabricColor implements StringRepresentable {
     WHITE(DyeColor.WHITE, 0xF1EEE8),
@@ -25,27 +24,24 @@ public enum FabricColor implements StringRepresentable {
     RED(DyeColor.RED, 0xA54B4B),
     BLACK(DyeColor.BLACK, 0x2E3138);
 
-    private static final Map<DyeColor, FabricColor> BY_DYE_COLOR = createLookup();
-
     private final DyeColor dyeColor;
     private final int tintRgb;
+
+    static {
+        EnumSet<DyeColor> colors = EnumSet.noneOf(DyeColor.class);
+        for (FabricColor color : values()) {
+            if (!colors.add(color.dyeColor)) {
+                throw new IllegalStateException("Duplicate fabric dye color: " + color.dyeColor);
+            }
+        }
+        if (!colors.equals(EnumSet.allOf(DyeColor.class))) {
+            throw new IllegalStateException("Fabric color palette must cover every DyeColor");
+        }
+    }
 
     FabricColor(DyeColor dyeColor, int tintRgb) {
         this.dyeColor = dyeColor;
         this.tintRgb = tintRgb;
-    }
-
-    private static Map<DyeColor, FabricColor> createLookup() {
-        EnumMap<DyeColor, FabricColor> colors = new EnumMap<>(DyeColor.class);
-        for (FabricColor color : values()) {
-            if (colors.put(color.dyeColor, color) != null) {
-                throw new IllegalStateException("Duplicate fabric dye color: " + color.dyeColor);
-            }
-        }
-        if (colors.size() != DyeColor.values().length) {
-            throw new IllegalStateException("Fabric color palette must cover every DyeColor");
-        }
-        return Collections.unmodifiableMap(colors);
     }
 
     public DyeColor dyeColor() {
@@ -56,16 +52,17 @@ public enum FabricColor implements StringRepresentable {
         return tintRgb;
     }
 
+    public static Optional<FabricColor> fromSerializedName(String name) {
+        for (FabricColor color : values()) {
+            if (color.getSerializedName().equals(name)) {
+                return Optional.of(color);
+            }
+        }
+        return Optional.empty();
+    }
+
     @Override
     public String getSerializedName() {
         return dyeColor.getName();
-    }
-
-    public static FabricColor fromDyeColor(DyeColor dyeColor) {
-        FabricColor color = BY_DYE_COLOR.get(dyeColor);
-        if (color == null) {
-            throw new IllegalArgumentException("Unsupported dye color: " + dyeColor);
-        }
-        return color;
     }
 }

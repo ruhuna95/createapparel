@@ -43,7 +43,7 @@ public final class RuntimeGarmentTextureCache {
         return CACHE.computeIfAbsent(key, ignored -> compose(part, textures, data));
     }
 
-    public static void clear() {
+    static void clear() {
         if (CACHE.isEmpty()) {
             return;
         }

@@ -28,9 +28,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
 
 public final class SewingRecipe implements Recipe<RecipeWrapper> {
+    public static final int PROCESSING_DURATION = 2000;
     public static final int FABRIC_SLOT = 0;
     public static final int THREAD_SLOT = 1;
     public static final int PATTERN_SLOT = 2;

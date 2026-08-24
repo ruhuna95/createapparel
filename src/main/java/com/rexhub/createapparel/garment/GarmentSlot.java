@@ -1,8 +1,8 @@
 package com.rexhub.createapparel.garment;
 
-import java.util.Arrays;
+import net.minecraft.util.StringRepresentable;
 
-public enum GarmentSlot {
+public enum GarmentSlot implements StringRepresentable {
     INNER_TOP("inner_top"),
     TOP("top"),
     OUTER("outer"),
@@ -22,14 +22,17 @@ public enum GarmentSlot {
         this.serializedName = serializedName;
     }
 
-    public String serializedName() {
+    @Override
+    public String getSerializedName() {
         return serializedName;
     }
 
     public static GarmentSlot fromSerializedName(String name) {
-        return Arrays.stream(values())
-                .filter(slot -> slot.serializedName.equals(name))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown garment slot: " + name));
+        for (GarmentSlot slot : values()) {
+            if (slot.serializedName.equals(name)) {
+                return slot;
+            }
+        }
+        throw new IllegalArgumentException("Unknown garment slot: " + name);
     }
 }

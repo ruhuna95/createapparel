@@ -246,7 +246,7 @@ public final class SewingPatternScreen extends Screen {
             categoryButton.setMessage(Component.translatable(
                     "screen.createapparel.sewing_pattern.category",
                     Component.translatable(
-                            "garment_slot.createapparel." + categories.get(categoryIndex).serializedName()
+                            "garment_slot.createapparel." + categories.get(categoryIndex).getSerializedName()
                     )
             ));
         }
