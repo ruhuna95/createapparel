@@ -89,6 +89,7 @@ public final class SewingMachineRenderer extends SmartBlockEntityRenderer<Sewing
         poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
         poseStack.translate(-0.5D, 0.0D, -0.5D);
         poseStack.translate(8.0F * MODEL_UNIT, 1.26F * MODEL_UNIT, 11.5F * MODEL_UNIT);
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
         poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
         Minecraft.getInstance().getItemRenderer().renderStatic(
                 fabric,
