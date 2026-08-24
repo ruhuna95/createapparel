@@ -1,5 +1,6 @@
 package com.rexhub.createapparel;
 
+import com.rexhub.createapparel.apparel.ApparelCapabilities;
 import com.rexhub.createapparel.config.ModConfigs;
 import com.rexhub.createapparel.data.CreateApparelDataGenerators;
 import com.rexhub.createapparel.init.ModRegistries;
@@ -16,6 +17,7 @@ public final class CreateApparel {
 
         ModRegistries.register(modEventBus);
         ModConfigs.register(context);
+        modEventBus.addListener(ApparelCapabilities::register);
         modEventBus.addListener(CreateApparelCommon::onCommonSetup);
         modEventBus.addListener(CreateApparelDataGenerators::gatherData);
     }

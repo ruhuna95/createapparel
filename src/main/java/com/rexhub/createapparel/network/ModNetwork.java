@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.network;
 
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.apparel.ApparelInventory;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.PatternData;
 import net.minecraft.resources.ResourceLocation;
@@ -14,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
 
     private static SimpleChannel channel;
 
@@ -52,6 +53,11 @@ public final class ModNetwork {
                     }
                 })
                 .add();
+        channel.messageBuilder(ApparelInventorySyncPacket.class, 3, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ApparelInventorySyncPacket::encode)
+                .decoder(ApparelInventorySyncPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient())
+                .add();
     }
 
     private static SimpleChannel channel() {
@@ -64,6 +70,28 @@ public final class ModNetwork {
     public static void sendGarmentDefinitions(ServerPlayer player, List<GarmentDefinition> definitions) {
         if (channel != null) {
             channel.send(PacketDistributor.PLAYER.with(() -> player), new GarmentDefinitionsPacket(definitions));
+        }
+    }
+
+    public static void sendApparelInventory(ServerPlayer player, ApparelInventory inventory) {
+        if (channel != null) {
+            channel.send(
+                    PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
+                    new ApparelInventorySyncPacket(player.getId(), inventory.copyContents())
+            );
+        }
+    }
+
+    public static void sendApparelInventory(
+            ServerPlayer target,
+            ServerPlayer observer,
+            ApparelInventory inventory
+    ) {
+        if (channel != null) {
+            channel.send(
+                    PacketDistributor.PLAYER.with(() -> observer),
+                    new ApparelInventorySyncPacket(target.getId(), inventory.copyContents())
+            );
         }
     }
 
