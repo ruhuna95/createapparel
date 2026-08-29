@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
 
     private static SimpleChannel channel;
 
@@ -77,7 +77,7 @@ public final class ModNetwork {
         if (channel != null) {
             channel.send(
                     PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
-                    new ApparelInventorySyncPacket(player.getId(), inventory.copyContents())
+                    apparelInventoryPacket(player, inventory)
             );
         }
     }
@@ -90,9 +90,24 @@ public final class ModNetwork {
         if (channel != null) {
             channel.send(
                     PacketDistributor.PLAYER.with(() -> observer),
-                    new ApparelInventorySyncPacket(target.getId(), inventory.copyContents())
+                    apparelInventoryPacket(target, inventory)
             );
         }
+    }
+
+    private static ApparelInventorySyncPacket apparelInventoryPacket(
+            ServerPlayer player,
+            ApparelInventory inventory
+    ) {
+        return new ApparelInventorySyncPacket(
+                player.getId(),
+                inventory.copyContents(),
+                inventory.isBodyModeEnabled(),
+                inventory.isArmorVisibilityEnabled(),
+                inventory.armProfile(),
+                inventory.chestProfile(),
+                inventory.skinTone()
+        );
     }
 
     public static void openSewingPatternEditor(ServerPlayer player, InteractionHand hand) {

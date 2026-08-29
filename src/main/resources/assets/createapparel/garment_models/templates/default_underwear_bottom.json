@@ -1,0 +1,13 @@
+{
+  "default": {
+    "bottom_torso": {
+      "model": "createapparel:default_underwear_bottom/bottom_torso"
+    },
+    "bottom_right_leg": {
+      "model": "createapparel:default_underwear_bottom/bottom_right_leg"
+    },
+    "bottom_left_leg": {
+      "model": "createapparel:default_underwear_bottom/bottom_left_leg"
+    }
+  }
+}

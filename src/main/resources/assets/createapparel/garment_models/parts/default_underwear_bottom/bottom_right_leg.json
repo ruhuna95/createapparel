@@ -1,0 +1,78 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      -2,
+      11.03125,
+      0
+    ],
+    "elements": [
+      {
+        "name": "underwear_bottom_right_leg",
+        "from": [
+          -4.0625,
+          10,
+          -2.0625
+        ],
+        "to": [
+          0.0625,
+          12.0625,
+          2.0625
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              8,
+              12,
+              12,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              12,
+              16,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              8,
+              14,
+              12,
+              16
+            ]
+          },
+          "left": {
+            "uv": [
+              12,
+              14,
+              16,
+              16
+            ]
+          },
+          "top": {
+            "uv": [
+              8,
+              8,
+              12,
+              12
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/default_underwear_bottom/bottom/base/default"
+      }
+    }
+  }
+}

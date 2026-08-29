@@ -1,0 +1,86 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    64,
+    64
+  ],
+  "geometry": {
+    "pivot": [
+      -2,
+      12,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_leg",
+        "from": [
+          -4.01,
+          -0.01,
+          -2.01
+        ],
+        "to": [
+          0.01,
+          12.01,
+          2.01
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              44,
+              36,
+              48,
+              48
+            ]
+          },
+          "right": {
+            "uv": [
+              48,
+              36,
+              52,
+              48
+            ]
+          },
+          "back": {
+            "uv": [
+              52,
+              36,
+              56,
+              48
+            ]
+          },
+          "left": {
+            "uv": [
+              40,
+              36,
+              44,
+              48
+            ]
+          },
+          "top": {
+            "uv": [
+              44,
+              32,
+              48,
+              36
+            ]
+          },
+          "bottom": {
+            "uv": [
+              48,
+              32,
+              52,
+              36
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:body/body_tint_base"
+      }
+    }
+  }
+}

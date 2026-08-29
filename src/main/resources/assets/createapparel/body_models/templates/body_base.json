@@ -1,0 +1,76 @@
+{
+  "classic_flat": {
+    "torso": {
+      "model": "createapparel:torso"
+    },
+    "right_arm": {
+      "model": "createapparel:right_arm_classic"
+    },
+    "left_arm": {
+      "model": "createapparel:left_arm_classic"
+    },
+    "right_leg": {
+      "model": "createapparel:right_leg"
+    },
+    "left_leg": {
+      "model": "createapparel:left_leg"
+    }
+  },
+  "classic_bust": {
+    "torso": {
+      "model": "createapparel:torso"
+    },
+    "right_arm": {
+      "model": "createapparel:right_arm_classic"
+    },
+    "left_arm": {
+      "model": "createapparel:left_arm_classic"
+    },
+    "right_leg": {
+      "model": "createapparel:right_leg"
+    },
+    "left_leg": {
+      "model": "createapparel:left_leg"
+    },
+    "bust": {
+      "model": "createapparel:bust"
+    }
+  },
+  "slim_flat": {
+    "torso": {
+      "model": "createapparel:torso"
+    },
+    "right_arm": {
+      "model": "createapparel:right_arm_slim"
+    },
+    "left_arm": {
+      "model": "createapparel:left_arm_slim"
+    },
+    "right_leg": {
+      "model": "createapparel:right_leg"
+    },
+    "left_leg": {
+      "model": "createapparel:left_leg"
+    }
+  },
+  "slim_bust": {
+    "torso": {
+      "model": "createapparel:torso"
+    },
+    "right_arm": {
+      "model": "createapparel:right_arm_slim"
+    },
+    "left_arm": {
+      "model": "createapparel:left_arm_slim"
+    },
+    "right_leg": {
+      "model": "createapparel:right_leg"
+    },
+    "left_leg": {
+      "model": "createapparel:left_leg"
+    },
+    "bust": {
+      "model": "createapparel:bust"
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    64,
+    64
+  ],
+  "geometry": {
+    "pivot": [
+      -4,
+      24,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_arm",
+        "from": [
+          -7.01,
+          11.99,
+          -2.01
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.01
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              44,
+              20,
+              47,
+              32
+            ]
+          },
+          "right": {
+            "uv": [
+              47,
+              20,
+              51,
+              32
+            ]
+          },
+          "back": {
+            "uv": [
+              51,
+              20,
+              54,
+              32
+            ]
+          },
+          "left": {
+            "uv": [
+              40,
+              20,
+              44,
+              32
+            ]
+          },
+          "top": {
+            "uv": [
+              44,
+              16,
+              47,
+              20
+            ]
+          },
+          "bottom": {
+            "uv": [
+              47,
+              16,
+              50,
+              20
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:body/body_tint_base"
+      }
+    }
+  }
+}

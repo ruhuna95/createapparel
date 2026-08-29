@@ -46,7 +46,13 @@ public final class ApparelInventoryEvents {
 
     @SubscribeEvent
     public static void synchronizeOnLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        synchronizeToTracking(event.getEntity());
+        if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        ApparelCapabilities.get(serverPlayer).ifPresent(inventory -> {
+            inventory.initializeArmProfile(ArmProfile.defaultFor(serverPlayer));
+            ModNetwork.sendApparelInventory(serverPlayer, inventory);
+        });
     }
 
     @SubscribeEvent

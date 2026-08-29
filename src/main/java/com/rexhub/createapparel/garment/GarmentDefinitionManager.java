@@ -37,7 +37,7 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
         return Optional.ofNullable(definitions.get(id));
     }
 
-    private static List<GarmentDefinition> all() {
+    public static List<GarmentDefinition> all() {
         return List.copyOf(definitions.values());
     }
 

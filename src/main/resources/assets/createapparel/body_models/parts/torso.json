@@ -1,0 +1,86 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    64,
+    64
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      18.5,
+      0
+    ],
+    "elements": [
+      {
+        "name": "torso",
+        "from": [
+          -4.01,
+          11.99,
+          -2.01
+        ],
+        "to": [
+          4.01,
+          24.01,
+          2.01
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              20,
+              4,
+              28,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              28,
+              4,
+              32,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              32,
+              4,
+              40,
+              16
+            ]
+          },
+          "left": {
+            "uv": [
+              16,
+              4,
+              20,
+              16
+            ]
+          },
+          "top": {
+            "uv": [
+              20,
+              0,
+              28,
+              4
+            ]
+          },
+          "bottom": {
+            "uv": [
+              28,
+              0,
+              36,
+              4
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:body/body_tint_base"
+      }
+    }
+  }
+}

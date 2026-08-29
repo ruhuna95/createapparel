@@ -12,10 +12,12 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nullable;
 
 final class ApparelInventoryProvider implements ICapabilitySerializable<CompoundTag> {
-    private final ApparelInventory inventory = new ApparelInventory();
-    private LazyOptional<ApparelInventory> optional = createOptional();
+    private final ApparelInventory inventory;
+    private LazyOptional<ApparelInventory> optional;
 
     ApparelInventoryProvider(Player player) {
+        inventory = new ApparelInventory();
+        optional = createOptional();
         inventory.setChangeListener(() -> {
             if (player instanceof ServerPlayer serverPlayer) {
                 ModNetwork.sendApparelInventory(serverPlayer, inventory);

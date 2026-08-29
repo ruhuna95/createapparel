@@ -1,0 +1,10 @@
+{
+  "default": {
+    "top_torso": {
+      "model": "createapparel:default_underwear_top/top_torso"
+    },
+    "top_bust": {
+      "model": "createapparel:default_underwear_top/top_bust"
+    }
+  }
+}

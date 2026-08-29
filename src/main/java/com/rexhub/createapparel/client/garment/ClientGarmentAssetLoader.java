@@ -38,20 +38,27 @@ import java.util.Optional;
 final class ClientGarmentAssetLoader {
     private static final String TEMPLATE_DIRECTORY = "garment_models/templates";
     private static final String PART_DIRECTORY = "garment_models/parts";
+    private static final String BODY_TEMPLATE_DIRECTORY = "body_models/templates";
+    private static final String BODY_PART_DIRECTORY = "body_models/parts";
 
     private ClientGarmentAssetLoader() {
     }
 
     static LoadedAssets load(ResourceManager manager) {
-        Map<ResourceLocation, GarmentModelTemplate> templates = loadTemplates(manager);
-        Map<ResourceLocation, GarmentPartModel> parts = loadParts(manager);
-        validateBodyBust(manager);
-        validatePartTextures(manager, parts);
-        return new LoadedAssets(templates, parts);
+        Map<ResourceLocation, GarmentModelTemplate> garmentTemplates = loadTemplates(manager, TEMPLATE_DIRECTORY);
+        Map<ResourceLocation, GarmentPartModel> garmentParts = loadParts(manager, PART_DIRECTORY);
+        Map<ResourceLocation, GarmentModelTemplate> bodyTemplates = loadTemplates(manager, BODY_TEMPLATE_DIRECTORY);
+        Map<ResourceLocation, GarmentPartModel> bodyParts = loadParts(manager, BODY_PART_DIRECTORY);
+        validatePartTextures(manager, garmentParts, false);
+        validatePartTextures(manager, bodyParts, true);
+        return new LoadedAssets(garmentTemplates, garmentParts, bodyTemplates, bodyParts);
     }
 
-    private static Map<ResourceLocation, GarmentModelTemplate> loadTemplates(ResourceManager manager) {
-        FileToIdConverter converter = FileToIdConverter.json(TEMPLATE_DIRECTORY);
+    private static Map<ResourceLocation, GarmentModelTemplate> loadTemplates(
+            ResourceManager manager,
+            String directory
+    ) {
+        FileToIdConverter converter = FileToIdConverter.json(directory);
         LinkedHashMap<ResourceLocation, GarmentModelTemplate> loaded = new LinkedHashMap<>();
         converter.listMatchingResources(manager).entrySet().stream()
                 .sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString)))
@@ -63,8 +70,11 @@ final class ClientGarmentAssetLoader {
         return Collections.unmodifiableMap(loaded);
     }
 
-    private static Map<ResourceLocation, GarmentPartModel> loadParts(ResourceManager manager) {
-        FileToIdConverter converter = FileToIdConverter.json(PART_DIRECTORY);
+    private static Map<ResourceLocation, GarmentPartModel> loadParts(
+            ResourceManager manager,
+            String directory
+    ) {
+        FileToIdConverter converter = FileToIdConverter.json(directory);
         LinkedHashMap<ResourceLocation, GarmentPartModel> loaded = new LinkedHashMap<>();
         converter.listMatchingResources(manager).entrySet().stream()
                 .sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString)))
@@ -206,20 +216,30 @@ final class ClientGarmentAssetLoader {
 
     private static void validatePartTextures(
             ResourceManager manager,
-            Map<ResourceLocation, GarmentPartModel> loadedParts
+            Map<ResourceLocation, GarmentPartModel> loadedParts,
+            boolean bodyParts
     ) {
         for (GarmentPartModel part : loadedParts.values()) {
+            TextureKind baseKind = bodyParts
+                    ? TextureKind.BODY_TINT
+                    : isDefaultUnderwear(part.id()) ? TextureKind.FIXED_COLOR : TextureKind.BASE;
             for (TextureVariant variant : part.variants().values()) {
-                validateTexture(manager, part, variant.base(), TextureKind.BASE);
+                validateTexture(manager, part, variant.base(), baseKind);
             }
             for (DesignMasks masks : part.designs().values()) {
                 masks.secondary().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
                 masks.accent().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
             }
             for (ResourceLocation override : part.materialOverrides().values()) {
-                validateTexture(manager, part, override, TextureKind.BASE);
+                validateTexture(manager, part, override, baseKind);
             }
         }
+    }
+
+    private static boolean isDefaultUnderwear(ResourceLocation partId) {
+        return CreateApparel.MOD_ID.equals(partId.getNamespace())
+                && (partId.getPath().startsWith("default_underwear_top/")
+                || partId.getPath().startsWith("default_underwear_bottom/"));
     }
 
     private static void validateTexture(
@@ -244,48 +264,20 @@ final class ClientGarmentAssetLoader {
                     int green = FastColor.ABGR32.green(pixel);
                     int blue = FastColor.ABGR32.blue(pixel);
                     int alpha = FastColor.ABGR32.alpha(pixel);
-                    if (red != green || green != blue) {
+                    if (kind != TextureKind.FIXED_COLOR && (red != green || green != blue)) {
                         throw new IllegalStateException("Garment texture is not grayscale: " + textureId);
                     }
                     if (kind == TextureKind.BASE) {
                         if (alpha != 0 && alpha != 255) {
                             throw new IllegalStateException("Garment base alpha is not binary: " + textureId);
                         }
-                    } else if (alpha != 255 || red != 0 && red != 255) {
+                    } else if (kind == TextureKind.MASK && (alpha != 255 || red != 0 && red != 255)) {
                         throw new IllegalStateException("Garment design mask is not binary: " + textureId);
                     }
                 }
             }
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to read garment texture: " + textureId, exception);
-        }
-    }
-
-    private static void validateBodyBust(ResourceManager manager) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
-                CreateApparel.MOD_ID,
-                "body_models/parts/bust.json"
-        );
-        Resource resource = manager.getResource(id)
-                .orElseThrow(() -> new IllegalStateException("Missing BUST body model: " + id));
-        JsonObject json = readJson(resource, id);
-        if (!"bust".equals(GsonHelper.getAsString(json, "profile"))) {
-            throw new IllegalStateException("Invalid BUST body profile: " + id);
-        }
-        JsonObject geometry = GsonHelper.getAsJsonObject(json, "geometry");
-        assertVector(vector(GsonHelper.getAsJsonArray(geometry, "pivot"), id + " pivot"), 0.0F, 12.5F, -2.25F, id);
-        JsonArray elements = GsonHelper.getAsJsonArray(geometry, "elements");
-        if (elements.size() != 1) {
-            throw new IllegalStateException("BUST body model must contain one element: " + id);
-        }
-        JsonObject element = elements.get(0).getAsJsonObject();
-        assertVector(vector(GsonHelper.getAsJsonArray(element, "from"), id + " from"), -3.5F, 9.5F, -2.25F, id);
-        assertVector(vector(GsonHelper.getAsJsonArray(element, "to"), id + " to"), 3.5F, 12.5F, -0.25F, id);
-        JsonObject rotation = GsonHelper.getAsJsonObject(element, "rotation");
-        assertVector(vector(GsonHelper.getAsJsonArray(rotation, "origin"), id + " origin"), 0.0F, 12.5F, -2.25F, id);
-        if (!"x".equals(GsonHelper.getAsString(rotation, "axis"))
-                || Float.compare(GsonHelper.getAsFloat(rotation, "angle"), 40.0F) != 0) {
-            throw new IllegalStateException("Invalid BUST body rotation: " + id);
         }
     }
 
@@ -345,22 +337,18 @@ final class ClientGarmentAssetLoader {
         };
     }
 
-    private static void assertVector(Vec3 actual, float x, float y, float z, ResourceLocation id) {
-        if (Float.compare(actual.x(), x) != 0
-                || Float.compare(actual.y(), y) != 0
-                || Float.compare(actual.z(), z) != 0) {
-            throw new IllegalStateException("Unexpected BUST body geometry: " + id);
-        }
-    }
-
     record LoadedAssets(
-            Map<ResourceLocation, GarmentModelTemplate> templates,
-            Map<ResourceLocation, GarmentPartModel> parts
+            Map<ResourceLocation, GarmentModelTemplate> garmentTemplates,
+            Map<ResourceLocation, GarmentPartModel> garmentParts,
+            Map<ResourceLocation, GarmentModelTemplate> bodyTemplates,
+            Map<ResourceLocation, GarmentPartModel> bodyParts
     ) {
     }
 
     private enum TextureKind {
         BASE,
+        BODY_TINT,
+        FIXED_COLOR,
         MASK
     }
 }

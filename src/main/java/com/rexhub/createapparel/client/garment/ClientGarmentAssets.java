@@ -1,6 +1,8 @@
 package com.rexhub.createapparel.client.garment;
 
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.apparel.ArmProfile;
+import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentDefinitionManager;
@@ -35,6 +37,18 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             "bust",
             "tucked_torso"
     );
+    private static final ResourceLocation BODY_BASE_TEMPLATE = ResourceLocation.fromNamespaceAndPath(
+            CreateApparel.MOD_ID,
+            "body_base"
+    );
+    private static final ResourceLocation DEFAULT_UNDERWEAR_TOP_TEMPLATE = ResourceLocation.fromNamespaceAndPath(
+            CreateApparel.MOD_ID,
+            "default_underwear_top"
+    );
+    private static final ResourceLocation DEFAULT_UNDERWEAR_BOTTOM_TEMPLATE = ResourceLocation.fromNamespaceAndPath(
+            CreateApparel.MOD_ID,
+            "default_underwear_bottom"
+    );
 
     private volatile AssetState state = AssetState.EMPTY;
 
@@ -58,23 +72,44 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         if (definition == null || !definition.designs().contains(design)) {
             return Optional.empty();
         }
-        Map<String, ResourceLocation> variant = getModelVariant(definition, snapshot.templates()).orElse(null);
+        Map<String, ResourceLocation> variant = getModelVariant(definition, snapshot.garmentTemplates()).orElse(null);
         return variant == null
                 ? Optional.empty()
-                : Optional.of(colorChannels(variant, design, snapshot.parts()));
+                : Optional.of(colorChannels(variant, design, snapshot.garmentParts()));
     }
 
     @Override
     public synchronized void onResourceManagerReload(ResourceManager manager) {
         ClientGarmentAssetLoader.LoadedAssets loaded = ClientGarmentAssetLoader.load(manager);
         AssetState current = state;
-        validateDefinitions(current.definitions(), loaded.templates(), loaded.parts());
+        validateDefinitions(current.definitions(), loaded.garmentTemplates(), loaded.garmentParts());
+        validateSupportAssets(
+                loaded.garmentTemplates(),
+                loaded.garmentParts(),
+                loaded.bodyTemplates(),
+                loaded.bodyParts()
+        );
 
-        state = new AssetState(manager, current.definitions(), loaded.templates(), loaded.parts());
+        state = new AssetState(
+                manager,
+                current.definitions(),
+                loaded.garmentTemplates(),
+                loaded.garmentParts(),
+                loaded.bodyTemplates(),
+                loaded.bodyParts()
+        );
         RuntimeGarmentTextureCache.clear();
     }
 
     public Optional<ResolvedGarment> resolve(ItemStack stack) {
+        return resolve(stack, ArmProfile.CLASSIC, ChestProfile.FLAT);
+    }
+
+    public Optional<ResolvedGarment> resolve(
+            ItemStack stack,
+            ArmProfile armProfile,
+            ChestProfile chestProfile
+    ) {
         AssetState snapshot = state;
         ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
         if (itemId == null) {
@@ -86,11 +121,11 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         if (definition == null) {
             return Optional.empty();
         }
-        Map<String, ResourceLocation> variant = getModelVariant(definition, snapshot.templates()).orElse(null);
+        Map<String, ResourceLocation> variant = getModelVariant(definition, snapshot.garmentTemplates()).orElse(null);
         if (variant == null) {
             return Optional.empty();
         }
-        GarmentPartModel referenceTorso = snapshot.parts().get(variant.get("torso"));
+        GarmentPartModel referenceTorso = snapshot.garmentParts().get(variant.get("torso"));
         if (referenceTorso == null) {
             return Optional.empty();
         }
@@ -99,20 +134,24 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         GarmentData data;
         try {
             data = GarmentData.fromStack(stack, definition);
-            validateColorChannels(definition, data, variant, snapshot.parts());
+            validateColorChannels(definition, data, variant, snapshot.garmentParts());
         } catch (IllegalArgumentException exception) {
             data = GarmentData.defaultFor(definition);
         }
 
         List<String> selectedNames = new ArrayList<>();
         selectedNames.add("tucked".equals(data.styles().get("tuck")) ? "tucked_torso" : "torso");
-        selectedNames.add("left_sleeve_classic");
-        selectedNames.add("right_sleeve_classic");
+        if (chestProfile == ChestProfile.BUST && variant.containsKey("bust")) {
+            selectedNames.add("bust");
+        }
+        String armSuffix = armProfile.getSerializedName();
+        selectedNames.add("left_sleeve_" + armSuffix);
+        selectedNames.add("right_sleeve_" + armSuffix);
 
         List<ResolvedPart> resolvedParts = new ArrayList<>();
         for (String name : selectedNames) {
             ResourceLocation partId = variant.get(name);
-            GarmentPartModel part = snapshot.parts().get(partId);
+            GarmentPartModel part = snapshot.garmentParts().get(partId);
             if (part == null) {
                 return Optional.empty();
             }
@@ -126,12 +165,104 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         return Optional.of(new ResolvedGarment(definition, data, List.copyOf(resolvedParts)));
     }
 
+    public Optional<List<ResolvedSupportPart>> resolveBody(
+            ArmProfile armProfile,
+            ChestProfile chestProfile
+    ) {
+        AssetState snapshot = state;
+        String variantName = armProfile.getSerializedName() + "_" + chestProfile.getSerializedName();
+        GarmentModelTemplate template = snapshot.bodyTemplates().get(BODY_BASE_TEMPLATE);
+        if (template == null) {
+            return Optional.empty();
+        }
+        Map<String, ResourceLocation> variant = template.variants().get(variantName);
+        if (variant == null) {
+            return Optional.empty();
+        }
+        return resolveSupportParts(variant, snapshot.bodyParts(), List.of(
+                "torso",
+                "right_arm",
+                "left_arm",
+                "right_leg",
+                "left_leg",
+                "bust"
+        ));
+    }
+
+    public Optional<List<ResolvedSupportPart>> resolveDefaultUnderwear(ChestProfile chestProfile) {
+        AssetState snapshot = state;
+        List<ResolvedSupportPart> resolved = new ArrayList<>();
+        if (!appendSupportTemplateParts(
+                snapshot,
+                DEFAULT_UNDERWEAR_TOP_TEMPLATE,
+                List.of("top_torso", chestProfile == ChestProfile.BUST ? "top_bust" : ""),
+                resolved
+        ) || !appendSupportTemplateParts(
+                snapshot,
+                DEFAULT_UNDERWEAR_BOTTOM_TEMPLATE,
+                List.of("bottom_torso", "bottom_right_leg", "bottom_left_leg"),
+                resolved
+        )) {
+            return Optional.empty();
+        }
+        return Optional.of(List.copyOf(resolved));
+    }
+
     ResourceManager resourceManager() {
         ResourceManager manager = state.resourceManager();
         if (manager == null) {
             throw new IllegalStateException("Garment resources have not been loaded");
         }
         return manager;
+    }
+
+    private static boolean appendSupportTemplateParts(
+            AssetState snapshot,
+            ResourceLocation templateId,
+            List<String> selectedNames,
+            List<ResolvedSupportPart> output
+    ) {
+        GarmentModelTemplate template = snapshot.garmentTemplates().get(templateId);
+        if (template == null) {
+            return false;
+        }
+        Map<String, ResourceLocation> variant = template.variants().get("default");
+        if (variant == null) {
+            return false;
+        }
+        Optional<List<ResolvedSupportPart>> resolved = resolveSupportParts(
+                variant,
+                snapshot.garmentParts(),
+                selectedNames
+        );
+        resolved.ifPresent(output::addAll);
+        return resolved.isPresent();
+    }
+
+    private static Optional<List<ResolvedSupportPart>> resolveSupportParts(
+            Map<String, ResourceLocation> variant,
+            Map<ResourceLocation, GarmentPartModel> parts,
+            List<String> selectedNames
+    ) {
+        List<ResolvedSupportPart> resolved = new ArrayList<>();
+        for (String name : selectedNames) {
+            if (name.isEmpty()) {
+                continue;
+            }
+            ResourceLocation partId = variant.get(name);
+            if (partId == null) {
+                if ("bust".equals(name)) {
+                    continue;
+                }
+                return Optional.empty();
+            }
+            GarmentPartModel part = parts.get(partId);
+            if (part == null) {
+                return Optional.empty();
+            }
+            resolved.add(new ResolvedSupportPart(name, part, part.defaultTexture()));
+        }
+        return Optional.of(List.copyOf(resolved));
     }
 
     private synchronized void replaceDefinitions(List<GarmentDefinition> synchronizedDefinitions) {
@@ -145,8 +276,15 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                 });
         Map<ResourceLocation, GarmentDefinition> immutable = Collections.unmodifiableMap(loaded);
         AssetState current = state;
-        validateDefinitions(immutable, current.templates(), current.parts());
-        state = new AssetState(current.resourceManager(), immutable, current.templates(), current.parts());
+        validateDefinitions(immutable, current.garmentTemplates(), current.garmentParts());
+        state = new AssetState(
+                current.resourceManager(),
+                immutable,
+                current.garmentTemplates(),
+                current.garmentParts(),
+                current.bodyTemplates(),
+                current.bodyParts()
+        );
     }
 
     private static Optional<Map<String, ResourceLocation>> getModelVariant(
@@ -216,6 +354,81 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         }
     }
 
+    private static void validateSupportAssets(
+            Map<ResourceLocation, GarmentModelTemplate> garmentTemplates,
+            Map<ResourceLocation, GarmentPartModel> garmentParts,
+            Map<ResourceLocation, GarmentModelTemplate> bodyTemplates,
+            Map<ResourceLocation, GarmentPartModel> bodyParts
+    ) {
+        GarmentModelTemplate bodyTemplate = requireTemplate(bodyTemplates, BODY_BASE_TEMPLATE);
+        requireVariantParts(
+                bodyTemplate,
+                "classic_flat",
+                Set.of("torso", "right_arm", "left_arm", "right_leg", "left_leg"),
+                bodyParts
+        );
+        requireVariantParts(
+                bodyTemplate,
+                "classic_bust",
+                Set.of("torso", "right_arm", "left_arm", "right_leg", "left_leg", "bust"),
+                bodyParts
+        );
+        requireVariantParts(
+                bodyTemplate,
+                "slim_flat",
+                Set.of("torso", "right_arm", "left_arm", "right_leg", "left_leg"),
+                bodyParts
+        );
+        requireVariantParts(
+                bodyTemplate,
+                "slim_bust",
+                Set.of("torso", "right_arm", "left_arm", "right_leg", "left_leg", "bust"),
+                bodyParts
+        );
+        requireVariantParts(
+                requireTemplate(garmentTemplates, DEFAULT_UNDERWEAR_TOP_TEMPLATE),
+                "default",
+                Set.of("top_torso", "top_bust"),
+                garmentParts
+        );
+        requireVariantParts(
+                requireTemplate(garmentTemplates, DEFAULT_UNDERWEAR_BOTTOM_TEMPLATE),
+                "default",
+                Set.of("bottom_torso", "bottom_right_leg", "bottom_left_leg"),
+                garmentParts
+        );
+    }
+
+    private static GarmentModelTemplate requireTemplate(
+            Map<ResourceLocation, GarmentModelTemplate> templates,
+            ResourceLocation id
+    ) {
+        GarmentModelTemplate template = templates.get(id);
+        if (template == null) {
+            throw new IllegalStateException("Missing support model template: " + id);
+        }
+        return template;
+    }
+
+    private static void requireVariantParts(
+            GarmentModelTemplate template,
+            String variantName,
+            Set<String> requiredNames,
+            Map<ResourceLocation, GarmentPartModel> parts
+    ) {
+        Map<String, ResourceLocation> variant = template.variants().get(variantName);
+        if (variant == null || !variant.keySet().containsAll(requiredNames)) {
+            throw new IllegalStateException(
+                    "Support model variant is missing required parts: " + template.id() + " / " + variantName
+            );
+        }
+        for (String name : requiredNames) {
+            if (!parts.containsKey(variant.get(name))) {
+                throw new IllegalStateException("Unknown support part model: " + variant.get(name));
+            }
+        }
+    }
+
     private static void validateColorChannels(
             GarmentDefinition definition,
             GarmentData data,
@@ -253,10 +466,19 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     private record AssetState(
             @Nullable ResourceManager resourceManager,
             Map<ResourceLocation, GarmentDefinition> definitions,
-            Map<ResourceLocation, GarmentModelTemplate> templates,
-            Map<ResourceLocation, GarmentPartModel> parts
+            Map<ResourceLocation, GarmentModelTemplate> garmentTemplates,
+            Map<ResourceLocation, GarmentPartModel> garmentParts,
+            Map<ResourceLocation, GarmentModelTemplate> bodyTemplates,
+            Map<ResourceLocation, GarmentPartModel> bodyParts
     ) {
-        private static final AssetState EMPTY = new AssetState(null, Map.of(), Map.of(), Map.of());
+        private static final AssetState EMPTY = new AssetState(
+                null,
+                Map.of(),
+                Map.of(),
+                Map.of(),
+                Map.of(),
+                Map.of()
+        );
     }
 
     public record GarmentModelTemplate(
@@ -288,6 +510,10 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             ResourceLocation base = materialOverrides.getOrDefault(data.material(), variant.base());
             DesignMasks masks = designs.getOrDefault(data.design(), DesignMasks.NONE);
             return new ResolvedTextures(base, masks.secondary(), masks.accent());
+        }
+
+        public ResourceLocation defaultTexture() {
+            return variants.get("default").base();
         }
     }
 
@@ -325,6 +551,13 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             GarmentPartModel model,
             ResolvedTextures textures,
             float topAlignmentOffset
+    ) {
+    }
+
+    public record ResolvedSupportPart(
+            String semanticName,
+            GarmentPartModel model,
+            ResourceLocation texture
     ) {
     }
 

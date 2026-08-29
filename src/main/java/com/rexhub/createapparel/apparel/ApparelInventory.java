@@ -12,13 +12,26 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class ApparelInventory extends ItemStackHandler {
     public static final int SLOT_COUNT = GarmentSlot.values().length;
 
+    private static final String ARM_PROFILE_TAG = "ArmProfile";
+    private static final String CHEST_PROFILE_TAG = "ChestProfile";
+    private static final String SKIN_TONE_TAG = "SkinTone";
+    private static final String BODY_MODE_OVERRIDE_TAG = "BodyModeOverride";
+    private static final String ARMOR_VISIBILITY_OVERRIDE_TAG = "ArmorVisibilityOverride";
+
     private Runnable changeListener = () -> {
     };
     private boolean suppressChangeNotification;
+    private ArmProfile armProfile = ArmProfile.CLASSIC;
+    private boolean armProfileInitialized;
+    private ChestProfile chestProfile = ChestProfile.FLAT;
+    private SkinTone skinTone = SkinTone.NATURAL;
+    private Optional<Boolean> bodyModeOverride = Optional.empty();
+    private Optional<Boolean> armorVisibilityOverride = Optional.empty();
 
     public ApparelInventory() {
         super(SLOT_COUNT);
@@ -30,6 +43,70 @@ public final class ApparelInventory extends ItemStackHandler {
 
     public void setChangeListener(Runnable changeListener) {
         this.changeListener = Objects.requireNonNull(changeListener);
+    }
+
+    public ArmProfile armProfile() {
+        return armProfile;
+    }
+
+    public ChestProfile chestProfile() {
+        return chestProfile;
+    }
+
+    public SkinTone skinTone() {
+        return skinTone;
+    }
+
+    public boolean isBodyModeEnabled() {
+        return bodyModeOverride.orElseGet(() -> ApparelBodyMode.isActive(this));
+    }
+
+    public boolean isArmorVisibilityEnabled() {
+        return armorVisibilityOverride.orElseGet(() -> ApparelBodyMode.isActive(this));
+    }
+
+    public void setArmProfile(ArmProfile armProfile) {
+        ArmProfile selectedProfile = Objects.requireNonNull(armProfile);
+        if (!armProfileInitialized || this.armProfile != selectedProfile) {
+            this.armProfile = selectedProfile;
+            armProfileInitialized = true;
+            notifyChanged();
+        }
+    }
+
+    void initializeArmProfile(ArmProfile armProfile) {
+        if (!armProfileInitialized) {
+            this.armProfile = Objects.requireNonNull(armProfile);
+            armProfileInitialized = true;
+        }
+    }
+
+    public void setChestProfile(ChestProfile chestProfile) {
+        if (this.chestProfile != chestProfile) {
+            this.chestProfile = Objects.requireNonNull(chestProfile);
+            notifyChanged();
+        }
+    }
+
+    public void setSkinTone(SkinTone skinTone) {
+        if (this.skinTone != skinTone) {
+            this.skinTone = Objects.requireNonNull(skinTone);
+            notifyChanged();
+        }
+    }
+
+    public void setBodyModeEnabled(boolean enabled) {
+        if (!bodyModeOverride.equals(Optional.of(enabled))) {
+            bodyModeOverride = Optional.of(enabled);
+            notifyChanged();
+        }
+    }
+
+    public void setArmorVisibilityEnabled(boolean enabled) {
+        if (!armorVisibilityOverride.equals(Optional.of(enabled))) {
+            armorVisibilityOverride = Optional.of(enabled);
+            notifyChanged();
+        }
     }
 
     public void copyFrom(ApparelInventory source) {
@@ -84,14 +161,53 @@ public final class ApparelInventory extends ItemStackHandler {
     }
 
     @Override
+    public CompoundTag serializeNBT() {
+        CompoundTag tag = super.serializeNBT();
+        if (armProfileInitialized) {
+            tag.putString(ARM_PROFILE_TAG, armProfile.getSerializedName());
+        }
+        tag.putString(CHEST_PROFILE_TAG, chestProfile.getSerializedName());
+        tag.putString(SKIN_TONE_TAG, skinTone.getSerializedName());
+        bodyModeOverride.ifPresent(value -> tag.putBoolean(BODY_MODE_OVERRIDE_TAG, value));
+        armorVisibilityOverride.ifPresent(value -> tag.putBoolean(ARMOR_VISIBILITY_OVERRIDE_TAG, value));
+        return tag;
+    }
+
+    @Override
     public void deserializeNBT(CompoundTag tag) {
         CompoundTag normalizedTag = tag.copy();
         normalizedTag.putInt("Size", SLOT_COUNT);
-        super.deserializeNBT(normalizedTag);
+        suppressChangeNotification = true;
+        try {
+            super.deserializeNBT(normalizedTag);
+            armProfileInitialized = false;
+            if (tag.contains(ARM_PROFILE_TAG, CompoundTag.TAG_STRING)) {
+                armProfile = ArmProfile.fromSerializedName(tag.getString(ARM_PROFILE_TAG));
+                armProfileInitialized = true;
+            }
+            if (tag.contains(CHEST_PROFILE_TAG, CompoundTag.TAG_STRING)) {
+                chestProfile = ChestProfile.fromSerializedName(tag.getString(CHEST_PROFILE_TAG));
+            }
+            if (tag.contains(SKIN_TONE_TAG, CompoundTag.TAG_STRING)) {
+                skinTone = SkinTone.fromSerializedName(tag.getString(SKIN_TONE_TAG));
+            }
+            bodyModeOverride = tag.contains(BODY_MODE_OVERRIDE_TAG, CompoundTag.TAG_BYTE)
+                    ? Optional.of(tag.getBoolean(BODY_MODE_OVERRIDE_TAG))
+                    : Optional.empty();
+            armorVisibilityOverride = tag.contains(ARMOR_VISIBILITY_OVERRIDE_TAG, CompoundTag.TAG_BYTE)
+                    ? Optional.of(tag.getBoolean(ARMOR_VISIBILITY_OVERRIDE_TAG))
+                    : Optional.empty();
+        } finally {
+            suppressChangeNotification = false;
+        }
     }
 
     @Override
     protected void onContentsChanged(int slot) {
+        notifyChanged();
+    }
+
+    private void notifyChanged() {
         if (!suppressChangeNotification) {
             changeListener.run();
         }

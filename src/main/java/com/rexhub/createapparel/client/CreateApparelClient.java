@@ -6,6 +6,7 @@ import com.rexhub.createapparel.client.model.ModPartialModels;
 import com.rexhub.createapparel.client.model.SilkwormCocoonModel;
 import com.rexhub.createapparel.client.model.SilkwormModel;
 import com.rexhub.createapparel.client.renderer.LoomRenderer;
+import com.rexhub.createapparel.client.renderer.PlayerApparelLayers;
 import com.rexhub.createapparel.client.renderer.SewingMachineRenderer;
 import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
 import com.rexhub.createapparel.client.renderer.SpinningMachineRenderer;
@@ -68,6 +69,16 @@ public final class CreateApparelClient {
         event.registerBlockEntityRenderer(ModBlockEntities.SPINNING_MACHINE.get(), SpinningMachineRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.LOOM.get(), LoomRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SEWING_MACHINE.get(), SewingMachineRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void addPlayerLayers(EntityRenderersEvent.AddLayers event) {
+        for (String skin : event.getSkins()) {
+            net.minecraft.client.renderer.entity.player.PlayerRenderer renderer = event.getPlayerSkin(skin);
+            if (renderer != null) {
+                PlayerApparelLayers.add(renderer);
+            }
+        }
     }
 
     @SubscribeEvent
