@@ -17,21 +17,20 @@ import java.util.Optional;
 public final class ApparelInventory extends ItemStackHandler {
     public static final int SLOT_COUNT = GarmentSlot.values().length;
 
-    private static final String ARM_PROFILE_TAG = "ArmProfile";
     private static final String CHEST_PROFILE_TAG = "ChestProfile";
     private static final String SKIN_TONE_TAG = "SkinTone";
     private static final String BODY_MODE_OVERRIDE_TAG = "BodyModeOverride";
-    private static final String ARMOR_VISIBILITY_OVERRIDE_TAG = "ArmorVisibilityOverride";
+    private static final String ARMOR_HIDDEN_OVERRIDE_TAG = "ArmorHiddenOverride";
+    private static final String LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG = "ArmorVisibilityOverride";
 
     private Runnable changeListener = () -> {
     };
     private boolean suppressChangeNotification;
     private ArmProfile armProfile = ArmProfile.CLASSIC;
-    private boolean armProfileInitialized;
     private ChestProfile chestProfile = ChestProfile.FLAT;
     private SkinTone skinTone = SkinTone.NATURAL;
     private Optional<Boolean> bodyModeOverride = Optional.empty();
-    private Optional<Boolean> armorVisibilityOverride = Optional.empty();
+    private Optional<Boolean> armorHiddenOverride = Optional.empty();
 
     public ApparelInventory() {
         super(SLOT_COUNT);
@@ -61,24 +60,12 @@ public final class ApparelInventory extends ItemStackHandler {
         return bodyModeOverride.orElseGet(() -> ApparelBodyMode.isActive(this));
     }
 
-    public boolean isArmorVisibilityEnabled() {
-        return armorVisibilityOverride.orElseGet(() -> ApparelBodyMode.isActive(this));
+    public boolean isArmorHidden() {
+        return armorHiddenOverride.orElseGet(() -> ApparelBodyMode.isActive(this));
     }
 
-    public void setArmProfile(ArmProfile armProfile) {
-        ArmProfile selectedProfile = Objects.requireNonNull(armProfile);
-        if (!armProfileInitialized || this.armProfile != selectedProfile) {
-            this.armProfile = selectedProfile;
-            armProfileInitialized = true;
-            notifyChanged();
-        }
-    }
-
-    void initializeArmProfile(ArmProfile armProfile) {
-        if (!armProfileInitialized) {
-            this.armProfile = Objects.requireNonNull(armProfile);
-            armProfileInitialized = true;
-        }
+    void updateArmProfile(ArmProfile armProfile) {
+        this.armProfile = Objects.requireNonNull(armProfile);
     }
 
     public void setChestProfile(ChestProfile chestProfile) {
@@ -102,15 +89,16 @@ public final class ApparelInventory extends ItemStackHandler {
         }
     }
 
-    public void setArmorVisibilityEnabled(boolean enabled) {
-        if (!armorVisibilityOverride.equals(Optional.of(enabled))) {
-            armorVisibilityOverride = Optional.of(enabled);
+    public void setArmorHidden(boolean hidden) {
+        if (!armorHiddenOverride.equals(Optional.of(hidden))) {
+            armorHiddenOverride = Optional.of(hidden);
             notifyChanged();
         }
     }
 
     public void copyFrom(ApparelInventory source) {
         deserializeNBT(source.serializeNBT());
+        armProfile = source.armProfile;
     }
 
     public List<ItemStack> copyContents() {
@@ -163,13 +151,10 @@ public final class ApparelInventory extends ItemStackHandler {
     @Override
     public CompoundTag serializeNBT() {
         CompoundTag tag = super.serializeNBT();
-        if (armProfileInitialized) {
-            tag.putString(ARM_PROFILE_TAG, armProfile.getSerializedName());
-        }
         tag.putString(CHEST_PROFILE_TAG, chestProfile.getSerializedName());
         tag.putString(SKIN_TONE_TAG, skinTone.getSerializedName());
         bodyModeOverride.ifPresent(value -> tag.putBoolean(BODY_MODE_OVERRIDE_TAG, value));
-        armorVisibilityOverride.ifPresent(value -> tag.putBoolean(ARMOR_VISIBILITY_OVERRIDE_TAG, value));
+        armorHiddenOverride.ifPresent(value -> tag.putBoolean(ARMOR_HIDDEN_OVERRIDE_TAG, value));
         return tag;
     }
 
@@ -180,11 +165,6 @@ public final class ApparelInventory extends ItemStackHandler {
         suppressChangeNotification = true;
         try {
             super.deserializeNBT(normalizedTag);
-            armProfileInitialized = false;
-            if (tag.contains(ARM_PROFILE_TAG, CompoundTag.TAG_STRING)) {
-                armProfile = ArmProfile.fromSerializedName(tag.getString(ARM_PROFILE_TAG));
-                armProfileInitialized = true;
-            }
             if (tag.contains(CHEST_PROFILE_TAG, CompoundTag.TAG_STRING)) {
                 chestProfile = ChestProfile.fromSerializedName(tag.getString(CHEST_PROFILE_TAG));
             }
@@ -194,9 +174,13 @@ public final class ApparelInventory extends ItemStackHandler {
             bodyModeOverride = tag.contains(BODY_MODE_OVERRIDE_TAG, CompoundTag.TAG_BYTE)
                     ? Optional.of(tag.getBoolean(BODY_MODE_OVERRIDE_TAG))
                     : Optional.empty();
-            armorVisibilityOverride = tag.contains(ARMOR_VISIBILITY_OVERRIDE_TAG, CompoundTag.TAG_BYTE)
-                    ? Optional.of(tag.getBoolean(ARMOR_VISIBILITY_OVERRIDE_TAG))
-                    : Optional.empty();
+            if (tag.contains(ARMOR_HIDDEN_OVERRIDE_TAG, CompoundTag.TAG_BYTE)) {
+                armorHiddenOverride = Optional.of(tag.getBoolean(ARMOR_HIDDEN_OVERRIDE_TAG));
+            } else if (tag.contains(LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG, CompoundTag.TAG_BYTE)) {
+                armorHiddenOverride = Optional.of(tag.getBoolean(LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG));
+            } else {
+                armorHiddenOverride = Optional.empty();
+            }
         } finally {
             suppressChangeNotification = false;
         }

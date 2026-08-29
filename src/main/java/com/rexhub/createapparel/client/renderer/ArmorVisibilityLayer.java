@@ -32,7 +32,7 @@ final class ArmorVisibilityLayer extends RenderLayer<AbstractClientPlayer, Playe
             float netHeadYaw,
             float headPitch
     ) {
-        if (!ClientApparelInventories.isArmorVisibilityActive(player)) {
+        if (!ClientApparelInventories.isArmorHidden(player)) {
             delegate.render(
                     poseStack,
                     buffer,

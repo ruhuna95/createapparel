@@ -17,7 +17,7 @@ public record ApparelInventorySyncPacket(
         int playerId,
         List<ItemStack> contents,
         boolean bodyModeEnabled,
-        boolean armorVisibilityEnabled,
+        boolean armorHidden,
         ArmProfile armProfile,
         ChestProfile chestProfile,
         SkinTone skinTone
@@ -34,7 +34,7 @@ public record ApparelInventorySyncPacket(
         buffer.writeVarInt(contents.size());
         contents.forEach(buffer::writeItem);
         buffer.writeBoolean(bodyModeEnabled);
-        buffer.writeBoolean(armorVisibilityEnabled);
+        buffer.writeBoolean(armorHidden);
         buffer.writeEnum(armProfile);
         buffer.writeEnum(chestProfile);
         buffer.writeEnum(skinTone);
@@ -68,7 +68,7 @@ public record ApparelInventorySyncPacket(
                         playerId,
                         contents,
                         bodyModeEnabled,
-                        armorVisibilityEnabled,
+                        armorHidden,
                         armProfile,
                         chestProfile,
                         skinTone

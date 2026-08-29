@@ -103,7 +103,7 @@ public final class ModNetwork {
                 player.getId(),
                 inventory.copyContents(),
                 inventory.isBodyModeEnabled(),
-                inventory.isArmorVisibilityEnabled(),
+                inventory.isArmorHidden(),
                 inventory.armProfile(),
                 inventory.chestProfile(),
                 inventory.skinTone()

@@ -203,9 +203,9 @@ public final class ApparelCommand {
                                         ))))
                         .then(Commands.literal("armor")
                                 .then(Commands.literal("show")
-                                        .executes(context -> setArmorVisibility(context, false)))
+                                        .executes(context -> setArmorHidden(context, false)))
                                 .then(Commands.literal("hide")
-                                        .executes(context -> setArmorVisibility(context, true))))
+                                        .executes(context -> setArmorHidden(context, true))))
                         .then(Commands.literal("chest")
                                 .then(Commands.literal("flat")
                                         .executes(context -> setChestProfile(context, ChestProfile.FLAT)))
@@ -415,11 +415,11 @@ public final class ApparelCommand {
         return updateAppearance(context, inventory -> inventory.setBodyModeEnabled(enabled), "Body skin", enabled);
     }
 
-    private static int setArmorVisibility(CommandContext<CommandSourceStack> context, boolean hidden)
+    private static int setArmorHidden(CommandContext<CommandSourceStack> context, boolean hidden)
             throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "target");
         for (ServerPlayer target : targets) {
-            getInventory(target).setArmorVisibilityEnabled(hidden);
+            getInventory(target).setArmorHidden(hidden);
         }
         context.getSource().sendSuccess(
                 () -> Component.literal("Armor: " + (hidden ? "HIDDEN" : "VISIBLE")),

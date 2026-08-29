@@ -50,7 +50,7 @@ public final class ApparelInventoryEvents {
             return;
         }
         ApparelCapabilities.get(serverPlayer).ifPresent(inventory -> {
-            inventory.initializeArmProfile(ArmProfile.defaultFor(serverPlayer));
+            inventory.updateArmProfile(ArmProfile.defaultFor(serverPlayer));
             ModNetwork.sendApparelInventory(serverPlayer, inventory);
         });
     }

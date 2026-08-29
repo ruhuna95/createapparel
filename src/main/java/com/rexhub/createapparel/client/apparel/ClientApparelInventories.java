@@ -27,7 +27,7 @@ public final class ClientApparelInventories {
             int playerId,
             List<ItemStack> contents,
             boolean bodyModeEnabled,
-            boolean armorVisibilityEnabled,
+            boolean armorHidden,
             ArmProfile armProfile,
             ChestProfile chestProfile,
             SkinTone skinTone
@@ -38,7 +38,7 @@ public final class ClientApparelInventories {
         STATE_BY_PLAYER.put(playerId, new PlayerApparelState(
                 contents.stream().map(ItemStack::copy).toList(),
                 bodyModeEnabled,
-                armorVisibilityEnabled,
+                armorHidden,
                 armProfile,
                 chestProfile,
                 skinTone
@@ -54,9 +54,9 @@ public final class ClientApparelInventories {
         return state != null ? state.bodyModeEnabled() : ApparelBodyMode.isActive(EMPTY_CONTENTS);
     }
 
-    public static boolean isArmorVisibilityActive(Player player) {
+    public static boolean isArmorHidden(Player player) {
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
-        return state != null && state.armorVisibilityEnabled();
+        return state != null && state.armorHidden();
     }
 
     public static ArmProfile armProfile(Player player) {
@@ -90,7 +90,7 @@ public final class ClientApparelInventories {
     private record PlayerApparelState(
             List<ItemStack> contents,
             boolean bodyModeEnabled,
-            boolean armorVisibilityEnabled,
+            boolean armorHidden,
             ArmProfile armProfile,
             ChestProfile chestProfile,
             SkinTone skinTone
