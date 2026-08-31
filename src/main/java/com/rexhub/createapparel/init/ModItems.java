@@ -38,6 +38,10 @@ public final class ModItems {
             "sewing_machine",
             () -> new BlockItem(ModBlocks.SEWING_MACHINE.get(), new Item.Properties())
     );
+    public static final RegistryObject<Item> WARDROBE = ModRegistries.ITEMS.register(
+            "wardrobe",
+            () -> new BlockItem(ModBlocks.WARDROBE.get(), new Item.Properties())
+    );
     public static final RegistryObject<Item> SEWING_PATTERN = ModRegistries.ITEMS.register(
             "sewing_pattern",
             () -> new SewingPatternItem(new Item.Properties().stacksTo(1))
@@ -186,6 +190,7 @@ public final class ModItems {
         items.add(SPINNING_MACHINE);
         items.add(LOOM);
         items.add(SEWING_MACHINE);
+        items.add(WARDROBE);
         items.add(SEWING_PATTERN);
         addMaterialGroup(
                 items,
@@ -240,12 +245,12 @@ public final class ModItems {
         Set<RegistryObject<Item>> uniqueGarmentItems = new HashSet<>(GARMENT_CREATIVE_TAB_ITEMS);
         Set<RegistryObject<Item>> uniqueItems = new HashSet<>(uniqueMainItems);
         uniqueItems.addAll(uniqueGarmentItems);
-        if (CREATIVE_TAB_ITEMS.size() != 141
+        if (CREATIVE_TAB_ITEMS.size() != 142
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
                 || GARMENT_CREATIVE_TAB_ITEMS.size() != 3
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 144) {
-            throw new IllegalStateException("The Phase 8 creative tabs must contain 144 unique items");
+                || uniqueItems.size() != 145) {
+            throw new IllegalStateException("The creative tabs must contain 145 unique items");
         }
     }
 }

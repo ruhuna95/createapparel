@@ -70,7 +70,17 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
                             packedOverlay
                     )
             );
-            ClientGarmentAssets.INSTANCE.resolveDefaultUnderwear(chestProfile).ifPresent(parts ->
+            boolean includeDefaultTop = ClientApparelInventories.getStack(player, GarmentSlot.INNER_TOP).isEmpty()
+                    && ClientApparelInventories.getStack(player, GarmentSlot.TOP).isEmpty();
+            boolean includeDefaultBottom = ClientApparelInventories.getStack(
+                    player,
+                    GarmentSlot.INNER_BOTTOM
+            ).isEmpty();
+            ClientGarmentAssets.INSTANCE.resolveDefaultUnderwear(
+                    chestProfile,
+                    includeDefaultTop,
+                    includeDefaultBottom
+            ).ifPresent(parts ->
                     CommonGarmentRenderer.renderHumanoidSupport(
                             parts,
                             getParentModel(),

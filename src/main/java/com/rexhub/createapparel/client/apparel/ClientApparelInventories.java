@@ -19,6 +19,7 @@ public final class ClientApparelInventories {
             .mapToObj(ignored -> ItemStack.EMPTY)
             .toList();
     private static final Map<Integer, PlayerApparelState> STATE_BY_PLAYER = new HashMap<>();
+    private static PreviewState activePreview;
 
     private ClientApparelInventories() {
     }
@@ -46,15 +47,24 @@ public final class ClientApparelInventories {
     }
 
     public static ItemStack getStack(Player player, GarmentSlot slot) {
+        if (activePreview != null && activePreview.playerId() == player.getId()) {
+            return activePreview.contents().get(slot.ordinal()).copy();
+        }
         return contents(player).get(slot.ordinal()).copy();
     }
 
     public static boolean isBodyModeActive(Player player) {
+        if (activePreview != null && activePreview.playerId() == player.getId()) {
+            return ApparelBodyMode.isActive(activePreview.contents());
+        }
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
         return state != null ? state.bodyModeEnabled() : ApparelBodyMode.isActive(EMPTY_CONTENTS);
     }
 
     public static boolean isArmorHidden(Player player) {
+        if (activePreview != null && activePreview.playerId() == player.getId()) {
+            return ApparelBodyMode.isActive(activePreview.contents());
+        }
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
         return state != null && state.armorHidden();
     }
@@ -65,11 +75,17 @@ public final class ClientApparelInventories {
     }
 
     public static ChestProfile chestProfile(Player player) {
+        if (activePreview != null && activePreview.playerId() == player.getId()) {
+            return activePreview.chestProfile();
+        }
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
         return state != null ? state.chestProfile() : ChestProfile.FLAT;
     }
 
     public static SkinTone skinTone(Player player) {
+        if (activePreview != null && activePreview.playerId() == player.getId()) {
+            return activePreview.skinTone();
+        }
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
         return state != null ? state.skinTone() : SkinTone.NATURAL;
     }
@@ -82,6 +98,30 @@ public final class ClientApparelInventories {
         STATE_BY_PLAYER.clear();
     }
 
+    public static void withPreview(
+            Player player,
+            List<ItemStack> contents,
+            ChestProfile chestProfile,
+            SkinTone skinTone,
+            Runnable renderer
+    ) {
+        if (contents.size() != ApparelInventory.SLOT_COUNT) {
+            throw new IllegalArgumentException("Invalid wardrobe preview inventory size: " + contents.size());
+        }
+        PreviewState previous = activePreview;
+        activePreview = new PreviewState(
+                player.getId(),
+                contents.stream().map(ItemStack::copy).toList(),
+                chestProfile,
+                skinTone
+        );
+        try {
+            renderer.run();
+        } finally {
+            activePreview = previous;
+        }
+    }
+
     private static List<ItemStack> contents(Player player) {
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
         return state != null ? state.contents() : EMPTY_CONTENTS;
@@ -92,6 +132,14 @@ public final class ClientApparelInventories {
             boolean bodyModeEnabled,
             boolean armorHidden,
             ArmProfile armProfile,
+            ChestProfile chestProfile,
+            SkinTone skinTone
+    ) {
+    }
+
+    private record PreviewState(
+            int playerId,
+            List<ItemStack> contents,
             ChestProfile chestProfile,
             SkinTone skinTone
     ) {

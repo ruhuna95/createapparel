@@ -189,15 +189,22 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         ));
     }
 
-    public Optional<List<ResolvedSupportPart>> resolveDefaultUnderwear(ChestProfile chestProfile) {
+    public Optional<List<ResolvedSupportPart>> resolveDefaultUnderwear(
+            ChestProfile chestProfile,
+            boolean includeTop,
+            boolean includeBottom
+    ) {
         AssetState snapshot = state;
         List<ResolvedSupportPart> resolved = new ArrayList<>();
-        if (!appendSupportTemplateParts(
+        if (includeTop && !appendSupportTemplateParts(
                 snapshot,
                 DEFAULT_UNDERWEAR_TOP_TEMPLATE,
                 List.of("top_torso", chestProfile == ChestProfile.BUST ? "top_bust" : ""),
                 resolved
-        ) || !appendSupportTemplateParts(
+        )) {
+            return Optional.empty();
+        }
+        if (includeBottom && !appendSupportTemplateParts(
                 snapshot,
                 DEFAULT_UNDERWEAR_BOTTOM_TEMPLATE,
                 List.of("bottom_torso", "bottom_right_leg", "bottom_left_leg"),
@@ -205,7 +212,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         )) {
             return Optional.empty();
         }
-        return Optional.of(List.copyOf(resolved));
+        return resolved.isEmpty() ? Optional.empty() : Optional.of(List.copyOf(resolved));
     }
 
     ResourceManager resourceManager() {

@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "5";
 
     private static SimpleChannel channel;
 
@@ -57,6 +57,16 @@ public final class ModNetwork {
                 .encoder(ApparelInventorySyncPacket::encode)
                 .decoder(ApparelInventorySyncPacket::decode)
                 .consumerMainThread((packet, context) -> packet.handleClient())
+                .add();
+        channel.messageBuilder(WardrobeActionPacket.class, 4, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(WardrobeActionPacket::encode)
+                .decoder(WardrobeActionPacket::decode)
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null) {
+                        packet.handle(player);
+                    }
+                })
                 .add();
     }
 
@@ -125,5 +135,9 @@ public final class ModNetwork {
                 data.secondaryColor(),
                 data.accentColor()
         ));
+    }
+
+    public static void updateWardrobe(WardrobeActionPacket packet) {
+        channel().sendToServer(packet);
     }
 }

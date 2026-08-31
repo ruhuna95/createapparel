@@ -1,0 +1,139 @@
+{
+  "loader": "forge:obj",
+  "model": "createapparel:models/item/wardrobe.obj",
+  "flip_v": true,
+  "automatic_culling": false,
+  "shade_quads": true,
+  "textures": {
+    "front_upper": "createapparel:block/wardrobe/wardrobe_front_upper",
+    "front_lower": "createapparel:block/wardrobe/wardrobe_front_lower",
+    "side_upper": "createapparel:block/wardrobe/wardrobe_side_upper",
+    "side_lower": "createapparel:block/wardrobe/wardrobe_side_lower",
+    "top": "createapparel:block/wardrobe/wardrobe_top",
+    "oak": "minecraft:block/oak_planks",
+    "open_upper": "createapparel:block/wardrobe/wardrobe_open_upper",
+    "open_lower": "createapparel:block/wardrobe/wardrobe_open_lower",
+    "particle": "createapparel:block/wardrobe/wardrobe_side_lower"
+  },
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        -2,
+        0
+      ],
+      "scale": [
+        0.45,
+        0.45,
+        0.45
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        1,
+        0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        75,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        1,
+        0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    }
+  }
+}

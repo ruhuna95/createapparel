@@ -1,0 +1,16 @@
+{
+  "loader": "forge:obj",
+  "model": "createapparel:models/block/wardrobe/lower_open_doors.obj",
+  "flip_v": true,
+  "automatic_culling": false,
+  "shade_quads": true,
+  "emissive_ambient": false,
+  "visibility": {
+    "element_0": false,
+    "element_1": true
+  },
+  "textures": {
+    "front_lower": "createapparel:block/wardrobe/wardrobe_front_lower",
+    "particle": "createapparel:block/wardrobe/wardrobe_side_lower"
+  }
+}

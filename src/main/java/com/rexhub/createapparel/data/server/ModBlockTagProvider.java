@@ -28,5 +28,6 @@ public final class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.LOOM.get(),
                 ModBlocks.SEWING_MACHINE.get()
         );
+        tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.WARDROBE.get());
     }
 }

@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "facing=north,half=lower,open=false": {
+      "model": "createapparel:block/wardrobe/lower_body"
+    },
+    "facing=north,half=lower,open=true": {
+      "model": "createapparel:block/wardrobe/lower_body"
+    },
+    "facing=north,half=upper,open=false": {
+      "model": "createapparel:block/wardrobe/upper_body"
+    },
+    "facing=north,half=upper,open=true": {
+      "model": "createapparel:block/wardrobe/upper_body"
+    },
+    "facing=east,half=lower,open=false": {
+      "model": "createapparel:block/wardrobe/lower_body",
+      "y": 90
+    },
+    "facing=east,half=lower,open=true": {
+      "model": "createapparel:block/wardrobe/lower_body",
+      "y": 90
+    },
+    "facing=east,half=upper,open=false": {
+      "model": "createapparel:block/wardrobe/upper_body",
+      "y": 90
+    },
+    "facing=east,half=upper,open=true": {
+      "model": "createapparel:block/wardrobe/upper_body",
+      "y": 90
+    },
+    "facing=south,half=lower,open=false": {
+      "model": "createapparel:block/wardrobe/lower_body",
+      "y": 180
+    },
+    "facing=south,half=lower,open=true": {
+      "model": "createapparel:block/wardrobe/lower_body",
+      "y": 180
+    },
+    "facing=south,half=upper,open=false": {
+      "model": "createapparel:block/wardrobe/upper_body",
+      "y": 180
+    },
+    "facing=south,half=upper,open=true": {
+      "model": "createapparel:block/wardrobe/upper_body",
+      "y": 180
+    },
+    "facing=west,half=lower,open=false": {
+      "model": "createapparel:block/wardrobe/lower_body",
+      "y": 270
+    },
+    "facing=west,half=lower,open=true": {
+      "model": "createapparel:block/wardrobe/lower_body",
+      "y": 270
+    },
+    "facing=west,half=upper,open=false": {
+      "model": "createapparel:block/wardrobe/upper_body",
+      "y": 270
+    },
+    "facing=west,half=upper,open=true": {
+      "model": "createapparel:block/wardrobe/upper_body",
+      "y": 270
+    }
+  }
+}

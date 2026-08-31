@@ -12,6 +12,10 @@ public final class ModPartialModels {
     public static final PartialModel SEWING_MACHINE_ROTATING = block("sewing_machine/rotating");
     public static final PartialModel SEWING_MACHINE_PISTON = block("sewing_machine/piston");
     public static final PartialModel SEWING_MACHINE_THREAD = block("sewing_machine/thread");
+    public static final PartialModel WARDROBE_LOWER_LEFT_DOOR = block("wardrobe/lower_left_door");
+    public static final PartialModel WARDROBE_LOWER_RIGHT_DOOR = block("wardrobe/lower_right_door");
+    public static final PartialModel WARDROBE_UPPER_LEFT_DOOR = block("wardrobe/upper_left_door");
+    public static final PartialModel WARDROBE_UPPER_RIGHT_DOOR = block("wardrobe/upper_right_door");
 
     private ModPartialModels() {
     }

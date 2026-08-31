@@ -27,6 +27,7 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.SPINNING_MACHINE.get());
         dropSelf(ModBlocks.LOOM.get());
         dropSelf(ModBlocks.SEWING_MACHINE.get());
+        add(ModBlocks.WARDROBE.get(), createDoorTable(ModBlocks.WARDROBE.get()));
     }
 
     private void addCropDrops(Block crop, Item produce, Item seeds) {

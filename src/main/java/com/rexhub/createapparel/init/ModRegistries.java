@@ -43,6 +43,7 @@ public final class ModRegistries {
     public static void register(IEventBus modEventBus) {
         ModBlocks.bootstrap();
         ModBlockEntities.bootstrap();
+        ModMenuTypes.bootstrap();
         ModRecipeTypes.bootstrap();
         ModEntities.bootstrap();
         ModLootModifiers.bootstrap();

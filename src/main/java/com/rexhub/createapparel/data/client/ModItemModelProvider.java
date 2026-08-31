@@ -31,6 +31,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
             } else if (item == ModItems.SPINNING_MACHINE
                     || item == ModItems.LOOM
                     || item == ModItems.SEWING_MACHINE
+                    || item == ModItems.WARDROBE
                     || item == ModItems.T_SHIRT
                     || item == ModItems.T_SHIRT_U_NECK
                     || item == ModItems.T_SHIRT_V_NECK) {
