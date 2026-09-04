@@ -271,8 +271,9 @@ final class ClientGarmentAssetLoader {
                         if (alpha != 0 && alpha != 255) {
                             throw new IllegalStateException("Garment base alpha is not binary: " + textureId);
                         }
-                    } else if (kind == TextureKind.MASK && (alpha != 255 || red != 0 && red != 255)) {
-                        throw new IllegalStateException("Garment design mask is not binary: " + textureId);
+                    } else if (kind == TextureKind.MASK
+                            && !GarmentTexturePixelOps.isValidMaskPixel(red, green, blue, alpha)) {
+                        throw new IllegalStateException("Garment design mask is not opaque grayscale: " + textureId);
                     }
                 }
             }

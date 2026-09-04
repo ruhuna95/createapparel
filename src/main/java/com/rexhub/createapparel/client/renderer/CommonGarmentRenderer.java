@@ -20,13 +20,14 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.Matrix4f;
 
 import java.util.List;
 
 public final class CommonGarmentRenderer {
     private static final float MODEL_UNIT = 1.0F / 16.0F;
     private static final float BODY_HEIGHT = 24.0F;
-    private static final float SLEEVE_OFFSET = 6.5F;
+    private static final Matrix4f ITEM_X_REFLECTION = new Matrix4f().scaling(-1.0F, 1.0F, 1.0F);
     private static final int WHITE = 0xFFFFFF;
 
     private CommonGarmentRenderer() {
@@ -39,15 +40,17 @@ public final class CommonGarmentRenderer {
             int packedLight,
             int packedOverlay
     ) {
+        Vec3 center = itemBoundsCenter(garment.parts());
         poseStack.pushPose();
-        poseStack.translate(0.5F, 0.0F, 0.5F);
+        poseStack.translate(0.5F, 0.5F, 0.5F);
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
+        mirrorItemX(poseStack);
+        poseStack.translate(-center.x(), -center.y(), -center.z());
         for (ResolvedPart part : garment.parts()) {
-            PartMapping mapping = PartMapping.item(part);
             renderPart(
                     part.model(),
                     RuntimeGarmentTextureCache.get(part.model(), part.textures(), garment.data()),
-                    mapping,
+                    PartMapping.item(),
                     null,
                     poseStack,
                     buffer,
@@ -71,12 +74,12 @@ public final class CommonGarmentRenderer {
         poseStack.pushPose();
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
         for (ResolvedPart part : garment.parts()) {
-            PartMapping mapping = PartMapping.humanoidGarment(part);
+            PartMapping mapping = PartMapping.humanoidGarment();
             renderPart(
                     part.model(),
                     RuntimeGarmentTextureCache.get(part.model(), part.textures(), garment.data()),
                     mapping,
-                    humanoidPose(playerModel, armProfile, part.model(), mapping),
+                    humanoidGarmentPose(playerModel, armProfile, part),
                     poseStack,
                     buffer,
                     packedLight,
@@ -105,7 +108,7 @@ public final class CommonGarmentRenderer {
                     part.model(),
                     textureResource(part.texture()),
                     mapping,
-                    humanoidPose(playerModel, armProfile, part.model(), mapping),
+                    humanoidSupportPose(playerModel, armProfile, part.model()),
                     poseStack,
                     buffer,
                     packedLight,
@@ -151,14 +154,34 @@ public final class CommonGarmentRenderer {
         poseStack.popPose();
     }
 
-    private static HumanoidPartPose humanoidPose(
+    private static HumanoidPartPose humanoidGarmentPose(
             PlayerModel<AbstractClientPlayer> model,
             ArmProfile armProfile,
-            GarmentPartModel part,
-            PartMapping mapping
+            ResolvedPart part
+    ) {
+        String semanticName = part.semanticName();
+        if (semanticName.startsWith("left_sleeve") || semanticName.startsWith("right_sleeve")) {
+            float armY = armProfile == ArmProfile.SLIM ? 2.5F : 2.0F;
+            float centerX = partCenterX(part.model());
+            return centerX < 0.0F
+                    ? new HumanoidPartPose(model.rightArm, -5.0F, armY, 0.0F)
+                    : new HumanoidPartPose(model.leftArm, 5.0F, armY, 0.0F);
+        }
+        if (semanticName.contains("leg")) {
+            return partCenterX(part.model()) < 0.0F
+                    ? new HumanoidPartPose(model.rightLeg, -1.9F, 12.0F, 0.0F)
+                    : new HumanoidPartPose(model.leftLeg, 1.9F, 12.0F, 0.0F);
+        }
+        return new HumanoidPartPose(model.body, 0.0F, 0.0F, 0.0F);
+    }
+
+    private static HumanoidPartPose humanoidSupportPose(
+            PlayerModel<AbstractClientPlayer> model,
+            ArmProfile armProfile,
+            GarmentPartModel part
     ) {
         Element reference = part.elements().get(0);
-        float centerX = mapping.x((reference.from().x() + reference.to().x()) * 0.5F);
+        float centerX = (reference.from().x() + reference.to().x()) * 0.5F;
         String name = reference.name();
         if (name.contains("arm") || name.contains("sleeve")) {
             float armY = armProfile == ArmProfile.SLIM ? 2.5F : 2.0F;
@@ -172,6 +195,89 @@ public final class CommonGarmentRenderer {
                     : new HumanoidPartPose(model.leftLeg, 1.9F, 12.0F, 0.0F);
         }
         return new HumanoidPartPose(model.body, 0.0F, 0.0F, 0.0F);
+    }
+
+    private static float partCenterX(GarmentPartModel part) {
+        float minX = Float.POSITIVE_INFINITY;
+        float maxX = Float.NEGATIVE_INFINITY;
+        for (Element element : part.elements()) {
+            minX = Math.min(minX, Math.min(element.from().x(), element.to().x()));
+            maxX = Math.max(maxX, Math.max(element.from().x(), element.to().x()));
+        }
+        return (minX + maxX) * 0.5F;
+    }
+
+    private static Vec3 itemBoundsCenter(List<ResolvedPart> parts) {
+        float[] bounds = {
+                Float.POSITIVE_INFINITY,
+                Float.POSITIVE_INFINITY,
+                Float.POSITIVE_INFINITY,
+                Float.NEGATIVE_INFINITY,
+                Float.NEGATIVE_INFINITY,
+                Float.NEGATIVE_INFINITY
+        };
+        for (ResolvedPart part : parts) {
+            for (Element element : part.model().elements()) {
+                includeElementBounds(bounds, element);
+            }
+        }
+        if (!Float.isFinite(bounds[0])) {
+            return new Vec3(0.0F, 0.0F, 0.0F);
+        }
+        return new Vec3(
+                (bounds[0] + bounds[3]) * 0.5F,
+                (bounds[1] + bounds[4]) * 0.5F,
+                (bounds[2] + bounds[5]) * 0.5F
+        );
+    }
+
+    private static void includeElementBounds(float[] bounds, Element element) {
+        Vec3 from = element.from();
+        Vec3 to = element.to();
+        for (float x : new float[]{from.x(), to.x()}) {
+            for (float y : new float[]{from.y(), to.y()}) {
+                for (float z : new float[]{from.z(), to.z()}) {
+                    includePoint(bounds, rotatePoint(new Vec3(x, y, z), element.rotation()));
+                }
+            }
+        }
+    }
+
+    private static Vec3 rotatePoint(Vec3 point, Rotation rotation) {
+        if (rotation == null || rotation.angle() == 0.0F) {
+            return point;
+        }
+        Vec3 origin = rotation.origin();
+        float x = point.x() - origin.x();
+        float y = point.y() - origin.y();
+        float z = point.z() - origin.z();
+        float radians = (float) Math.toRadians(rotation.angle());
+        float sin = (float) Math.sin(radians);
+        float cos = (float) Math.cos(radians);
+        Vec3 rotated = switch (rotation.axis()) {
+            case X -> new Vec3(x, y * cos - z * sin, y * sin + z * cos);
+            case Y -> new Vec3(x * cos + z * sin, y, -x * sin + z * cos);
+            case Z -> new Vec3(x * cos - y * sin, x * sin + y * cos, z);
+        };
+        return new Vec3(
+                rotated.x() + origin.x(),
+                rotated.y() + origin.y(),
+                rotated.z() + origin.z()
+        );
+    }
+
+    private static void includePoint(float[] bounds, Vec3 point) {
+        bounds[0] = Math.min(bounds[0], point.x());
+        bounds[1] = Math.min(bounds[1], point.y());
+        bounds[2] = Math.min(bounds[2], point.z());
+        bounds[3] = Math.max(bounds[3], point.x());
+        bounds[4] = Math.max(bounds[4], point.y());
+        bounds[5] = Math.max(bounds[5], point.z());
+    }
+
+    private static void mirrorItemX(PoseStack poseStack) {
+        poseStack.mulPoseMatrix(ITEM_X_REFLECTION);
+        poseStack.last().normal().scale(-1.0F, 1.0F, 1.0F);
     }
 
     private static void applyRotation(Rotation rotation, PartMapping mapping, PoseStack poseStack) {
@@ -334,37 +440,23 @@ public final class CommonGarmentRenderer {
         }
     }
 
-    private record PartMapping(boolean humanoid, float xOffset, float yOffset, float yAnchor) {
-        private static PartMapping item(ResolvedPart part) {
-            return new PartMapping(false, sleeveOffset(part.semanticName()), part.topAlignmentOffset(), 0.0F);
+    private record PartMapping(boolean humanoid) {
+        private static PartMapping item() {
+            return new PartMapping(false);
         }
 
-        private static PartMapping humanoidGarment(ResolvedPart part) {
-            float referenceTop = part.model().upperY() + part.topAlignmentOffset();
-            return new PartMapping(true, sleeveOffset(part.semanticName()), part.topAlignmentOffset(), referenceTop);
+        private static PartMapping humanoidGarment() {
+            return new PartMapping(true);
         }
 
         private static PartMapping humanoidSupport() {
-            return new PartMapping(true, 0.0F, 0.0F, BODY_HEIGHT);
+            return new PartMapping(true);
         }
 
         private Vec3 point(Vec3 point) {
-            return new Vec3(x(point.x()), y(point.y()), point.z());
-        }
-
-        private float x(float x) {
-            return x + xOffset;
-        }
-
-        private float y(float y) {
-            return humanoid ? yAnchor - (y + yOffset) : y + yOffset;
-        }
-
-        private static float sleeveOffset(String semanticName) {
-            if (semanticName.startsWith("left_sleeve")) {
-                return -SLEEVE_OFFSET;
-            }
-            return semanticName.startsWith("right_sleeve") ? SLEEVE_OFFSET : 0.0F;
+            return humanoid
+                    ? new Vec3(point.x(), BODY_HEIGHT - point.y(), point.z())
+                    : point;
         }
     }
 

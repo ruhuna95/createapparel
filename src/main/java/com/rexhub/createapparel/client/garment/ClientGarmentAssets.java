@@ -125,12 +125,6 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         if (variant == null) {
             return Optional.empty();
         }
-        GarmentPartModel referenceTorso = snapshot.garmentParts().get(variant.get("torso"));
-        if (referenceTorso == null) {
-            return Optional.empty();
-        }
-        float referenceTop = referenceTorso.upperY();
-
         GarmentData data;
         try {
             data = GarmentData.fromStack(stack, definition);
@@ -158,8 +152,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             resolvedParts.add(new ResolvedPart(
                     name,
                     part,
-                    part.resolveTextures(definition, data),
-                    referenceTop - part.upperY()
+                    part.resolveTextures(definition, data)
             ));
         }
         return Optional.of(new ResolvedGarment(definition, data, List.copyOf(resolvedParts)));
@@ -504,14 +497,6 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             Map<String, DesignMasks> designs,
             Map<FabricMaterial, ResourceLocation> materialOverrides
     ) {
-        public float upperY() {
-            return elements.stream()
-                    .map(Element::to)
-                    .map(Vec3::y)
-                    .max(Float::compare)
-                    .orElseThrow();
-        }
-
         public ResolvedTextures resolveTextures(GarmentDefinition definition, GarmentData data) {
             TextureVariant variant = variants.getOrDefault(definition.textureVariant(), variants.get("default"));
             ResourceLocation base = materialOverrides.getOrDefault(data.material(), variant.base());
@@ -556,8 +541,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     public record ResolvedPart(
             String semanticName,
             GarmentPartModel model,
-            ResolvedTextures textures,
-            float topAlignmentOffset
+            ResolvedTextures textures
     ) {
     }
 

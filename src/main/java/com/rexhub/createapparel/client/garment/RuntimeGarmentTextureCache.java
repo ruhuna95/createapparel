@@ -16,6 +16,7 @@ import net.minecraft.util.FastColor;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -62,6 +63,9 @@ public final class RuntimeGarmentTextureCache {
              NativeImage secondary = readOptional(manager, textures.secondary());
              NativeImage accent = readOptional(manager, textures.accent())) {
             NativeImage output = new NativeImage(part.textureWidth(), part.textureHeight(), false);
+            int primaryTint = data.primaryColor().tintRgb();
+            OptionalInt secondaryTint = tintRgb(data.secondaryColor());
+            OptionalInt accentTint = tintRgb(data.accentColor());
             for (int y = 0; y < part.textureHeight(); y++) {
                 for (int x = 0; x < part.textureWidth(); x++) {
                     int basePixel = base.getPixelRGBA(x, y);
@@ -70,9 +74,14 @@ public final class RuntimeGarmentTextureCache {
                         output.setPixelRGBA(x, y, 0);
                         continue;
                     }
-                    FabricColor color = selectColor(x, y, secondary, accent, data);
                     int grayscale = FastColor.ABGR32.red(basePixel);
-                    int tint = color.tintRgb();
+                    int tint = GarmentTexturePixelOps.composeTint(
+                            primaryTint,
+                            secondaryTint,
+                            accentTint,
+                            maskRed(secondary, x, y),
+                            maskRed(accent, x, y)
+                    );
                     int red = grayscale * FastColor.ARGB32.red(tint) / 255;
                     int green = grayscale * FastColor.ARGB32.green(tint) / 255;
                     int blue = grayscale * FastColor.ARGB32.blue(tint) / 255;
@@ -91,20 +100,12 @@ public final class RuntimeGarmentTextureCache {
         }
     }
 
-    private static FabricColor selectColor(
-            int x,
-            int y,
-            NativeImage secondary,
-            NativeImage accent,
-            GarmentData data
-    ) {
-        if (accent != null && FastColor.ABGR32.red(accent.getPixelRGBA(x, y)) == 255) {
-            return data.accentColor().orElse(data.primaryColor());
-        }
-        if (secondary != null && FastColor.ABGR32.red(secondary.getPixelRGBA(x, y)) == 255) {
-            return data.secondaryColor().orElse(data.primaryColor());
-        }
-        return data.primaryColor();
+    private static int maskRed(NativeImage mask, int x, int y) {
+        return mask == null ? 0 : FastColor.ABGR32.red(mask.getPixelRGBA(x, y));
+    }
+
+    private static OptionalInt tintRgb(Optional<FabricColor> color) {
+        return color.isPresent() ? OptionalInt.of(color.get().tintRgb()) : OptionalInt.empty();
     }
 
     private static NativeImage read(ResourceManager manager, ResourceLocation texture) throws IOException {
