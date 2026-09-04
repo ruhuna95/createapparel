@@ -27,8 +27,8 @@ public final class ClientApparelInventories {
     public static void accept(
             int playerId,
             List<ItemStack> contents,
-            boolean bodyModeEnabled,
-            boolean armorHidden,
+            boolean forceSkin,
+            boolean forceHideArmor,
             ArmProfile armProfile,
             ChestProfile chestProfile,
             SkinTone skinTone
@@ -38,8 +38,8 @@ public final class ClientApparelInventories {
         }
         STATE_BY_PLAYER.put(playerId, new PlayerApparelState(
                 contents.stream().map(ItemStack::copy).toList(),
-                bodyModeEnabled,
-                armorHidden,
+                forceSkin,
+                forceHideArmor,
                 armProfile,
                 chestProfile,
                 skinTone
@@ -55,18 +55,18 @@ public final class ClientApparelInventories {
 
     public static boolean isBodyModeActive(Player player) {
         if (activePreview != null && activePreview.playerId() == player.getId()) {
-            return ApparelBodyMode.isActive(activePreview.contents());
+            return forceSkin(player) || ApparelBodyMode.isActive(activePreview.contents());
         }
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
-        return state != null ? state.bodyModeEnabled() : ApparelBodyMode.isActive(EMPTY_CONTENTS);
+        return state != null && (state.forceSkin() || ApparelBodyMode.isActive(state.contents()));
     }
 
     public static boolean isArmorHidden(Player player) {
         if (activePreview != null && activePreview.playerId() == player.getId()) {
-            return ApparelBodyMode.isActive(activePreview.contents());
+            return forceHideArmor(player) || ApparelBodyMode.isActive(activePreview.contents());
         }
         PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
-        return state != null && state.armorHidden();
+        return state != null && (state.forceHideArmor() || ApparelBodyMode.isActive(state.contents()));
     }
 
     public static ArmProfile armProfile(Player player) {
@@ -127,10 +127,20 @@ public final class ClientApparelInventories {
         return state != null ? state.contents() : EMPTY_CONTENTS;
     }
 
+    private static boolean forceSkin(Player player) {
+        PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
+        return state != null && state.forceSkin();
+    }
+
+    private static boolean forceHideArmor(Player player) {
+        PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
+        return state != null && state.forceHideArmor();
+    }
+
     private record PlayerApparelState(
             List<ItemStack> contents,
-            boolean bodyModeEnabled,
-            boolean armorHidden,
+            boolean forceSkin,
+            boolean forceHideArmor,
             ArmProfile armProfile,
             ChestProfile chestProfile,
             SkinTone skinTone

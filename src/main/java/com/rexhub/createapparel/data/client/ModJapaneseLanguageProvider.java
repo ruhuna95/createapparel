@@ -57,6 +57,9 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.T_SHIRT.get(), "Tシャツ");
         add(ModItems.T_SHIRT_U_NECK.get(), "UネックTシャツ");
         add(ModItems.T_SHIRT_V_NECK.get(), "VネックTシャツ");
+        add(ModItems.T_SHIRT_LONGSLEEVES.get(), "長袖Tシャツ");
+        add(ModItems.T_SHIRT_LONGSLEEVES_U_NECK.get(), "Uネック長袖Tシャツ");
+        add(ModItems.T_SHIRT_LONGSLEEVES_V_NECK.get(), "Vネック長袖Tシャツ");
 
         add("tooltip.createapparel.sewing_pattern.unset", "右クリックで設定");
         add("tooltip.createapparel.sewing_pattern.recipe", "レシピ: %s");

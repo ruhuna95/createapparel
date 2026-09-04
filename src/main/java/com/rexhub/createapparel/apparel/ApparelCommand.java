@@ -195,17 +195,18 @@ public final class ApparelCommand {
     private static ArgumentBuilder<CommandSourceStack, ?> bodyCommand() {
         return Commands.literal("body")
                 .then(Commands.argument("target", EntityArgument.players())
-                        .then(Commands.literal("skin")
-                                .then(Commands.argument("enabled", BoolArgumentType.bool())
-                                        .executes(context -> setBodyMode(
+                        .then(Commands.literal("forceSkin")
+                                .then(Commands.argument("force", BoolArgumentType.bool())
+                                        .executes(context -> setForceSkin(
                                                 context,
-                                                BoolArgumentType.getBool(context, "enabled")
+                                                BoolArgumentType.getBool(context, "force")
                                         ))))
-                        .then(Commands.literal("armor")
-                                .then(Commands.literal("show")
-                                        .executes(context -> setArmorHidden(context, false)))
-                                .then(Commands.literal("hide")
-                                        .executes(context -> setArmorHidden(context, true))))
+                        .then(Commands.literal("forceHideArmor")
+                                .then(Commands.argument("force", BoolArgumentType.bool())
+                                        .executes(context -> setForceHideArmor(
+                                                context,
+                                                BoolArgumentType.getBool(context, "force")
+                                        ))))
                         .then(Commands.literal("chest")
                                 .then(Commands.literal("flat")
                                         .executes(context -> setChestProfile(context, ChestProfile.FLAT)))
@@ -410,22 +411,19 @@ public final class ApparelCommand {
         return changed;
     }
 
-    private static int setBodyMode(CommandContext<CommandSourceStack> context, boolean enabled)
+    private static int setForceSkin(CommandContext<CommandSourceStack> context, boolean forced)
             throws CommandSyntaxException {
-        return updateAppearance(context, inventory -> inventory.setBodyModeEnabled(enabled), "Body skin", enabled);
+        return updateAppearance(context, inventory -> inventory.setForceSkin(forced), "Force skin", forced);
     }
 
-    private static int setArmorHidden(CommandContext<CommandSourceStack> context, boolean hidden)
+    private static int setForceHideArmor(CommandContext<CommandSourceStack> context, boolean forced)
             throws CommandSyntaxException {
-        Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "target");
-        for (ServerPlayer target : targets) {
-            getInventory(target).setArmorHidden(hidden);
-        }
-        context.getSource().sendSuccess(
-                () -> Component.literal("Armor: " + (hidden ? "HIDDEN" : "VISIBLE")),
-                false
+        return updateAppearance(
+                context,
+                inventory -> inventory.setForceHideArmor(forced),
+                "Force hide armor",
+                forced
         );
-        return targets.size();
     }
 
     private static int setChestProfile(CommandContext<CommandSourceStack> context, ChestProfile profile)

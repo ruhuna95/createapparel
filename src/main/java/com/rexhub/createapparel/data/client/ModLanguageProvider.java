@@ -58,6 +58,9 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.T_SHIRT.get(), "T-Shirt");
         add(ModItems.T_SHIRT_U_NECK.get(), "U-Neck T-Shirt");
         add(ModItems.T_SHIRT_V_NECK.get(), "V-Neck T-Shirt");
+        add(ModItems.T_SHIRT_LONGSLEEVES.get(), "Long Sleeve T-Shirt");
+        add(ModItems.T_SHIRT_LONGSLEEVES_U_NECK.get(), "U-Neck Long Sleeve T-Shirt");
+        add(ModItems.T_SHIRT_LONGSLEEVES_V_NECK.get(), "V-Neck Long Sleeve T-Shirt");
 
         add("tooltip.createapparel.sewing_pattern.unset", "Right-click to configure");
         add("tooltip.createapparel.sewing_pattern.recipe", "Recipe: %s");

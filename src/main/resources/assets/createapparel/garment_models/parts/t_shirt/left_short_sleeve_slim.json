@@ -12,9 +12,9 @@
     ],
     "elements": [
       {
-        "name": "left_sleeve_classic",
+        "name": "left_sleeve_slim",
         "from": [
-          -8.25,
+          -7.25,
           19,
           -2.25
         ],
@@ -28,23 +28,23 @@
             "uv": [
               4,
               4,
-              8,
+              7,
               9
             ]
           },
           "right": {
             "uv": [
-              8,
+              7,
               4,
-              12,
+              11,
               9
             ]
           },
           "back": {
             "uv": [
-              12,
+              11,
               4,
-              16,
+              14,
               9
             ]
           },
@@ -60,7 +60,7 @@
             "uv": [
               4,
               0,
-              8,
+              7,
               4
             ]
           }
@@ -71,15 +71,15 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/t_shirt/sleeve_classic/base/default"
+        "base": "createapparel:garment/t_shirt/short_sleeve_slim/base/default"
       }
     },
     "designs": {
       "stripe": {
-        "secondary_mask": "createapparel:garment/t_shirt/sleeve_classic/masks/stripe/secondary"
+        "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_slim/masks/stripe/secondary"
       },
       "stripe_logo": {
-        "secondary_mask": "createapparel:garment/t_shirt/sleeve_classic/masks/stripe/secondary"
+        "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_slim/masks/stripe/secondary"
       }
     }
   }

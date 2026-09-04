@@ -12,15 +12,16 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class ApparelInventory extends ItemStackHandler {
     public static final int SLOT_COUNT = GarmentSlot.values().length;
 
     private static final String CHEST_PROFILE_TAG = "ChestProfile";
     private static final String SKIN_TONE_TAG = "SkinTone";
-    private static final String BODY_MODE_OVERRIDE_TAG = "BodyModeOverride";
-    private static final String ARMOR_HIDDEN_OVERRIDE_TAG = "ArmorHiddenOverride";
+    private static final String FORCE_SKIN_TAG = "ForceSkin";
+    private static final String FORCE_HIDE_ARMOR_TAG = "ForceHideArmor";
+    private static final String LEGACY_BODY_MODE_OVERRIDE_TAG = "BodyModeOverride";
+    private static final String LEGACY_ARMOR_HIDDEN_OVERRIDE_TAG = "ArmorHiddenOverride";
     private static final String LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG = "ArmorVisibilityOverride";
 
     private Runnable changeListener = () -> {
@@ -29,8 +30,8 @@ public final class ApparelInventory extends ItemStackHandler {
     private ArmProfile armProfile = ArmProfile.CLASSIC;
     private ChestProfile chestProfile = ChestProfile.FLAT;
     private SkinTone skinTone = SkinTone.NATURAL;
-    private Optional<Boolean> bodyModeOverride = Optional.empty();
-    private Optional<Boolean> armorHiddenOverride = Optional.empty();
+    private boolean forceSkin;
+    private boolean forceHideArmor;
 
     public ApparelInventory() {
         super(SLOT_COUNT);
@@ -57,11 +58,19 @@ public final class ApparelInventory extends ItemStackHandler {
     }
 
     public boolean isBodyModeEnabled() {
-        return bodyModeOverride.orElseGet(() -> ApparelBodyMode.isActive(this));
+        return forceSkin || ApparelBodyMode.isActive(this);
     }
 
     public boolean isArmorHidden() {
-        return armorHiddenOverride.orElseGet(() -> ApparelBodyMode.isActive(this));
+        return forceHideArmor || ApparelBodyMode.isActive(this);
+    }
+
+    public boolean forceSkin() {
+        return forceSkin;
+    }
+
+    public boolean forceHideArmor() {
+        return forceHideArmor;
     }
 
     void updateArmProfile(ArmProfile armProfile) {
@@ -82,16 +91,16 @@ public final class ApparelInventory extends ItemStackHandler {
         }
     }
 
-    public void setBodyModeEnabled(boolean enabled) {
-        if (!bodyModeOverride.equals(Optional.of(enabled))) {
-            bodyModeOverride = Optional.of(enabled);
+    public void setForceSkin(boolean forceSkin) {
+        if (this.forceSkin != forceSkin) {
+            this.forceSkin = forceSkin;
             notifyChanged();
         }
     }
 
-    public void setArmorHidden(boolean hidden) {
-        if (!armorHiddenOverride.equals(Optional.of(hidden))) {
-            armorHiddenOverride = Optional.of(hidden);
+    public void setForceHideArmor(boolean forceHideArmor) {
+        if (this.forceHideArmor != forceHideArmor) {
+            this.forceHideArmor = forceHideArmor;
             notifyChanged();
         }
     }
@@ -153,8 +162,8 @@ public final class ApparelInventory extends ItemStackHandler {
         CompoundTag tag = super.serializeNBT();
         tag.putString(CHEST_PROFILE_TAG, chestProfile.getSerializedName());
         tag.putString(SKIN_TONE_TAG, skinTone.getSerializedName());
-        bodyModeOverride.ifPresent(value -> tag.putBoolean(BODY_MODE_OVERRIDE_TAG, value));
-        armorHiddenOverride.ifPresent(value -> tag.putBoolean(ARMOR_HIDDEN_OVERRIDE_TAG, value));
+        tag.putBoolean(FORCE_SKIN_TAG, forceSkin);
+        tag.putBoolean(FORCE_HIDE_ARMOR_TAG, forceHideArmor);
         return tag;
     }
 
@@ -171,15 +180,19 @@ public final class ApparelInventory extends ItemStackHandler {
             if (tag.contains(SKIN_TONE_TAG, CompoundTag.TAG_STRING)) {
                 skinTone = SkinTone.fromSerializedName(tag.getString(SKIN_TONE_TAG));
             }
-            bodyModeOverride = tag.contains(BODY_MODE_OVERRIDE_TAG, CompoundTag.TAG_BYTE)
-                    ? Optional.of(tag.getBoolean(BODY_MODE_OVERRIDE_TAG))
-                    : Optional.empty();
-            if (tag.contains(ARMOR_HIDDEN_OVERRIDE_TAG, CompoundTag.TAG_BYTE)) {
-                armorHiddenOverride = Optional.of(tag.getBoolean(ARMOR_HIDDEN_OVERRIDE_TAG));
-            } else if (tag.contains(LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG, CompoundTag.TAG_BYTE)) {
-                armorHiddenOverride = Optional.of(tag.getBoolean(LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG));
+            if (tag.contains(FORCE_SKIN_TAG, CompoundTag.TAG_BYTE)) {
+                forceSkin = tag.getBoolean(FORCE_SKIN_TAG);
             } else {
-                armorHiddenOverride = Optional.empty();
+                forceSkin = tag.getBoolean(LEGACY_BODY_MODE_OVERRIDE_TAG);
+            }
+            if (tag.contains(FORCE_HIDE_ARMOR_TAG, CompoundTag.TAG_BYTE)) {
+                forceHideArmor = tag.getBoolean(FORCE_HIDE_ARMOR_TAG);
+            } else if (tag.contains(LEGACY_ARMOR_HIDDEN_OVERRIDE_TAG, CompoundTag.TAG_BYTE)) {
+                forceHideArmor = tag.getBoolean(LEGACY_ARMOR_HIDDEN_OVERRIDE_TAG);
+            } else if (tag.contains(LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG, CompoundTag.TAG_BYTE)) {
+                forceHideArmor = tag.getBoolean(LEGACY_ARMOR_VISIBILITY_OVERRIDE_TAG);
+            } else {
+                forceHideArmor = false;
             }
         } finally {
             suppressChangeNotification = false;

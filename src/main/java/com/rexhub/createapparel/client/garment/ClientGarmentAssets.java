@@ -128,7 +128,6 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         GarmentData data;
         try {
             data = GarmentData.fromStack(stack, definition);
-            validateColorChannels(definition, data, variant, snapshot.garmentParts());
         } catch (IllegalArgumentException exception) {
             data = GarmentData.defaultFor(definition);
         }
@@ -426,19 +425,6 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             if (!parts.containsKey(variant.get(name))) {
                 throw new IllegalStateException("Unknown support part model: " + variant.get(name));
             }
-        }
-    }
-
-    private static void validateColorChannels(
-            GarmentDefinition definition,
-            GarmentData data,
-            Map<String, ResourceLocation> variant,
-            Map<ResourceLocation, GarmentPartModel> parts
-    ) {
-        ColorChannels required = colorChannels(variant, data.design(), parts);
-        if (required.secondary() != data.secondaryColor().isPresent()
-                || required.accent() != data.accentColor().isPresent()) {
-            throw new IllegalArgumentException("Garment color channels do not match design masks: " + definition.id());
         }
     }
 

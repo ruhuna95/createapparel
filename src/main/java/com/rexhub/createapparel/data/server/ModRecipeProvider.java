@@ -36,6 +36,19 @@ import javax.annotation.Nullable;
 public final class ModRecipeProvider extends BaseRecipeProvider {
     private static final int MILLING_DURATION = 100;
     private static final int FABRIC_TREATMENT_WATER_AMOUNT = 250;
+    private static final List<TagKey<Item>> T_SHIRT_FABRICS = List.of(
+            ModTags.Items.FABRICS_COTTON,
+            ModTags.Items.FABRICS_LINEN,
+            ModTags.Items.FABRICS_HEMP,
+            ModTags.Items.FABRICS_SYNTHETIC
+    );
+    private static final List<TagKey<Item>> LONG_SLEEVE_T_SHIRT_FABRICS = List.of(
+            ModTags.Items.FABRICS_COTTON,
+            ModTags.Items.FABRICS_LINEN,
+            ModTags.Items.FABRICS_HEMP,
+            ModTags.Items.FABRICS_WOOL,
+            ModTags.Items.FABRICS_SYNTHETIC
+    );
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
@@ -75,9 +88,22 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             decolorizing(material);
         }
 
-        sewing("t_shirt", ModItems.T_SHIRT);
-        sewing("t_shirt_u_neck", ModItems.T_SHIRT_U_NECK);
-        sewing("t_shirt_v_neck", ModItems.T_SHIRT_V_NECK);
+        sewing("t_shirt", ModItems.T_SHIRT, T_SHIRT_FABRICS, 3);
+        sewing("t_shirt_u_neck", ModItems.T_SHIRT_U_NECK, T_SHIRT_FABRICS, 3);
+        sewing("t_shirt_v_neck", ModItems.T_SHIRT_V_NECK, T_SHIRT_FABRICS, 3);
+        sewing("t_shirt_longsleeves", ModItems.T_SHIRT_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 4);
+        sewing(
+                "t_shirt_longsleeves_u_neck",
+                ModItems.T_SHIRT_LONGSLEEVES_U_NECK,
+                LONG_SLEEVE_T_SHIRT_FABRICS,
+                4
+        );
+        sewing(
+                "t_shirt_longsleeves_v_neck",
+                ModItems.T_SHIRT_LONGSLEEVES_V_NECK,
+                LONG_SLEEVE_T_SHIRT_FABRICS,
+                4
+        );
     }
 
     private void milling(
@@ -165,19 +191,16 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .build(consumer));
     }
 
-    private void sewing(String recipeName, RegistryObject<Item> result) {
+    private void sewing(
+            String recipeName,
+            RegistryObject<Item> result,
+            List<TagKey<Item>> fabricTags,
+            int fabricCount
+    ) {
         register(consumer -> consumer.accept(new SewingFinishedRecipe(
                 asResource(recipeName),
-                List.of(
-                        ModTags.Items.FABRICS_COTTON,
-                        ModTags.Items.FABRICS_LINEN,
-                        ModTags.Items.FABRICS_HEMP,
-                        ModTags.Items.FABRICS_WOOL,
-                        ModTags.Items.FABRICS_SILK,
-                        ModTags.Items.FABRICS_LEATHER,
-                        ModTags.Items.FABRICS_SYNTHETIC
-                ),
-                3,
+                fabricTags,
+                fabricCount,
                 List.of(ModTags.Items.THREADS),
                 1,
                 ModItems.SEWING_PATTERN.getId(),

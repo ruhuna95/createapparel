@@ -112,8 +112,8 @@ public final class ModNetwork {
         return new ApparelInventorySyncPacket(
                 player.getId(),
                 inventory.copyContents(),
-                inventory.isBodyModeEnabled(),
-                inventory.isArmorHidden(),
+                inventory.forceSkin(),
+                inventory.forceHideArmor(),
                 inventory.armProfile(),
                 inventory.chestProfile(),
                 inventory.skinTone()

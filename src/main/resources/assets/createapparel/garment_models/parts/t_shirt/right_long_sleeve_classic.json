@@ -15,7 +15,7 @@
         "name": "right_sleeve_classic",
         "from": [
           3.98,
-          19,
+          13,
           -2.25
         ],
         "to": [
@@ -29,7 +29,7 @@
               4,
               4,
               8,
-              9
+              15
             ]
           },
           "right": {
@@ -37,7 +37,7 @@
               8,
               4,
               12,
-              9
+              15
             ]
           },
           "back": {
@@ -45,7 +45,7 @@
               12,
               4,
               16,
-              9
+              15
             ]
           },
           "left": {
@@ -53,7 +53,7 @@
               0,
               4,
               4,
-              9
+              15
             ]
           },
           "top": {
@@ -71,15 +71,15 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/t_shirt/sleeve_classic/base/default"
+        "base": "createapparel:garment/t_shirt/long_sleeve_classic/base/default"
       }
     },
     "designs": {
       "stripe": {
-        "secondary_mask": "createapparel:garment/t_shirt/sleeve_classic/masks/stripe/secondary"
+        "secondary_mask": "createapparel:garment/t_shirt/long_sleeve_classic/masks/stripe/secondary"
       },
       "stripe_logo": {
-        "secondary_mask": "createapparel:garment/t_shirt/sleeve_classic/masks/stripe/secondary"
+        "secondary_mask": "createapparel:garment/t_shirt/long_sleeve_classic/masks/stripe/secondary"
       }
     }
   }

@@ -16,8 +16,8 @@ import java.util.List;
 public record ApparelInventorySyncPacket(
         int playerId,
         List<ItemStack> contents,
-        boolean bodyModeEnabled,
-        boolean armorHidden,
+        boolean forceSkin,
+        boolean forceHideArmor,
         ArmProfile armProfile,
         ChestProfile chestProfile,
         SkinTone skinTone
@@ -33,8 +33,8 @@ public record ApparelInventorySyncPacket(
         buffer.writeVarInt(playerId);
         buffer.writeVarInt(contents.size());
         contents.forEach(buffer::writeItem);
-        buffer.writeBoolean(bodyModeEnabled);
-        buffer.writeBoolean(armorHidden);
+        buffer.writeBoolean(forceSkin);
+        buffer.writeBoolean(forceHideArmor);
         buffer.writeEnum(armProfile);
         buffer.writeEnum(chestProfile);
         buffer.writeEnum(skinTone);
@@ -67,8 +67,8 @@ public record ApparelInventorySyncPacket(
                 () -> () -> ClientApparelInventories.accept(
                         playerId,
                         contents,
-                        bodyModeEnabled,
-                        armorHidden,
+                        forceSkin,
+                        forceHideArmor,
                         armProfile,
                         chestProfile,
                         skinTone
