@@ -17,6 +17,18 @@ final class GarmentTexturePixelOps {
                 && green == blue;
     }
 
+    static boolean isValidOverlayAlpha(int alpha) {
+        return alpha == 0 || alpha == MAX_CHANNEL_VALUE;
+    }
+
+    static int applyOverlay(int composedPixel, OptionalInt overlayPixel) {
+        if (overlayPixel.isEmpty()) {
+            return composedPixel;
+        }
+        int pixel = overlayPixel.getAsInt();
+        return pixel >>> 24 == 0 ? composedPixel : pixel;
+    }
+
     static int composeTint(
             int primaryTint,
             OptionalInt secondaryTint,

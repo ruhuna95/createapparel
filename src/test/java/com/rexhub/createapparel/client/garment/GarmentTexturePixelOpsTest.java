@@ -102,6 +102,45 @@ class GarmentTexturePixelOpsTest {
         }
     }
 
+    @Test
+    void missingOverlayKeepsComposedPixel() {
+        assertEquals(0xFF102030, GarmentTexturePixelOps.applyOverlay(
+                0xFF102030,
+                OptionalInt.empty()
+        ));
+    }
+
+    @Test
+    void transparentOverlayKeepsComposedPixel() {
+        assertEquals(0xFF102030, GarmentTexturePixelOps.applyOverlay(
+                0xFF102030,
+                OptionalInt.of(0x00332211)
+        ));
+    }
+
+    @Test
+    void opaqueOverlayFullyReplacesComposedPixel() {
+        assertEquals(0xFF332211, GarmentTexturePixelOps.applyOverlay(
+                0xFF102030,
+                OptionalInt.of(0xFF332211)
+        ));
+    }
+
+    @Test
+    void opaqueOverlayCanReplaceTransparentBase() {
+        assertEquals(0xFF332211, GarmentTexturePixelOps.applyOverlay(
+                0,
+                OptionalInt.of(0xFF332211)
+        ));
+    }
+
+    @Test
+    void overlayAlphaMustBeBinary() {
+        assertTrue(GarmentTexturePixelOps.isValidOverlayAlpha(0));
+        assertTrue(GarmentTexturePixelOps.isValidOverlayAlpha(255));
+        assertFalse(GarmentTexturePixelOps.isValidOverlayAlpha(128));
+    }
+
     private static int compose(int secondaryMaskRed, int accentMaskRed) {
         return GarmentTexturePixelOps.composeTint(
                 PRIMARY,

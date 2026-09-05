@@ -487,7 +487,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             TextureVariant variant = variants.getOrDefault(definition.textureVariant(), variants.get("default"));
             ResourceLocation base = materialOverrides.getOrDefault(data.material(), variant.base());
             DesignMasks masks = designs.getOrDefault(data.design(), DesignMasks.NONE);
-            return new ResolvedTextures(base, masks.secondary(), masks.accent());
+            return new ResolvedTextures(base, masks.secondary(), masks.accent(), variant.overlay());
         }
 
         public ResourceLocation defaultTexture() {
@@ -507,7 +507,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     public record Uv(float u0, float v0, float u1, float v1) {
     }
 
-    public record TextureVariant(ResourceLocation base) {
+    public record TextureVariant(ResourceLocation base, Optional<ResourceLocation> overlay) {
     }
 
     public record DesignMasks(Optional<ResourceLocation> secondary, Optional<ResourceLocation> accent) {
@@ -520,7 +520,8 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     public record ResolvedTextures(
             ResourceLocation base,
             Optional<ResourceLocation> secondary,
-            Optional<ResourceLocation> accent
+            Optional<ResourceLocation> accent,
+            Optional<ResourceLocation> overlay
     ) {
     }
 

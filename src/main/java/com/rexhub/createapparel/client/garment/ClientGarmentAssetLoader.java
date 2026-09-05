@@ -169,10 +169,12 @@ final class ClientGarmentAssetLoader {
         JsonObject variantsJson = GsonHelper.getAsJsonObject(texturesJson, "variants");
         for (Map.Entry<String, JsonElement> entry : variantsJson.entrySet()) {
             JsonObject variant = GsonHelper.convertToJsonObject(entry.getValue(), entry.getKey());
-            variants.put(entry.getKey(), new TextureVariant(resourceLocation(
+            ResourceLocation base = resourceLocation(
                     GsonHelper.getAsString(variant, "base"),
                     id + " / variant " + entry.getKey()
-            )));
+            );
+            Optional<ResourceLocation> overlay = optionalResourceLocation(variant, "overlay", id);
+            variants.put(entry.getKey(), new TextureVariant(base, overlay));
         }
         if (!variants.containsKey("default")) {
             throw new IllegalStateException("Garment part has no default texture variant: " + id);
@@ -225,6 +227,7 @@ final class ClientGarmentAssetLoader {
                     : isDefaultUnderwear(part.id()) ? TextureKind.FIXED_COLOR : TextureKind.BASE;
             for (TextureVariant variant : part.variants().values()) {
                 validateTexture(manager, part, variant.base(), baseKind);
+                variant.overlay().ifPresent(id -> validateTexture(manager, part, id, TextureKind.OVERLAY));
             }
             for (DesignMasks masks : part.designs().values()) {
                 masks.secondary().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
@@ -264,13 +267,18 @@ final class ClientGarmentAssetLoader {
                     int green = FastColor.ABGR32.green(pixel);
                     int blue = FastColor.ABGR32.blue(pixel);
                     int alpha = FastColor.ABGR32.alpha(pixel);
-                    if (kind != TextureKind.FIXED_COLOR && (red != green || green != blue)) {
+                    if (kind != TextureKind.FIXED_COLOR
+                            && kind != TextureKind.OVERLAY
+                            && (red != green || green != blue)) {
                         throw new IllegalStateException("Garment texture is not grayscale: " + textureId);
                     }
                     if (kind == TextureKind.BASE) {
                         if (alpha != 0 && alpha != 255) {
                             throw new IllegalStateException("Garment base alpha is not binary: " + textureId);
                         }
+                    } else if (kind == TextureKind.OVERLAY
+                            && !GarmentTexturePixelOps.isValidOverlayAlpha(alpha)) {
+                        throw new IllegalStateException("Garment overlay alpha is not binary: " + textureId);
                     } else if (kind == TextureKind.MASK
                             && !GarmentTexturePixelOps.isValidMaskPixel(red, green, blue, alpha)) {
                         throw new IllegalStateException("Garment design mask is not opaque grayscale: " + textureId);
@@ -350,6 +358,7 @@ final class ClientGarmentAssetLoader {
         BASE,
         BODY_TINT,
         FIXED_COLOR,
-        MASK
+        MASK,
+        OVERLAY
     }
 }
