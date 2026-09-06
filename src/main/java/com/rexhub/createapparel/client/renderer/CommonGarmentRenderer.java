@@ -11,9 +11,11 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedGarme
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedPart;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedSupportPart;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Rotation;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.TexturePoint;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Uv;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
 import com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache;
+import com.rexhub.createapparel.client.garment.GarmentElementGeometry;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -232,14 +234,8 @@ public final class CommonGarmentRenderer {
     }
 
     private static void includeElementBounds(float[] bounds, Element element) {
-        Vec3 from = element.from();
-        Vec3 to = element.to();
-        for (float x : new float[]{from.x(), to.x()}) {
-            for (float y : new float[]{from.y(), to.y()}) {
-                for (float z : new float[]{from.z(), to.z()}) {
-                    includePoint(bounds, rotatePoint(new Vec3(x, y, z), element.rotation()));
-                }
-            }
+        for (Vec3 corner : element.corners()) {
+            includePoint(bounds, rotatePoint(corner, element.rotation()));
         }
     }
 
@@ -309,13 +305,10 @@ public final class CommonGarmentRenderer {
             int packedOverlay,
             int tintRgb
     ) {
-        Vec3 from = element.from();
-        Vec3 to = element.to();
         element.faces().forEach((face, uv) -> renderFace(
                 face,
                 uv,
-                from,
-                to,
+                element,
                 textureWidth,
                 textureHeight,
                 mapping,
@@ -330,8 +323,7 @@ public final class CommonGarmentRenderer {
     private static void renderFace(
             Face face,
             Uv uv,
-            Vec3 from,
-            Vec3 to,
+            Element element,
             int textureWidth,
             int textureHeight,
             PartMapping mapping,
@@ -341,54 +333,23 @@ public final class CommonGarmentRenderer {
             int packedOverlay,
             int tintRgb
     ) {
-        float u0 = uv.u0() / textureWidth;
-        float v0 = uv.v0() / textureHeight;
-        float u1 = uv.u1() / textureWidth;
-        float v1 = uv.v1() / textureHeight;
-        switch (face) {
-            case FRONT -> quad(
-                    mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb, 0.0F, 0.0F, -1.0F,
-                    new Vertex(from.x(), from.y(), from.z(), u0, v1),
-                    new Vertex(from.x(), to.y(), from.z(), u0, v0),
-                    new Vertex(to.x(), to.y(), from.z(), u1, v0),
-                    new Vertex(to.x(), from.y(), from.z(), u1, v1)
-            );
-            case BACK -> quad(
-                    mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb, 0.0F, 0.0F, 1.0F,
-                    new Vertex(to.x(), from.y(), to.z(), u0, v1),
-                    new Vertex(to.x(), to.y(), to.z(), u0, v0),
-                    new Vertex(from.x(), to.y(), to.z(), u1, v0),
-                    new Vertex(from.x(), from.y(), to.z(), u1, v1)
-            );
-            case LEFT -> quad(
-                    mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb, -1.0F, 0.0F, 0.0F,
-                    new Vertex(from.x(), from.y(), to.z(), u0, v1),
-                    new Vertex(from.x(), to.y(), to.z(), u0, v0),
-                    new Vertex(from.x(), to.y(), from.z(), u1, v0),
-                    new Vertex(from.x(), from.y(), from.z(), u1, v1)
-            );
-            case RIGHT -> quad(
-                    mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb, 1.0F, 0.0F, 0.0F,
-                    new Vertex(to.x(), from.y(), from.z(), u0, v1),
-                    new Vertex(to.x(), to.y(), from.z(), u0, v0),
-                    new Vertex(to.x(), to.y(), to.z(), u1, v0),
-                    new Vertex(to.x(), from.y(), to.z(), u1, v1)
-            );
-            case TOP -> quad(
-                    mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb, 0.0F, 1.0F, 0.0F,
-                    new Vertex(from.x(), to.y(), from.z(), u0, v1),
-                    new Vertex(from.x(), to.y(), to.z(), u0, v0),
-                    new Vertex(to.x(), to.y(), to.z(), u1, v0),
-                    new Vertex(to.x(), to.y(), from.z(), u1, v1)
-            );
-            case BOTTOM -> quad(
-                    mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb, 0.0F, -1.0F, 0.0F,
-                    new Vertex(from.x(), from.y(), to.z(), u0, v1),
-                    new Vertex(from.x(), from.y(), from.z(), u0, v0),
-                    new Vertex(to.x(), from.y(), from.z(), u1, v0),
-                    new Vertex(to.x(), from.y(), to.z(), u1, v1)
+        List<Vec3> points = GarmentElementGeometry.faceVertices(element, face);
+        Vec3 normal = GarmentElementGeometry.normal(points);
+        Vertex[] faceVertices = new Vertex[4];
+        for (int index = 0; index < faceVertices.length; index++) {
+            TexturePoint texturePoint = uv.corners().get(index);
+            faceVertices[index] = vertex(
+                    points.get(index), texturePoint.u() / textureWidth, texturePoint.v() / textureHeight
             );
         }
+        quad(
+                mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb,
+                normal.x(), normal.y(), normal.z(), faceVertices
+        );
+    }
+
+    private static Vertex vertex(Vec3 point, float u, float v) {
+        return new Vertex(point.x(), point.y(), point.z(), u, v);
     }
 
     private static void quad(

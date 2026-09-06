@@ -147,7 +147,7 @@ final class ClientGarmentAssetLoader {
                 Face face = Face.fromName(faceEntry.getKey());
                 JsonObject faceJson = GsonHelper.convertToJsonObject(faceEntry.getValue(), faceEntry.getKey());
                 float[] uv = floatQuad(GsonHelper.getAsJsonArray(faceJson, "uv"), id + " " + faceEntry.getKey());
-                faces.put(face, new Uv(uv[0], uv[1], uv[2], uv[3]));
+                faces.put(face, new Uv(uv[0], uv[1], uv[2], uv[3], textureCorners(faceJson, uv, id)));
             }
             if (faces.isEmpty()) {
                 throw new IllegalStateException("Garment element has no faces: " + id);
@@ -157,7 +157,10 @@ final class ClientGarmentAssetLoader {
                     from,
                     to,
                     rotation,
-                    Collections.unmodifiableMap(faces)
+                    Collections.unmodifiableMap(faces),
+                    GarmentElementGeometry.corners(
+                            from, to, inset(elementJson, "top_inset", id), inset(elementJson, "bottom_inset", id)
+                    )
             ));
         }
         if (elements.isEmpty()) {
@@ -219,6 +222,38 @@ final class ClientGarmentAssetLoader {
                 Collections.unmodifiableMap(designs),
                 Collections.unmodifiableMap(materialOverrides)
         );
+    }
+
+    private static float[] inset(JsonObject element, String key, ResourceLocation id) {
+        return element.has(key)
+                ? floatQuad(GsonHelper.getAsJsonArray(element, key), id + " " + key)
+                : new float[4];
+    }
+
+    private static List<ClientGarmentAssets.TexturePoint> textureCorners(
+            JsonObject face, float[] uv, ResourceLocation id
+    ) {
+        if (!face.has("uv_corners")) {
+            return new Uv(uv[0], uv[1], uv[2], uv[3]).corners();
+        }
+        JsonArray values = GsonHelper.getAsJsonArray(face, "uv_corners");
+        if (values.size() != 4) {
+            throw new IllegalStateException("Expected four UV corners: " + id);
+        }
+        List<ClientGarmentAssets.TexturePoint> corners = new ArrayList<>(4);
+        for (JsonElement value : values) {
+            if (!value.isJsonArray() || value.getAsJsonArray().size() != 2) {
+                throw new IllegalStateException("Expected two values per UV corner: " + id);
+            }
+            float u = value.getAsJsonArray().get(0).getAsFloat();
+            float v = value.getAsJsonArray().get(1).getAsFloat();
+            if (!Float.isFinite(u) || !Float.isFinite(v)
+                    || u < uv[0] || u > uv[2] || v < uv[1] || v > uv[3]) {
+                throw new IllegalStateException("UV corner must be inside its UV rectangle: " + id);
+            }
+            corners.add(new ClientGarmentAssets.TexturePoint(u, v));
+        }
+        return List.copyOf(corners);
     }
 
     private static void validatePartTextures(

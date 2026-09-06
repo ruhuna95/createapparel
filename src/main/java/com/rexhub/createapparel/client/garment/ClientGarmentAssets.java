@@ -504,10 +504,21 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     public record Rotation(Vec3 origin, Axis axis, float angle) {
     }
 
-    public record Element(String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces) {
+    public record Element(
+            String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces, List<Vec3> corners
+    ) {
     }
 
-    public record Uv(float u0, float v0, float u1, float v1) {
+    public record Uv(float u0, float v0, float u1, float v1, List<TexturePoint> corners) {
+        public Uv(float u0, float v0, float u1, float v1) {
+            this(u0, v0, u1, v1, List.of(
+                    new TexturePoint(u0, v1), new TexturePoint(u0, v0),
+                    new TexturePoint(u1, v0), new TexturePoint(u1, v1)
+            ));
+        }
+    }
+
+    public record TexturePoint(float u, float v) {
     }
 
     public record TextureVariant(
