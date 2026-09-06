@@ -132,14 +132,9 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             data = GarmentData.defaultFor(definition);
         }
 
-        List<String> selectedNames = new ArrayList<>();
-        selectedNames.add("tucked".equals(data.styles().get("tuck")) ? "tucked_torso" : "torso");
-        if (chestProfile == ChestProfile.BUST && variant.containsKey("bust")) {
-            selectedNames.add("bust");
-        }
-        String armSuffix = armProfile.getSerializedName();
-        selectedNames.add("left_sleeve_" + armSuffix);
-        selectedNames.add("right_sleeve_" + armSuffix);
+        List<String> selectedNames = GarmentPartSelection.select(
+                data.styles(), armProfile, chestProfile, variant.containsKey("bust")
+        );
 
         List<ResolvedPart> resolvedParts = new ArrayList<>();
         for (String name : selectedNames) {
@@ -346,9 +341,14 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                     );
                 }
             }
-            if (definition.styles().getOrDefault("tuck", List.of()).contains("tucked")
-                    && !variant.containsKey("tucked_torso")) {
-                throw new IllegalStateException("Garment tuck style requires tucked_torso: " + definition.id());
+            Set<String> missingStyleParts = new LinkedHashSet<>(GarmentPartSelection.requiredStyleParts(
+                    definition.styles(), variant.containsKey("bust")
+            ));
+            missingStyleParts.removeAll(variant.keySet());
+            if (!missingStyleParts.isEmpty()) {
+                throw new IllegalStateException(
+                        "Garment styles require missing parts: " + definition.id() + " / " + missingStyleParts
+                );
             }
         }
     }
@@ -487,7 +487,10 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             TextureVariant variant = variants.getOrDefault(definition.textureVariant(), variants.get("default"));
             ResourceLocation base = materialOverrides.getOrDefault(data.material(), variant.base());
             DesignMasks masks = designs.getOrDefault(data.design(), DesignMasks.NONE);
-            return new ResolvedTextures(base, masks.secondary(), masks.accent(), variant.overlay());
+            return new ResolvedTextures(
+                    base, masks.secondary(), masks.accent(), variant.overlay(),
+                    variant.brightness(), variant.brightnessMask()
+            );
         }
 
         public ResourceLocation defaultTexture() {
@@ -507,7 +510,12 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     public record Uv(float u0, float v0, float u1, float v1) {
     }
 
-    public record TextureVariant(ResourceLocation base, Optional<ResourceLocation> overlay) {
+    public record TextureVariant(
+            ResourceLocation base,
+            Optional<ResourceLocation> overlay,
+            float brightness,
+            Optional<ResourceLocation> brightnessMask
+    ) {
     }
 
     public record DesignMasks(Optional<ResourceLocation> secondary, Optional<ResourceLocation> accent) {
@@ -521,7 +529,9 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             ResourceLocation base,
             Optional<ResourceLocation> secondary,
             Optional<ResourceLocation> accent,
-            Optional<ResourceLocation> overlay
+            Optional<ResourceLocation> overlay,
+            float brightness,
+            Optional<ResourceLocation> brightnessMask
     ) {
     }
 

@@ -61,6 +61,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.T_SHIRT_LONGSLEEVES.get(), "Long Sleeve T-Shirt");
         add(ModItems.T_SHIRT_LONGSLEEVES_U_NECK.get(), "U-Neck Long Sleeve T-Shirt");
         add(ModItems.T_SHIRT_LONGSLEEVES_V_NECK.get(), "V-Neck Long Sleeve T-Shirt");
+        add(ModItems.SHIRT_SHORTSLEEVES.get(), "Short Sleeves Shirt");
+        add(ModItems.SHIRT_LONGSLEEVES.get(), "Long Sleeves Shirt");
 
         add("tooltip.createapparel.sewing_pattern.unset", "Right-click to configure");
         add("tooltip.createapparel.sewing_pattern.recipe", "Recipe: %s");
@@ -108,6 +110,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("style.createapparel.sleeves.normal", "Normal");
         add("style.createapparel.sleeves.rolled", "Rolled");
         add("style.createapparel.open.closed", "Closed");
+        add("style.createapparel.open.opened", "First Button Open");
         add("style.createapparel.open.top_opened", "Top Opened");
         add("style.createapparel.open.open", "Open");
         add("style.createapparel.hood.down", "Down");

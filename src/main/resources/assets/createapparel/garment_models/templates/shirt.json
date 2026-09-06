@@ -1,0 +1,78 @@
+{
+  "shirt_shortsleeves": {
+    "torso": {
+      "model": "createapparel:shirt/torso"
+    },
+    "tucked_torso": {
+      "model": "createapparel:shirt/tucked_torso"
+    },
+    "bust": {
+      "model": "createapparel:shirt/bust"
+    },
+    "torso_opened": {
+      "model": "createapparel:shirt/torso_opened"
+    },
+    "tucked_torso_opened": {
+      "model": "createapparel:shirt/tucked_torso_opened"
+    },
+    "bust_opened": {
+      "model": "createapparel:shirt/bust_opened"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:shirt/left_short_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:shirt/right_short_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:shirt/left_short_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:shirt/right_short_sleeve_slim"
+    }
+  },
+  "shirt_longsleeves": {
+    "torso": {
+      "model": "createapparel:shirt/torso"
+    },
+    "tucked_torso": {
+      "model": "createapparel:shirt/tucked_torso"
+    },
+    "bust": {
+      "model": "createapparel:shirt/bust"
+    },
+    "torso_opened": {
+      "model": "createapparel:shirt/torso_opened"
+    },
+    "tucked_torso_opened": {
+      "model": "createapparel:shirt/tucked_torso_opened"
+    },
+    "bust_opened": {
+      "model": "createapparel:shirt/bust_opened"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:shirt/left_long_sleeve_classic"
+    },
+    "left_sleeve_classic_rolled": {
+      "model": "createapparel:shirt/left_long_sleeve_classic_rolled"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:shirt/right_long_sleeve_classic"
+    },
+    "right_sleeve_classic_rolled": {
+      "model": "createapparel:shirt/right_long_sleeve_classic_rolled"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:shirt/left_long_sleeve_slim"
+    },
+    "left_sleeve_slim_rolled": {
+      "model": "createapparel:shirt/left_long_sleeve_slim_rolled"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:shirt/right_long_sleeve_slim"
+    },
+    "right_sleeve_slim_rolled": {
+      "model": "createapparel:shirt/right_long_sleeve_slim_rolled"
+    }
+  }
+}

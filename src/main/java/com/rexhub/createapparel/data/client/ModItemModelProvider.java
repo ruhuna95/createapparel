@@ -37,7 +37,9 @@ public final class ModItemModelProvider extends ItemModelProvider {
                     || item == ModItems.T_SHIRT_V_NECK
                     || item == ModItems.T_SHIRT_LONGSLEEVES
                     || item == ModItems.T_SHIRT_LONGSLEEVES_U_NECK
-                    || item == ModItems.T_SHIRT_LONGSLEEVES_V_NECK) {
+                    || item == ModItems.T_SHIRT_LONGSLEEVES_V_NECK
+                    || item == ModItems.SHIRT_SHORTSLEEVES
+                    || item == ModItems.SHIRT_LONGSLEEVES) {
                 continue;
             } else {
                 basicItem(item.get());

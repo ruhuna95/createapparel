@@ -54,6 +54,8 @@ public final class ModItems {
             registerGarment("t_shirt_longsleeves_u_neck");
     public static final RegistryObject<Item> T_SHIRT_LONGSLEEVES_V_NECK =
             registerGarment("t_shirt_longsleeves_v_neck");
+    public static final RegistryObject<Item> SHIRT_SHORTSLEEVES = registerGarment("shirt_shortsleeves");
+    public static final RegistryObject<Item> SHIRT_LONGSLEEVES = registerGarment("shirt_longsleeves");
 
     public static final RegistryObject<Item> COTTON_SEEDS = registerSeeds("cotton_seeds", ModBlocks.COTTON_CROP);
     public static final RegistryObject<Item> COTTON_BOLL = registerSimple("cotton_boll");
@@ -105,7 +107,9 @@ public final class ModItems {
                     T_SHIRT_V_NECK,
                     T_SHIRT_LONGSLEEVES,
                     T_SHIRT_LONGSLEEVES_U_NECK,
-                    T_SHIRT_LONGSLEEVES_V_NECK
+                    T_SHIRT_LONGSLEEVES_V_NECK,
+                    SHIRT_SHORTSLEEVES,
+                    SHIRT_LONGSLEEVES
             );
 
     static {
@@ -259,10 +263,10 @@ public final class ModItems {
         uniqueItems.addAll(uniqueGarmentItems);
         if (CREATIVE_TAB_ITEMS.size() != 142
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 6
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 8
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 148) {
-            throw new IllegalStateException("The creative tabs must contain 148 unique items");
+                || uniqueItems.size() != 150) {
+            throw new IllegalStateException("The creative tabs must contain 150 unique items");
         }
     }
 }

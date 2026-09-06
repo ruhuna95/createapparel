@@ -49,6 +49,13 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             ModTags.Items.FABRICS_WOOL,
             ModTags.Items.FABRICS_SYNTHETIC
     );
+    private static final List<TagKey<Item>> SHIRT_FABRICS = List.of(
+            ModTags.Items.FABRICS_COTTON,
+            ModTags.Items.FABRICS_LINEN,
+            ModTags.Items.FABRICS_HEMP,
+            ModTags.Items.FABRICS_SILK,
+            ModTags.Items.FABRICS_SYNTHETIC
+    );
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
@@ -104,6 +111,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 LONG_SLEEVE_T_SHIRT_FABRICS,
                 4
         );
+        sewing("shirt_shortsleeves", ModItems.SHIRT_SHORTSLEEVES, SHIRT_FABRICS, 4);
+        sewing("shirt_longsleeves", ModItems.SHIRT_LONGSLEEVES, SHIRT_FABRICS, 4);
     }
 
     private void milling(

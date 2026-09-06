@@ -1,0 +1,150 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "bust_opened",
+        "from": [
+          -3.75,
+          19.25,
+          -1.64
+        ],
+        "to": [
+          3.75,
+          23.5,
+          1.37
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              3,
+              3,
+              7
+            ]
+          },
+          "front": {
+            "uv": [
+              3,
+              3,
+              10,
+              7
+            ]
+          },
+          "right": {
+            "uv": [
+              10,
+              3,
+              13,
+              7
+            ]
+          },
+          "bottom": {
+            "uv": [
+              10,
+              0,
+              17,
+              3
+            ]
+          }
+        },
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        }
+      },
+      {
+        "name": "bust_opened_decoration",
+        "from": [
+          -3.8125,
+          19.1875,
+          -1.64
+        ],
+        "to": [
+          3.8125,
+          23.5625,
+          1.37
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              10,
+              7,
+              17,
+              10
+            ]
+          }
+        },
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        }
+      },
+      {
+        "name": "bust_opened_front_decoration",
+        "from": [
+          -3.75,
+          19.25,
+          -1.7025
+        ],
+        "to": [
+          3.75,
+          23.5,
+          -1.64
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              3,
+              10,
+              10,
+              14
+            ]
+          }
+        },
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/shirt/bust_opened/base/default",
+        "overlay": "createapparel:garment/shirt/bust_opened/overlay/default",
+        "brightness_mask": "createapparel:garment/shirt/bust_opened/masks/brightness/default"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/shirt/bust_opened/masks/stripe/secondary"
+      }
+    }
+  }
+}

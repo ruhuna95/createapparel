@@ -38,6 +38,8 @@ public final class RuntimeGarmentTextureCache {
                 textures.secondary(),
                 textures.accent(),
                 textures.overlay(),
+                textures.brightness(),
+                textures.brightnessMask(),
                 data.primaryColor(),
                 data.secondaryColor(),
                 data.accentColor()
@@ -63,7 +65,8 @@ public final class RuntimeGarmentTextureCache {
         try (NativeImage base = read(manager, textures.base());
              NativeImage secondary = readOptional(manager, textures.secondary());
              NativeImage accent = readOptional(manager, textures.accent());
-             NativeImage overlay = readOptional(manager, textures.overlay())) {
+             NativeImage overlay = readOptional(manager, textures.overlay());
+             NativeImage brightnessMask = readOptional(manager, textures.brightnessMask())) {
             NativeImage output = new NativeImage(part.textureWidth(), part.textureHeight(), false);
             int primaryTint = data.primaryColor().tintRgb();
             OptionalInt secondaryTint = tintRgb(data.secondaryColor());
@@ -86,6 +89,12 @@ public final class RuntimeGarmentTextureCache {
                         int green = grayscale * FastColor.ARGB32.green(tint) / 255;
                         int blue = grayscale * FastColor.ARGB32.blue(tint) / 255;
                         composedPixel = FastColor.ABGR32.color(alpha, blue, green, red);
+                        composedPixel = GarmentTexturePixelOps.applyBrightness(
+                                composedPixel,
+                                textures.brightness(),
+                                brightnessMask == null ? GarmentTexturePixelOps.NEUTRAL_BRIGHTNESS_LUMINANCE
+                                        : maskRed(brightnessMask, x, y)
+                        );
                     }
                     output.setPixelRGBA(x, y, GarmentTexturePixelOps.applyOverlay(
                             composedPixel,
@@ -140,6 +149,8 @@ public final class RuntimeGarmentTextureCache {
             Optional<ResourceLocation> secondary,
             Optional<ResourceLocation> accent,
             Optional<ResourceLocation> overlay,
+            float brightness,
+            Optional<ResourceLocation> brightnessMask,
             FabricColor primaryColor,
             Optional<FabricColor> secondaryColor,
             Optional<FabricColor> accentColor

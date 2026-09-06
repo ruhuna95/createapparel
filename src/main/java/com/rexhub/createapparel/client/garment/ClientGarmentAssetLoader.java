@@ -112,7 +112,7 @@ final class ClientGarmentAssetLoader {
         return new GarmentModelTemplate(id, Collections.unmodifiableMap(variants));
     }
 
-    private static GarmentPartModel parsePart(ResourceLocation id, JsonObject json) {
+    static GarmentPartModel parsePart(ResourceLocation id, JsonObject json) {
         String renderType = GsonHelper.getAsString(json, "render_type");
         if (!"cutout".equals(renderType)) {
             throw new IllegalStateException("Unsupported garment render type: " + id + " / " + renderType);
@@ -174,7 +174,12 @@ final class ClientGarmentAssetLoader {
                     id + " / variant " + entry.getKey()
             );
             Optional<ResourceLocation> overlay = optionalResourceLocation(variant, "overlay", id);
-            variants.put(entry.getKey(), new TextureVariant(base, overlay));
+            float brightness = GsonHelper.getAsFloat(variant, "brightness", 1.0F);
+            if (!GarmentTexturePixelOps.isValidBrightness(brightness)) {
+                throw new IllegalStateException("Garment brightness must be finite and between 0 and 4: " + id);
+            }
+            Optional<ResourceLocation> brightnessMask = optionalResourceLocation(variant, "brightness_mask", id);
+            variants.put(entry.getKey(), new TextureVariant(base, overlay, brightness, brightnessMask));
         }
         if (!variants.containsKey("default")) {
             throw new IllegalStateException("Garment part has no default texture variant: " + id);
@@ -228,6 +233,7 @@ final class ClientGarmentAssetLoader {
             for (TextureVariant variant : part.variants().values()) {
                 validateTexture(manager, part, variant.base(), baseKind);
                 variant.overlay().ifPresent(id -> validateTexture(manager, part, id, TextureKind.OVERLAY));
+                variant.brightnessMask().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
             }
             for (DesignMasks masks : part.designs().values()) {
                 masks.secondary().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
@@ -278,7 +284,7 @@ final class ClientGarmentAssetLoader {
                         }
                     } else if (kind == TextureKind.OVERLAY
                             && !GarmentTexturePixelOps.isValidOverlayAlpha(alpha)) {
-                        throw new IllegalStateException("Garment overlay alpha is not binary: " + textureId);
+                        throw new IllegalStateException("Garment overlay alpha is outside 0..255: " + textureId);
                     } else if (kind == TextureKind.MASK
                             && !GarmentTexturePixelOps.isValidMaskPixel(red, green, blue, alpha)) {
                         throw new IllegalStateException("Garment design mask is not opaque grayscale: " + textureId);

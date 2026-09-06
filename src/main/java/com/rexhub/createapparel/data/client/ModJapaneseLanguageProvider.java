@@ -60,6 +60,8 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.T_SHIRT_LONGSLEEVES.get(), "長袖Tシャツ");
         add(ModItems.T_SHIRT_LONGSLEEVES_U_NECK.get(), "Uネック長袖Tシャツ");
         add(ModItems.T_SHIRT_LONGSLEEVES_V_NECK.get(), "Vネック長袖Tシャツ");
+        add(ModItems.SHIRT_SHORTSLEEVES.get(), "半袖ワイシャツ");
+        add(ModItems.SHIRT_LONGSLEEVES.get(), "長袖ワイシャツ");
 
         add("tooltip.createapparel.sewing_pattern.unset", "右クリックで設定");
         add("tooltip.createapparel.sewing_pattern.recipe", "レシピ: %s");
@@ -107,6 +109,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("style.createapparel.sleeves.normal", "通常");
         add("style.createapparel.sleeves.rolled", "腕まくり");
         add("style.createapparel.open.closed", "閉じる");
+        add("style.createapparel.open.opened", "第1ボタンを開ける");
         add("style.createapparel.open.top_opened", "上部を開く");
         add("style.createapparel.open.open", "開く");
         add("style.createapparel.hood.down", "下ろす");

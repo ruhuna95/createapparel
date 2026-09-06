@@ -1,0 +1,116 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "tucked_torso_opened",
+        "from": [
+          -4.005,
+          13.995,
+          -2.25
+        ],
+        "to": [
+          4.005,
+          24.005,
+          2.25
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              14
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              4,
+              16,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              4,
+              24,
+              14
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          },
+          "bottom": {
+            "uv": [
+              12,
+              0,
+              20,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "tucked_torso_opened_decoration",
+        "from": [
+          -4.005,
+          13.995,
+          -2.3125
+        ],
+        "to": [
+          4.005,
+          24.005,
+          2.3125
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              14,
+              12,
+              24
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/shirt/tucked_torso_opened/base/default",
+        "overlay": "createapparel:garment/shirt/tucked_torso_opened/overlay/default",
+        "brightness_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/brightness/default"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/stripe/secondary"
+      }
+    }
+  }
+}

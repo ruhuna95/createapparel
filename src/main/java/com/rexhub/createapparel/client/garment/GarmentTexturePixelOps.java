@@ -3,6 +3,7 @@ package com.rexhub.createapparel.client.garment;
 import java.util.OptionalInt;
 
 final class GarmentTexturePixelOps {
+    static final int NEUTRAL_BRIGHTNESS_LUMINANCE = 100;
     private static final int MAX_CHANNEL_VALUE = 255;
 
     private GarmentTexturePixelOps() {
@@ -18,7 +19,27 @@ final class GarmentTexturePixelOps {
     }
 
     static boolean isValidOverlayAlpha(int alpha) {
-        return alpha == 0 || alpha == MAX_CHANNEL_VALUE;
+        return isChannel(alpha);
+    }
+
+    static boolean isValidBrightness(float brightness) {
+        return Float.isFinite(brightness) && brightness >= 0.0F && brightness <= 4.0F;
+    }
+
+    static int applyBrightness(int pixel, float brightness, int maskLuminance) {
+        if (!isValidBrightness(brightness)) {
+            throw new IllegalArgumentException("Brightness must be finite and between 0 and 4");
+        }
+        double factor = brightness * clampChannel(maskLuminance) / (double) NEUTRAL_BRIGHTNESS_LUMINANCE;
+        if (factor == 1.0D || pixel >>> 24 == 0) {
+            return pixel;
+        }
+        int result = pixel & 0xFF000000;
+        for (int shift = 0; shift < 24; shift += 8) {
+            int channel = pixel >>> shift & 0xFF;
+            result |= clampChannel((int) Math.round(channel * factor)) << shift;
+        }
+        return result;
     }
 
     static int applyOverlay(int composedPixel, OptionalInt overlayPixel) {
@@ -26,7 +47,25 @@ final class GarmentTexturePixelOps {
             return composedPixel;
         }
         int pixel = overlayPixel.getAsInt();
-        return pixel >>> 24 == 0 ? composedPixel : pixel;
+        int sourceAlpha = pixel >>> 24;
+        if (sourceAlpha == 0) {
+            return composedPixel;
+        }
+        int destinationAlpha = composedPixel >>> 24;
+        if (sourceAlpha == 255 || destinationAlpha == 0) {
+            return pixel;
+        }
+        int destinationWeight = destinationAlpha * (255 - sourceAlpha);
+        int alphaNumerator = sourceAlpha * 255 + destinationWeight;
+        int result = (alphaNumerator + 127) / 255 << 24;
+        for (int shift = 0; shift < 24; shift += 8) {
+            int source = pixel >>> shift & 0xFF;
+            int destination = composedPixel >>> shift & 0xFF;
+            int channel = (source * sourceAlpha * 255 + destination * destinationWeight
+                    + alphaNumerator / 2) / alphaNumerator;
+            result |= channel << shift;
+        }
+        return result;
     }
 
     static int composeTint(

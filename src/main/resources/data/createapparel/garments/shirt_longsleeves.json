@@ -1,0 +1,24 @@
+{
+  "slot": "top",
+  "model_template": "createapparel:shirt",
+  "model_variant": "shirt_longsleeves",
+  "texture_variant": "default",
+  "designs": [
+    "plain",
+    "stripe"
+  ],
+  "styles": {
+    "tuck": [
+      "untucked",
+      "tucked"
+    ],
+    "sleeves": [
+      "normal",
+      "rolled"
+    ],
+    "open": [
+      "closed",
+      "opened"
+    ]
+  }
+}
