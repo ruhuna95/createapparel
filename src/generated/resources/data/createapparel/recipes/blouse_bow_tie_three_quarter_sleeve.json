@@ -1,0 +1,23 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 4,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/linen",
+      "createapparel:fabrics/hemp",
+      "createapparel:fabrics/silk",
+      "createapparel:fabrics/synthetic"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:blouse_bow_tie_three_quarter_sleeve"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}

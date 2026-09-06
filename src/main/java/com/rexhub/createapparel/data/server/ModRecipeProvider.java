@@ -56,6 +56,13 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             ModTags.Items.FABRICS_SILK,
             ModTags.Items.FABRICS_SYNTHETIC
     );
+    private static final List<TagKey<Item>> BLOUSE_FABRICS = List.of(
+            ModTags.Items.FABRICS_COTTON,
+            ModTags.Items.FABRICS_LINEN,
+            ModTags.Items.FABRICS_HEMP,
+            ModTags.Items.FABRICS_SILK,
+            ModTags.Items.FABRICS_SYNTHETIC
+    );
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
@@ -113,6 +120,12 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         );
         sewing("shirt_shortsleeves", ModItems.SHIRT_SHORTSLEEVES, SHIRT_FABRICS, 4);
         sewing("shirt_longsleeves", ModItems.SHIRT_LONGSLEEVES, SHIRT_FABRICS, 4);
+        sewing("blouse_round", ModItems.BLOUSE_ROUND, BLOUSE_FABRICS, 4);
+        sewing("blouse_frill", ModItems.BLOUSE_FRILL, BLOUSE_FABRICS, 4);
+        sewing("blouse_bow_tie", ModItems.BLOUSE_BOW_TIE, BLOUSE_FABRICS, 4);
+        sewing("blouse_round_three_quarter_sleeve", ModItems.BLOUSE_ROUND_THREE_QUARTER_SLEEVE, BLOUSE_FABRICS, 4);
+        sewing("blouse_frill_three_quarter_sleeve", ModItems.BLOUSE_FRILL_THREE_QUARTER_SLEEVE, BLOUSE_FABRICS, 4);
+        sewing("blouse_bow_tie_three_quarter_sleeve", ModItems.BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE, BLOUSE_FABRICS, 4);
     }
 
     private void milling(

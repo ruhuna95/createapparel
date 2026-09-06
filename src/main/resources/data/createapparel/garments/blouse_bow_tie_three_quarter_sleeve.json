@@ -1,0 +1,15 @@
+{
+  "slot": "top",
+  "model_template": "createapparel:blouse",
+  "model_variant": "three_quarter_sleeve_classic",
+  "texture_variant": "bow_tie",
+  "designs": [
+    "plain"
+  ],
+  "styles": {
+    "tuck": [
+      "untucked",
+      "tucked"
+    ]
+  }
+}

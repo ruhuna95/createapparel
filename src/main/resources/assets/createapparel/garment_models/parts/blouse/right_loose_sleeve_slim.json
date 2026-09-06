@@ -1,0 +1,152 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_loose_sleeve_slim",
+        "from": [
+          -7.75,
+          13.7425,
+          -2.75
+        ],
+        "to": [
+          -3.9925,
+          24.005,
+          2.75
+        ],
+        "top_inset": [
+          0.5,
+          0.5,
+          0.0025,
+          0.5
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              14
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              14
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              7,
+              4
+            ]
+          },
+          "bottom": {
+            "uv": [
+              7,
+              0,
+              10,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_loose_sleeve_slim_cuff",
+        "from": [
+          -7.25,
+          11.75,
+          -2.25
+        ],
+        "to": [
+          -3.995,
+          13.75,
+          2.25
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              14,
+              4,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              14,
+              7,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              14,
+              11,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              14,
+              14,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/blouse/loose_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_slim/masks/brightness/default"
+      },
+      "round": {
+        "base": "createapparel:garment/blouse/loose_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_slim/masks/brightness/default"
+      },
+      "frill": {
+        "base": "createapparel:garment/blouse/loose_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_slim/masks/brightness/default"
+      },
+      "bow_tie": {
+        "base": "createapparel:garment/blouse/loose_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_slim/masks/brightness/default"
+      }
+    }
+  }
+}

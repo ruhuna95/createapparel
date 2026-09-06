@@ -1,0 +1,224 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "tucked_torso",
+        "from": [
+          -4.505,
+          14.995,
+          -2.75
+        ],
+        "to": [
+          4.505,
+          24.005,
+          2.75
+        ],
+        "top_inset": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              5,
+              5,
+              14
+            ],
+            "uv_corners": [
+              [
+                0,
+                14
+              ],
+              [
+                0.5,
+                5
+              ],
+              [
+                4.5,
+                5
+              ],
+              [
+                5,
+                14
+              ]
+            ]
+          },
+          "front": {
+            "uv": [
+              5,
+              5,
+              14,
+              14
+            ],
+            "uv_corners": [
+              [
+                5,
+                14
+              ],
+              [
+                5.5,
+                5
+              ],
+              [
+                13.5,
+                5
+              ],
+              [
+                14,
+                14
+              ]
+            ]
+          },
+          "right": {
+            "uv": [
+              14,
+              5,
+              19,
+              14
+            ],
+            "uv_corners": [
+              [
+                14,
+                14
+              ],
+              [
+                14.5,
+                5
+              ],
+              [
+                18.5,
+                5
+              ],
+              [
+                19,
+                14
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              19,
+              5,
+              28,
+              14
+            ],
+            "uv_corners": [
+              [
+                19,
+                14
+              ],
+              [
+                19.5,
+                5
+              ],
+              [
+                27.5,
+                5
+              ],
+              [
+                28,
+                14
+              ]
+            ]
+          },
+          "top": {
+            "uv": [
+              5,
+              0,
+              13,
+              4
+            ]
+          },
+          "bottom": {
+            "uv": [
+              13,
+              0,
+              22,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "tucked_torso_decoration",
+        "from": [
+          -4.505,
+          14.995,
+          -2.8125
+        ],
+        "to": [
+          4.505,
+          24.005,
+          2.8125
+        ],
+        "top_inset": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              5,
+              14,
+              14,
+              23
+            ],
+            "uv_corners": [
+              [
+                5,
+                23
+              ],
+              [
+                5.5,
+                14
+              ],
+              [
+                13.5,
+                14
+              ],
+              [
+                14,
+                23
+              ]
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/blouse/tucked_torso/base/round",
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/round"
+      },
+      "round": {
+        "base": "createapparel:garment/blouse/tucked_torso/base/round",
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/round"
+      },
+      "frill": {
+        "base": "createapparel:garment/blouse/tucked_torso/base/frill",
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/frill"
+      },
+      "bow_tie": {
+        "base": "createapparel:garment/blouse/tucked_torso/base/bow_tie",
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/bow_tie"
+      }
+    }
+  }
+}

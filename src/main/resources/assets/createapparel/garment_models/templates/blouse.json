@@ -1,0 +1,94 @@
+{
+  "classic": {
+    "torso": {
+      "model": "createapparel:blouse/torso"
+    },
+    "tucked_torso": {
+      "model": "createapparel:blouse/tucked_torso"
+    },
+    "bust": {
+      "model": "createapparel:blouse/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:blouse/left_loose_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:blouse/right_loose_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:blouse/left_loose_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:blouse/right_loose_sleeve_slim"
+    }
+  },
+  "slim": {
+    "torso": {
+      "model": "createapparel:blouse/torso"
+    },
+    "tucked_torso": {
+      "model": "createapparel:blouse/tucked_torso"
+    },
+    "bust": {
+      "model": "createapparel:blouse/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:blouse/left_loose_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:blouse/right_loose_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:blouse/left_loose_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:blouse/right_loose_sleeve_slim"
+    }
+  },
+  "three_quarter_sleeve_classic": {
+    "torso": {
+      "model": "createapparel:blouse/torso"
+    },
+    "tucked_torso": {
+      "model": "createapparel:blouse/tucked_torso"
+    },
+    "bust": {
+      "model": "createapparel:blouse/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:blouse/left_three_quarter_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:blouse/right_three_quarter_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:blouse/left_three_quarter_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:blouse/right_three_quarter_sleeve_slim"
+    }
+  },
+  "three_quarter_sleeve_slim": {
+    "torso": {
+      "model": "createapparel:blouse/torso"
+    },
+    "tucked_torso": {
+      "model": "createapparel:blouse/tucked_torso"
+    },
+    "bust": {
+      "model": "createapparel:blouse/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:blouse/left_three_quarter_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:blouse/right_three_quarter_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:blouse/left_three_quarter_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:blouse/right_three_quarter_sleeve_slim"
+    }
+  }
+}

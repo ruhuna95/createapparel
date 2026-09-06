@@ -61,8 +61,14 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.T_SHIRT_LONGSLEEVES.get(), "Long Sleeve T-Shirt");
         add(ModItems.T_SHIRT_LONGSLEEVES_U_NECK.get(), "U-Neck Long Sleeve T-Shirt");
         add(ModItems.T_SHIRT_LONGSLEEVES_V_NECK.get(), "V-Neck Long Sleeve T-Shirt");
-        add(ModItems.SHIRT_SHORTSLEEVES.get(), "Short Sleeves Shirt");
-        add(ModItems.SHIRT_LONGSLEEVES.get(), "Long Sleeves Shirt");
+        add(ModItems.SHIRT_SHORTSLEEVES.get(), "Short Sleeve Shirt");
+        add(ModItems.SHIRT_LONGSLEEVES.get(), "Long Sleeve Shirt");
+        add(ModItems.BLOUSE_ROUND.get(), "Peter Pan Collar Blouse");
+        add(ModItems.BLOUSE_FRILL.get(), "Frill Blouse");
+        add(ModItems.BLOUSE_BOW_TIE.get(), "Bow Tie Blouse");
+        add(ModItems.BLOUSE_ROUND_THREE_QUARTER_SLEEVE.get(), "Peter Pan Collar Three-Quarter Sleeve Blouse");
+        add(ModItems.BLOUSE_FRILL_THREE_QUARTER_SLEEVE.get(), "Frill Three-Quarter Sleeve Blouse");
+        add(ModItems.BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE.get(), "Bow Tie Three-Quarter Sleeve Blouse");
 
         add("tooltip.createapparel.sewing_pattern.unset", "Right-click to configure");
         add("tooltip.createapparel.sewing_pattern.recipe", "Recipe: %s");

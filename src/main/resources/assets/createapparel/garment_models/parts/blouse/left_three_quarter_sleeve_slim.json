@@ -1,0 +1,130 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_three_quarter_sleeve_slim",
+        "from": [
+          3.995,
+          15.75,
+          -2.25
+        ],
+        "to": [
+          7.25,
+          24.005,
+          2.25
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              12
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              12
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              12
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              12
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              7,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_three_quarter_sleeve_slim_decoration",
+        "from": [
+          3.995,
+          15.6875,
+          -2.3125
+        ],
+        "to": [
+          7.3125,
+          24.005,
+          2.3125
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              12,
+              7,
+              20
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              12,
+              14,
+              20
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              12,
+              11,
+              20
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+      },
+      "round": {
+        "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+      },
+      "frill": {
+        "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+      },
+      "bow_tie": {
+        "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+      }
+    }
+  }
+}

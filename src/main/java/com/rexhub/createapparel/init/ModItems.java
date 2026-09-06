@@ -56,6 +56,15 @@ public final class ModItems {
             registerGarment("t_shirt_longsleeves_v_neck");
     public static final RegistryObject<Item> SHIRT_SHORTSLEEVES = registerGarment("shirt_shortsleeves");
     public static final RegistryObject<Item> SHIRT_LONGSLEEVES = registerGarment("shirt_longsleeves");
+    public static final RegistryObject<Item> BLOUSE_ROUND = registerGarment("blouse_round");
+    public static final RegistryObject<Item> BLOUSE_FRILL = registerGarment("blouse_frill");
+    public static final RegistryObject<Item> BLOUSE_BOW_TIE = registerGarment("blouse_bow_tie");
+    public static final RegistryObject<Item> BLOUSE_ROUND_THREE_QUARTER_SLEEVE =
+            registerGarment("blouse_round_three_quarter_sleeve");
+    public static final RegistryObject<Item> BLOUSE_FRILL_THREE_QUARTER_SLEEVE =
+            registerGarment("blouse_frill_three_quarter_sleeve");
+    public static final RegistryObject<Item> BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE =
+            registerGarment("blouse_bow_tie_three_quarter_sleeve");
 
     public static final RegistryObject<Item> COTTON_SEEDS = registerSeeds("cotton_seeds", ModBlocks.COTTON_CROP);
     public static final RegistryObject<Item> COTTON_BOLL = registerSimple("cotton_boll");
@@ -109,7 +118,13 @@ public final class ModItems {
                     T_SHIRT_LONGSLEEVES_U_NECK,
                     T_SHIRT_LONGSLEEVES_V_NECK,
                     SHIRT_SHORTSLEEVES,
-                    SHIRT_LONGSLEEVES
+                    SHIRT_LONGSLEEVES,
+                    BLOUSE_ROUND,
+                    BLOUSE_FRILL,
+                    BLOUSE_BOW_TIE,
+                    BLOUSE_ROUND_THREE_QUARTER_SLEEVE,
+                    BLOUSE_FRILL_THREE_QUARTER_SLEEVE,
+                    BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE
             );
 
     static {
@@ -263,10 +278,10 @@ public final class ModItems {
         uniqueItems.addAll(uniqueGarmentItems);
         if (CREATIVE_TAB_ITEMS.size() != 142
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 8
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 14
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 150) {
-            throw new IllegalStateException("The creative tabs must contain 150 unique items");
+                || uniqueItems.size() != 156) {
+            throw new IllegalStateException("The creative tabs must contain 156 unique items");
         }
     }
 }

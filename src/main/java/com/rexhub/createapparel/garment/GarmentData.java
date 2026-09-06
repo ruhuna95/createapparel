@@ -1,5 +1,6 @@
 package com.rexhub.createapparel.garment;
 
+import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.nbt.CompoundTag;
@@ -57,9 +58,12 @@ public record GarmentData(
         Optional<FabricColor> secondary = optionalColor(tag, "secondary_color");
         Optional<FabricColor> accent = optionalColor(tag, "accent_color");
 
-        CompoundTag styleTag = tag.getCompound("style");
+        return new GarmentData(material, design, primary, secondary, accent, readStyles(tag.getCompound("style"), definition));
+    }
+
+    static Map<String, String> readStyles(CompoundTag styleTag, GarmentDefinition definition) {
         for (String key : styleTag.getAllKeys()) {
-            if (!definition.styles().containsKey(key)) {
+            if (!definition.styles().containsKey(key) && !isRetiredBlouseSleeveStyle(definition, key, styleTag.getString(key))) {
                 throw new IllegalArgumentException("Unknown garment style category: " + definition.id() + " / " + key);
             }
         }
@@ -73,7 +77,18 @@ public record GarmentData(
             }
             styles.put(key, selected);
         });
-        return new GarmentData(material, design, primary, secondary, accent, styles);
+        return styles;
+    }
+
+    private static boolean isRetiredBlouseSleeveStyle(GarmentDefinition definition, String key, String value) {
+        if (!"sleeves".equals(key) || !("normal".equals(value) || "rolled".equals(value))
+                || !CreateApparel.MOD_ID.equals(definition.id().getNamespace())) {
+            return false;
+        }
+        return switch (definition.id().getPath()) {
+            case "blouse_round", "blouse_frill", "blouse_bow_tie" -> true;
+            default -> false;
+        };
     }
 
     public void write(ItemStack stack) {
