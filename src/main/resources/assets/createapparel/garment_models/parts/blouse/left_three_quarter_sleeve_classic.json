@@ -70,13 +70,13 @@
         "name": "left_three_quarter_sleeve_classic_decoration",
         "from": [
           3.995,
-          15.6875,
-          -2.3125
+          15.7,
+          -2.3
         ],
         "to": [
-          8.3125,
+          8.3,
           24.005,
-          2.3125
+          2.3
         ],
         "faces": {
           "front": {

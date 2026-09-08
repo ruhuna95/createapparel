@@ -80,10 +80,16 @@ class BlouseAssetTest {
     void tuckedHemBustAndCuffsFollowTheSpecifiedGeometry() throws IOException {
         var torso = part("torso").elements().get(0);
         var tucked = part("tucked_torso").elements().get(0);
-        assertEquals(3, tucked.from().y() - torso.from().y(), 0.00001);
-        assertEquals(-4.505F, tucked.corners().get(0).x(), 0.00001);
+        assertEquals(2.995, tucked.from().y() - torso.from().y(), 0.00001);
+        assertEquals(-4.5F, tucked.corners().get(0).x(), 0.00001);
+        assertEquals(4.5F, tucked.corners().get(1).x(), 0.00001);
         assertEquals(-4.005F, tucked.corners().get(4).x(), 0.00001);
-        assertEquals(-2.75F, tucked.corners().get(0).z(), 0.00001);
+        assertEquals(4.005F, tucked.corners().get(5).x(), 0.00001);
+        var tuckedDecoration = part("tucked_torso").elements().get(1);
+        for (int corner = 0; corner < 8; corner++) {
+            assertEquals(tucked.corners().get(corner).x(), tuckedDecoration.corners().get(corner).x());
+        }
+        assertEquals(-2.5F, tucked.corners().get(0).z(), 0.00001);
         assertEquals(-2.25F, tucked.corners().get(4).z(), 0.00001);
         assertTrue(tucked.faces().containsKey(Face.BOTTOM));
         assertFalse(torso.faces().containsKey(Face.BOTTOM));
@@ -111,20 +117,20 @@ class BlouseAssetTest {
                 assertFalse(cuff.faces().containsKey(Face.BOTTOM));
                 var upper = loose.elements().get(0);
                 assertTrue(upper.faces().containsKey(Face.BOTTOM));
-                assertEquals(13.7425F, upper.from().y());
+                assertEquals(13.74F, upper.from().y());
                 assertEquals(24.005F, upper.to().y());
-                assertEquals(-2.75F, upper.corners().get(0).z());
+                assertEquals(-2.5F, upper.corners().get(0).z());
                 assertEquals(-2.25F, upper.corners().get(4).z());
-                assertEquals(0.5F, cuff.from().z() - upper.from().z(), 0.00001);
-                assertEquals(0.5F, upper.to().z() - cuff.to().z(), 0.00001);
+                assertEquals(0.25F, cuff.from().z() - upper.from().z(), 0.00001);
+                assertEquals(0.25F, upper.to().z() - cuff.to().z(), 0.00001);
                 if (side.equals("left")) {
-                    assertEquals(0.5F, upper.to().x() - cuff.to().x(), 0.00001);
-                    assertEquals(3.9925F, upper.from().x());
+                    assertEquals(0.25F, upper.to().x() - cuff.to().x(), 0.00001);
+                    assertEquals(3.99F, upper.from().x());
                     assertEquals(cuff.to().x(), upper.corners().get(5).x(), 0.00001);
                     assertEquals(3.995F, upper.corners().get(4).x(), 0.00001);
                 } else {
-                    assertEquals(0.5F, cuff.from().x() - upper.from().x(), 0.00001);
-                    assertEquals(-3.9925F, upper.to().x());
+                    assertEquals(0.25F, cuff.from().x() - upper.from().x(), 0.00001);
+                    assertEquals(-3.99F, upper.to().x());
                     assertEquals(cuff.from().x(), upper.corners().get(4).x(), 0.00001);
                     assertEquals(-3.995F, upper.corners().get(5).x(), 0.00001);
                 }
