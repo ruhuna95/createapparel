@@ -238,7 +238,7 @@ tasks.named('test', Test).configure {
 }
 
 tasks.register('copyGameTestStructures', Copy) {
-    from 'gameteststructures'
+    from 'src/test/resources/gameteststructures'
     into 'run/gameteststructures'
 }
 
