@@ -1,0 +1,147 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_sleeve_slim_rolled",
+        "from": [
+          -7.5,
+          16.75,
+          -2.5
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.5
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              11
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              11
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              11
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              11
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              7,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_sleeve_slim_rolled_fold",
+        "from": [
+          -7.75,
+          15.75,
+          -2.75
+        ],
+        "to": [
+          -3.99,
+          16.75,
+          2.75
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              15,
+              7,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              15,
+              14,
+              16
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              15,
+              4,
+              16
+            ]
+          },
+          "bottom": {
+            "uv": [
+              7,
+              11,
+              10,
+              15
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              11,
+              7,
+              15
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              15,
+              11,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/shirt/long_sleeve_slim_rolled/base/default",
+        "brightness_mask": "createapparel:garment/shirt/long_sleeve_slim_rolled/masks/brightness/default"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/shirt/long_sleeve_slim_rolled/masks/stripe/secondary"
+      }
+    }
+  }
+}

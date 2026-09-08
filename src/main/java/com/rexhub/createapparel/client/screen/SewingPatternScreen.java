@@ -3,6 +3,7 @@ package com.rexhub.createapparel.client.screen;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.math.Axis;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
+import com.rexhub.createapparel.client.renderer.CommonGarmentRenderer;
 import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentSlot;
@@ -16,13 +17,11 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 
@@ -37,6 +36,8 @@ public final class SewingPatternScreen extends Screen {
     private static final int BUTTON_HEIGHT = 20;
     private static final int ROW_SPACING = 24;
     private static final float PREVIEW_SCALE = 4.0F;
+    private static final float PREVIEW_MODEL_SCALE = 0.82F;
+    private static final float PREVIEW_TILT_DEGREES = 15.0F;
     private static final float ITEM_RENDER_Z = 150.0F;
     private static final long PREVIEW_ROTATION_PERIOD_MILLIS = 8_000L;
 
@@ -83,7 +84,7 @@ public final class SewingPatternScreen extends Screen {
                 .toList();
         categories = availableRecipes.stream()
                 .map(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId()).orElseThrow())
-                .map(GarmentDefinition::slot)
+                .map(GarmentDefinition::defaultSlot)
                 .distinct()
                 .sorted(Comparator.comparingInt(GarmentSlot::ordinal))
                 .toList();
@@ -157,7 +158,7 @@ public final class SewingPatternScreen extends Screen {
                 .filter(recipe -> recipe.getId().equals(recipeId))
                 .findFirst()
                 .flatMap(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId()))
-                .map(GarmentDefinition::slot)
+                .map(GarmentDefinition::defaultSlot)
                 .map(categories::indexOf)
                 .filter(index -> index >= 0)
                 .ifPresent(index -> categoryIndex = index);
@@ -170,7 +171,7 @@ public final class SewingPatternScreen extends Screen {
             GarmentSlot category = categories.get(categoryIndex);
             recipes = availableRecipes.stream()
                     .filter(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId())
-                            .map(definition -> definition.slot() == category)
+                            .map(definition -> definition.defaultSlot() == category)
                             .orElse(false))
                     .toList();
         }
@@ -320,8 +321,7 @@ public final class SewingPatternScreen extends Screen {
                         : Optional.empty(),
                 channels.accent()
                         ? Optional.of(FabricColor.values()[accentColorIndex])
-                        : Optional.empty(),
-                defaults.styles()
+                        : Optional.empty()
         );
         previewData.write(result);
         previewStack = result;
@@ -385,42 +385,31 @@ public final class SewingPatternScreen extends Screen {
             return;
         }
 
-        BakedModel model = minecraft.getItemRenderer().getModel(
-                previewStack,
-                minecraft.level,
-                minecraft.player,
-                0
-        );
-        boolean flatLighting = !model.usesBlockLight();
+        var garment = ClientGarmentAssets.INSTANCE.resolve(previewStack);
+        if (garment.isEmpty()) {
+            return;
+        }
         graphics.pose().pushPose();
         try {
-            graphics.pose().translate(rightPanelCenter, height / 2.0F - 10.0F, ITEM_RENDER_Z);
+            graphics.pose().translate(rightPanelCenter, height / 2.0F - 14.0F, ITEM_RENDER_Z);
             graphics.pose().mulPoseMatrix(new Matrix4f().scaling(1.0F, -1.0F, 1.0F));
             graphics.pose().scale(
-                    16.0F * PREVIEW_SCALE,
-                    16.0F * PREVIEW_SCALE,
-                    16.0F * PREVIEW_SCALE
+                    16.0F * PREVIEW_SCALE * PREVIEW_MODEL_SCALE,
+                    16.0F * PREVIEW_SCALE * PREVIEW_MODEL_SCALE,
+                    16.0F * PREVIEW_SCALE * PREVIEW_MODEL_SCALE
             );
-            model = model.applyTransform(ItemDisplayContext.GUI, graphics.pose(), false);
-            graphics.pose().mulPose(Axis.YP.rotationDegrees(previewRotationDegrees()));
-            if (flatLighting) {
-                Lighting.setupForFlatItems();
-            }
-            minecraft.getItemRenderer().render(
-                    previewStack,
-                    ItemDisplayContext.NONE,
-                    false,
+            graphics.pose().mulPose(Axis.XP.rotationDegrees(PREVIEW_TILT_DEGREES));
+            graphics.pose().mulPose(Axis.YP.rotationDegrees(225.0F + previewRotationDegrees()));
+            Lighting.setupFor3DItems();
+            CommonGarmentRenderer.renderPreview(
+                    garment.get(),
                     graphics.pose(),
                     graphics.bufferSource(),
                     LightTexture.FULL_BRIGHT,
-                    OverlayTexture.NO_OVERLAY,
-                    model
+                    OverlayTexture.NO_OVERLAY
             );
             graphics.flush();
         } finally {
-            if (flatLighting) {
-                Lighting.setupFor3DItems();
-            }
             graphics.pose().popPose();
         }
         graphics.drawCenteredString(font, previewStack.getHoverName(), rightPanelCenter, height / 2 + 42, 0xFFFFFF);

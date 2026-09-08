@@ -4,6 +4,7 @@ import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.garment.GarmentData;
+import com.rexhub.createapparel.garment.GarmentWearContext;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentDefinitionManager;
 import com.rexhub.createapparel.garment.GarmentItem;
@@ -110,6 +111,15 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             ArmProfile armProfile,
             ChestProfile chestProfile
     ) {
+        return resolve(stack, null, armProfile, chestProfile);
+    }
+
+    public Optional<ResolvedGarment> resolve(
+            ItemStack stack,
+            GarmentWearContext wearContext,
+            ArmProfile armProfile,
+            ChestProfile chestProfile
+    ) {
         AssetState snapshot = state;
         ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
         if (itemId == null) {
@@ -121,7 +131,11 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         if (definition == null) {
             return Optional.empty();
         }
-        Map<String, ResourceLocation> variant = getModelVariant(definition, snapshot.garmentTemplates()).orElse(null);
+        GarmentWearContext effectiveContext = wearContext == null ? GarmentWearContext.defaultsFor(definition) : wearContext;
+        if (!definition.allowedSlots().contains(effectiveContext.slot())) {
+            return Optional.empty();
+        }
+        Map<String, ResourceLocation> variant = getModelVariant(definition, effectiveContext.slot(), snapshot.garmentTemplates()).orElse(null);
         if (variant == null) {
             return Optional.empty();
         }
@@ -133,7 +147,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         }
 
         List<String> selectedNames = GarmentPartSelection.select(
-                data.styles(), armProfile, chestProfile, variant.containsKey("bust")
+                effectiveContext.styleState().normalize(definition).styles(), armProfile, chestProfile, variant.containsKey("bust")
         );
 
         List<ResolvedPart> resolvedParts = new ArrayList<>();
@@ -285,10 +299,18 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             GarmentDefinition definition,
             Map<ResourceLocation, GarmentModelTemplate> templates
     ) {
+        return getModelVariant(definition, definition.defaultSlot(), templates);
+    }
+
+    private static Optional<Map<String, ResourceLocation>> getModelVariant(
+            GarmentDefinition definition,
+            com.rexhub.createapparel.garment.GarmentSlot slot,
+            Map<ResourceLocation, GarmentModelTemplate> templates
+    ) {
         GarmentModelTemplate template = templates.get(definition.modelTemplate());
         return template == null
                 ? Optional.empty()
-                : Optional.ofNullable(template.variants().get(definition.modelVariant()));
+                : Optional.ofNullable(template.variants().get(definition.modelVariantFor(slot)));
     }
 
     private static void validateDefinitions(
@@ -307,48 +329,50 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             if (template == null) {
                 throw new IllegalStateException("Unknown garment model template: " + definition.modelTemplate());
             }
-            Map<String, ResourceLocation> variant = template.variants().get(definition.modelVariant());
-            if (variant == null) {
-                throw new IllegalStateException(
-                        "Unknown garment model variant: " + definition.modelTemplate() + " / " + definition.modelVariant()
-                );
-            }
-            if (definition.modelTemplate().equals(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "t_shirt"))
-                    && !variant.keySet().containsAll(T_SHIRT_REQUIRED_PARTS)) {
-                throw new IllegalStateException(
-                        "T-Shirt model variant is missing required parts: " + definition.modelVariant()
-                );
-            }
-            for (Map.Entry<String, ResourceLocation> partEntry : variant.entrySet()) {
-                GarmentPartModel part = partsToValidate.get(partEntry.getValue());
-                if (part == null) {
-                    throw new IllegalStateException("Unknown garment part model: " + partEntry.getValue());
-                }
-                if (!part.variants().containsKey(definition.textureVariant())
-                        && !part.variants().containsKey("default")) {
+            for (var slot : definition.allowedSlots()) {
+                Map<String, ResourceLocation> variant = template.variants().get(definition.modelVariantFor(slot));
+                if (variant == null) {
                     throw new IllegalStateException(
-                            "Unresolved garment texture variant: " + part.id() + " / " + definition.textureVariant()
+                            "Unknown garment model variant: " + definition.modelTemplate() + " / " + definition.modelVariant()
                     );
                 }
-            }
-            for (String design : definition.designs()) {
-                if (!"plain".equals(design) && variant.values().stream()
-                        .map(partsToValidate::get)
-                        .filter(java.util.Objects::nonNull)
-                        .noneMatch(part -> part.designs().containsKey(design))) {
+                if (definition.modelTemplate().equals(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "t_shirt"))
+                        && !variant.keySet().containsAll(T_SHIRT_REQUIRED_PARTS)) {
                     throw new IllegalStateException(
-                            "Garment design has no reachable mask: " + definition.id() + " / " + design
+                            "T-Shirt model variant is missing required parts: " + definition.modelVariant()
                     );
                 }
-            }
-            Set<String> missingStyleParts = new LinkedHashSet<>(GarmentPartSelection.requiredStyleParts(
-                    definition.styles(), variant.containsKey("bust")
-            ));
-            missingStyleParts.removeAll(variant.keySet());
-            if (!missingStyleParts.isEmpty()) {
-                throw new IllegalStateException(
-                        "Garment styles require missing parts: " + definition.id() + " / " + missingStyleParts
-                );
+                for (Map.Entry<String, ResourceLocation> partEntry : variant.entrySet()) {
+                    GarmentPartModel part = partsToValidate.get(partEntry.getValue());
+                    if (part == null) {
+                        throw new IllegalStateException("Unknown garment part model: " + partEntry.getValue());
+                    }
+                    if (!part.variants().containsKey(definition.textureVariant())
+                            && !part.variants().containsKey("default")) {
+                        throw new IllegalStateException(
+                                "Unresolved garment texture variant: " + part.id() + " / " + definition.textureVariant()
+                        );
+                    }
+                }
+                for (String design : definition.designs()) {
+                    if (!"plain".equals(design) && variant.values().stream()
+                            .map(partsToValidate::get)
+                            .filter(java.util.Objects::nonNull)
+                            .noneMatch(part -> part.designs().containsKey(design))) {
+                        throw new IllegalStateException(
+                                "Garment design has no reachable mask: " + definition.id() + " / " + design
+                        );
+                    }
+                }
+                Set<String> missingStyleParts = new LinkedHashSet<>(GarmentPartSelection.requiredStyleParts(
+                        definition.styles(), variant.containsKey("bust")
+                ));
+                missingStyleParts.removeAll(variant.keySet());
+                if (!missingStyleParts.isEmpty()) {
+                    throw new IllegalStateException(
+                            "Garment styles require missing parts: " + definition.id() + " / " + missingStyleParts
+                    );
+                }
             }
         }
     }

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.network.ModNetwork;
+import com.rexhub.createapparel.apparel.ApparelCapabilities;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -67,13 +68,21 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
         event.addListener(INSTANCE);
     }
 
+    private static void synchronizePlayer(net.minecraft.server.level.ServerPlayer player) {
+        ModNetwork.sendGarmentDefinitions(player, all());
+        ApparelCapabilities.get(player).ifPresent(inventory -> {
+            inventory.reconcileStyles();
+            ModNetwork.sendApparelInventory(player, inventory);
+        });
+    }
+
     @SubscribeEvent
     public static void synchronize(OnDatapackSyncEvent event) {
         if (event.getPlayer() != null) {
-            ModNetwork.sendGarmentDefinitions(event.getPlayer(), all());
+            synchronizePlayer(event.getPlayer());
             return;
         }
         event.getPlayerList().getPlayers()
-                .forEach(player -> ModNetwork.sendGarmentDefinitions(player, all()));
+                .forEach(GarmentDefinitionManager::synchronizePlayer);
     }
 }

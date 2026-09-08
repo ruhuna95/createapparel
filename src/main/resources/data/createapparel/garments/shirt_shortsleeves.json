@@ -1,5 +1,4 @@
 {
-  "slot": "top",
   "model_template": "createapparel:shirt",
   "model_variant": "shirt_shortsleeves",
   "texture_variant": "default",
@@ -16,5 +15,13 @@
       "closed",
       "opened"
     ]
+  },
+  "default_slot": "top",
+  "allowed_slots": [
+    "top",
+    "outer"
+  ],
+  "slot_model_variants": {
+    "outer": "shirt_shortsleeves_outer"
   }
 }

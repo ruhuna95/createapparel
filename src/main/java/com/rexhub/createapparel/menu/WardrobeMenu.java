@@ -209,7 +209,7 @@ public final class WardrobeMenu extends AbstractContainerMenu {
         ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
         return itemId == null
                 ? null
-                : GarmentDefinitionManager.get(itemId).map(definition -> definition.slot()).orElse(null);
+                : GarmentDefinitionManager.get(itemId).map(definition -> definition.defaultSlot()).orElse(null);
     }
 
     private record SlotPosition(int x, int y) {

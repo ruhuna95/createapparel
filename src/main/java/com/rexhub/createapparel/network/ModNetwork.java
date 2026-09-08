@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "5";
+    private static final String PROTOCOL_VERSION = "6";
 
     private static SimpleChannel channel;
 
@@ -112,6 +112,7 @@ public final class ModNetwork {
         return new ApparelInventorySyncPacket(
                 player.getId(),
                 inventory.copyContents(),
+                inventory.copyStyles(),
                 inventory.forceSkin(),
                 inventory.forceHideArmor(),
                 inventory.armProfile(),

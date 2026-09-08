@@ -1,0 +1,123 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_sleeve_classic",
+        "from": [
+          -8.5,
+          12.75,
+          -2.5
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.5
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              15
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              15
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              15
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              15
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_sleeve_classic_decoration",
+        "from": [
+          -8.55,
+          12.75,
+          -2.55
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.55
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              15,
+              8,
+              26
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              15,
+              16,
+              26
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              15,
+              4,
+              26
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/shirt/long_sleeve_classic/base/default",
+        "brightness_mask": "createapparel:garment/shirt/long_sleeve_classic/masks/brightness/default"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/shirt/long_sleeve_classic/masks/stripe/secondary"
+      }
+    }
+  }
+}

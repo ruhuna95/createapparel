@@ -1,0 +1,123 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_sleeve_slim",
+        "from": [
+          -7.5,
+          18.75,
+          -2.5
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.5
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              9
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              9
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              9
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              9
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              7,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_sleeve_slim_decoration",
+        "from": [
+          -7.55,
+          18.75,
+          -2.55
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.55
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              9,
+              7,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              9,
+              14,
+              14
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              9,
+              4,
+              14
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/shirt/short_sleeve_slim/base/default",
+        "brightness_mask": "createapparel:garment/shirt/short_sleeve_slim/masks/brightness/default"
+      }
+    },
+    "designs": {
+      "stripe": {
+        "secondary_mask": "createapparel:garment/shirt/short_sleeve_slim/masks/stripe/secondary"
+      }
+    }
+  }
+}

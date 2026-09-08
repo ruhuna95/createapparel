@@ -6,6 +6,10 @@ import com.rexhub.createapparel.apparel.SkinTone;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.garment.GarmentData;
+import com.rexhub.createapparel.garment.EquippedStyleState;
+import com.rexhub.createapparel.garment.GarmentStyleResolver;
+import java.util.Map;
+import java.util.EnumMap;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.menu.WardrobeMenu;
@@ -25,7 +29,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,6 +64,9 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private ItemStack observedStack = ItemStack.EMPTY;
     private GarmentDefinition selectedDefinition;
     private GarmentData previewData;
+    private EquippedStyleState previewStyles = EquippedStyleState.EMPTY;
+    private EquippedStyleState observedStyles = EquippedStyleState.EMPTY;
+    private long observedRevision = -1;
     private ItemStack previewStack = ItemStack.EMPTY;
     private ChestProfile previewChestProfile = ChestProfile.FLAT;
     private SkinTone previewSkinTone = SkinTone.NATURAL;
@@ -120,13 +126,19 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
     private void refreshSelectedGarment(boolean force) {
         ItemStack actual = menu.apparelStack(selectedSlot);
-        if (!force && ItemStack.matches(actual, observedStack)) {
+        EquippedStyleState actualStyles = minecraft == null || minecraft.player == null
+                ? EquippedStyleState.EMPTY : ClientApparelInventories.styleState(minecraft.player, selectedSlot);
+        long revision = minecraft == null || minecraft.player == null ? 0 : ClientApparelInventories.revision(minecraft.player);
+        if (!force && revision == observedRevision && ItemStack.matches(actual, observedStack) && actualStyles.equals(observedStyles)) {
             return;
         }
 
         GarmentDefinition definition = definitionFor(actual).orElse(null);
         GarmentData actualData = readData(actual, definition).orElse(null);
         observedStack = actual.copy();
+        observedStyles = actualStyles;
+        observedRevision = revision;
+        previewStyles = definition == null ? EquippedStyleState.EMPTY : actualStyles.normalize(definition);
         selectedDefinition = definition;
         if (definition == null || actualData == null) {
             previewData = null;
@@ -165,25 +177,28 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         if (selectedDefinition == null || previewData == null) {
             return;
         }
-        List<String> values = selectedDefinition.styles().get(category);
+        List<String> values = GarmentStyleResolver.allowedStyles(selectedDefinition, selectedSlot,
+                ClientApparelInventories.context(menu.copyApparelContents(), previewStyleSnapshot())).get(category);
         if (values == null || values.isEmpty()) {
             return;
         }
-        String current = previewData.styles().getOrDefault(category, values.get(0));
+        String current = previewStyles.styles().getOrDefault(category, values.get(0));
         String next = values.get((values.indexOf(current) + 1) % values.size());
-        LinkedHashMap<String, String> styles = new LinkedHashMap<>(previewData.styles());
-        styles.put(category, next);
-        previewData = new GarmentData(
-                previewData.material(),
-                previewData.design(),
-                previewData.primaryColor(),
-                previewData.secondaryColor(),
-                previewData.accentColor(),
-                styles
-        );
-        rebuildPreviewStack();
+        previewStyles = previewStyles.with(category, next);
         updateStyleButtonMessages();
         ModNetwork.updateWardrobe(WardrobeActionPacket.style(selectedSlot, category, next));
+    }
+
+    private Map<GarmentSlot, EquippedStyleState> previewStyleSnapshot() {
+        Map<GarmentSlot, EquippedStyleState> styles = new EnumMap<>(GarmentSlot.class);
+        if (minecraft != null && minecraft.player != null) {
+            styles.putAll(ClientApparelInventories.styles(minecraft.player));
+        }
+        styles.put(selectedSlot, previewStyles);
+        var context = ClientApparelInventories.context(menu.copyApparelContents(), styles);
+        context.equipped().forEach((slot, view) -> styles.put(slot,
+                GarmentStyleResolver.normalize(view.definition(), slot, view.styleState(), context)));
+        return styles;
     }
 
     private void cycleChestProfile() {
@@ -206,7 +221,6 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
             return;
         }
         previewStack = observedStack.copy();
-        previewData.write(previewStack);
     }
 
     private void updateProfileButtons() {
@@ -232,7 +246,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
             if (index >= styleButtons.size()) {
                 break;
             }
-            String value = previewData.styles().get(category);
+            String value = previewStyles.styles().get(category);
             styleButtons.get(index).setMessage(Component.translatable(
                     "screen.createapparel.wardrobe.style",
                     Component.translatable("style_category.createapparel." + category),
@@ -337,6 +351,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         ClientApparelInventories.withPreview(
                 minecraft.player,
                 previewContents,
+                previewStyleSnapshot(),
                 previewChestProfile,
                 previewSkinTone,
                 () -> {

@@ -12,10 +12,15 @@ import net.minecraftforge.fml.DistExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.EnumMap;
+import com.rexhub.createapparel.garment.GarmentSlot;
+import com.rexhub.createapparel.garment.EquippedStyleState;
 
 public record ApparelInventorySyncPacket(
         int playerId,
         List<ItemStack> contents,
+        Map<GarmentSlot, EquippedStyleState> styles,
         boolean forceSkin,
         boolean forceHideArmor,
         ArmProfile armProfile,
@@ -26,6 +31,7 @@ public record ApparelInventorySyncPacket(
         if (contents.size() != ApparelInventory.SLOT_COUNT) {
             throw new IllegalArgumentException("Invalid apparel inventory size: " + contents.size());
         }
+        styles = Map.copyOf(styles);
         contents = contents.stream().map(ItemStack::copy).toList();
     }
 
@@ -33,6 +39,9 @@ public record ApparelInventorySyncPacket(
         buffer.writeVarInt(playerId);
         buffer.writeVarInt(contents.size());
         contents.forEach(buffer::writeItem);
+        for (GarmentSlot slot : GarmentSlot.values()) {
+            styles.getOrDefault(slot, EquippedStyleState.EMPTY).write(buffer);
+        }
         buffer.writeBoolean(forceSkin);
         buffer.writeBoolean(forceHideArmor);
         buffer.writeEnum(armProfile);
@@ -50,9 +59,17 @@ public record ApparelInventorySyncPacket(
         for (int slot = 0; slot < size; slot++) {
             contents.add(buffer.readItem());
         }
+        Map<GarmentSlot, EquippedStyleState> styles = new EnumMap<>(GarmentSlot.class);
+        for (GarmentSlot slot : GarmentSlot.values()) {
+            EquippedStyleState style = EquippedStyleState.read(buffer);
+            if (!contents.get(slot.ordinal()).isEmpty()) {
+                styles.put(slot, style);
+            }
+        }
         return new ApparelInventorySyncPacket(
                 playerId,
                 contents,
+                styles,
                 buffer.readBoolean(),
                 buffer.readBoolean(),
                 buffer.readEnum(ArmProfile.class),
@@ -67,6 +84,7 @@ public record ApparelInventorySyncPacket(
                 () -> () -> ClientApparelInventories.accept(
                         playerId,
                         contents,
+                        styles,
                         forceSkin,
                         forceHideArmor,
                         armProfile,

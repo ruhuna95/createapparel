@@ -3,8 +3,8 @@
   "display": {
     "gui": {
       "rotation": [
-        25,
-        225,
+        0,
+        180,
         0
       ],
       "translation": [

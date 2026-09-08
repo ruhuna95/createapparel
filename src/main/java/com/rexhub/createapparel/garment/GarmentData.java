@@ -1,14 +1,10 @@
 package com.rexhub.createapparel.garment;
 
-import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public record GarmentData(
@@ -16,20 +12,16 @@ public record GarmentData(
         String design,
         FabricColor primaryColor,
         Optional<FabricColor> secondaryColor,
-        Optional<FabricColor> accentColor,
-        Map<String, String> styles
+        Optional<FabricColor> accentColor
 ) {
     public static final String TAG_NAME = "GarmentData";
 
     public GarmentData {
         secondaryColor = secondaryColor == null ? Optional.empty() : secondaryColor;
         accentColor = accentColor == null ? Optional.empty() : accentColor;
-        styles = Collections.unmodifiableMap(new LinkedHashMap<>(styles));
     }
 
     public static GarmentData defaultFor(GarmentDefinition definition) {
-        LinkedHashMap<String, String> styles = new LinkedHashMap<>();
-        definition.styles().forEach((key, values) -> styles.put(key, values.get(0)));
         String design = definition.designs().contains("plain")
                 ? "plain"
                 : definition.designs().iterator().next();
@@ -38,8 +30,7 @@ public record GarmentData(
                 design,
                 FabricColor.WHITE,
                 Optional.empty(),
-                Optional.empty(),
-                styles
+                Optional.empty()
         );
     }
 
@@ -58,37 +49,7 @@ public record GarmentData(
         Optional<FabricColor> secondary = optionalColor(tag, "secondary_color");
         Optional<FabricColor> accent = optionalColor(tag, "accent_color");
 
-        return new GarmentData(material, design, primary, secondary, accent, readStyles(tag.getCompound("style"), definition));
-    }
-
-    static Map<String, String> readStyles(CompoundTag styleTag, GarmentDefinition definition) {
-        for (String key : styleTag.getAllKeys()) {
-            if (!definition.styles().containsKey(key) && !isRetiredBlouseSleeveStyle(definition, key, styleTag.getString(key))) {
-                throw new IllegalArgumentException("Unknown garment style category: " + definition.id() + " / " + key);
-            }
-        }
-        LinkedHashMap<String, String> styles = new LinkedHashMap<>();
-        definition.styles().forEach((key, allowed) -> {
-            String selected = styleTag.contains(key) ? styleTag.getString(key) : allowed.get(0);
-            if (!allowed.contains(selected)) {
-                throw new IllegalArgumentException(
-                        "Garment style is not allowed: " + definition.id() + " / " + key + "=" + selected
-                );
-            }
-            styles.put(key, selected);
-        });
-        return styles;
-    }
-
-    private static boolean isRetiredBlouseSleeveStyle(GarmentDefinition definition, String key, String value) {
-        if (!"sleeves".equals(key) || !("normal".equals(value) || "rolled".equals(value))
-                || !CreateApparel.MOD_ID.equals(definition.id().getNamespace())) {
-            return false;
-        }
-        return switch (definition.id().getPath()) {
-            case "blouse_round", "blouse_frill", "blouse_bow_tie" -> true;
-            default -> false;
-        };
+        return new GarmentData(material, design, primary, secondary, accent);
     }
 
     public void write(ItemStack stack) {
@@ -98,9 +59,6 @@ public record GarmentData(
         tag.putString("primary_color", primaryColor.getSerializedName());
         secondaryColor.ifPresent(color -> tag.putString("secondary_color", color.getSerializedName()));
         accentColor.ifPresent(color -> tag.putString("accent_color", color.getSerializedName()));
-        CompoundTag styleTag = new CompoundTag();
-        styles.forEach(styleTag::putString);
-        tag.put("style", styleTag);
         stack.getOrCreateTag().put(TAG_NAME, tag);
     }
 

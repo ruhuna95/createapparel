@@ -2,6 +2,13 @@ package com.rexhub.createapparel.apparel;
 
 import com.rexhub.createapparel.garment.GarmentDefinitionManager;
 import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.EquippedStyleState;
+import com.rexhub.createapparel.garment.GarmentDefinition;
+import com.rexhub.createapparel.garment.ApparelContext;
+import com.rexhub.createapparel.garment.GarmentStyleResolver;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Optional;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -27,6 +34,7 @@ public final class ApparelInventory extends ItemStackHandler {
     private Runnable changeListener = () -> {
     };
     private boolean suppressChangeNotification;
+    private final Map<GarmentSlot, EquippedStyleState> styleStates = new EnumMap<>(GarmentSlot.class);
     private ArmProfile armProfile = ArmProfile.CLASSIC;
     private ChestProfile chestProfile = ChestProfile.FLAT;
     private SkinTone skinTone = SkinTone.NATURAL;
@@ -39,6 +47,132 @@ public final class ApparelInventory extends ItemStackHandler {
 
     public ItemStack getStack(GarmentSlot slot) {
         return getStackInSlot(slot.ordinal());
+    }
+
+    public Optional<GarmentDefinition> definition(GarmentSlot slot) {
+        ItemStack stack = getStack(slot);
+        if (stack.isEmpty()) {
+            return Optional.empty();
+        }
+        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        return id == null ? Optional.empty() : GarmentDefinitionManager.get(id);
+    }
+
+    public EquippedStyleState styleState(GarmentSlot slot) {
+        return styleStates.getOrDefault(slot, EquippedStyleState.EMPTY);
+    }
+
+    public Map<GarmentSlot, EquippedStyleState> copyStyles() {
+        return Map.copyOf(styleStates);
+    }
+
+    private void initializeStyleState(GarmentSlot slot) {
+        clearStyleState(slot);
+        definition(slot).ifPresent(definition -> styleStates.put(slot, EquippedStyleState.defaultsFor(definition)));
+    }
+
+    private void clearStyleState(GarmentSlot slot) {
+        styleStates.remove(slot);
+    }
+
+    public ApparelContext context() {
+        Map<GarmentSlot, ApparelContext.EquippedGarmentView> equipped = new EnumMap<>(GarmentSlot.class);
+        for (GarmentSlot slot : GarmentSlot.values()) {
+            definition(slot).ifPresent(definition ->
+                    equipped.put(slot, new ApparelContext.EquippedGarmentView(definition, styleState(slot))));
+        }
+        return new ApparelContext(equipped);
+    }
+
+    public Map<String, List<String>> allowedStyles(GarmentSlot slot) {
+        return definition(slot).map(definition -> GarmentStyleResolver.allowedStyles(definition, slot, context()))
+                .orElse(Map.of());
+    }
+
+    public void reconcileStyles() {
+        ApparelContext context = context();
+        for (GarmentSlot slot : GarmentSlot.values()) {
+            if (getStack(slot).isEmpty()) {
+                clearStyleState(slot);
+            } else {
+                definition(slot).ifPresent(definition ->
+                        styleStates.put(slot, GarmentStyleResolver.normalize(definition, slot, styleState(slot), context)));
+            }
+        }
+    }
+
+    public boolean setStyle(GarmentSlot slot, String category, String value) {
+        GarmentDefinition definition = definition(slot).orElse(null);
+        if (definition == null || !allowedStyles(slot).getOrDefault(category, List.of()).contains(value)) {
+            return false;
+        }
+        styleStates.put(slot, styleState(slot).normalize(definition).with(category, value));
+        reconcileStyles();
+        notifyChanged();
+        return true;
+    }
+
+    @Override
+    public void setStackInSlot(int slot, ItemStack stack) {
+        validateSlotIndex(slot);
+        boolean previous = suppressChangeNotification;
+        suppressChangeNotification = true;
+        try {
+            super.setStackInSlot(slot, stack);
+            if (stack.isEmpty()) {
+                clearStyleState(GarmentSlot.values()[slot]);
+            } else {
+                initializeStyleState(GarmentSlot.values()[slot]);
+            }
+            reconcileStyles();
+        } finally {
+            suppressChangeNotification = previous;
+        }
+        notifyChanged();
+    }
+
+    @Override
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+        boolean previous = suppressChangeNotification;
+        suppressChangeNotification = true;
+        ItemStack remainder;
+        boolean changed = false;
+        try {
+            remainder = super.insertItem(slot, stack, simulate);
+            if (!simulate && remainder.getCount() != stack.getCount()) {
+                initializeStyleState(GarmentSlot.values()[slot]);
+                reconcileStyles();
+                changed = true;
+            }
+        } finally {
+            suppressChangeNotification = previous;
+        }
+        if (changed) {
+            notifyChanged();
+        }
+        return remainder;
+    }
+
+    @Override
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        boolean previous = suppressChangeNotification;
+        suppressChangeNotification = true;
+        ItemStack extracted;
+        try {
+            extracted = super.extractItem(slot, amount, simulate);
+            if (!simulate && !extracted.isEmpty()) {
+                if (getStackInSlot(slot).isEmpty()) {
+                    clearStyleState(GarmentSlot.values()[slot]);
+                }
+                reconcileStyles();
+            }
+        } finally {
+            suppressChangeNotification = previous;
+        }
+        if (!simulate && !extracted.isEmpty()) {
+            notifyChanged();
+        }
+        return extracted;
     }
 
     public void setChangeListener(Runnable changeListener) {
@@ -153,7 +287,7 @@ public final class ApparelInventory extends ItemStackHandler {
         ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
         return itemId != null
                 && GarmentDefinitionManager.get(itemId)
-                .map(definition -> definition.slot() == GarmentSlot.values()[slot])
+                .map(definition -> definition.allowedSlots().contains(GarmentSlot.values()[slot]))
                 .orElse(false);
     }
 
@@ -164,6 +298,13 @@ public final class ApparelInventory extends ItemStackHandler {
         tag.putString(SKIN_TONE_TAG, skinTone.getSerializedName());
         tag.putBoolean(FORCE_SKIN_TAG, forceSkin);
         tag.putBoolean(FORCE_HIDE_ARMOR_TAG, forceHideArmor);
+        CompoundTag styles = new CompoundTag();
+        styleStates.forEach((slot, state) -> {
+            if (!getStack(slot).isEmpty()) {
+                styles.put(slot.getSerializedName(), state.serializeNBT());
+            }
+        });
+        tag.put("ApparelStyles", styles);
         return tag;
     }
 
@@ -174,6 +315,13 @@ public final class ApparelInventory extends ItemStackHandler {
         suppressChangeNotification = true;
         try {
             super.deserializeNBT(normalizedTag);
+            styleStates.clear();
+            CompoundTag savedStyles = tag.getCompound("ApparelStyles");
+            for (GarmentSlot slot : GarmentSlot.values()) {
+                if (savedStyles.contains(slot.getSerializedName(), CompoundTag.TAG_COMPOUND)) {
+                    styleStates.put(slot, EquippedStyleState.fromNBT(savedStyles.getCompound(slot.getSerializedName())));
+                }
+            }
             if (tag.contains(CHEST_PROFILE_TAG, CompoundTag.TAG_STRING)) {
                 chestProfile = ChestProfile.fromSerializedName(tag.getString(CHEST_PROFILE_TAG));
             }
@@ -194,6 +342,7 @@ public final class ApparelInventory extends ItemStackHandler {
             } else {
                 forceHideArmor = false;
             }
+            reconcileStyles();
         } finally {
             suppressChangeNotification = false;
         }

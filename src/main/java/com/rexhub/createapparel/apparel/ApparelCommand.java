@@ -127,9 +127,7 @@ public final class ApparelCommand {
                                                 ))
                                                 .then(Commands.argument("design", StringArgumentType.word())
                                                         .suggests((context, builder) -> SharedSuggestionProvider.suggest(
-                                                                GarmentDefinitionManager.all().stream()
-                                                                        .flatMap(definition -> definition.designs().stream())
-                                                                        .distinct(),
+                                                                designSuggestions(context),
                                                                 builder
                                                         ))
                                                         .then(Commands.argument("secondary_color", StringArgumentType.word())
@@ -148,6 +146,34 @@ public final class ApparelCommand {
                                                                                 string(context, "secondary_color"),
                                                                                 string(context, "accent_color")
                                                                         )))))))));
+    }
+
+    private static java.util.stream.Stream<String> designSuggestions(CommandContext<CommandSourceStack> context) {
+        try {
+            return GarmentDefinitionManager.get(ResourceLocationArgument.getId(context, "garment_item"))
+                    .stream().flatMap(definition -> definition.designs().stream());
+        } catch (IllegalArgumentException exception) {
+            return java.util.stream.Stream.empty();
+        }
+    }
+
+    private static Map<String, List<String>> styleSuggestions(CommandContext<CommandSourceStack> context) {
+        try {
+            Map<String, List<String>> common = null;
+            for (ServerPlayer player : EntityArgument.getPlayers(context, "target")) {
+                Map<String, List<String>> allowed = getInventory(player).allowedStyles(getGarmentSlot(context));
+                if (common == null) {
+                    common = new LinkedHashMap<>(allowed);
+                } else {
+                    common.replaceAll((category, values) -> values.stream()
+                            .filter(allowed.getOrDefault(category, List.of())::contains).toList());
+                    common.values().removeIf(List::isEmpty);
+                }
+            }
+            return common == null ? Map.of() : common;
+        } catch (CommandSyntaxException | IllegalArgumentException exception) {
+            return Map.of();
+        }
     }
 
     private static ArgumentBuilder<CommandSourceStack, ?> wardrobeCommand() {
@@ -176,17 +202,12 @@ public final class ApparelCommand {
                                 .then(garmentSlotArgument()
                                         .then(Commands.argument("style_category", StringArgumentType.word())
                                                 .suggests((context, builder) -> SharedSuggestionProvider.suggest(
-                                                        GarmentDefinitionManager.all().stream()
-                                                                .flatMap(definition -> definition.styles().keySet().stream())
-                                                                .distinct(),
+                                                        styleSuggestions(context).keySet().stream(),
                                                         builder
                                                 ))
                                                 .then(Commands.argument("style", StringArgumentType.word())
                                                         .suggests((context, builder) -> SharedSuggestionProvider.suggest(
-                                                                GarmentDefinitionManager.all().stream()
-                                                                        .flatMap(definition -> definition.styles().values().stream())
-                                                                        .flatMap(Collection::stream)
-                                                                        .distinct(),
+                                                                styleSuggestions(context).getOrDefault(string(context, "style_category"), List.of()).stream(),
                                                                 builder
                                                         ))
                                                         .executes(ApparelCommand::style))))));
@@ -257,8 +278,7 @@ public final class ApparelCommand {
                 design,
                 primaryColor,
                 secondaryColor,
-                accentColor,
-                defaults.styles()
+                accentColor
         );
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "target");
         for (ServerPlayer target : targets) {
@@ -375,30 +395,16 @@ public final class ApparelCommand {
             if (definition == null) {
                 throw UNKNOWN_GARMENT.create(itemId);
             }
-            List<String> allowed = definition.styles().get(category);
+            List<String> allowed = inventory.allowedStyles(slot).get(category);
             if (allowed == null) {
                 throw UNKNOWN_STYLE_CATEGORY.create(category);
             }
             if (!allowed.contains(selectedStyle)) {
                 throw UNKNOWN_STYLE.create(category + "=" + selectedStyle);
             }
-            GarmentData oldData;
-            try {
-                oldData = GarmentData.fromStack(stack, definition);
-            } catch (IllegalArgumentException exception) {
-                oldData = GarmentData.defaultFor(definition);
+            if (!inventory.setStyle(slot, category, selectedStyle)) {
+                throw UNKNOWN_STYLE.create(category + "=" + selectedStyle);
             }
-            Map<String, String> styles = new LinkedHashMap<>(oldData.styles());
-            styles.put(category, selectedStyle);
-            new GarmentData(
-                    oldData.material(),
-                    oldData.design(),
-                    oldData.primaryColor(),
-                    oldData.secondaryColor(),
-                    oldData.accentColor(),
-                    styles
-            ).write(stack);
-            inventory.setStackInSlot(slot.ordinal(), stack.copy());
             changed++;
         }
         int changedCount = changed;

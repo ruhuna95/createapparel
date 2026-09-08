@@ -6,6 +6,7 @@ import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.garment.GarmentSlot;
+import com.rexhub.createapparel.garment.GarmentWearContext;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -99,7 +100,7 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
             if (stack.isEmpty()) {
                 continue;
             }
-            ClientGarmentAssets.INSTANCE.resolve(stack, armProfile, chestProfile).ifPresent(garment ->
+            ClientGarmentAssets.INSTANCE.resolve(stack, new GarmentWearContext(slot, ClientApparelInventories.styleState(player, slot)), armProfile, chestProfile).ifPresent(garment ->
                     CommonGarmentRenderer.renderHumanoidGarment(
                             garment,
                             getParentModel(),

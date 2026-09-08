@@ -63,7 +63,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
     private void blouseModel(RegistryObject<Item> item) {
         getBuilder(item.getId().getPath()).parent(new ModelFile.UncheckedModelFile(mcLoc("builtin/entity")))
                 .transforms()
-                .transform(ItemDisplayContext.GUI).rotation(25, 225, 0).translation(0, -1, 0).scale(0.82F).end()
+                .transform(ItemDisplayContext.GUI).rotation(0, 180, 0).translation(0, -1, 0).scale(0.82F).end()
                 .transform(ItemDisplayContext.GROUND).rotation(0, 180, 0).translation(0, 2, 0).scale(0.5F).end()
                 .transform(ItemDisplayContext.FIXED).scale(0.85F).end()
                 .transform(ItemDisplayContext.THIRD_PERSON_RIGHT_HAND)

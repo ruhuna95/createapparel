@@ -15,6 +15,9 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets.TexturePoint;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Uv;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
 import com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache;
+import com.rexhub.createapparel.client.garment.FlatGarmentGeometry;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
+import net.minecraft.world.item.ItemStack;
 import com.rexhub.createapparel.client.garment.GarmentElementGeometry;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -42,11 +45,41 @@ public final class CommonGarmentRenderer {
             int packedLight,
             int packedOverlay
     ) {
-        Vec3 center = itemBoundsCenter(garment.parts());
+        renderFlat(garment, new Vec3(0.5F, 0.5F, 0.5F), poseStack, buffer, packedLight, packedOverlay);
+    }
+
+    public static void renderHanger(ItemStack stack, PoseStack poseStack, MultiBufferSource buffer,
+                                    int packedLight, int packedOverlay) {
+        ClientGarmentAssets.INSTANCE.resolve(stack).ifPresent(garment -> {
+            var flat = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
+            float height = flat.flattenedBounds().max().y() - flat.flattenedBounds().min().y();
+            renderFlat(garment, new Vec3(0, -height * MODEL_UNIT / 2, 0),
+                    poseStack, buffer, packedLight, packedOverlay);
+        });
+    }
+
+    private static void renderFlat(ResolvedGarment garment, Vec3 anchor, PoseStack poseStack,
+                                   MultiBufferSource buffer, int packedLight, int packedOverlay) {
+        var flat = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
+        renderCentered(garment, anchor, flat.originalBounds().center(), flat.scaleZ(),
+                poseStack, buffer, packedLight, packedOverlay);
+    }
+
+    public static void renderPreview(ResolvedGarment garment, PoseStack poseStack,
+                                     MultiBufferSource buffer, int packedLight, int packedOverlay) {
+        var geometry = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
+        renderCentered(garment, new Vec3(0, 0, 0), geometry.originalBounds().center(), 1,
+                poseStack, buffer, packedLight, packedOverlay);
+    }
+
+    private static void renderCentered(ResolvedGarment garment, Vec3 anchor, Vec3 center, float scaleZ,
+                                       PoseStack poseStack, MultiBufferSource buffer,
+                                       int packedLight, int packedOverlay) {
         poseStack.pushPose();
-        poseStack.translate(0.5F, 0.5F, 0.5F);
+        poseStack.translate(anchor.x(), anchor.y(), anchor.z());
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
         mirrorItemX(poseStack);
+        poseStack.scale(1, 1, scaleZ);
         poseStack.translate(-center.x(), -center.y(), -center.z());
         for (ResolvedPart part : garment.parts()) {
             renderPart(
@@ -207,68 +240,6 @@ public final class CommonGarmentRenderer {
             maxX = Math.max(maxX, Math.max(element.from().x(), element.to().x()));
         }
         return (minX + maxX) * 0.5F;
-    }
-
-    private static Vec3 itemBoundsCenter(List<ResolvedPart> parts) {
-        float[] bounds = {
-                Float.POSITIVE_INFINITY,
-                Float.POSITIVE_INFINITY,
-                Float.POSITIVE_INFINITY,
-                Float.NEGATIVE_INFINITY,
-                Float.NEGATIVE_INFINITY,
-                Float.NEGATIVE_INFINITY
-        };
-        for (ResolvedPart part : parts) {
-            for (Element element : part.model().elements()) {
-                includeElementBounds(bounds, element);
-            }
-        }
-        if (!Float.isFinite(bounds[0])) {
-            return new Vec3(0.0F, 0.0F, 0.0F);
-        }
-        return new Vec3(
-                (bounds[0] + bounds[3]) * 0.5F,
-                (bounds[1] + bounds[4]) * 0.5F,
-                (bounds[2] + bounds[5]) * 0.5F
-        );
-    }
-
-    private static void includeElementBounds(float[] bounds, Element element) {
-        for (Vec3 corner : element.corners()) {
-            includePoint(bounds, rotatePoint(corner, element.rotation()));
-        }
-    }
-
-    private static Vec3 rotatePoint(Vec3 point, Rotation rotation) {
-        if (rotation == null || rotation.angle() == 0.0F) {
-            return point;
-        }
-        Vec3 origin = rotation.origin();
-        float x = point.x() - origin.x();
-        float y = point.y() - origin.y();
-        float z = point.z() - origin.z();
-        float radians = (float) Math.toRadians(rotation.angle());
-        float sin = (float) Math.sin(radians);
-        float cos = (float) Math.cos(radians);
-        Vec3 rotated = switch (rotation.axis()) {
-            case X -> new Vec3(x, y * cos - z * sin, y * sin + z * cos);
-            case Y -> new Vec3(x * cos + z * sin, y, -x * sin + z * cos);
-            case Z -> new Vec3(x * cos - y * sin, x * sin + y * cos, z);
-        };
-        return new Vec3(
-                rotated.x() + origin.x(),
-                rotated.y() + origin.y(),
-                rotated.z() + origin.z()
-        );
-    }
-
-    private static void includePoint(float[] bounds, Vec3 point) {
-        bounds[0] = Math.min(bounds[0], point.x());
-        bounds[1] = Math.min(bounds[1], point.y());
-        bounds[2] = Math.min(bounds[2], point.z());
-        bounds[3] = Math.max(bounds[3], point.x());
-        bounds[4] = Math.max(bounds[4], point.y());
-        bounds[5] = Math.max(bounds[5], point.z());
     }
 
     private static void mirrorItemX(PoseStack poseStack) {

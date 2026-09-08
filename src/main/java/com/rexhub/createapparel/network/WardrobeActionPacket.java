@@ -4,18 +4,11 @@ import com.rexhub.createapparel.apparel.ApparelCapabilities;
 import com.rexhub.createapparel.apparel.ApparelInventory;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.apparel.SkinTone;
-import com.rexhub.createapparel.garment.GarmentData;
-import com.rexhub.createapparel.garment.GarmentDefinition;
-import com.rexhub.createapparel.garment.GarmentDefinitionManager;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.menu.WardrobeMenu;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public record WardrobeActionPacket(
@@ -106,40 +99,9 @@ public record WardrobeActionPacket(
     }
 
     private void applyStyle(ApparelInventory inventory, ServerPlayer player) {
-        ItemStack equipped = inventory.getStack(garmentSlot);
-        if (equipped.isEmpty()) {
-            return;
+        if (!inventory.setStyle(garmentSlot, styleCategory, styleValue)) {
+            ModNetwork.sendApparelInventory(player, inventory);
         }
-        ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(equipped.getItem());
-        GarmentDefinition definition = itemId == null
-                ? null
-                : GarmentDefinitionManager.get(itemId).orElse(null);
-        if (definition == null || definition.slot() != garmentSlot) {
-            return;
-        }
-        if (!definition.styles().getOrDefault(styleCategory, java.util.List.of()).contains(styleValue)) {
-            return;
-        }
-
-        GarmentData current;
-        try {
-            current = GarmentData.fromStack(equipped, definition);
-        } catch (IllegalArgumentException exception) {
-            return;
-        }
-        LinkedHashMap<String, String> styles = new LinkedHashMap<>(current.styles());
-        styles.put(styleCategory, styleValue);
-        ItemStack updated = equipped.copy();
-        new GarmentData(
-                current.material(),
-                current.design(),
-                current.primaryColor(),
-                current.secondaryColor(),
-                current.accentColor(),
-                styles
-        ).write(updated);
-        inventory.setStackInSlot(garmentSlot.ordinal(), updated);
-        player.containerMenu.broadcastChanges();
     }
 
     private static <T> java.util.Optional<T> enumValue(T[] values, int index) {

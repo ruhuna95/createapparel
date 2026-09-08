@@ -236,3 +236,12 @@ tasks.withType(JavaCompile).configureEach {
 tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
+
+tasks.register('copyGameTestStructures', Copy) {
+    from 'gameteststructures'
+    into 'run/gameteststructures'
+}
+
+tasks.matching { it.name == 'prepareRunGameTestServer' }.configureEach {
+    dependsOn 'copyGameTestStructures'
+}

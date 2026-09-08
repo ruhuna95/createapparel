@@ -26,7 +26,6 @@ import net.minecraftforge.items.wrapper.RecipeWrapper;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 public final class SewingRecipe implements Recipe<RecipeWrapper> {
@@ -92,15 +91,12 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
             return ItemStack.EMPTY;
         }
 
-        LinkedHashMap<String, String> styles = new LinkedHashMap<>();
-        definition.styles().forEach((key, values) -> styles.put(key, values.get(0)));
         GarmentData garmentData = new GarmentData(
                 attribute.material(),
                 pattern.design(),
                 attribute.color().orElseThrow(),
                 pattern.secondaryColor(),
-                pattern.accentColor(),
-                styles
+                pattern.accentColor()
         );
         ItemStack result = new ItemStack(resultItem);
         garmentData.write(result);
