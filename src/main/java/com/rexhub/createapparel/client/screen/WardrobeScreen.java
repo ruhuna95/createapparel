@@ -15,13 +15,13 @@ import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.menu.WardrobeMenu;
 import com.rexhub.createapparel.network.ModNetwork;
 import com.rexhub.createapparel.network.WardrobeActionPacket;
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
@@ -50,6 +50,8 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private static final int SELECTION_X = SCREEN_WIDTH - SELECTION_WIDTH - 2;
     private static final int STYLE_BUTTON_WIDTH = SELECTION_WIDTH;
     private static final int SELECTED_GARMENT_Y = 18;
+    private static final double NAME_SCROLL_PIXELS_PER_SECOND = 20.0D;
+    private static final double NAME_SCROLL_PAUSE_SECONDS = 1.0D;
     private static final int STYLE_BUTTON_Y = 40;
     private static final int PREVIEW_PANEL_Y = 6;
     private static final int PREVIEW_PANEL_WIDTH = 100;
@@ -67,6 +69,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private EquippedStyleState previewStyles = EquippedStyleState.EMPTY;
     private EquippedStyleState observedStyles = EquippedStyleState.EMPTY;
     private long observedRevision = -1;
+    private long selectedNameChangedAt = Util.getMillis();
     private ItemStack previewStack = ItemStack.EMPTY;
     private ChestProfile previewChestProfile = ChestProfile.FLAT;
     private SkinTone previewSkinTone = SkinTone.NATURAL;
@@ -135,6 +138,9 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
         GarmentDefinition definition = definitionFor(actual).orElse(null);
         GarmentData actualData = readData(actual, definition).orElse(null);
+        if (force || !ItemStack.matches(actual, observedStack)) {
+            selectedNameChangedAt = Util.getMillis();
+        }
         observedStack = actual.copy();
         observedStyles = actualStyles;
         observedRevision = revision;
@@ -377,28 +383,16 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         Component selectedName = observedStack.isEmpty()
                 ? Component.translatable("screen.createapparel.wardrobe.empty")
                 : observedStack.getHoverName();
-        List<FormattedCharSequence> selectedLines = font.split(
-                Component.translatable("screen.createapparel.wardrobe.selected_garment", selectedName),
-                SELECTION_WIDTH
-        );
-        for (int line = 0; line < Math.min(selectedLines.size(), 2); line++) {
-            graphics.drawString(
-                    font,
-                    selectedLines.get(line),
-                    SELECTION_X,
-                    SELECTED_GARMENT_Y + line * 10,
-                    TEXT_COLOR,
-                    false
-            );
-        }
+        renderFittedSelectionText(graphics,
+                Component.translatable("screen.createapparel.wardrobe.selected_garment", Component.empty()),
+                SELECTED_GARMENT_Y, TEXT_COLOR);
+        renderSelectedName(graphics, selectedName);
         if (selectedDefinition != null && selectedDefinition.stylesFor(selectedSlot).isEmpty()) {
-            graphics.drawString(
-                    font,
+            renderFittedSelectionText(
+                    graphics,
                     Component.translatable("screen.createapparel.wardrobe.no_styles"),
-                    SELECTION_X,
                     STYLE_BUTTON_Y,
-                    MUTED_TEXT_COLOR,
-                    false
+                    MUTED_TEXT_COLOR
             );
         }
         graphics.drawString(
@@ -409,6 +403,40 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
                 TEXT_COLOR,
                 false
         );
+    }
+
+    private void renderSelectedName(GuiGraphics graphics, Component name) {
+        int y = SELECTED_GARMENT_Y + 10;
+        int overflow = font.width(name) - SELECTION_WIDTH;
+        if (overflow <= 0) {
+            graphics.drawString(font, name, SELECTION_X, y, TEXT_COLOR, false);
+            return;
+        }
+        double travelSeconds = overflow / NAME_SCROLL_PIXELS_PER_SECOND;
+        double halfCycle = NAME_SCROLL_PAUSE_SECONDS + travelSeconds;
+        double elapsed = (Util.getMillis() - selectedNameChangedAt) / 1000.0D % (2 * halfCycle);
+        double offset = elapsed < halfCycle
+                ? Math.max(0, elapsed - NAME_SCROLL_PAUSE_SECONDS) * NAME_SCROLL_PIXELS_PER_SECOND
+                : overflow - Math.max(0, elapsed - halfCycle - NAME_SCROLL_PAUSE_SECONDS) * NAME_SCROLL_PIXELS_PER_SECOND;
+        graphics.enableScissor(leftPos + SELECTION_X, topPos + y,
+                leftPos + SELECTION_X + SELECTION_WIDTH, topPos + y + font.lineHeight + 1);
+        try {
+            graphics.drawString(font, name, SELECTION_X - (int) offset, y, TEXT_COLOR, false);
+        } finally {
+            graphics.disableScissor();
+        }
+    }
+
+    private void renderFittedSelectionText(GuiGraphics graphics, Component text, int y, int color) {
+        float scale = Math.min(1.0F, (float) SELECTION_WIDTH / Math.max(1, font.width(text)));
+        graphics.pose().pushPose();
+        try {
+            graphics.pose().translate(SELECTION_X, y, 0);
+            graphics.pose().scale(scale, scale, 1.0F);
+            graphics.drawString(font, text, 0, 0, color, false);
+        } finally {
+            graphics.pose().popPose();
+        }
     }
 
     @Override
