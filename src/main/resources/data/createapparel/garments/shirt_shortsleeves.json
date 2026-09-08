@@ -21,6 +21,9 @@
     "top",
     "outer"
   ],
+  "slot_styles": {
+    "outer": {}
+  },
   "slot_model_variants": {
     "outer": "shirt_shortsleeves_outer"
   }

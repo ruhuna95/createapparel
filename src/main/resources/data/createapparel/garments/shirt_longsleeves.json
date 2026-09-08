@@ -25,6 +25,11 @@
     "top",
     "outer"
   ],
+  "slot_styles": {
+    "outer": {
+      "sleeves": ["normal", "rolled"]
+    }
+  },
   "slot_model_variants": {
     "outer": "shirt_longsleeves_outer"
   }

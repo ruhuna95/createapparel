@@ -79,20 +79,8 @@
     "torso": {
       "model": "createapparel:shirt_outer/torso"
     },
-    "tucked_torso": {
-      "model": "createapparel:shirt_outer/tucked_torso"
-    },
     "bust": {
       "model": "createapparel:shirt_outer/bust"
-    },
-    "torso_opened": {
-      "model": "createapparel:shirt_outer/torso_opened"
-    },
-    "tucked_torso_opened": {
-      "model": "createapparel:shirt_outer/tucked_torso_opened"
-    },
-    "bust_opened": {
-      "model": "createapparel:shirt_outer/bust_opened"
     },
     "left_sleeve_classic": {
       "model": "createapparel:shirt_outer/left_short_sleeve_classic"
@@ -111,20 +99,8 @@
     "torso": {
       "model": "createapparel:shirt_outer/torso"
     },
-    "tucked_torso": {
-      "model": "createapparel:shirt_outer/tucked_torso"
-    },
     "bust": {
       "model": "createapparel:shirt_outer/bust"
-    },
-    "torso_opened": {
-      "model": "createapparel:shirt_outer/torso_opened"
-    },
-    "tucked_torso_opened": {
-      "model": "createapparel:shirt_outer/tucked_torso_opened"
-    },
-    "bust_opened": {
-      "model": "createapparel:shirt_outer/bust_opened"
     },
     "left_sleeve_classic": {
       "model": "createapparel:shirt_outer/left_long_sleeve_classic"

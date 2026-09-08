@@ -24,18 +24,23 @@ public record GarmentDefinition(
         Map<GarmentSlot, String> slotModelVariants,
         String textureVariant,
         Set<String> designs,
-        Map<String, List<String>> styles
+        Map<String, List<String>> styles,
+        Map<GarmentSlot, Map<String, List<String>>> slotStyles
 ) {
     private static final int MAX_COLLECTION_SIZE = 256;
 
     public GarmentDefinition(ResourceLocation id, GarmentSlot slot, ResourceLocation modelTemplate,
                              String modelVariant, String textureVariant, Set<String> designs,
                              Map<String, List<String>> styles) {
-        this(id, slot, Set.of(slot), modelTemplate, modelVariant, Map.of(), textureVariant, designs, styles);
+        this(id, slot, Set.of(slot), modelTemplate, modelVariant, Map.of(), textureVariant, designs, styles, Map.of());
     }
 
     public String modelVariantFor(GarmentSlot slot) {
         return slotModelVariants.getOrDefault(slot, modelVariant);
+    }
+
+    public Map<String, List<String>> stylesFor(GarmentSlot slot) {
+        return slotStyles.getOrDefault(slot, styles);
     }
 
     public GarmentDefinition {
@@ -60,6 +65,23 @@ public record GarmentDefinition(
                 throw new IllegalArgumentException("Garment style options must not be empty: " + id + " / " + key);
             }
         });
+        Map<GarmentSlot, Map<String, List<String>>> immutableSlotStyles = new LinkedHashMap<>();
+        Set<GarmentSlot> supportedSlots = allowedSlots;
+        slotStyles.forEach((slot, categories) -> {
+            if (!supportedSlots.contains(slot)) {
+                throw new IllegalArgumentException("Style override for unsupported slot: " + id + " / " + slot);
+            }
+            Map<String, List<String>> immutableCategories = new LinkedHashMap<>();
+            categories.forEach((key, values) -> {
+                if (key.isBlank() || values.isEmpty() || values.stream().anyMatch(String::isBlank)
+                        || new LinkedHashSet<>(values).size() != values.size()) {
+                    throw new IllegalArgumentException("Invalid slot styles: " + id + " / " + slot + " / " + key);
+                }
+                immutableCategories.put(key, List.copyOf(values));
+            });
+            immutableSlotStyles.put(slot, Collections.unmodifiableMap(immutableCategories));
+        });
+        slotStyles = Collections.unmodifiableMap(immutableSlotStyles);
     }
 
     public static GarmentDefinition fromJson(ResourceLocation id, JsonObject json) {
@@ -114,7 +136,19 @@ public record GarmentDefinition(
             }
             styles.put(entry.getKey(), values);
         }
-        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant, designs, styles);
+        Map<GarmentSlot, Map<String, List<String>>> slotStyles = new LinkedHashMap<>();
+        GsonHelper.getAsJsonObject(json, "slot_styles", new JsonObject()).entrySet().forEach(entry -> {
+            Map<String, List<String>> categories = new LinkedHashMap<>();
+            GsonHelper.convertToJsonObject(entry.getValue(), entry.getKey()).entrySet().forEach(category -> {
+                List<String> values = new ArrayList<>();
+                for (JsonElement value : GsonHelper.convertToJsonArray(category.getValue(), category.getKey())) {
+                    values.add(GsonHelper.convertToString(value, category.getKey()));
+                }
+                categories.put(category.getKey(), values);
+            });
+            slotStyles.put(GarmentSlot.fromSerializedName(entry.getKey()), categories);
+        });
+        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant, designs, styles, slotStyles);
     }
 
     public void write(FriendlyByteBuf buffer) {
@@ -134,6 +168,15 @@ public record GarmentDefinition(
         styles.forEach((key, values) -> {
             buffer.writeUtf(key);
             buffer.writeCollection(values, FriendlyByteBuf::writeUtf);
+        });
+        buffer.writeVarInt(slotStyles.size());
+        slotStyles.forEach((slot, categories) -> {
+            buffer.writeEnum(slot);
+            buffer.writeVarInt(categories.size());
+            categories.forEach((key, values) -> {
+                buffer.writeUtf(key);
+                buffer.writeCollection(values, FriendlyByteBuf::writeUtf);
+            });
         });
     }
 
@@ -172,7 +215,28 @@ public record GarmentDefinition(
         for (int index = 0; index < styleCount; index++) {
             styles.put(buffer.readUtf(), buffer.readList(FriendlyByteBuf::readUtf));
         }
-        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant, designs, styles);
+        int slotStyleCount = buffer.readVarInt();
+        if (slotStyleCount < 0 || slotStyleCount > GarmentSlot.values().length) {
+            throw new IllegalArgumentException("Invalid slot style count: " + slotStyleCount);
+        }
+        Map<GarmentSlot, Map<String, List<String>>> slotStyles = new LinkedHashMap<>();
+        for (int index = 0; index < slotStyleCount; index++) {
+            GarmentSlot styleSlot = buffer.readEnum(GarmentSlot.class);
+            int categoryCount = buffer.readVarInt();
+            if (categoryCount < 0 || categoryCount > MAX_COLLECTION_SIZE) {
+                throw new IllegalArgumentException("Invalid slot style category count: " + categoryCount);
+            }
+            Map<String, List<String>> categories = new LinkedHashMap<>();
+            for (int category = 0; category < categoryCount; category++) {
+                if (categories.put(buffer.readUtf(), buffer.readList(FriendlyByteBuf::readUtf)) != null) {
+                    throw new IllegalArgumentException("Duplicate slot style category");
+                }
+            }
+            if (slotStyles.put(styleSlot, categories) != null) {
+                throw new IllegalArgumentException("Duplicate slot style override");
+            }
+        }
+        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant, designs, styles, slotStyles);
     }
 
     private static ResourceLocation parseResourceLocation(String value, String field) {

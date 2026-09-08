@@ -10,7 +10,7 @@ public final class GarmentStyleResolver {
     }
 
     public static Map<String, List<String>> allowedStyles(GarmentDefinition definition, GarmentSlot slot, ApparelContext context) {
-        Map<String, List<String>> allowed = new LinkedHashMap<>(definition.styles());
+        Map<String, List<String>> allowed = new LinkedHashMap<>(definition.stylesFor(slot));
         List<String> sleeves = allowed.getOrDefault("sleeves", List.of());
         if (slot == GarmentSlot.TOP && context.has(GarmentSlot.OUTER)
                 && sleeves.contains("normal") && sleeves.contains("rolled")) {

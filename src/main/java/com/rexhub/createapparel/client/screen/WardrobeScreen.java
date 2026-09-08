@@ -138,7 +138,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         observedStack = actual.copy();
         observedStyles = actualStyles;
         observedRevision = revision;
-        previewStyles = definition == null ? EquippedStyleState.EMPTY : actualStyles.normalize(definition);
+        previewStyles = definition == null ? EquippedStyleState.EMPTY : actualStyles.normalize(definition, selectedSlot);
         selectedDefinition = definition;
         if (definition == null || actualData == null) {
             previewData = null;
@@ -158,7 +158,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         }
 
         int index = 0;
-        for (String category : selectedDefinition.styles().keySet()) {
+        for (String category : selectedDefinition.stylesFor(selectedSlot).keySet()) {
             Button button = Button.builder(Component.empty(), ignored -> cycleStyle(category))
                     .bounds(
                             leftPos + SELECTION_X,
@@ -242,7 +242,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
             return;
         }
         int index = 0;
-        for (String category : selectedDefinition.styles().keySet()) {
+        for (String category : selectedDefinition.stylesFor(selectedSlot).keySet()) {
             if (index >= styleButtons.size()) {
                 break;
             }
@@ -391,7 +391,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
                     false
             );
         }
-        if (selectedDefinition != null && selectedDefinition.styles().isEmpty()) {
+        if (selectedDefinition != null && selectedDefinition.stylesFor(selectedSlot).isEmpty()) {
             graphics.drawString(
                     font,
                     Component.translatable("screen.createapparel.wardrobe.no_styles"),

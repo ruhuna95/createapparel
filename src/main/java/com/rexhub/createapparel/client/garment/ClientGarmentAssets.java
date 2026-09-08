@@ -147,7 +147,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         }
 
         List<String> selectedNames = GarmentPartSelection.select(
-                effectiveContext.styleState().normalize(definition).styles(), armProfile, chestProfile, variant.containsKey("bust")
+                effectiveContext.styleState().normalize(definition, effectiveContext.slot()).styles(), armProfile, chestProfile, variant.containsKey("bust")
         );
 
         List<ResolvedPart> resolvedParts = new ArrayList<>();
@@ -365,7 +365,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                     }
                 }
                 Set<String> missingStyleParts = new LinkedHashSet<>(GarmentPartSelection.requiredStyleParts(
-                        definition.styles(), variant.containsKey("bust")
+                        definition.stylesFor(slot), variant.containsKey("bust")
                 ));
                 missingStyleParts.removeAll(variant.keySet());
                 if (!missingStyleParts.isEmpty()) {

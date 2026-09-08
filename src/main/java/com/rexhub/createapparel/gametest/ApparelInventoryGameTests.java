@@ -95,6 +95,9 @@ public final class ApparelInventoryGameTests {
         inventory.setStackInSlot(GarmentSlot.TOP.ordinal(), shirt.copy());
         inventory.setStyle(GarmentSlot.TOP, "sleeves", "rolled");
         inventory.setStackInSlot(GarmentSlot.OUTER.ordinal(), shirt.copy());
+        helper.assertTrue(inventory.styleState(GarmentSlot.OUTER).styles().keySet().equals(java.util.Set.of("sleeves")), "OUTER initializes sleeves only");
+        helper.assertTrue(!inventory.setStyle(GarmentSlot.OUTER, "tuck", "tucked"), "OUTER rejects tuck");
+        helper.assertTrue(!inventory.setStyle(GarmentSlot.OUTER, "open", "opened"), "OUTER rejects open");
         helper.assertTrue("normal".equals(inventory.styleState(GarmentSlot.TOP).styles().get("sleeves")), "OUTER normalizes TOP");
         helper.assertTrue(!inventory.setStyle(GarmentSlot.TOP, "sleeves", "rolled"), "Forbidden style rejected");
         helper.assertTrue(inventory.setStyle(GarmentSlot.OUTER, "sleeves", "rolled"), "Slot styles are independent");
@@ -103,7 +106,10 @@ public final class ApparelInventoryGameTests {
         helper.assertTrue(loaded.copyStyles().equals(inventory.copyStyles()), "Multiple slot styles survive load");
         var stale = loaded.serializeNBT();
         stale.getCompound("ApparelStyles").getCompound("top").putString("sleeves", "rolled");
+        stale.getCompound("ApparelStyles").getCompound("outer").putString("tuck", "tucked");
+        stale.getCompound("ApparelStyles").getCompound("outer").putString("open", "opened");
         loaded.deserializeNBT(stale);
+        helper.assertTrue(loaded.styleState(GarmentSlot.OUTER).styles().equals(java.util.Map.of("sleeves", "rolled")), "Load drops obsolete OUTER styles");
         helper.assertTrue("normal".equals(loaded.styleState(GarmentSlot.TOP).styles().get("sleeves")), "Load reconciles constraints last");
         loaded.extractItem(GarmentSlot.OUTER.ordinal(), 1, false);
         helper.assertTrue("normal".equals(loaded.styleState(GarmentSlot.TOP).styles().get("sleeves")), "Removing OUTER does not restore rolled");

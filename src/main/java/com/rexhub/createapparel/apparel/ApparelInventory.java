@@ -68,7 +68,7 @@ public final class ApparelInventory extends ItemStackHandler {
 
     private void initializeStyleState(GarmentSlot slot) {
         clearStyleState(slot);
-        definition(slot).ifPresent(definition -> styleStates.put(slot, EquippedStyleState.defaultsFor(definition)));
+        definition(slot).ifPresent(definition -> styleStates.put(slot, EquippedStyleState.EMPTY.normalize(definition, slot)));
     }
 
     private void clearStyleState(GarmentSlot slot) {
@@ -106,7 +106,7 @@ public final class ApparelInventory extends ItemStackHandler {
         if (definition == null || !allowedStyles(slot).getOrDefault(category, List.of()).contains(value)) {
             return false;
         }
-        styleStates.put(slot, styleState(slot).normalize(definition).with(category, value));
+        styleStates.put(slot, styleState(slot).normalize(definition, slot).with(category, value));
         reconcileStyles();
         notifyChanged();
         return true;

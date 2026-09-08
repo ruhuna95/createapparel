@@ -31,9 +31,12 @@ class GarmentDefinitionTest {
     @Test
     void slotVariantsAndNetworkRoundTrip() {
         var definition = GarmentDefinition.fromJson(ID, json("\"default_slot\":\"top\",\"allowed_slots\":[\"top\",\"outer\"],"
-                + "\"slot_model_variants\":{\"outer\":\"outer_open\"}"));
+                + "\"slot_model_variants\":{\"outer\":\"outer_open\"},"
+                + "\"slot_styles\":{\"outer\":{\"sleeves\":[\"normal\",\"rolled\"]}}"));
         assertEquals("top", definition.modelVariantFor(GarmentSlot.TOP));
         assertEquals("outer_open", definition.modelVariantFor(GarmentSlot.OUTER));
+        assertEquals(Map.of("sleeves", List.of("normal", "rolled")), definition.stylesFor(GarmentSlot.OUTER));
+        assertEquals(Map.of(), definition.stylesFor(GarmentSlot.TOP));
         assertEquals(GarmentSlot.TOP, GarmentWearContext.defaultsFor(definition).slot());
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
@@ -41,6 +44,38 @@ class GarmentDefinitionTest {
             assertEquals(definition, GarmentDefinition.read(buffer));
         } finally {
             buffer.release();
+        }
+    }
+
+    @Test
+    void invalidSlotStylesAreRejected() {
+        for (String styles : List.of(
+                "{\"outer\":{\"sleeves\":[\"normal\"]}}",
+                "{\"top\":{\"sleeves\":[]}}",
+                "{\"top\":{\"\":[\"normal\"]}}",
+                "{\"top\":{\"sleeves\":[\"\"]}}",
+                "{\"top\":{\"sleeves\":[\"normal\",\"normal\"]}}")) {
+            assertThrows(IllegalArgumentException.class, () -> GarmentDefinition.fromJson(ID,
+                    json("\"slot\":\"top\",\"slot_styles\":" + styles)));
+        }
+    }
+
+    @Test
+    void onlyLongSleeveShirtOuterHasStylesWhileDefaultItemKeepsTopStyles() throws java.io.IOException {
+        for (String name : List.of("shirt_shortsleeves", "shirt_longsleeves")) {
+            var definition = GarmentDefinition.fromJson(ID, JsonParser.parseString(java.nio.file.Files.readString(
+                    java.nio.file.Path.of("src/main/resources/data/createapparel/garments/" + name + ".json"))).getAsJsonObject());
+            var context = new ApparelContext(Map.of());
+            boolean longSleeves = name.equals("shirt_longsleeves");
+            assertEquals(longSleeves ? Set.of("sleeves") : Set.of(),
+                    GarmentStyleResolver.allowedStyles(definition, GarmentSlot.OUTER, context).keySet());
+            var old = new EquippedStyleState(Map.of("sleeves", "rolled", "open", "opened", "tuck", "tucked"));
+            var normalized = GarmentStyleResolver.normalize(definition, GarmentSlot.OUTER, old, context);
+            assertEquals(longSleeves ? Map.of("sleeves", "rolled") : Map.of(), normalized.styles());
+            assertEquals(normalized, old.normalize(definition, GarmentSlot.OUTER));
+            assertEquals("closed", GarmentWearContext.defaultsFor(definition).styleState().styles().get("open"));
+            assertEquals("untucked", GarmentWearContext.defaultsFor(definition).styleState().styles().get("tuck"));
+            assertEquals(definition.styles(), GarmentStyleResolver.allowedStyles(definition, GarmentSlot.TOP, context));
         }
     }
 

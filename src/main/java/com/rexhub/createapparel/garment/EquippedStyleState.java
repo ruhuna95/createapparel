@@ -19,8 +19,12 @@ public record EquippedStyleState(Map<String, String> styles) {
     }
 
     public EquippedStyleState normalize(GarmentDefinition definition) {
+        return normalize(definition, definition.defaultSlot());
+    }
+
+    public EquippedStyleState normalize(GarmentDefinition definition, GarmentSlot slot) {
         Map<String, String> normalized = new LinkedHashMap<>();
-        definition.styles().forEach((category, allowed) -> {
+        definition.stylesFor(slot).forEach((category, allowed) -> {
             String value = styles.get(category);
             normalized.put(category, value != null && allowed.contains(value) ? value : allowed.get(0));
         });
