@@ -96,7 +96,7 @@ class BlouseAssetTest {
         var bust = part("bust");
         var frontDecoration = bust.elements().get(2);
         assertEquals(Set.of(Face.FRONT), frontDecoration.faces().keySet());
-        assertEquals(-1.7025F, frontDecoration.from().z());
+        assertEquals(-1.79F, frontDecoration.from().z());
         assertEquals(bust.elements().get(0).rotation(), frontDecoration.rotation());
         var uv = frontDecoration.faces().get(Face.FRONT);
         assertEquals(List.of(3F, 10F, 10F, 14F), List.of(uv.u0(), uv.v0(), uv.u1(), uv.v1()));

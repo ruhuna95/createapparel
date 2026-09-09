@@ -32,12 +32,14 @@ class ShirtBustAssetTest {
             assertEquals(Set.of(Face.FRONT), decoration.faces().keySet());
             assertEquals(new Uv(3, 10, 10, 14), decoration.faces().get(Face.FRONT));
             assertEquals(main.rotation(), decoration.rotation());
-            assertEquals(main.from().x(), decoration.from().x());
-            assertEquals(main.from().y(), decoration.from().y());
-            assertEquals(main.to().x(), decoration.to().x());
+            assertEquals(main.from().x() - 0.15F, decoration.from().x(), 0.000001F);
+            assertEquals(main.from().y() - 0.15F, decoration.from().y(), 0.000001F);
+            assertEquals(main.to().x() + 0.15F, decoration.to().x(), 0.000001F);
             assertEquals(main.to().y(), decoration.to().y());
-            assertEquals(0.0625F, main.from().z() - decoration.from().z(), 0.000001F);
-            assertEquals(main.from().z(), decoration.to().z());
+            assertEquals(0.15F, main.from().z() - decoration.from().z(), 0.000001F);
+            assertEquals(main.to().z(), decoration.to().z());
+            assertEquals(part.elements().get(1).from(), decoration.from());
+            assertEquals(part.elements().get(1).to(), decoration.to());
         }
     }
 

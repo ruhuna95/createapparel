@@ -44,7 +44,7 @@ class ShirtOuterAssetTest {
                                             assertTrue(id.getPath().startsWith("shirt_outer/"));
                                             for (var element : model.elements()) {
                                                 if (element.faces().containsKey(Face.FRONT)) {
-                                                    assertTrue(element.to().x() <= -1.5 || element.from().x() >= 1.5,
+                                                    assertTrue(element.to().x() <= -1.25 || element.from().x() >= 1.25,
                                                             id + "/" + element.name());
                                                 }
                                             }
@@ -78,11 +78,14 @@ class ShirtOuterAssetTest {
                     var uv = element.faces().get(Face.FRONT);
                     assertEquals(2, uv.u1() - uv.u0(), 0.00001, element.name());
                     float outerOffset = part.equals("torso") ? 0.01F : 0.5F;
+                    if (part.equals("bust") && element.name().endsWith("_collar")) {
+                        outerOffset += 0.5F;
+                    }
                     assertEquals(2 + outerOffset, element.to().x() - element.from().x(), 0.00001, element.name());
                 }
                 if (element.name().endsWith("_placket")) {
-                    assertEquals(part.equals("torso") ? 2 : 1.5, element.from().x(), 0.00001);
-                    assertEquals(1, element.to().x() - element.from().x(), 0.00001);
+                    assertEquals(part.equals("torso") ? 2 : 1.25, element.from().x(), 0.00001);
+                    assertEquals(part.equals("torso") ? 1 : 1.25, element.to().x() - element.from().x(), 0.00001);
                     assertEquals(1, element.faces().get(Face.FRONT).u1() - element.faces().get(Face.FRONT).u0(), 0.00001);
                 }
             }
