@@ -15,6 +15,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GarmentPartSelectionTest {
     @ParameterizedTest
+    @CsvSource({"down", "up"})
+    void hoodStylesSelectExactlyOneHoodForEveryBodyProfile(String hood) {
+        for (ArmProfile arms : ArmProfile.values()) {
+            for (ChestProfile chest : ChestProfile.values()) {
+                List<String> expected = new ArrayList<>();
+                expected.add("torso");
+                if (chest == ChestProfile.BUST) {
+                    expected.add("bust");
+                }
+                expected.add("left_sleeve_" + arms.getSerializedName());
+                expected.add("right_sleeve_" + arms.getSerializedName());
+                expected.add("hood_" + hood);
+                assertEquals(expected, GarmentPartSelection.select(Map.of("hood", hood), arms, chest, true));
+            }
+        }
+        assertEquals(Set.of("hood_down", "hood_up"), GarmentPartSelection.requiredStyleParts(
+                Map.of("hood", List.of("down", "up")), true
+        ));
+    }
+
+    @ParameterizedTest
     @CsvSource({
             "untucked, closed, normal, torso, bust, ''",
             "untucked, closed, rolled, torso, bust, _rolled",

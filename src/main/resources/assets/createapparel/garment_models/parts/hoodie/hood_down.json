@@ -1,0 +1,79 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "hood_down",
+        "from": [
+          -3.75,
+          19.75,
+          2.25
+        ],
+        "to": [
+          3.75,
+          24.25,
+          4.75
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              2,
+              0,
+              9,
+              2
+            ]
+          },
+          "bottom": {
+            "uv": [
+              9,
+              0,
+              16,
+              2
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              2,
+              2,
+              6
+            ]
+          },
+          "right": {
+            "uv": [
+              9,
+              2,
+              11,
+              6
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              2,
+              18,
+              6
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/hoodie/hood_down/base/default"
+      }
+    },
+    "designs": {}
+  }
+}

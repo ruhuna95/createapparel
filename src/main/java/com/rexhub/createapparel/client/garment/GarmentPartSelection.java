@@ -29,11 +29,17 @@ final class GarmentPartSelection {
         }
         selected.add("left_sleeve_" + armProfile.getSerializedName() + sleeveSuffix);
         selected.add("right_sleeve_" + armProfile.getSerializedName() + sleeveSuffix);
+        if (styles.containsKey("hood")) {
+            selected.add("hood_" + styles.get("hood"));
+        }
         return List.copyOf(selected);
     }
 
     static Set<String> requiredStyleParts(Map<String, List<String>> styles, boolean hasBust) {
         Set<String> required = new LinkedHashSet<>();
+        for (String hood : styles.getOrDefault("hood", List.of())) {
+            required.add("hood_" + hood);
+        }
         boolean tucked = styles.getOrDefault("tuck", List.of()).contains("tucked");
         if (tucked) {
             required.add("tucked_torso");

@@ -195,6 +195,9 @@ public final class CommonGarmentRenderer {
             ResolvedPart part
     ) {
         String semanticName = part.semanticName();
+        if (semanticName.equals("hood_up")) {
+            return new HumanoidPartPose(model.head, 0.0F, 0.0F, 0.0F);
+        }
         if (semanticName.startsWith("left_sleeve") || semanticName.startsWith("right_sleeve")) {
             float armY = armProfile == ArmProfile.SLIM ? 2.5F : 2.0F;
             float centerX = partCenterX(part.model());

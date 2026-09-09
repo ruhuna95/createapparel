@@ -1,0 +1,87 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "hood_up",
+        "from": [
+          -4.25,
+          23.75,
+          -4.25
+        ],
+        "to": [
+          4.25,
+          32.25,
+          4.25
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              8,
+              0,
+              16,
+              8
+            ]
+          },
+          "bottom": {
+            "uv": [
+              16,
+              0,
+              24,
+              8
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              8,
+              8,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              8,
+              16,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              8,
+              24,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              24,
+              8,
+              32,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/hoodie/hood_up/base/default"
+      }
+    },
+    "designs": {}
+  }
+}

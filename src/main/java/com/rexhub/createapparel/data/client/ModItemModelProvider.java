@@ -30,6 +30,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
             } else if (item == ModItems.SEWING_PATTERN) {
                 withExistingParent(item.getId().getPath(), mcLoc("item/generated"))
                         .texture("layer0", modLoc("item/sewing_pattern"));
+            } else if (item == ModItems.PULLOVER_HOODIE) {
+                blouseModel(item);
             } else if (item == ModItems.BLOUSE_ROUND
                     || item == ModItems.BLOUSE_FRILL
                     || item == ModItems.BLOUSE_BOW_TIE

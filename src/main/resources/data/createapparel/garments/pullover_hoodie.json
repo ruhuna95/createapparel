@@ -1,0 +1,10 @@
+{
+  "slot": "top",
+  "model_template": "createapparel:hoodie",
+  "model_variant": "classic",
+  "texture_variant": "default",
+  "designs": ["plain"],
+  "styles": {
+    "hood": ["down", "up"]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "classic": {
+    "torso": {
+      "model": "createapparel:hoodie/torso_pullover"
+    },
+    "bust": {
+      "model": "createapparel:hoodie/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:hoodie/left_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:hoodie/right_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:hoodie/left_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:hoodie/right_sleeve_slim"
+    },
+    "hood_up": {
+      "model": "createapparel:hoodie/hood_up"
+    },
+    "hood_down": {
+      "model": "createapparel:hoodie/hood_down"
+    }
+  },
+  "slim": {
+    "torso": {
+      "model": "createapparel:hoodie/torso_pullover"
+    },
+    "bust": {
+      "model": "createapparel:hoodie/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:hoodie/left_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:hoodie/right_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:hoodie/left_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:hoodie/right_sleeve_slim"
+    },
+    "hood_up": {
+      "model": "createapparel:hoodie/hood_up"
+    },
+    "hood_down": {
+      "model": "createapparel:hoodie/hood_down"
+    }
+  }
+}
