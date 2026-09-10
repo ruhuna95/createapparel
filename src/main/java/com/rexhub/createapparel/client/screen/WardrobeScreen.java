@@ -29,6 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,6 +63,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private static final ResourceLocation[] EMPTY_APPAREL_SLOT_TEXTURES = createEmptyApparelSlotTextures();
 
     private final List<Button> styleButtons = new ArrayList<>();
+    private final List<GarmentSlot> slotSelectionOrder;
     private GarmentSlot selectedSlot = GarmentSlot.TOP;
     private ItemStack observedStack = ItemStack.EMPTY;
     private GarmentDefinition selectedDefinition;
@@ -80,6 +82,10 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         super(menu, inventory, title);
         imageWidth = SCREEN_WIDTH;
         imageHeight = 228;
+        slotSelectionOrder = List.of(GarmentSlot.values()).stream()
+                .sorted(Comparator.comparingInt((GarmentSlot slot) -> menu.slots.get(slot.ordinal()).y)
+                        .thenComparingInt(slot -> menu.slots.get(slot.ordinal()).x))
+                .toList();
     }
 
     @Override
@@ -125,6 +131,19 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (delta == 0 || mouseX < leftPos || mouseX >= leftPos + imageWidth
+                || mouseY < topPos || mouseY >= topPos + PLAYER_INVENTORY_LABEL_Y) {
+            return super.mouseScrolled(mouseX, mouseY, delta);
+        }
+        int direction = delta > 0 ? -1 : 1;
+        int index = Math.floorMod(slotSelectionOrder.indexOf(selectedSlot) + direction, slotSelectionOrder.size());
+        selectedSlot = slotSelectionOrder.get(index);
+        refreshSelectedGarment(true);
+        return true;
     }
 
     private void refreshSelectedGarment(boolean force) {

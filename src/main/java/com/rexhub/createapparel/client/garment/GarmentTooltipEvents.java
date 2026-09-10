@@ -1,0 +1,78 @@
+package com.rexhub.createapparel.client.garment;
+
+import com.rexhub.createapparel.CreateApparel;
+import com.mojang.datafixers.util.Either;
+import com.rexhub.createapparel.garment.GarmentDefinition;
+import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.GarmentSlot;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderTooltipEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.List;
+
+@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+public final class GarmentTooltipEvents {
+    private GarmentTooltipEvents() {
+    }
+
+    @SubscribeEvent
+    public static void addGarmentSlots(ItemTooltipEvent event) {
+        if (!(event.getItemStack().getItem() instanceof GarmentItem)) {
+            return;
+        }
+        var id = ForgeRegistries.ITEMS.getKey(event.getItemStack().getItem());
+        if (id != null) {
+            ClientGarmentAssets.getDefinition(id).ifPresent(definition ->
+                    appendSlots(event.getToolTip(), definition));
+        }
+    }
+
+    static void appendSlots(List<Component> tooltip, GarmentDefinition definition) {
+        int insertion = tooltip.size();
+        for (int index = 0; index < tooltip.size(); index++) {
+            if (tooltip.get(index).getContents() instanceof TranslatableContents text
+                    && text.getKey().equals("itemGroup.createapparel.garment")) {
+                insertion = index + 1;
+                break;
+            }
+        }
+        for (GarmentSlot slot : GarmentSlot.values()) {
+            if (definition.allowedSlots().contains(slot)) {
+                tooltip.add(insertion++, Component.translatable("tooltip.createapparel.garment.slot",
+                        Component.translatable("garment_slot.createapparel." + slot.getSerializedName()))
+                        .withStyle(ChatFormatting.GRAY));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void removeDuplicateGarmentGroups(RenderTooltipEvent.GatherComponents event) {
+        if (event.getItemStack().getItem() instanceof GarmentItem) {
+            removeDuplicateGroups(event.getTooltipElements());
+        }
+    }
+
+    static void removeDuplicateGroups(List<Either<FormattedText, TooltipComponent>> tooltip) {
+        boolean foundGroup = false;
+        for (int index = tooltip.size() - 1; index >= 0; index--) {
+            var text = tooltip.get(index).left().orElse(null);
+            if (text instanceof Component component
+                    && component.getContents() instanceof TranslatableContents translation
+                    && translation.getKey().equals("itemGroup.createapparel.garment")) {
+                if (foundGroup) {
+                    tooltip.remove(index);
+                }
+                foundGroup = true;
+            }
+        }
+    }
+}

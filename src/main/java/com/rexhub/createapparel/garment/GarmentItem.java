@@ -28,10 +28,8 @@ public final class GarmentItem extends Item {
             TooltipFlag isAdvanced
     ) {
         super.appendHoverText(stack, level, tooltipComponents, isAdvanced);
-        if (stack.getTagElement(GarmentData.TAG_NAME) != null) {
-            tooltipComponents.add(Component.translatable("itemGroup.createapparel.garment")
-                    .withStyle(ChatFormatting.BLUE));
-        }
+        tooltipComponents.add(Component.translatable("itemGroup.createapparel.garment")
+                .withStyle(ChatFormatting.BLUE));
     }
 
     @Override
