@@ -15,7 +15,7 @@
         "name": "bust_opened",
         "from": [
           -3.75,
-          19.25,
+          19.27,
           -1.64
         ],
         "to": [
@@ -71,7 +71,7 @@
         "name": "bust_opened_decoration",
         "from": [
           -3.9,
-          19.1,
+          19.12,
           -1.79
         ],
         "to": [
@@ -103,7 +103,7 @@
         "name": "bust_opened_front_decoration",
         "from": [
           -3.9,
-          19.1,
+          19.12,
           -1.79
         ],
         "to": [

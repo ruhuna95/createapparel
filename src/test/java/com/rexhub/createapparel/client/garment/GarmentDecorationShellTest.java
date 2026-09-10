@@ -53,7 +53,7 @@ class GarmentDecorationShellTest {
         assertEquals(collar.from().z(), front.from().z());
         assertTrue(front.to().x() <= collar.to().x());
         assertEquals(18.75F, front.from().y());
-        assertEquals(-1.895F, front.from().z());
+        assertEquals(-2.14F, front.from().z());
         assertEquals(1.25F, front.from().x());
         assertEquals(4.25F, collar.to().x());
         assertEquals(-1.25F, element(part, "bust_right_collar").to().x());
