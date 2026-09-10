@@ -1,5 +1,6 @@
 {
-  "slot": "top",
+  "default_slot": "top",
+  "allowed_slots": ["top"],
   "model_template": "createapparel:hoodie",
   "model_variant": "classic",
   "texture_variant": "default",

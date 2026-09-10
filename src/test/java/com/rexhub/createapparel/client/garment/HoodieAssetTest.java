@@ -19,6 +19,36 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HoodieAssetTest {
+    @Test
+    void innerCuffUvsAndHoodBoundsMatchAuthoredSpecification() throws IOException {
+        for (String name : List.of("left_sleeve_classic", "left_sleeve_slim",
+                "right_sleeve_classic", "right_sleeve_slim")) {
+            var model = json(ASSETS.resolve("garment_models/parts/hoodie/" + name + ".json"));
+            var faces = model.getAsJsonObject("geometry").getAsJsonArray("elements")
+                    .get(1).getAsJsonObject().getAsJsonObject("faces");
+            String face = name.startsWith("left") ? "left" : "right";
+            String expected = name.startsWith("left") ? "[0,15,4,26]"
+                    : name.endsWith("slim") ? "[7,15,11,26]" : "[8,15,12,26]";
+            assertEquals(expected, faces.getAsJsonObject(face).get("uv").toString(), name);
+        }
+        var hood = json(ASSETS.resolve("garment_models/parts/hoodie/hood_up.json"))
+                .getAsJsonObject("geometry").getAsJsonArray("elements");
+        assertEquals(1, hood.size());
+        var from = hood.get(0).getAsJsonObject().getAsJsonArray("from");
+        var to = hood.get(0).getAsJsonObject().getAsJsonArray("to");
+        double[] headFrom = {-4, 24, -4};
+        double[] headTo = {4, 32, 4};
+        for (int axis = 0; axis < 3; axis++) {
+            assertEquals(headFrom[axis] - (axis == 1 ? 0.01 : 0.6),
+                    from.get(axis).getAsDouble(), 0.000001);
+            assertEquals(headTo[axis] + 0.6, to.get(axis).getAsDouble(), 0.000001);
+        }
+        var definition = json(Path.of("src/main/resources/data/createapparel/garments/pullover_hoodie.json"));
+        assertEquals("top", definition.get("default_slot").getAsString());
+        assertEquals("[\"top\"]", definition.get("allowed_slots").toString());
+        assertFalse(definition.has("slot"));
+    }
+
     private static final Path ASSETS = Path.of("src/main/resources/assets/createapparel");
 
     @Test
