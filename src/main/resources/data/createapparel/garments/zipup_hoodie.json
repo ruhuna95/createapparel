@@ -1,0 +1,34 @@
+{
+  "default_slot": "top",
+  "allowed_slots": [
+    "top",
+    "outer"
+  ],
+  "model_template": "createapparel:hoodie",
+  "model_variant": "zipup_classic",
+  "slot_model_variants": {
+    "outer": "zipup_outer"
+  },
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {
+    "hood": [
+      "down",
+      "up"
+    ]
+  },
+  "slot_styles": {
+    "outer": {
+      "hood": [
+        "down",
+        "up"
+      ],
+      "open": [
+        "closed",
+        "opened"
+      ]
+    }
+  }
+}

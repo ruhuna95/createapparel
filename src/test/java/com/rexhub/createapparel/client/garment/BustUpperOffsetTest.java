@@ -23,7 +23,7 @@ class BustUpperOffsetTest {
                 .get(0).getAsJsonObject();
         var from = base.getAsJsonArray("from");
         var to = base.getAsJsonArray("to");
-        for (String name : List.of("t_shirt/bust", "shirt/bust", "shirt/bust_opened", "blouse/bust", "hoodie/bust")) {
+        for (String name : List.of("t_shirt/bust", "shirt/bust", "shirt/bust_opened", "blouse/bust", "hoodie/bust_pullover")) {
             var elements = part(name).elements();
             for (int i = 0; i < elements.size(); i++) {
                 var element = elements.get(i);
@@ -47,7 +47,7 @@ class BustUpperOffsetTest {
 
     @Test
     void topBustAndFrontDecorationFollowUpperPlaneException() throws IOException {
-        for (String name : List.of("t_shirt/bust", "shirt/bust", "shirt/bust_opened", "blouse/bust", "hoodie/bust")) {
+        for (String name : List.of("t_shirt/bust", "shirt/bust", "shirt/bust_opened", "blouse/bust", "hoodie/bust_pullover")) {
             for (var element : part(name).elements()) {
                 float expected = 23.4633F;
                 assertEquals(expected, element.to().y(), 0.00001F, name + "/" + element.name());

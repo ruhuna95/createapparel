@@ -22,6 +22,7 @@ public final class ModLanguageProvider extends LanguageProvider {
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
         add("itemGroup.createapparel.garment", "Create: Apparel - Garment");
+        add("tooltip.createapparel.garment.slot", "Garment for %s");
         add("tooltip.createapparel.machine.fiber", "Fiber: %s");
         add("tooltip.createapparel.machine.thread", "Thread: %s");
         add("tooltip.createapparel.machine.fabric", "Fabric: %s");
@@ -65,6 +66,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.SHIRT_LONGSLEEVES.get(), "Long Sleeve Shirt");
         add(ModItems.BLOUSE_ROUND.get(), "Peter Pan Collar Blouse");
         add(ModItems.PULLOVER_HOODIE.get(), "Pullover Hoodie");
+        add(ModItems.ZIPUP_HOODIE.get(), "Zip-up Hoodie");
         add(ModItems.BLOUSE_FRILL.get(), "Frill Blouse");
         add(ModItems.BLOUSE_BOW_TIE.get(), "Bow Tie Blouse");
         add(ModItems.BLOUSE_ROUND_THREE_QUARTER_SLEEVE.get(), "Peter Pan Collar Three-Quarter Sleeve Blouse");

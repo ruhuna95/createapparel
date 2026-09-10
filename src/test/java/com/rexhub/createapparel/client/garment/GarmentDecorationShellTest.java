@@ -21,7 +21,7 @@ class GarmentDecorationShellTest {
 
     @Test
     void bustNorthAndDownShareAnOuterEdgeBeforeAndAfterRotation() throws IOException {
-        for (String name : List.of("shirt/bust", "shirt/bust_opened", "blouse/bust", "hoodie/bust")) {
+        for (String name : List.of("shirt/bust", "shirt/bust_opened", "blouse/bust", "hoodie/bust_pullover")) {
             var part = part(name);
             var body = part.elements().get(0);
             var front = part.elements().stream().skip(1).filter(e -> e.faces().containsKey(Face.FRONT)).findFirst().orElseThrow();
@@ -66,7 +66,7 @@ class GarmentDecorationShellTest {
                 String name = PARTS.relativize(path).toString().replace('\\', '/').replace(".json", "");
                 var part = part(name);
                 var body = part.elements().get(0);
-                float spacing = name.startsWith("shirt_outer/") ? 0.25F : 0.15F;
+                float spacing = name.startsWith("shirt_outer/") || name.startsWith("hoodie_outer/") ? 0.25F : 0.15F;
                 for (var shell : part.elements()) {
                     if (!shell.name().endsWith("_decoration") || shell.name().contains("bust")) {
                         continue;
@@ -89,8 +89,10 @@ class GarmentDecorationShellTest {
                             assertTrue(shell.faces().containsKey(Face.RIGHT), name);
                         }
                     } else {
-                        assertEquals(body.from().x(), shell.from().x());
-                        assertEquals(body.to().x(), shell.to().x());
+                        boolean ribSides = shell.faces().containsKey(Face.LEFT) && shell.faces().containsKey(Face.RIGHT);
+                        float ribOffset = ribSides ? 0.0005F : 0;
+                        assertEquals(body.from().x() - ribOffset, shell.from().x(), EPSILON, name);
+                        assertEquals(body.to().x() + ribOffset, shell.to().x(), EPSILON, name);
                         assertEquals(body.from().y(), shell.from().y());
                     }
                     assertFalse(shell.faces().containsKey(Face.TOP));

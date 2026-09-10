@@ -12,7 +12,7 @@
     ],
     "elements": [
       {
-        "name": "bust",
+        "name": "bust_zipup",
         "from": [
           -3.75,
           19.27,
@@ -68,7 +68,7 @@
         }
       },
       {
-        "name": "bust_front_decoration",
+        "name": "bust_zipup_decoration",
         "from": [
           -3.9,
           19.12,
@@ -112,8 +112,9 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/hoodie/bust/base/default",
-        "brightness_mask": "createapparel:garment/hoodie/bust/masks/brightness/default"
+        "base": "createapparel:garment/hoodie/bust_zipup/base/default",
+        "brightness_mask": "createapparel:garment/hoodie/bust_zipup/masks/brightness/default",
+        "overlay": "createapparel:garment/hoodie/bust_zipup/overlay/default"
       }
     },
     "designs": {}

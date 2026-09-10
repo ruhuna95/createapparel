@@ -1,0 +1,128 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "torso_zipup",
+        "from": [
+          -4.01,
+          11.99,
+          -2.5
+        ],
+        "to": [
+          4.01,
+          24.01,
+          2.5
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              4,
+              16,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              4,
+              24,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "torso_zipup_decoration",
+        "from": [
+          -4.0105,
+          11.99,
+          -2.75
+        ],
+        "to": [
+          4.0105,
+          24.01,
+          2.75
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              16,
+              12,
+              28
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              16,
+              24,
+              28
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              16,
+              4,
+              28
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              16,
+              16,
+              28
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/hoodie/torso_zipup/base/default",
+        "brightness_mask": "createapparel:garment/hoodie/torso_zipup/masks/brightness/default",
+        "overlay": "createapparel:garment/hoodie/torso_zipup/overlay/default"
+      }
+    },
+    "designs": {}
+  }
+}

@@ -30,6 +30,13 @@ class HoodieAssetTest {
             String expected = name.startsWith("left") ? "[0,15,4,26]"
                     : name.endsWith("slim") ? "[7,15,11,26]" : "[8,15,12,26]";
             assertEquals(expected, faces.getAsJsonObject(face).get("uv").toString(), name);
+            var uv = faces.getAsJsonObject(face).getAsJsonArray("uv");
+            var texture = ImageIO.read(ASSETS.resolve("textures/garment/hoodie/" + name + "/base/default.png").toFile());
+            for (int y = uv.get(3).getAsInt() - 2; y < uv.get(3).getAsInt(); y++) {
+                for (int x = uv.get(0).getAsInt(); x < uv.get(2).getAsInt(); x++) {
+                    assertEquals(255, texture.getRGB(x, y) >>> 24, name + " inner cuff must be visible");
+                }
+            }
         }
         var hood = json(ASSETS.resolve("garment_models/parts/hoodie/hood_up.json"))
                 .getAsJsonObject("geometry").getAsJsonArray("elements");
@@ -50,6 +57,33 @@ class HoodieAssetTest {
     }
 
     private static final Path ASSETS = Path.of("src/main/resources/assets/createapparel");
+
+    @Test
+    void topHemSidesHaveOpaqueRibsAndKeepTheHemOpening() throws IOException {
+        for (String name : List.of("torso_pullover", "torso_zipup", "torso_zipup_opened")) {
+            var model = json(ASSETS.resolve("garment_models/parts/hoodie/" + name + ".json"));
+            var shell = model.getAsJsonObject("geometry").getAsJsonArray("elements").get(1).getAsJsonObject();
+            assertEquals(-4.0055, shell.getAsJsonArray("from").get(0).getAsDouble(), 0.000001);
+            assertEquals(4.0055, shell.getAsJsonArray("to").get(0).getAsDouble(), 0.000001);
+            var faces = shell.getAsJsonObject("faces");
+            assertFalse(faces.has("top"));
+            assertFalse(faces.has("bottom"));
+            var texture = ImageIO.read(ASSETS.resolve("textures/garment/hoodie/" + name + "/base/default.png").toFile());
+            for (String face : List.of("left", "right")) {
+                var uv = faces.getAsJsonObject(face).getAsJsonArray("uv");
+                for (int x = uv.get(0).getAsInt(); x < uv.get(2).getAsInt(); x++) {
+                    assertEquals(0, texture.getRGB(x, 26) >>> 24, name + " hem must be one pixel high");
+                    assertEquals(texture.getRGB(face.equals("left") ? 4 : 11, 27), texture.getRGB(x, 27),
+                            name + " side hem must match NORTH");
+                }
+                for (int y = 27; y < 28; y++) {
+                    for (int x = uv.get(0).getAsInt(); x < uv.get(2).getAsInt(); x++) {
+                        assertEquals(255, texture.getRGB(x, y) >>> 24, name + " hem side must be visible");
+                    }
+                }
+            }
+        }
+    }
 
     @Test
     void everyHoodAndBodyProfileResolvesToLoadablePartsAndTextures() throws IOException {
@@ -115,7 +149,7 @@ class HoodieAssetTest {
 
     @Test
     void bustDecorationUsesRaisedSurfaceAndAllowsAuthoredCutoutsAndBrightness() throws IOException {
-        var part = json(ASSETS.resolve("garment_models/parts/hoodie/bust.json"));
+        var part = json(ASSETS.resolve("garment_models/parts/hoodie/bust_pullover.json"));
         var elements = part.getAsJsonObject("geometry").getAsJsonArray("elements");
         var body = elements.get(0).getAsJsonObject();
         var decoration = elements.get(1).getAsJsonObject();

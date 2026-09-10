@@ -21,6 +21,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     protected void addTranslations() {
         add("itemGroup.createapparel", "Create: Apparel");
         add("itemGroup.createapparel.garment", "Create Apparel - 衣服");
+        add("tooltip.createapparel.garment.slot", "%s用衣服");
         add("tooltip.createapparel.machine.fiber", "繊維：%s");
         add("tooltip.createapparel.machine.thread", "糸：%s");
         add("tooltip.createapparel.machine.fabric", "生地：%s");
@@ -64,6 +65,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.SHIRT_LONGSLEEVES.get(), "長袖ワイシャツ");
         add(ModItems.BLOUSE_ROUND.get(), "丸襟ブラウス");
         add(ModItems.PULLOVER_HOODIE.get(), "プルオーバーパーカー");
+        add(ModItems.ZIPUP_HOODIE.get(), "ジップアップパーカー");
         add(ModItems.BLOUSE_FRILL.get(), "フリルブラウス");
         add(ModItems.BLOUSE_BOW_TIE.get(), "ボウタイブラウス");
         add(ModItems.BLOUSE_ROUND_THREE_QUARTER_SLEEVE.get(), "丸襟七分丈ブラウス");
