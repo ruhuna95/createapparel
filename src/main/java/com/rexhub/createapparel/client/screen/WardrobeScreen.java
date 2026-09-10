@@ -20,6 +20,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -272,10 +273,15 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
                 break;
             }
             String value = previewStyles.styles().get(category);
+            ResourceLocation garmentId = selectedDefinition.id();
+            String garmentStyleKey = "style." + garmentId.getNamespace() + "." + garmentId.getPath()
+                    + "." + category + "." + value;
+            String styleKey = I18n.exists(garmentStyleKey) ? garmentStyleKey
+                    : "style.createapparel." + category + "." + value;
             styleButtons.get(index).setMessage(Component.translatable(
                     "screen.createapparel.wardrobe.style",
                     Component.translatable("style_category.createapparel." + category),
-                    Component.translatable("style.createapparel." + category + "." + value)
+                    Component.translatable(styleKey)
             ));
             index++;
         }

@@ -119,6 +119,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("style.createapparel.sleeves.rolled", "腕まくり");
         add("style.createapparel.open.closed", "閉じる");
         add("style.createapparel.open.opened", "第1ボタンを開ける");
+        add("style.createapparel.zipup_hoodie.open.opened", "開く");
         add("style.createapparel.open.top_opened", "上部を開く");
         add("style.createapparel.open.open", "開く");
         add("style.createapparel.hood.down", "下ろす");

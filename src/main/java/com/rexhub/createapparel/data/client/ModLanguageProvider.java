@@ -120,6 +120,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("style.createapparel.sleeves.rolled", "Rolled");
         add("style.createapparel.open.closed", "Closed");
         add("style.createapparel.open.opened", "First Button Open");
+        add("style.createapparel.zipup_hoodie.open.opened", "Open");
         add("style.createapparel.open.top_opened", "Top Opened");
         add("style.createapparel.open.open", "Open");
         add("style.createapparel.hood.down", "Down");
