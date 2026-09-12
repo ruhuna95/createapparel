@@ -89,8 +89,11 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
                 .toList();
     }
 
+    private final SelectionMenu selectionMenu = new SelectionMenu();
+
     @Override
     protected void init() {
+        selectionMenu.close();
         super.init();
         if (minecraft == null || minecraft.player == null) {
             return;
@@ -102,7 +105,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         chestProfileButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleChestProfile())
                 .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 91, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT)
                 .build());
-        skinToneButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleSkinTone())
+        skinToneButton = addRenderableWidget(Button.builder(Component.empty(), button -> openSkinToneGrid())
                 .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 113, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT)
                 .build());
 
@@ -136,6 +139,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (selectionMenu.mouseScrolled(delta)) return true;
         if (delta == 0 || mouseX < leftPos || mouseX >= leftPos + imageWidth
                 || mouseY < topPos || mouseY >= topPos + PLAYER_INVENTORY_LABEL_Y) {
             return super.mouseScrolled(mouseX, mouseY, delta);
@@ -234,11 +238,15 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         ModNetwork.updateWardrobe(WardrobeActionPacket.chestProfile(previewChestProfile));
     }
 
-    private void cycleSkinTone() {
-        SkinTone[] values = SkinTone.values();
-        previewSkinTone = values[(previewSkinTone.ordinal() + 1) % values.length];
-        updateProfileButtons();
-        ModNetwork.updateWardrobe(WardrobeActionPacket.skinTone(previewSkinTone));
+    private void openSkinToneGrid() {
+        List<SkinTone> tones = List.of(SkinTone.values());
+        selectionMenu.open(skinToneButton, width, height, tones.stream()
+                .map(tone -> (Component) Component.translatable("skin_tone.createapparel." + tone.getSerializedName()))
+                .toList(), tones.stream().map(SkinTone::tintRgb).toList(), previewSkinTone.ordinal(), index -> {
+                    previewSkinTone = tones.get(index);
+                    updateProfileButtons();
+                    ModNetwork.updateWardrobe(WardrobeActionPacket.skinTone(previewSkinTone));
+                });
     }
 
     private void rebuildPreviewStack() {
@@ -310,7 +318,8 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
-        renderTooltip(graphics, mouseX, mouseY);
+        if (!selectionMenu.isOpen()) renderTooltip(graphics, mouseX, mouseY);
+        selectionMenu.render(graphics, mouseX, mouseY);
     }
 
     @Override
@@ -483,5 +492,29 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
                 return;
             }
         }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return selectionMenu.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (selectionMenu.mouseReleased()) {
+            setDragging(false);
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return selectionMenu.isOpen() || super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+        return selectionMenu.keyPressed(key) || super.keyPressed(key, scanCode, modifiers);
     }
 }

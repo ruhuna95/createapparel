@@ -68,8 +68,11 @@ public final class SewingPatternScreen extends Screen {
         this.hand = hand;
     }
 
+    private final SelectionMenu selectionMenu = new SelectionMenu();
+
     @Override
     protected void init() {
+        selectionMenu.close();
         if (minecraft == null || minecraft.level == null || minecraft.player == null) {
             return;
         }
@@ -80,7 +83,7 @@ public final class SewingPatternScreen extends Screen {
                 .stream()
                 .filter(recipe -> recipe.matchesPatternItem(patternStack))
                 .filter(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId()).isPresent())
-                .sorted(Comparator.comparing(recipe -> recipe.getId().toString()))
+                .sorted(SewingPatternOrder.RECIPES)
                 .toList();
         categories = availableRecipes.stream()
                 .map(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId()).orElseThrow())
@@ -102,24 +105,24 @@ public final class SewingPatternScreen extends Screen {
         int buttonWidth = Mth.clamp(width / 2 - 32, MIN_BUTTON_WIDTH, MAX_BUTTON_WIDTH);
         int left = leftPanelCenter - buttonWidth / 2;
         int top = height / 2 - 74;
-        categoryButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleCategory())
+        categoryButton = addRenderableWidget(Button.builder(Component.empty(), button -> openCategoryMenu())
                 .bounds(left, top, buttonWidth, BUTTON_HEIGHT)
                 .build());
-        recipeButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleRecipe())
+        recipeButton = addRenderableWidget(Button.builder(Component.empty(), button -> openRecipeMenu())
                 .bounds(left, top + ROW_SPACING, buttonWidth, BUTTON_HEIGHT)
                 .build());
-        designButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleDesign())
+        designButton = addRenderableWidget(Button.builder(Component.empty(), button -> openDesignMenu())
                 .bounds(left, top + ROW_SPACING * 2, buttonWidth, BUTTON_HEIGHT)
                 .build());
-        secondaryColorButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleSecondaryColor())
+        secondaryColorButton = addRenderableWidget(Button.builder(Component.empty(), button -> openSecondaryColorGrid())
                 .bounds(left, top + ROW_SPACING * 3, buttonWidth, BUTTON_HEIGHT)
                 .build());
-        accentColorButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleAccentColor())
+        accentColorButton = addRenderableWidget(Button.builder(Component.empty(), button -> openAccentColorGrid())
                 .bounds(left, top + ROW_SPACING * 4, buttonWidth, BUTTON_HEIGHT)
                 .build());
         previewFabricColorButton = addRenderableWidget(Button.builder(
                         Component.empty(),
-                        button -> cyclePreviewFabricColor()
+                        button -> openFabricColorGrid()
                 )
                 .bounds(
                         rightPanelCenter - buttonWidth / 2,
@@ -135,22 +138,24 @@ public final class SewingPatternScreen extends Screen {
         updateButtons();
     }
 
-    private void cycleCategory() {
-        if (categories.isEmpty()) {
-            return;
-        }
-        categoryIndex = (categoryIndex + 1) % categories.size();
-        updateRecipes(null, null);
-        updateButtons();
+    private void openCategoryMenu() {
+        selectionMenu.open(categoryButton, width, height, categories.stream()
+                .map(slot -> (Component) Component.translatable("garment_slot.createapparel." + slot.getSerializedName()))
+                .toList(), List.of(), categoryIndex, index -> {
+                    categoryIndex = index;
+                    updateRecipes(null, null);
+                    updateButtons();
+                });
     }
 
-    private void cycleRecipe() {
-        if (recipes.isEmpty()) {
-            return;
-        }
-        recipeIndex = (recipeIndex + 1) % recipes.size();
-        updateDesigns(null);
-        updateButtons();
+    private void openRecipeMenu() {
+        selectionMenu.open(recipeButton, width, height, recipes.stream()
+                .map(recipe -> recipe.getResultItem(minecraft.level.registryAccess()).getHoverName())
+                .toList(), List.of(), recipeIndex, index -> {
+                    recipeIndex = index;
+                    updateDesigns(null);
+                    updateButtons();
+                });
     }
 
     private void selectCategory(ResourceLocation recipeId) {
@@ -187,27 +192,35 @@ public final class SewingPatternScreen extends Screen {
         updateDesigns(preferredDesign);
     }
 
-    private void cycleDesign() {
-        if (designs.isEmpty()) {
-            return;
-        }
-        designIndex = (designIndex + 1) % designs.size();
-        updateButtons();
+    private void openDesignMenu() {
+        selectionMenu.open(designButton, width, height, designs.stream()
+                .map(design -> (Component) Component.translatable("design.createapparel." + design))
+                .toList(), List.of(), designIndex, index -> {
+                    designIndex = index;
+                    updateButtons();
+                });
     }
 
-    private void cycleSecondaryColor() {
-        secondaryColorIndex = (secondaryColorIndex + 1) % FabricColor.values().length;
-        updateButtons();
+    private void selectColor(Button anchor, int current, java.util.function.IntConsumer onSelect) {
+        List<FabricColor> colors = List.of(FabricColor.values());
+        selectionMenu.open(anchor, width, height, colors.stream()
+                .map(color -> (Component) Component.translatable("color.minecraft." + color.getSerializedName()))
+                .toList(), colors.stream().map(FabricColor::tintRgb).toList(), current, index -> {
+                    onSelect.accept(index);
+                    updateButtons();
+                });
     }
 
-    private void cyclePreviewFabricColor() {
-        previewFabricColorIndex = (previewFabricColorIndex + 1) % FabricColor.values().length;
-        updateButtons();
+    private void openSecondaryColorGrid() {
+        selectColor(secondaryColorButton, secondaryColorIndex, index -> secondaryColorIndex = index);
     }
 
-    private void cycleAccentColor() {
-        accentColorIndex = (accentColorIndex + 1) % FabricColor.values().length;
-        updateButtons();
+    private void openFabricColorGrid() {
+        selectColor(previewFabricColorButton, previewFabricColorIndex, index -> previewFabricColorIndex = index);
+    }
+
+    private void openAccentColorGrid() {
+        selectColor(accentColorButton, accentColorIndex, index -> accentColorIndex = index);
     }
 
     private void updateDesigns(String preferredDesign) {
@@ -378,6 +391,7 @@ public final class SewingPatternScreen extends Screen {
         );
         renderPreview(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
+        selectionMenu.render(graphics, mouseX, mouseY);
     }
 
     private void renderPreview(GuiGraphics graphics) {
@@ -424,5 +438,34 @@ public final class SewingPatternScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return selectionMenu.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (selectionMenu.mouseReleased()) {
+            setDragging(false);
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return selectionMenu.isOpen() || super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+        return selectionMenu.keyPressed(key) || super.keyPressed(key, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        return selectionMenu.mouseScrolled(delta) || super.mouseScrolled(mouseX, mouseY, delta);
     }
 }
