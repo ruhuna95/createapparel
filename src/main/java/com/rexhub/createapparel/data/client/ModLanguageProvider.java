@@ -66,6 +66,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.SHIRT_LONGSLEEVES.get(), "Long Sleeve Shirt");
         add(ModItems.BLOUSE_ROUND.get(), "Peter Pan Collar Blouse");
         add(ModItems.PULLOVER_HOODIE.get(), "Pullover Hoodie");
+        add(ModItems.SWEATER.get(), "Sweater");
+        add(ModItems.V_NECK_SWEATER.get(), "V-Neck Sweater");
         add(ModItems.ZIPUP_HOODIE.get(), "Zip-up Hoodie");
         add(ModItems.BLOUSE_FRILL.get(), "Frill Blouse");
         add(ModItems.BLOUSE_BOW_TIE.get(), "Bow Tie Blouse");

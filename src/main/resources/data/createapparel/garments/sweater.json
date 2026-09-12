@@ -1,0 +1,13 @@
+{
+  "default_slot": "top",
+  "allowed_slots": [
+    "top"
+  ],
+  "model_template": "createapparel:sweater",
+  "model_variant": "classic",
+  "texture_variant": "crew_neck",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

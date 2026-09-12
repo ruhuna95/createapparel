@@ -119,6 +119,10 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 4
         );
         sewing("shirt_shortsleeves", ModItems.SHIRT_SHORTSLEEVES, SHIRT_FABRICS, 4);
+        sewing("sweater", ModItems.SWEATER,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
+        sewing("v_neck_sweater", ModItems.V_NECK_SWEATER,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
         sewing("pullover_hoodie", ModItems.PULLOVER_HOODIE,

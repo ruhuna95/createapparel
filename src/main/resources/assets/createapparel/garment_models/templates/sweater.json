@@ -1,0 +1,42 @@
+{
+  "classic": {
+    "torso": {
+      "model": "createapparel:sweater/torso"
+    },
+    "bust": {
+      "model": "createapparel:sweater/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:sweater/left_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:sweater/right_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:sweater/left_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:sweater/right_sleeve_slim"
+    }
+  },
+  "slim": {
+    "torso": {
+      "model": "createapparel:sweater/torso"
+    },
+    "bust": {
+      "model": "createapparel:sweater/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:sweater/left_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:sweater/right_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:sweater/left_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:sweater/right_sleeve_slim"
+    }
+  }
+}

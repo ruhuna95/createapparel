@@ -1,0 +1,132 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_sleeve_slim",
+        "from": [
+          -7.25,
+          12.75,
+          -2.25
+        ],
+        "to": [
+          -3.995,
+          24.005,
+          2.25
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              7,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              15
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              15
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              15
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              15
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_sleeve_slim_decoration",
+        "from": [
+          -7.4,
+          12.6,
+          -2.4
+        ],
+        "to": [
+          -3.9945,
+          24.005,
+          2.4
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              15,
+              4,
+              26
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              15,
+              7,
+              26
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              15,
+              11,
+              26
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              15,
+              14,
+              26
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/sweater/sleeve_slim/base/default"
+      },
+      "crew_neck": {
+        "base": "createapparel:garment/sweater/sleeve_slim/base/default"
+      },
+      "v_neck": {
+        "base": "createapparel:garment/sweater/sleeve_slim/base/default"
+      }
+    },
+    "designs": {}
+  }
+}

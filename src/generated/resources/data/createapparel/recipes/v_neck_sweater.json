@@ -1,0 +1,21 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 5,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/hemp",
+      "createapparel:fabrics/wool"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:v_neck_sweater"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}
