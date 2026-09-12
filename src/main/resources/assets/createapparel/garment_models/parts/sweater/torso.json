@@ -122,15 +122,8 @@
       },
       "crew_neck": {
         "base": "createapparel:garment/sweater/torso/base/crew_neck"
-      },
-      "v_neck": {
-        "base": "createapparel:garment/sweater/torso/base/v_neck"
       }
     },
-    "designs": {
-      "plain": {
-        "secondary_mask": "createapparel:garment/sweater/torso/masks/plain/secondary"
-      }
-    }
+    "designs": {}
   }
 }

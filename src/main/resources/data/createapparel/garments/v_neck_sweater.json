@@ -3,7 +3,7 @@
   "allowed_slots": [
     "top"
   ],
-  "model_template": "createapparel:sweater",
+  "model_template": "createapparel:v_neck_sweater",
   "model_variant": "classic",
   "texture_variant": "v_neck",
   "designs": [

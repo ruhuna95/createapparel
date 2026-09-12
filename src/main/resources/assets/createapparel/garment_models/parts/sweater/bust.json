@@ -116,15 +116,8 @@
       },
       "crew_neck": {
         "base": "createapparel:garment/sweater/bust/base/crew_neck"
-      },
-      "v_neck": {
-        "base": "createapparel:garment/sweater/bust/base/v_neck"
       }
     },
-    "designs": {
-      "plain": {
-        "secondary_mask": "createapparel:garment/sweater/bust/masks/plain/secondary"
-      }
-    }
+    "designs": {}
   }
 }

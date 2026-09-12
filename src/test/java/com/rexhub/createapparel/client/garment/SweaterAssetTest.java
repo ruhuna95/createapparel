@@ -21,9 +21,10 @@ class SweaterAssetTest {
 
     @Test
     void bothGarmentsResolveForAllBodyProfiles() throws IOException {
-        var template = json(ASSETS.resolve("garment_models/templates/sweater.json"));
         for (String garment : List.of("sweater", "v_neck_sweater")) {
             var definition = json(Path.of("src/main/resources/data/createapparel/garments/" + garment + ".json"));
+            var templateId = ResourceLocation.parse(definition.get("model_template").getAsString());
+            var template = json(ASSETS.resolve("garment_models/templates/" + templateId.getPath() + ".json"));
             assertEquals("[\"top\"]", definition.get("allowed_slots").toString());
             assertEquals(0, definition.getAsJsonObject("styles").size());
             String variant = definition.get("texture_variant").getAsString();
@@ -35,6 +36,10 @@ class SweaterAssetTest {
                             var id = ResourceLocation.parse(reference.get("model").getAsString());
                             var part = ClientGarmentAssetLoader.parsePart(id,
                                     json(ASSETS.resolve("garment_models/parts/" + id.getPath() + ".json")));
+                            boolean usesSecondary = garment.equals("v_neck_sweater")
+                                    && (semantic.equals("torso") || semantic.equals("bust"));
+                            assertEquals(usesSecondary, part.designs().values().stream()
+                                    .anyMatch(mask -> mask.secondary().isPresent()));
                             var texture = part.variants().get(variant);
                             assertNotNull(texture);
                             assertTrue(texture.overlay().isEmpty());
@@ -74,7 +79,7 @@ class SweaterAssetTest {
     }
 
     @Test
-    void sharedSecondaryMasksAreGrayscaleAndCoverVisibleVNeckPixels() throws IOException {
+    void vNeckSecondaryMasksAreGrayscaleAndCoverVisibleVNeckPixels() throws IOException {
         for (String part : List.of("torso", "bust")) {
             Path textures = ASSETS.resolve("textures/garment/sweater/" + part);
             var vneck = ImageIO.read(textures.resolve("base/v_neck.png").toFile());
@@ -92,6 +97,19 @@ class SweaterAssetTest {
                 }
             }
             assertTrue(shirtPixels >= 8);
+        }
+    }
+
+    @Test
+    void splitTorsoAndBustKeepIdenticalGeometryAndSeparateColorContracts() throws IOException {
+        for (String name : List.of("torso", "bust")) {
+            var crew = json(ASSETS.resolve("garment_models/parts/sweater/" + name + ".json"));
+            var vneck = json(ASSETS.resolve("garment_models/parts/sweater/" + name + "_v_neck.json"));
+            assertEquals(crew.get("geometry"), vneck.get("geometry"));
+            assertEquals(crew.get("texture_size"), vneck.get("texture_size"));
+            assertEquals(0, crew.getAsJsonObject("textures").getAsJsonObject("designs").size());
+            assertTrue(vneck.getAsJsonObject("textures").getAsJsonObject("designs")
+                    .getAsJsonObject("plain").has("secondary_mask"));
         }
     }
 
