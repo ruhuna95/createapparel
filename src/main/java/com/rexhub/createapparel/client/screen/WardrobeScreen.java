@@ -43,7 +43,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private static final int LIGHT_EDGE_COLOR = 0xFFFFFFFF;
     private static final int DARK_EDGE_COLOR = 0xFF555555;
     private static final int PREVIEW_BACKGROUND_COLOR = 0xFF000000;
-    private static final int SELECTED_SLOT_COLOR = 0xFFFFFF80;
+    private static final int SELECTED_SLOT_COLOR = SelectionMenu.SELECTED_SLOT_COLOR;
     private static final int TEXT_COLOR = 0xFF404040;
     private static final int MUTED_TEXT_COLOR = 0xFF707070;
     private static final int BUTTON_HEIGHT = 18;
@@ -64,6 +64,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private static final ResourceLocation[] EMPTY_APPAREL_SLOT_TEXTURES = createEmptyApparelSlotTextures();
 
     private final List<Button> styleButtons = new ArrayList<>();
+    private final ButtonValueScroll buttonScroll = new ButtonValueScroll();
     private final List<GarmentSlot> slotSelectionOrder;
     private GarmentSlot selectedSlot = GarmentSlot.TOP;
     private ItemStack observedStack = ItemStack.EMPTY;
@@ -94,6 +95,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     @Override
     protected void init() {
         selectionMenu.close();
+        buttonScroll.clear();
         super.init();
         if (minecraft == null || minecraft.player == null) {
             return;
@@ -102,12 +104,15 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         previewSkinTone = ClientApparelInventories.skinTone(minecraft.player);
         selectedSlot = firstEquippedSlot().orElse(GarmentSlot.TOP);
 
-        chestProfileButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleChestProfile())
+        chestProfileButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleChestProfile(1))
                 .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 91, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT)
                 .build());
-        skinToneButton = addRenderableWidget(Button.builder(Component.empty(), button -> openSkinToneGrid())
-                .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 113, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT)
-                .build());
+        skinToneButton = addRenderableWidget(new ColorButton(leftPos + PREVIEW_PANEL_X + 2,
+                topPos + 113, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT,
+                button -> openSkinToneGrid(), () -> previewSkinTone.tintRgb()));
+        buttonScroll.bind(chestProfileButton, this::cycleChestProfile);
+        buttonScroll.bind(skinToneButton, direction -> selectSkinTone(
+                Math.floorMod(previewSkinTone.ordinal() + direction, SkinTone.values().length)));
 
         updateProfileButtons();
         refreshSelectedGarment(true);
@@ -140,6 +145,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (selectionMenu.mouseScrolled(delta)) return true;
+        if (buttonScroll.mouseScrolled(mouseX, mouseY, delta)) return true;
         if (delta == 0 || mouseX < leftPos || mouseX >= leftPos + imageWidth
                 || mouseY < topPos || mouseY >= topPos + PLAYER_INVENTORY_LABEL_Y) {
             return super.mouseScrolled(mouseX, mouseY, delta);
@@ -181,6 +187,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     }
 
     private void rebuildStyleButtons() {
+        styleButtons.forEach(buttonScroll::remove);
         styleButtons.forEach(this::removeWidget);
         styleButtons.clear();
         if (selectedDefinition == null || previewData == null) {
@@ -189,7 +196,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
         int index = 0;
         for (String category : selectedDefinition.stylesFor(selectedSlot).keySet()) {
-            Button button = Button.builder(Component.empty(), ignored -> cycleStyle(category))
+            Button button = Button.builder(Component.empty(), ignored -> cycleStyle(category, 1))
                     .bounds(
                             leftPos + SELECTION_X,
                             topPos + STYLE_BUTTON_Y + index * 20,
@@ -198,12 +205,13 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
                     )
                     .build();
             styleButtons.add(addRenderableWidget(button));
+            buttonScroll.bind(button, direction -> cycleStyle(category, direction));
             index++;
         }
         updateStyleButtonMessages();
     }
 
-    private void cycleStyle(String category) {
+    private void cycleStyle(String category, int direction) {
         if (selectedDefinition == null || previewData == null) {
             return;
         }
@@ -213,7 +221,8 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
             return;
         }
         String current = previewStyles.styles().getOrDefault(category, values.get(0));
-        String next = values.get((values.indexOf(current) + 1) % values.size());
+        String next = values.get(Math.floorMod(values.indexOf(current) + direction, values.size()));
+        if (next.equals(current)) return;
         previewStyles = previewStyles.with(category, next);
         updateStyleButtonMessages();
         ModNetwork.updateWardrobe(WardrobeActionPacket.style(selectedSlot, category, next));
@@ -231,9 +240,9 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         return styles;
     }
 
-    private void cycleChestProfile() {
+    private void cycleChestProfile(int direction) {
         ChestProfile[] values = ChestProfile.values();
-        previewChestProfile = values[(previewChestProfile.ordinal() + 1) % values.length];
+        previewChestProfile = values[Math.floorMod(previewChestProfile.ordinal() + direction, values.length)];
         updateProfileButtons();
         ModNetwork.updateWardrobe(WardrobeActionPacket.chestProfile(previewChestProfile));
     }
@@ -242,11 +251,15 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         List<SkinTone> tones = List.of(SkinTone.values());
         selectionMenu.open(skinToneButton, width, height, tones.stream()
                 .map(tone -> (Component) Component.translatable("skin_tone.createapparel." + tone.getSerializedName()))
-                .toList(), tones.stream().map(SkinTone::tintRgb).toList(), previewSkinTone.ordinal(), index -> {
-                    previewSkinTone = tones.get(index);
-                    updateProfileButtons();
-                    ModNetwork.updateWardrobe(WardrobeActionPacket.skinTone(previewSkinTone));
-                });
+                .toList(), tones.stream().map(SkinTone::tintRgb).toList(), previewSkinTone.ordinal(), this::selectSkinTone);
+    }
+
+    private void selectSkinTone(int index) {
+        SkinTone next = SkinTone.values()[index];
+        if (next == previewSkinTone) return;
+        previewSkinTone = next;
+        updateProfileButtons();
+        ModNetwork.updateWardrobe(WardrobeActionPacket.skinTone(previewSkinTone));
     }
 
     private void rebuildPreviewStack() {

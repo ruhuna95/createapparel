@@ -16,6 +16,14 @@ class SelectionMenuTest {
     private final AtomicInteger selected = new AtomicInteger(-1);
 
     @Test
+    void tabClosesMenuAndFallsThroughForFocusTraversal() {
+        open(20, 25, List.of(), 0);
+        assertFalse(menu.keyPressed(GLFW.GLFW_KEY_TAB));
+        assertFalse(menu.isOpen());
+        assertEquals(-1, selected.get());
+    }
+
+    @Test
     void scrollingChangesVisibleChoicesAndConsumesTheSelectionClick() {
         open(20, 25, List.of(), 0);
         assertTrue(menu.mouseScrolled(-1));

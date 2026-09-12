@@ -28,6 +28,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
 import java.util.List;
+import java.util.function.Function;
 
 public final class CommonGarmentRenderer {
     private static final float MODEL_UNIT = 1.0F / 16.0F;
@@ -62,19 +63,19 @@ public final class CommonGarmentRenderer {
                                    MultiBufferSource buffer, int packedLight, int packedOverlay) {
         var flat = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
         renderCentered(garment, anchor, flat.originalBounds().center(), flat.scaleZ(),
-                poseStack, buffer, packedLight, packedOverlay);
+                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull);
     }
 
     public static void renderPreview(ResolvedGarment garment, PoseStack poseStack,
                                      MultiBufferSource buffer, int packedLight, int packedOverlay) {
         var geometry = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
         renderCentered(garment, new Vec3(0, 0, 0), geometry.originalBounds().center(), 1,
-                poseStack, buffer, packedLight, packedOverlay);
+                poseStack, buffer, packedLight, packedOverlay, PreviewRenderType::garment);
     }
 
     private static void renderCentered(ResolvedGarment garment, Vec3 anchor, Vec3 center, float scaleZ,
                                        PoseStack poseStack, MultiBufferSource buffer,
-                                       int packedLight, int packedOverlay) {
+                                       int packedLight, int packedOverlay, Function<ResourceLocation, RenderType> renderType) {
         poseStack.pushPose();
         poseStack.translate(anchor.x(), anchor.y(), anchor.z());
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
@@ -91,7 +92,8 @@ public final class CommonGarmentRenderer {
                     buffer,
                     packedLight,
                     packedOverlay,
-                    WHITE
+                    WHITE,
+                    renderType
             );
         }
         poseStack.popPose();
@@ -165,7 +167,16 @@ public final class CommonGarmentRenderer {
             int packedOverlay,
             int tintRgb
     ) {
-        VertexConsumer vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
+        renderPart(part, texture, mapping, humanoidPose, poseStack, buffer, packedLight, packedOverlay,
+                tintRgb, RenderType::entityCutoutNoCull);
+    }
+
+    private static void renderPart(
+            GarmentPartModel part, ResourceLocation texture, PartMapping mapping, HumanoidPartPose humanoidPose,
+            PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay, int tintRgb,
+            Function<ResourceLocation, RenderType> renderType
+    ) {
+        VertexConsumer vertices = buffer.getBuffer(renderType.apply(texture));
         poseStack.pushPose();
         if (humanoidPose != null) {
             humanoidPose.apply(poseStack);

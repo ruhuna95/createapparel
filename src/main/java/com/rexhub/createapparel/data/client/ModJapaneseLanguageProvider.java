@@ -87,7 +87,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("screen.createapparel.sewing_pattern.no_designs", "デザインがありません");
         add("screen.createapparel.sewing_pattern.recipe", "衣服: %s");
         add("screen.createapparel.sewing_pattern.design", "デザイン: %s");
-        add("screen.createapparel.sewing_pattern.fabric_color", "生地の色：%s");
+        add("screen.createapparel.sewing_pattern.fabric_color", "プレビュー生地色：%s");
         add("screen.createapparel.sewing_pattern.secondary_color", "サブカラー: %s");
         add("screen.createapparel.sewing_pattern.accent_color", "アクセント: %s");
         add("screen.createapparel.sewing_pattern.preview", "完成プレビュー");

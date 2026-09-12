@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 final class SelectionMenu {
+    static final int SELECTED_SLOT_COLOR = 0xFFFFFF80;
     private static final int CELL = 20;
     private final Consumer<Component> narrator;
     private List<Component> labels = List.of();
@@ -90,7 +91,11 @@ final class SelectionMenu {
     boolean keyPressed(int key) {
         if (!open) return false;
         switch (key) {
-            case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_TAB -> close();
+            case GLFW.GLFW_KEY_ESCAPE -> close();
+            case GLFW.GLFW_KEY_TAB -> {
+                close();
+                return false;
+            }
             case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER, GLFW.GLFW_KEY_SPACE -> {
                 close();
                 selection.accept(highlighted);
@@ -152,7 +157,7 @@ final class SelectionMenu {
                 graphics.drawString(font, text, cx + 4, cy + 6, 0xFFFFFF, false);
                 if (index == selected) graphics.drawString(font, "*", cx + cellWidth - 10, cy + 6, 0xFFFFFF, false);
             } else {
-                graphics.fill(cx + 2, cy + 2, cx + CELL - 2, cy + CELL - 2, index == selected ? 0xFFFFFFFF : 0xFF111111);
+                graphics.fill(cx + 2, cy + 2, cx + CELL - 2, cy + CELL - 2, index == selected ? SELECTED_SLOT_COLOR : 0xFF111111);
                 graphics.fill(cx + 4, cy + 4, cx + CELL - 4, cy + CELL - 4, 0xFF000000 | colors.get(index));
             }
         }

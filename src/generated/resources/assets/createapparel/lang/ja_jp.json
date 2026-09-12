@@ -189,7 +189,7 @@
   "screen.createapparel.sewing_pattern.accent_color": "アクセント: %s",
   "screen.createapparel.sewing_pattern.category": "カテゴリ: %s",
   "screen.createapparel.sewing_pattern.design": "デザイン: %s",
-  "screen.createapparel.sewing_pattern.fabric_color": "生地の色：%s",
+  "screen.createapparel.sewing_pattern.fabric_color": "プレビュー生地色：%s",
   "screen.createapparel.sewing_pattern.no_categories": "衣服カテゴリがありません",
   "screen.createapparel.sewing_pattern.no_designs": "デザインがありません",
   "screen.createapparel.sewing_pattern.no_recipes": "縫製レシピがありません",

@@ -88,7 +88,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("screen.createapparel.sewing_pattern.no_designs", "No designs available");
         add("screen.createapparel.sewing_pattern.recipe", "Garment: %s");
         add("screen.createapparel.sewing_pattern.design", "Design: %s");
-        add("screen.createapparel.sewing_pattern.fabric_color", "Fabric color: %s");
+        add("screen.createapparel.sewing_pattern.fabric_color", "Preview fabric color: %s");
         add("screen.createapparel.sewing_pattern.secondary_color", "Secondary: %s");
         add("screen.createapparel.sewing_pattern.accent_color", "Accent: %s");
         add("screen.createapparel.sewing_pattern.preview", "Finished Preview");

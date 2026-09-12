@@ -1,6 +1,5 @@
 package com.rexhub.createapparel.client.screen;
 
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.math.Axis;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.renderer.CommonGarmentRenderer;
@@ -17,7 +16,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -39,9 +37,9 @@ public final class SewingPatternScreen extends Screen {
     private static final float PREVIEW_MODEL_SCALE = 0.82F;
     private static final float PREVIEW_TILT_DEGREES = 15.0F;
     private static final float ITEM_RENDER_Z = 150.0F;
-    private static final long PREVIEW_ROTATION_PERIOD_MILLIS = 8_000L;
 
     private final InteractionHand hand;
+    private final PreviewRotation previewRotation = new PreviewRotation();
     private List<SewingRecipe> availableRecipes = List.of();
     private List<GarmentSlot> categories = List.of();
     private List<SewingRecipe> recipes = List.of();
@@ -61,7 +59,7 @@ public final class SewingPatternScreen extends Screen {
     private Button previewFabricColorButton;
     private Button secondaryColorButton;
     private Button accentColorButton;
-    private Button doneButton;
+    private PatternEditSession editSession;
 
     public SewingPatternScreen(InteractionHand hand) {
         super(Component.translatable("screen.createapparel.sewing_pattern"));
@@ -73,11 +71,13 @@ public final class SewingPatternScreen extends Screen {
     @Override
     protected void init() {
         selectionMenu.close();
+        previewRotation.reset(Util.getMillis());
         if (minecraft == null || minecraft.level == null || minecraft.player == null) {
             return;
         }
 
         ItemStack patternStack = minecraft.player.getItemInHand(hand);
+        PatternData current = editSession == null ? PatternData.fromStack(patternStack).orElse(null) : selectedPattern();
         availableRecipes = minecraft.level.getRecipeManager()
                 .getAllRecipesFor(SewingRecipe.recipeType())
                 .stream()
@@ -92,7 +92,6 @@ public final class SewingPatternScreen extends Screen {
                 .sorted(Comparator.comparingInt(GarmentSlot::ordinal))
                 .toList();
 
-        PatternData current = PatternData.fromStack(patternStack).orElse(null);
         if (current != null) {
             selectCategory(current.recipe());
             secondaryColorIndex = current.secondaryColor().map(Enum::ordinal).orElse(FabricColor.WHITE.ordinal());
@@ -114,28 +113,18 @@ public final class SewingPatternScreen extends Screen {
         designButton = addRenderableWidget(Button.builder(Component.empty(), button -> openDesignMenu())
                 .bounds(left, top + ROW_SPACING * 2, buttonWidth, BUTTON_HEIGHT)
                 .build());
-        secondaryColorButton = addRenderableWidget(Button.builder(Component.empty(), button -> openSecondaryColorGrid())
-                .bounds(left, top + ROW_SPACING * 3, buttonWidth, BUTTON_HEIGHT)
-                .build());
-        accentColorButton = addRenderableWidget(Button.builder(Component.empty(), button -> openAccentColorGrid())
-                .bounds(left, top + ROW_SPACING * 4, buttonWidth, BUTTON_HEIGHT)
-                .build());
-        previewFabricColorButton = addRenderableWidget(Button.builder(
-                        Component.empty(),
-                        button -> openFabricColorGrid()
-                )
-                .bounds(
-                        rightPanelCenter - buttonWidth / 2,
-                        height / 2 + 58,
-                        buttonWidth,
-                        BUTTON_HEIGHT
-                )
-                .build());
-        doneButton = addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> saveAndClose())
-                .bounds(leftPanelCenter - 50, top + ROW_SPACING * 5 + 4, 100, BUTTON_HEIGHT)
-                .build());
+        secondaryColorButton = addRenderableWidget(new ColorButton(left, top + ROW_SPACING * 3,
+                buttonWidth, BUTTON_HEIGHT, button -> openSecondaryColorGrid(),
+                () -> FabricColor.values()[secondaryColorIndex].tintRgb()));
+        accentColorButton = addRenderableWidget(new ColorButton(left, top + ROW_SPACING * 4,
+                buttonWidth, BUTTON_HEIGHT, button -> openAccentColorGrid(),
+                () -> FabricColor.values()[accentColorIndex].tintRgb()));
+        previewFabricColorButton = addRenderableWidget(new ColorButton(rightPanelCenter - buttonWidth / 2,
+                height / 2 + 58, buttonWidth, BUTTON_HEIGHT, button -> openFabricColorGrid(),
+                () -> FabricColor.values()[previewFabricColorIndex].tintRgb()));
 
         updateButtons();
+        if (editSession == null) editSession = new PatternEditSession(current);
     }
 
     private void openCategoryMenu() {
@@ -153,6 +142,7 @@ public final class SewingPatternScreen extends Screen {
                 .map(recipe -> recipe.getResultItem(minecraft.level.registryAccess()).getHoverName())
                 .toList(), List.of(), recipeIndex, index -> {
                     recipeIndex = index;
+                    previewRotation.reset(Util.getMillis());
                     updateDesigns(null);
                     updateButtons();
                 });
@@ -170,6 +160,7 @@ public final class SewingPatternScreen extends Screen {
     }
 
     private void updateRecipes(ResourceLocation preferredRecipe, String preferredDesign) {
+        previewRotation.reset(Util.getMillis());
         if (categories.isEmpty()) {
             recipes = List.of();
         } else {
@@ -250,7 +241,6 @@ public final class SewingPatternScreen extends Screen {
         recipeButton.active = hasRecipe;
         designButton.active = hasRecipe && !designs.isEmpty();
         previewFabricColorButton.active = designButton.active;
-        doneButton.active = designButton.active;
 
         if (!hasCategory) {
             categoryButton.setMessage(Component.translatable(
@@ -354,16 +344,16 @@ public final class SewingPatternScreen extends Screen {
         );
     }
 
-    private void saveAndClose() {
+    private PatternData selectedPattern() {
         if (recipes.isEmpty() || designs.isEmpty()) {
-            return;
+            return null;
         }
         SewingRecipe recipe = recipes.get(recipeIndex);
         String design = designs.get(designIndex);
         ClientGarmentAssets.ColorChannels channels = ClientGarmentAssets
                 .getRequiredColorChannels(recipe.getResultId(), design)
                 .orElse(new ClientGarmentAssets.ColorChannels(false, false));
-        PatternData data = new PatternData(
+        return new PatternData(
                 recipe.getId(),
                 design,
                 channels.secondary()
@@ -373,8 +363,24 @@ public final class SewingPatternScreen extends Screen {
                         ? Optional.of(FabricColor.values()[accentColorIndex])
                         : Optional.empty()
         );
-        ModNetwork.updateSewingPattern(hand, data);
-        onClose();
+    }
+
+    private void saveChanges() {
+        if (minecraft == null || minecraft.player == null || minecraft.getConnection() == null) return;
+        if (editSession != null) editSession.close(selectedPattern())
+                .ifPresent(data -> ModNetwork.updateSewingPattern(hand, data));
+    }
+
+    @Override
+    public void onClose() {
+        saveChanges();
+        super.onClose();
+    }
+
+    @Override
+    public void removed() {
+        saveChanges();
+        super.removed();
     }
 
     @Override
@@ -403,6 +409,7 @@ public final class SewingPatternScreen extends Screen {
         if (garment.isEmpty()) {
             return;
         }
+        graphics.flush();
         graphics.pose().pushPose();
         try {
             graphics.pose().translate(rightPanelCenter, height / 2.0F - 14.0F, ITEM_RENDER_Z);
@@ -413,8 +420,7 @@ public final class SewingPatternScreen extends Screen {
                     16.0F * PREVIEW_SCALE * PREVIEW_MODEL_SCALE
             );
             graphics.pose().mulPose(Axis.XP.rotationDegrees(PREVIEW_TILT_DEGREES));
-            graphics.pose().mulPose(Axis.YP.rotationDegrees(225.0F + previewRotationDegrees()));
-            Lighting.setupFor3DItems();
+            graphics.pose().mulPose(Axis.YP.rotationDegrees(180.0F + previewRotation.angle(Util.getMillis())));
             CommonGarmentRenderer.renderPreview(
                     garment.get(),
                     graphics.pose(),
@@ -429,12 +435,6 @@ public final class SewingPatternScreen extends Screen {
         graphics.drawCenteredString(font, previewStack.getHoverName(), rightPanelCenter, height / 2 + 42, 0xFFFFFF);
     }
 
-    private static float previewRotationDegrees() {
-        return (Util.getMillis() % PREVIEW_ROTATION_PERIOD_MILLIS)
-                * 360.0F
-                / PREVIEW_ROTATION_PERIOD_MILLIS;
-    }
-
     @Override
     public boolean isPauseScreen() {
         return false;
@@ -442,11 +442,27 @@ public final class SewingPatternScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return selectionMenu.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button);
+        if (selectionMenu.mouseClicked(mouseX, mouseY, button)) return true;
+        if (minecraft != null && minecraft.options.keyInventory.matchesMouse(button)) {
+            onClose();
+            return true;
+        }
+        if (button == 0 && !previewStack.isEmpty()
+                && mouseX >= width / 2.0 + 8 && mouseX < width - 8
+                && mouseY >= height / 2.0 - 82 && mouseY < height / 2.0 + 34) {
+            previewRotation.startDrag(Util.getMillis());
+            setDragging(true);
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0 && previewRotation.release(Util.getMillis())) {
+            setDragging(false);
+            return true;
+        }
         if (selectionMenu.mouseReleased()) {
             setDragging(false);
             return true;
@@ -456,12 +472,22 @@ public final class SewingPatternScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        return selectionMenu.isOpen() || super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        if (selectionMenu.isOpen()) return true;
+        if (button == 0 && previewRotation.isDragging()) {
+            previewRotation.drag(dragX);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
     public boolean keyPressed(int key, int scanCode, int modifiers) {
-        return selectionMenu.keyPressed(key) || super.keyPressed(key, scanCode, modifiers);
+        if (selectionMenu.keyPressed(key)) return true;
+        if (minecraft != null && minecraft.options.keyInventory.matches(key, scanCode)) {
+            onClose();
+            return true;
+        }
+        return super.keyPressed(key, scanCode, modifiers);
     }
 
     @Override

@@ -189,7 +189,7 @@
   "screen.createapparel.sewing_pattern.accent_color": "Accent: %s",
   "screen.createapparel.sewing_pattern.category": "Category: %s",
   "screen.createapparel.sewing_pattern.design": "Design: %s",
-  "screen.createapparel.sewing_pattern.fabric_color": "Fabric color: %s",
+  "screen.createapparel.sewing_pattern.fabric_color": "Preview fabric color: %s",
   "screen.createapparel.sewing_pattern.no_categories": "No garment categories available",
   "screen.createapparel.sewing_pattern.no_designs": "No designs available",
   "screen.createapparel.sewing_pattern.no_recipes": "No sewing recipes available",
