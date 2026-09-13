@@ -43,7 +43,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
             } else if (item == ModItems.WARDROBE) {
                 wardrobeModel();
             } else if (item == ModItems.PULLOVER_HOODIE || item == ModItems.ZIPUP_HOODIE
-                    || item == ModItems.SWEATER || item == ModItems.V_NECK_SWEATER) {
+                    || item == ModItems.SWEATER || item == ModItems.V_NECK_SWEATER
+                    || item == ModItems.DENIM_PANTS) {
                 blouseModel(item);
             } else if (item == ModItems.BLOUSE_ROUND
                     || item == ModItems.BLOUSE_FRILL

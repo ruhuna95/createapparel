@@ -17,6 +17,23 @@ final class GarmentPartSelection {
             Map<String, String> styles,
             ArmProfile armProfile,
             ChestProfile chestProfile,
+            Set<String> availableParts
+    ) {
+        List<String> selected = new ArrayList<>(select(styles, armProfile, chestProfile, availableParts.contains("bust")));
+        selected.removeIf(name -> (name.startsWith("left_sleeve") || name.startsWith("right_sleeve"))
+                && !availableParts.contains(name.replace("_rolled", "")));
+        for (String leg : List.of("left_leg", "right_leg")) {
+            if (availableParts.contains(leg)) {
+                selected.add(leg);
+            }
+        }
+        return List.copyOf(selected);
+    }
+
+    static List<String> select(
+            Map<String, String> styles,
+            ArmProfile armProfile,
+            ChestProfile chestProfile,
             boolean hasBust
     ) {
         String openSuffix = "opened".equals(styles.get("open")) ? "_opened" : "";

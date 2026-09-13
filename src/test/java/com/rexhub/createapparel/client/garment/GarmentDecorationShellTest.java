@@ -60,13 +60,14 @@ class GarmentDecorationShellTest {
     }
 
     @Test
-    void ordinarySleeveAndTorsoShellsKeepTheirMinimalFacesAndLayerSpacing() throws IOException {
+    void ordinaryShellsKeepTheirMinimalFacesAndLayerSpacing() throws IOException {
         try (var paths = Files.walk(PARTS)) {
             for (Path path : paths.filter(p -> p.toString().endsWith(".json")).toList()) {
                 String name = PARTS.relativize(path).toString().replace('\\', '/').replace(".json", "");
                 var part = part(name);
                 var body = part.elements().get(0);
-                float spacing = name.startsWith("shirt_outer/") || name.startsWith("hoodie_outer/") ? 0.25F : 0.15F;
+                float spacing = name.startsWith("shirt_outer/") || name.startsWith("hoodie_outer/")
+                        || name.startsWith("denim_pants/") ? 0.25F : 0.15F;
                 for (var shell : part.elements()) {
                     if (!shell.name().endsWith("_decoration") || shell.name().contains("bust")) {
                         continue;
@@ -88,6 +89,10 @@ class GarmentDecorationShellTest {
                             assertEquals(body.from().x() - spacing, shell.from().x(), EPSILON, name);
                             assertTrue(shell.faces().containsKey(Face.RIGHT), name);
                         }
+                    } else if (shell.name().contains("leg")) {
+                        assertEquals(body.from().x() - spacing, shell.from().x(), EPSILON, name);
+                        assertEquals(body.to().x() + spacing, shell.to().x(), EPSILON, name);
+                        assertEquals(body.from().y(), shell.from().y(), EPSILON, name);
                     } else {
                         boolean ribSides = shell.faces().containsKey(Face.LEFT) && shell.faces().containsKey(Face.RIGHT);
                         float ribOffset = ribSides ? 0.0005F : 0;

@@ -1,0 +1,13 @@
+{
+  "default": {
+    "torso": {
+      "model": "createapparel:denim_pants/torso"
+    },
+    "left_leg": {
+      "model": "createapparel:denim_pants/left_leg"
+    },
+    "right_leg": {
+      "model": "createapparel:denim_pants/right_leg"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 5,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/hemp"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:denim_pants"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}

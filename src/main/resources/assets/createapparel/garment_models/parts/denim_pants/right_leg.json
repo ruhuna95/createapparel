@@ -1,0 +1,80 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_leg",
+        "from": [
+          -4.005,
+          1.995,
+          -2.25
+        ],
+        "to": [
+          0.005,
+          12.005,
+          2.25
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              14
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              14
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/denim_pants/right_leg/base/default",
+        "overlay": "createapparel:garment/denim_pants/right_leg/overlay/default"
+      }
+    },
+    "designs": {}
+  }
+}

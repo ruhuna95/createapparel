@@ -147,7 +147,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         }
 
         List<String> selectedNames = GarmentPartSelection.select(
-                effectiveContext.styleState().normalize(definition, effectiveContext.slot()).styles(), armProfile, chestProfile, variant.containsKey("bust")
+                effectiveContext.styleState().normalize(definition, effectiveContext.slot()).styles(), armProfile, chestProfile, variant.keySet()
         );
 
         List<ResolvedPart> resolvedParts = new ArrayList<>();
