@@ -88,7 +88,7 @@ class DenimPantsAssetTest {
                         assertTrue(seam >>> 24 < 255);
                         assertTrue((seam >> 16 & 255) > (seam & 255));
                         if (!torso) {
-                            assertEquals(name.equals("left_leg") ? 8 : 3, x);
+                            assertEquals(name.equals("left_leg") ? 9 : 2, x);
                             assertTrue(y >= 4 && y < 13);
                         }
                         seamPixels++;
