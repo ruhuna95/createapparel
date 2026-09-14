@@ -1,0 +1,79 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "torso",
+        "from": [
+          -4.004,
+          11.996,
+          -2.249
+        ],
+        "to": [
+          4.004,
+          14.004,
+          2.249
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              6
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              6
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              4,
+              16,
+              6
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              4,
+              24,
+              6
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/slacks/torso/base/default"
+      }
+    },
+    "designs": {}
+  }
+}

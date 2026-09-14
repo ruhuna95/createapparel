@@ -14,7 +14,7 @@ final class SewingPatternOrder {
             "blouse_round", "blouse_frill", "blouse_bow_tie",
             "blouse_round_three_quarter_sleeve", "blouse_frill_three_quarter_sleeve",
             "blouse_bow_tie_three_quarter_sleeve",
-            "pullover_hoodie", "zipup_hoodie", "sweater", "v_neck_sweater", "denim_pants"
+            "pullover_hoodie", "zipup_hoodie", "sweater", "v_neck_sweater", "denim_pants", "slacks"
     ).stream().map(path -> ResourceLocation.fromNamespaceAndPath("createapparel", path)).toList();
 
     static final Comparator<SewingRecipe> RECIPES = Comparator

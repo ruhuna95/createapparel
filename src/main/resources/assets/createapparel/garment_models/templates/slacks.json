@@ -1,0 +1,13 @@
+{
+  "default": {
+    "torso": {
+      "model": "createapparel:slacks/torso"
+    },
+    "left_leg": {
+      "model": "createapparel:slacks/left_leg"
+    },
+    "right_leg": {
+      "model": "createapparel:slacks/right_leg"
+    }
+  }
+}
