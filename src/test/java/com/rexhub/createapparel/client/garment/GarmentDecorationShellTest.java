@@ -67,7 +67,7 @@ class GarmentDecorationShellTest {
                 var part = part(name);
                 var body = part.elements().get(0);
                 float spacing = name.startsWith("shirt_outer/") || name.startsWith("hoodie_outer/")
-                        || name.startsWith("denim_pants/") ? 0.25F : 0.15F;
+                        || name.startsWith("denim_pants/") || name.startsWith("shorts/") ? 0.25F : 0.15F;
                 for (var shell : part.elements()) {
                     if (!shell.name().endsWith("_decoration") || shell.name().contains("bust")) {
                         continue;
@@ -90,8 +90,11 @@ class GarmentDecorationShellTest {
                             assertTrue(shell.faces().containsKey(Face.RIGHT), name);
                         }
                     } else if (shell.name().contains("leg")) {
-                        assertEquals(body.from().x() - spacing, shell.from().x(), EPSILON, name);
-                        assertEquals(body.to().x() + spacing, shell.to().x(), EPSILON, name);
+                        boolean shorts = name.startsWith("shorts/");
+                        float westSpacing = shorts && body.from().x() > -1 ? 0 : spacing;
+                        float eastSpacing = shorts && body.to().x() < 1 ? 0 : spacing;
+                        assertEquals(body.from().x() - westSpacing, shell.from().x(), EPSILON, name);
+                        assertEquals(body.to().x() + eastSpacing, shell.to().x(), EPSILON, name);
                         assertEquals(body.from().y(), shell.from().y(), EPSILON, name);
                     } else {
                         boolean ribSides = shell.faces().containsKey(Face.LEFT) && shell.faces().containsKey(Face.RIGHT);

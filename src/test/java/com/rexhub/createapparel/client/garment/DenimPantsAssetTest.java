@@ -152,7 +152,7 @@ class DenimPantsAssetTest {
     }
 
     @Test
-    void underwearOuterLegFacesStayInsideDenim() throws IOException {
+    void underwearInnerAndOuterLegFacesStayInsideDenim() throws IOException {
         for (String side : List.of("left", "right")) {
             String name = side + "_leg";
             var underwearId = ResourceLocation.parse("createapparel:default_underwear_bottom/bottom_" + name);
@@ -167,12 +167,16 @@ class DenimPantsAssetTest {
                 assertEquals(4.0025, underwear.to().x(), 0.000001);
                 assertTrue(underwear.to().x() < pants.to().x());
                 assertTrue(underwear.faces().containsKey(RIGHT));
-                assertEquals(-0.05, underwear.from().x(), 0.000001);
+                assertEquals(-0.0025, underwear.from().x(), 0.000001);
+                assertTrue(underwear.from().x() > pants.from().x());
+                assertTrue(underwear.faces().containsKey(LEFT));
             } else {
                 assertEquals(-4.0025, underwear.from().x(), 0.000001);
                 assertTrue(underwear.from().x() > pants.from().x());
                 assertTrue(underwear.faces().containsKey(LEFT));
-                assertEquals(0.05, underwear.to().x(), 0.000001);
+                assertEquals(0.0025, underwear.to().x(), 0.000001);
+                assertTrue(underwear.to().x() < pants.to().x());
+                assertTrue(underwear.faces().containsKey(RIGHT));
             }
             assertEquals(-2.05, underwear.from().z(), 0.000001);
             assertEquals(2.05, underwear.to().z(), 0.000001);

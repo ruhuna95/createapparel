@@ -1,0 +1,21 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 3,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/linen",
+      "createapparel:fabrics/hemp"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:shorts"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}

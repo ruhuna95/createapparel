@@ -1,0 +1,13 @@
+{
+  "default": {
+    "torso": {
+      "model": "createapparel:shorts/torso"
+    },
+    "left_leg": {
+      "model": "createapparel:shorts/left_leg"
+    },
+    "right_leg": {
+      "model": "createapparel:shorts/right_leg"
+    }
+  }
+}

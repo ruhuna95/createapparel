@@ -1,0 +1,115 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_leg",
+        "top_inset": [0.245, 0, 0, 0],
+        "from": [
+          -4.25,
+          7.995,
+          -2.25
+        ],
+        "to": [
+          0.005,
+          12.005,
+          2.25
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              8
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              8
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              8
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_leg_decoration",
+        "top_inset": [0.245, 0, 0, 0],
+        "from": [
+          -4.5,
+          7.995,
+          -2.5
+        ],
+        "to": [
+          0.005,
+          12.005,
+          2.5
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              8,
+              8,
+              12
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              8,
+              16,
+              12
+            ]
+          },
+          "left": {
+            "uv": [0, 8, 4, 12]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/shorts/right_leg/base/default"
+      }
+    },
+    "designs": {}
+  }
+}

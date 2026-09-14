@@ -190,7 +190,9 @@ class BlouseAssetTest {
     @Test
     void existingAssetsKeepTheirOriginalBoxBoundsAndUvRectangles() throws IOException {
         try (var paths = Files.walk(ASSETS.resolve("garment_models/parts"))) {
-            for (Path path : paths.filter(p -> p.toString().endsWith(".json") && !p.startsWith(PARTS)).toList()) {
+            for (Path path : paths.filter(p -> p.toString().endsWith(".json") && !p.startsWith(PARTS)
+                    && !p.equals(ASSETS.resolve("garment_models/parts/shorts/left_leg.json"))
+                    && !p.equals(ASSETS.resolve("garment_models/parts/shorts/right_leg.json"))).toList()) {
                 var part = ClientGarmentAssetLoader.parsePart(id("legacy"), json(path));
                 for (var element : part.elements()) {
                     for (Vec3 corner : element.corners()) {
