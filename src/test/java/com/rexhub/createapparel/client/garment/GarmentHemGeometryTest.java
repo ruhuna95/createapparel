@@ -1,0 +1,176 @@
+package com.rexhub.createapparel.client.garment;
+
+import com.google.gson.JsonParser;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Face;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.GarmentPartModel;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
+import com.rexhub.createapparel.garment.GarmentSlot;
+import net.minecraft.resources.ResourceLocation;
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class GarmentHemGeometryTest {
+    private static GarmentPartModel model(String name) throws Exception {
+        return ClientGarmentAssetLoader.parsePart(ResourceLocation.parse("createapparel:" + name),
+                JsonParser.parseString(Files.readString(Path.of(
+                        "src/main/resources/assets/createapparel/garment_models/parts/" + name + ".json"))).getAsJsonObject());
+    }
+
+    private static GarmentHemGeometry.Slope slope() throws Exception {
+        return GarmentHemGeometry.slope(model("a_line_skirt/torso").elements().get(1));
+    }
+
+    @Test
+    void skirtGeometryDeterminesSlopeWithoutTopSpecificConfiguration() throws Exception {
+        var slope = slope();
+        assertEquals(1 / 8.004F, slope.east(), 0.00001);
+        assertEquals(-1 / 8.004F, slope.north(), 0.00001);
+        var top = model("t_shirt/torso");
+        var result = GarmentHemGeometry.conform(top, "torso", GarmentSlot.TOP, slope);
+        float hem = top.elements().stream().map(e -> e.from().y()).min(Float::compare).orElseThrow();
+        float cut = hem + 2;
+        assertNotEquals(top, result);
+        for (var element : result.elements()) {
+            for (Vec3 point : element.corners()) {
+                assertTrue(point.y() >= hem);
+                if (point.y() < cut) {
+                    assertTrue(element.corners().stream().allMatch(p -> p.y() <= cut));
+                }
+            }
+        }
+        var original = top.elements().get(0);
+        Vec3 bottom = original.corners().get(0);
+        Vec3 expected = slope.forSlot(GarmentSlot.TOP).shift(bottom, 2);
+        assertTrue(result.elements().stream().flatMap(e -> e.corners().stream()).anyMatch(expected::equals));
+        assertEquals(top.variants(), result.variants());
+        assertEquals(top.designs(), result.designs());
+    }
+
+    @Test
+    void upperVerticesAndTextureCoordinatesAreUnchangedAndCutIsContinuous() throws Exception {
+        var top = model("t_shirt/torso");
+        var original = top.elements().get(0);
+        float cut = original.from().y() + 2;
+        var result = GarmentHemGeometry.conform(top, "torso", GarmentSlot.TOP, slope());
+        var frontUv = original.faces().get(Face.FRONT);
+        float cutV = frontUv.v0() + (frontUv.v1() - frontUv.v0())
+                * (original.to().y() - cut) / (original.to().y() - original.from().y());
+        int cutVertices = 0;
+        for (var element : result.elements()) {
+            for (var face : element.faces().entrySet()) {
+                var positions = GarmentElementGeometry.faceVertices(element, face.getKey());
+                var uv = face.getValue().corners();
+                for (int i = 0; i < 4; i++) {
+                    Vec3 point = positions.get(i);
+                    if (point.y() > cut) {
+                        assertTrue(original.corners().contains(point));
+                    }
+                    if (point.y() == cut && point.z() == original.from().z()) {
+                        assertEquals(cutV, uv.get(i).v(), 0.00001);
+                        cutVertices++;
+                    }
+                }
+                var normal = GarmentElementGeometry.normal(positions);
+                assertTrue(Float.isFinite(normal.x()) && Float.isFinite(normal.y()) && Float.isFinite(normal.z()));
+            }
+        }
+        assertTrue(cutVertices >= 4);
+    }
+
+    @Test
+    void sleevesAndOtherSlotsAreExcluded() throws Exception {
+        var part = model("t_shirt/torso");
+        for (var slot : List.of(GarmentSlot.BOTTOM, GarmentSlot.INNER_TOP, GarmentSlot.HEAD)) {
+            assertSame(part, GarmentHemGeometry.conform(part, "torso", slot, slope()));
+        }
+        assertSame(part, GarmentHemGeometry.conform(part, "left_sleeve", GarmentSlot.TOP, slope()));
+        assertSame(part, GarmentHemGeometry.conform(part, "bust", GarmentSlot.OUTER, slope()));
+    }
+
+    @Test
+    void existingDecoratedTopsAndOutersKeepFiniteConnectedSurfaces() throws Exception {
+        for (String name : List.of("shirt/torso", "shirt_outer/torso",
+                "hoodie/torso_pullover", "hoodie_outer/torso_zipup_opened")) {
+            var part = model(name);
+            var result = GarmentHemGeometry.conform(part, "torso", GarmentSlot.OUTER, slope());
+            assertNotEquals(part, result);
+            assertEquals(part.variants(), result.variants());
+            for (var element : result.elements()) {
+                for (var face : element.faces().entrySet()) {
+                    var positions = GarmentElementGeometry.faceVertices(element, face.getKey());
+                    var normal = GarmentElementGeometry.normal(positions);
+                    assertTrue(Float.isFinite(normal.x()) && Float.isFinite(normal.y()) && Float.isFinite(normal.z()), name);
+                    for (var uv : face.getValue().corners()) {
+                        assertTrue(uv.u() >= 0 && uv.u() <= part.textureWidth());
+                        assertTrue(uv.v() >= 0 && uv.v() <= part.textureHeight());
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void extensionFollowsSkirtMovementWithLayerSpacingAndFixedJoin() throws Exception {
+        var skirt = model("a_line_skirt/torso");
+        var rest = skirt.elements().get(1);
+        for (List<Vec3> legs : List.of(List.<Vec3>of(), List.of(new Vec3(2, 12, -10)),
+                List.of(new Vec3(-2, 12, 8)), List.of(new Vec3(5, 12, -8), new Vec3(-5, 12, 7)))) {
+            var posed = SkirtPoseGeometry.deform(skirt, legs);
+            var panel = posed.elements().get(1);
+            var animated = GarmentHemGeometry.animatedSlope(rest, panel);
+            Vec3 join = new Vec3(0, 14, -2.25F);
+            assertEquals(join, animated.forSlot(GarmentSlot.TOP).shift(join, 0));
+            Vec3 source = new Vec3(0, 12, -2.25F);
+            Vec3 top = animated.forSlot(GarmentSlot.TOP).shift(source, 2);
+            Vec3 outer = animated.forSlot(GarmentSlot.OUTER).shift(source, 2);
+            var face = GarmentElementGeometry.faceVertices(panel, Face.FRONT);
+            Vec3 normal = GarmentElementGeometry.normal(face);
+            Vec3 onSkirt = face.get(0);
+            float topDistance = dot(subtract(top, onSkirt), normal);
+            float outerDistance = dot(subtract(outer, onSkirt), normal);
+            assertTrue(topDistance > 0.015F, "TOP gap: " + topDistance);
+            assertTrue(outerDistance > topDistance + 0.015F);
+            if (legs.stream().anyMatch(p -> p.z() < -2.249F)) {
+                assertNotEquals(slope().forSlot(GarmentSlot.TOP).shift(source, 2), top);
+            } else {
+                assertEquals(slope().forSlot(GarmentSlot.TOP).shift(source, 2), top);
+            }
+            Vec3 backSource = new Vec3(0, 12, 2.25F);
+            Vec3 back = animated.forSlot(GarmentSlot.TOP).shift(backSource, 2);
+            if (legs.stream().anyMatch(p -> p.z() > 2.249F)) {
+                assertNotEquals(slope().forSlot(GarmentSlot.TOP).shift(backSource, 2), back);
+            }
+            var part = model("t_shirt/torso");
+            var transformed = GarmentHemGeometry.conform(part, "torso", GarmentSlot.TOP, animated);
+            var originalTop = part.elements().get(0).corners().subList(4, 8);
+            for (Vec3 original : originalTop) {
+                assertTrue(transformed.elements().stream().flatMap(e -> e.corners().stream()).anyMatch(original::equals));
+            }
+        }
+    }
+
+    private static Vec3 subtract(Vec3 a, Vec3 b) {
+        return new Vec3(a.x() - b.x(), a.y() - b.y(), a.z() - b.z());
+    }
+
+    private static float dot(Vec3 a, Vec3 b) {
+        return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
+    }
+
+    @Test
+    void changingSkirtSlopeChangesBothTopAndOuterAutomatically() throws Exception {
+        var part = model("t_shirt/torso");
+        var slope = slope();
+        var wider = new GarmentHemGeometry.Slope(slope.min(), slope.max(),
+                slope.west() * 2, slope.east() * 2, slope.north() * 2, slope.south() * 2);
+        var regular = GarmentHemGeometry.conform(part, "torso", GarmentSlot.TOP, slope);
+        var wide = GarmentHemGeometry.conform(part, "torso", GarmentSlot.TOP, wider);
+        assertNotEquals(regular, wide);
+        assertNotEquals(wide, GarmentHemGeometry.conform(part, "torso", GarmentSlot.OUTER, wider));
+    }
+}

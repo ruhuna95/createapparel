@@ -44,7 +44,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
                 wardrobeModel();
             } else if (item == ModItems.PULLOVER_HOODIE || item == ModItems.ZIPUP_HOODIE
                     || item == ModItems.SWEATER || item == ModItems.V_NECK_SWEATER
-                    || item == ModItems.DENIM_PANTS || item == ModItems.SLACKS || item == ModItems.SHORTS) {
+                    || item == ModItems.DENIM_PANTS || item == ModItems.SLACKS || item == ModItems.SHORTS
+                    || item == ModItems.A_LINE_SKIRT) {
                 blouseModel(item);
             } else if (item == ModItems.BLOUSE_ROUND
                     || item == ModItems.BLOUSE_FRILL

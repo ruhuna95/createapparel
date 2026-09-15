@@ -505,7 +505,8 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             List<Element> elements,
             Map<String, TextureVariant> variants,
             Map<String, DesignMasks> designs,
-            Map<FabricMaterial, ResourceLocation> materialOverrides
+            Map<FabricMaterial, ResourceLocation> materialOverrides,
+            Optional<SkirtMotion> skirtMotion
     ) {
         public ResolvedTextures resolveTextures(GarmentDefinition definition, GarmentData data) {
             TextureVariant variant = variants.getOrDefault(definition.textureVariant(), variants.get("default"));
@@ -523,6 +524,9 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     }
 
     public record Vec3(float x, float y, float z) {
+    }
+
+    public record SkirtMotion(float clearance) {
     }
 
     public record Rotation(Vec3 origin, Axis axis, float angle) {

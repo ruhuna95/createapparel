@@ -71,6 +71,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.DENIM_PANTS.get(), "Jeans");
         add(ModItems.SLACKS.get(), "Slacks");
         add(ModItems.SHORTS.get(), "Shorts");
+        add(ModItems.A_LINE_SKIRT.get(), "A-Line Skirt");
         add(ModItems.ZIPUP_HOODIE.get(), "Zip-up Hoodie");
         add(ModItems.BLOUSE_FRILL.get(), "Frill Blouse");
         add(ModItems.BLOUSE_BOW_TIE.get(), "Bow Tie Blouse");

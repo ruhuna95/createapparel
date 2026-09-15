@@ -19,6 +19,10 @@ import com.rexhub.createapparel.client.garment.FlatGarmentGeometry;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import net.minecraft.world.item.ItemStack;
 import com.rexhub.createapparel.client.garment.GarmentElementGeometry;
+import com.rexhub.createapparel.client.garment.SkirtPoseGeometry;
+import com.rexhub.createapparel.client.garment.GarmentHemGeometry;
+import com.rexhub.createapparel.garment.GarmentSlot;
+import java.util.Optional;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -101,6 +105,8 @@ public final class CommonGarmentRenderer {
 
     public static void renderHumanoidGarment(
             ResolvedGarment garment,
+            GarmentSlot slot,
+            Optional<GarmentHemGeometry.Slope> skirtSlope,
             PlayerModel<AbstractClientPlayer> playerModel,
             ArmProfile armProfile,
             PoseStack poseStack,
@@ -112,8 +118,10 @@ public final class CommonGarmentRenderer {
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
         for (ResolvedPart part : garment.parts()) {
             PartMapping mapping = PartMapping.humanoidGarment();
+            var posedModel = SkirtPoseGeometry.animate(part.model(), playerModel);
             renderPart(
-                    part.model(),
+                    skirtSlope.map(slope -> GarmentHemGeometry.conform(
+                            posedModel, part.semanticName(), slot, slope)).orElse(posedModel),
                     RuntimeGarmentTextureCache.get(part.model(), part.textures(), garment.data()),
                     mapping,
                     humanoidGarmentPose(playerModel, armProfile, part),

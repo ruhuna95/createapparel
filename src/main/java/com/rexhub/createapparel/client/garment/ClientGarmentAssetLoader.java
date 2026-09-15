@@ -220,8 +220,30 @@ final class ClientGarmentAssetLoader {
                 List.copyOf(elements),
                 Collections.unmodifiableMap(variants),
                 Collections.unmodifiableMap(designs),
-                Collections.unmodifiableMap(materialOverrides)
+                Collections.unmodifiableMap(materialOverrides),
+                skirtMotion(json, elements)
         );
+    }
+
+    private static Optional<ClientGarmentAssets.SkirtMotion> skirtMotion(JsonObject json, List<Element> elements) {
+        if (!json.has("skirt_motion")) {
+            return Optional.empty();
+        }
+        JsonObject motion = GsonHelper.getAsJsonObject(json, "skirt_motion");
+        float clearance = GsonHelper.getAsFloat(motion, "clearance", 0.025F);
+        if (!Float.isFinite(clearance) || clearance < 0 || clearance > 1) {
+            throw new IllegalStateException("Skirt clearance must be in [0, 1]");
+        }
+        Element reference = null;
+        for (String name : List.of("front_panel", "back_panel", "left_panel", "right_panel")) {
+            Element panel = elements.stream().filter(element -> element.name().equals(name)).findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Missing skirt panel: " + name));
+            if (panel.rotation() != null || reference != null && !reference.corners().equals(panel.corners())) {
+                throw new IllegalStateException("Skirt panels must share unrotated corners");
+            }
+            reference = panel;
+        }
+        return Optional.of(new ClientGarmentAssets.SkirtMotion(clearance));
     }
 
     private static float[] inset(JsonObject element, String key, ResourceLocation id) {

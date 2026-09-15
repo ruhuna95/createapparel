@@ -5,6 +5,7 @@ import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
+import com.rexhub.createapparel.client.garment.GarmentHemGeometry;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.garment.GarmentWearContext;
 import net.minecraft.client.model.PlayerModel;
@@ -95,6 +96,10 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
             );
         }
 
+        var skirtSlope = ClientGarmentAssets.INSTANCE.resolve(
+                ClientApparelInventories.getStack(player, GarmentSlot.BOTTOM),
+                new GarmentWearContext(GarmentSlot.BOTTOM, ClientApparelInventories.styleState(player, GarmentSlot.BOTTOM)),
+                armProfile, chestProfile).flatMap(garment -> GarmentHemGeometry.skirtSlope(garment, getParentModel()));
         for (GarmentSlot slot : RENDER_ORDER) {
             ItemStack stack = ClientApparelInventories.getStack(player, slot);
             if (stack.isEmpty()) {
@@ -103,6 +108,8 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
             ClientGarmentAssets.INSTANCE.resolve(stack, new GarmentWearContext(slot, ClientApparelInventories.styleState(player, slot)), armProfile, chestProfile).ifPresent(garment ->
                     CommonGarmentRenderer.renderHumanoidGarment(
                             garment,
+                            slot,
+                            skirtSlope,
                             getParentModel(),
                             armProfile,
                             poseStack,

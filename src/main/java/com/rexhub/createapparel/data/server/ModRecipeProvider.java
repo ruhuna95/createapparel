@@ -123,6 +123,9 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
         sewing("denim_pants", ModItems.DENIM_PANTS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP), 5);
+        sewing("a_line_skirt", ModItems.A_LINE_SKIRT,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 3);
         sewing("slacks", ModItems.SLACKS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
                         ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 4);
