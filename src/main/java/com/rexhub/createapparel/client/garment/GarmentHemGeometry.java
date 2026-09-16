@@ -64,7 +64,7 @@ public final class GarmentHemGeometry {
     }
 
     public static GarmentPartModel conform(GarmentPartModel part, String semantic, GarmentSlot slot, Slope slope) {
-        if ((slot != GarmentSlot.TOP && slot != GarmentSlot.OUTER) || !semantic.contains("torso")) {
+        if (!supportsHemConform(semantic, slot)) {
             return part;
         }
         float hem = part.elements().stream().flatMap(element -> element.corners().stream()
@@ -102,9 +102,13 @@ public final class GarmentHemGeometry {
 
     public record Prepared(float hem, List<Quad> quads) {
         public boolean applies(String semantic, GarmentSlot slot, Slope slope) {
-            return (slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER)
-                    && semantic.contains("torso") && hem < slope.min().y();
+            return supportsHemConform(semantic, slot) && hem < slope.min().y();
         }
+    }
+
+    private static boolean supportsHemConform(String semantic, GarmentSlot slot) {
+        return (slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER)
+                && semantic.contains("torso") && !semantic.startsWith("tucked_");
     }
 
     private static List<Element> split(List<Element> source, Slope surface, float cut) {

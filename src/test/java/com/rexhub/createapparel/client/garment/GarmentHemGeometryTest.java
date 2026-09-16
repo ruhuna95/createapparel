@@ -115,6 +115,31 @@ class GarmentHemGeometryTest {
     }
 
     @Test
+    void tuckedTorsoNeverConformsEvenWhenItsHemOverlapsTheSkirt() throws Exception {
+        var slope = slope();
+        for (String name : List.of("t_shirt/tucked_torso", "shirt/tucked_torso",
+                "shirt/tucked_torso_opened", "blouse/tucked_torso")) {
+            var tucked = model(name);
+            String semantic = name.substring(name.indexOf('/') + 1);
+            for (var slot : List.of(GarmentSlot.TOP, GarmentSlot.OUTER)) {
+                assertFalse(tucked.hemGeometry().applies(semantic, slot, slope), name);
+                assertSame(tucked, GarmentHemGeometry.conform(tucked, semantic, slot, slope), name);
+            }
+        }
+        var part = model("shirt/torso");
+        for (var slot : List.of(GarmentSlot.TOP, GarmentSlot.OUTER)) {
+            for (String semantic : List.of("tucked_torso", "tucked_torso_opened")) {
+                assertFalse(part.hemGeometry().applies(semantic, slot, slope));
+                assertSame(part, GarmentHemGeometry.conform(part, semantic, slot, slope));
+            }
+            for (String semantic : List.of("torso", "torso_opened")) {
+                assertTrue(part.hemGeometry().applies(semantic, slot, slope));
+                assertNotSame(part, GarmentHemGeometry.conform(part, semantic, slot, slope));
+            }
+        }
+    }
+
+    @Test
     void extensionFollowsSkirtMovementWithLayerSpacingAndFixedJoin() throws Exception {
         var skirt = model("a_line_skirt/torso");
         var rest = skirt.elements().get(1);
