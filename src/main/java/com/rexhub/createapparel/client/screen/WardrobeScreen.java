@@ -4,6 +4,7 @@ import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.apparel.SkinTone;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
+import com.rexhub.createapparel.client.apparel.ApparelRenderSnapshot;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.EquippedStyleState;
@@ -77,6 +78,9 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private ItemStack previewStack = ItemStack.EMPTY;
     private ChestProfile previewChestProfile = ChestProfile.FLAT;
     private SkinTone previewSkinTone = SkinTone.NATURAL;
+    private ApparelRenderSnapshot cachedPreview;
+    private List<ItemStack> cachedMenuContents = List.of();
+    private long previewAssetGeneration = -1;
     private Button chestProfileButton;
     private Button skinToneButton;
 
@@ -158,13 +162,14 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     }
 
     private void refreshSelectedGarment(boolean force) {
-        ItemStack actual = menu.apparelStack(selectedSlot);
+        ItemStack actual = menu.slots.get(selectedSlot.ordinal()).getItem();
         EquippedStyleState actualStyles = minecraft == null || minecraft.player == null
                 ? EquippedStyleState.EMPTY : ClientApparelInventories.styleState(minecraft.player, selectedSlot);
         long revision = minecraft == null || minecraft.player == null ? 0 : ClientApparelInventories.revision(minecraft.player);
         if (!force && revision == observedRevision && ItemStack.matches(actual, observedStack) && actualStyles.equals(observedStyles)) {
             return;
         }
+        cachedPreview = null;
 
         GarmentDefinition definition = definitionFor(actual).orElse(null);
         GarmentData actualData = readData(actual, definition).orElse(null);
@@ -224,17 +229,22 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         String next = values.get(Math.floorMod(values.indexOf(current) + direction, values.size()));
         if (next.equals(current)) return;
         previewStyles = previewStyles.with(category, next);
+        cachedPreview = null;
         updateStyleButtonMessages();
         ModNetwork.updateWardrobe(WardrobeActionPacket.style(selectedSlot, category, next));
     }
 
     private Map<GarmentSlot, EquippedStyleState> previewStyleSnapshot() {
+        return previewStyleSnapshot(menu.copyApparelContents());
+    }
+
+    private Map<GarmentSlot, EquippedStyleState> previewStyleSnapshot(List<ItemStack> contents) {
         Map<GarmentSlot, EquippedStyleState> styles = new EnumMap<>(GarmentSlot.class);
         if (minecraft != null && minecraft.player != null) {
             styles.putAll(ClientApparelInventories.styles(minecraft.player));
         }
         styles.put(selectedSlot, previewStyles);
-        var context = ClientApparelInventories.context(menu.copyApparelContents(), styles);
+        var context = ClientApparelInventories.context(contents, styles);
         context.equipped().forEach((slot, view) -> styles.put(slot,
                 GarmentStyleResolver.normalize(view.definition(), slot, view.styleState(), context)));
         return styles;
@@ -243,6 +253,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private void cycleChestProfile(int direction) {
         ChestProfile[] values = ChestProfile.values();
         previewChestProfile = values[Math.floorMod(previewChestProfile.ordinal() + direction, values.length)];
+        cachedPreview = null;
         updateProfileButtons();
         ModNetwork.updateWardrobe(WardrobeActionPacket.chestProfile(previewChestProfile));
     }
@@ -258,6 +269,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         SkinTone next = SkinTone.values()[index];
         if (next == previewSkinTone) return;
         previewSkinTone = next;
+        cachedPreview = null;
         updateProfileButtons();
         ModNetwork.updateWardrobe(WardrobeActionPacket.skinTone(previewSkinTone));
     }
@@ -393,20 +405,32 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         return textures;
     }
 
+    private boolean previewIsCurrent() {
+        if (cachedPreview == null || minecraft == null || minecraft.player == null
+                || cachedPreview.playerId() != minecraft.player.getId()
+                || cachedPreview.revision() != ClientApparelInventories.revision(minecraft.player)
+                || cachedPreview.armProfile() != ClientApparelInventories.armProfile(minecraft.player)
+                || previewAssetGeneration != ClientGarmentAssets.INSTANCE.generation()) return false;
+        for (int i = 0; i < cachedMenuContents.size(); i++) {
+            if (!ItemStack.matches(cachedMenuContents.get(i), menu.slots.get(i).getItem())) return false;
+        }
+        return true;
+    }
+
     private void renderPlayerPreview(GuiGraphics graphics, int mouseX, int mouseY) {
         if (minecraft == null || minecraft.player == null) {
             return;
         }
-        List<ItemStack> previewContents = new ArrayList<>(menu.copyApparelContents());
-        if (!previewStack.isEmpty()) {
-            previewContents.set(selectedSlot.ordinal(), previewStack.copy());
+        if (!previewIsCurrent()) {
+            cachedMenuContents = menu.copyApparelContents();
+            List<ItemStack> previewContents = new ArrayList<>(cachedMenuContents);
+            if (!previewStack.isEmpty()) previewContents.set(selectedSlot.ordinal(), previewStack);
+            cachedPreview = ClientApparelInventories.previewSnapshot(minecraft.player, previewContents,
+                    previewStyleSnapshot(cachedMenuContents), previewChestProfile, previewSkinTone);
+            previewAssetGeneration = ClientGarmentAssets.INSTANCE.generation();
         }
         ClientApparelInventories.withPreview(
-                minecraft.player,
-                previewContents,
-                previewStyleSnapshot(),
-                previewChestProfile,
-                previewSkinTone,
+                cachedPreview,
                 () -> {
                     graphics.pose().pushPose();
                     graphics.pose().translate(PREVIEW_CENTER_OFFSET_X, 0.0D, 0.0D);

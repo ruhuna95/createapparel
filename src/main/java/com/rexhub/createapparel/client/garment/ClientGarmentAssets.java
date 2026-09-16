@@ -52,6 +52,14 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     );
 
     private volatile AssetState state = AssetState.EMPTY;
+    private volatile long generation;
+    private static final int CHEST_PROFILE_COUNT = ChestProfile.values().length;
+    private final Map<Integer, Optional<List<ResolvedSupportPart>>> bodyCache = new java.util.HashMap<>();
+    private final Map<Integer, Optional<List<ResolvedSupportPart>>> underwearCache = new java.util.HashMap<>();
+
+    public long generation() {
+        return generation;
+    }
 
     private ClientGarmentAssets() {
     }
@@ -100,6 +108,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                 loaded.bodyParts()
         );
         RuntimeGarmentTextureCache.clear();
+        invalidateDerivedAssets();
     }
 
     public Optional<ResolvedGarment> resolve(ItemStack stack) {
@@ -170,6 +179,11 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             ArmProfile armProfile,
             ChestProfile chestProfile
     ) {
+        int key = armProfile.ordinal() * CHEST_PROFILE_COUNT + chestProfile.ordinal();
+        return bodyCache.computeIfAbsent(key, ignored -> resolveBodyUncached(armProfile, chestProfile));
+    }
+
+    private Optional<List<ResolvedSupportPart>> resolveBodyUncached(ArmProfile armProfile, ChestProfile chestProfile) {
         AssetState snapshot = state;
         String variantName = armProfile.getSerializedName() + "_" + chestProfile.getSerializedName();
         GarmentModelTemplate template = snapshot.bodyTemplates().get(BODY_BASE_TEMPLATE);
@@ -195,6 +209,11 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             boolean includeTop,
             boolean includeBottom
     ) {
+        int key = chestProfile.ordinal() * 4 + (includeTop ? 2 : 0) + (includeBottom ? 1 : 0);
+        return underwearCache.computeIfAbsent(key, ignored -> resolveUnderwearUncached(chestProfile, includeTop, includeBottom));
+    }
+
+    private Optional<List<ResolvedSupportPart>> resolveUnderwearUncached(ChestProfile chestProfile, boolean includeTop, boolean includeBottom) {
         AssetState snapshot = state;
         List<ResolvedSupportPart> resolved = new ArrayList<>();
         if (includeTop && !appendSupportTemplateParts(
@@ -293,6 +312,14 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                 current.bodyTemplates(),
                 current.bodyParts()
         );
+        invalidateDerivedAssets();
+    }
+
+    private void invalidateDerivedAssets() {
+        generation++;
+        bodyCache.clear();
+        underwearCache.clear();
+        FlatGarmentGeometry.clearCache();
     }
 
     private static Optional<Map<String, ResourceLocation>> getModelVariant(
@@ -506,7 +533,8 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             Map<String, TextureVariant> variants,
             Map<String, DesignMasks> designs,
             Map<FabricMaterial, ResourceLocation> materialOverrides,
-            Optional<SkirtMotion> skirtMotion
+            Optional<SkirtMotion> skirtMotion,
+            GarmentHemGeometry.Prepared hemGeometry
     ) {
         public ResolvedTextures resolveTextures(GarmentDefinition definition, GarmentData data) {
             TextureVariant variant = variants.getOrDefault(definition.textureVariant(), variants.get("default"));
@@ -533,8 +561,18 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     }
 
     public record Element(
-            String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces, List<Vec3> corners
+            String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces, List<Vec3> corners,
+            List<BakedFace> bakedFaces
     ) {
+        public Element(String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces, List<Vec3> corners) {
+            this(name, from, to, rotation, faces, corners, GarmentElementGeometry.bake(faces, corners));
+        }
+    }
+
+    public record BakedVertex(float x, float y, float z, float u, float v) {
+    }
+
+    public record BakedFace(List<BakedVertex> vertices, Vec3 normal) {
     }
 
     public record Uv(float u0, float v0, float u1, float v1, List<TexturePoint> corners) {
@@ -584,8 +622,13 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     public record ResolvedSupportPart(
             String semanticName,
             GarmentPartModel model,
-            ResourceLocation texture
+            ResourceLocation texture,
+            ResourceLocation textureFile
     ) {
+        public ResolvedSupportPart(String semanticName, GarmentPartModel model, ResourceLocation texture) {
+            this(semanticName, model, texture, ResourceLocation.fromNamespaceAndPath(
+                    texture.getNamespace(), "textures/" + texture.getPath() + ".png"));
+        }
     }
 
     public record ResolvedGarment(

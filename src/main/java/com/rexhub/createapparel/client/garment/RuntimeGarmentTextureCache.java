@@ -14,14 +14,18 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.FastColor;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayDeque;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class RuntimeGarmentTextureCache {
-    private static final Map<CacheKey, ResourceLocation> CACHE = new ConcurrentHashMap<>();
+    private static final ArrayDeque<ResourceLocation> FREE_TEXTURE_IDS = new ArrayDeque<>();
+    private static final RenderResourceCache<CacheKey, ResourceLocation> CACHE = new RenderResourceCache<>(1024,
+            texture -> {
+                Minecraft.getInstance().getTextureManager().release(texture);
+                FREE_TEXTURE_IDS.addLast(texture);
+            });
     private static final AtomicInteger NEXT_TEXTURE_ID = new AtomicInteger();
 
     private RuntimeGarmentTextureCache() {
@@ -32,7 +36,15 @@ public final class RuntimeGarmentTextureCache {
             ResolvedTextures textures,
             GarmentData data
     ) {
-        CacheKey key = new CacheKey(
+        return CACHE.get(key(part, textures, data), () -> compose(part, textures, data));
+    }
+
+    public static TextureReference reference(GarmentPartModel part, ResolvedTextures textures, GarmentData data) {
+        return new TextureReference(CACHE.reference(key(part, textures, data), () -> compose(part, textures, data)));
+    }
+
+    private static CacheKey key(GarmentPartModel part, ResolvedTextures textures, GarmentData data) {
+        return new CacheKey(
                 part.id(),
                 textures.base(),
                 textures.secondary(),
@@ -44,16 +56,26 @@ public final class RuntimeGarmentTextureCache {
                 data.secondaryColor(),
                 data.accentColor()
         );
-        return CACHE.computeIfAbsent(key, ignored -> compose(part, textures, data));
     }
 
-    static void clear() {
-        if (CACHE.isEmpty()) {
-            return;
-        }
-        Minecraft minecraft = Minecraft.getInstance();
-        CACHE.values().forEach(minecraft.getTextureManager()::release);
+    public static void clear() {
         CACHE.clear();
+    }
+
+    public static void endFrame() {
+        CACHE.endFrame();
+    }
+
+    public static final class TextureReference {
+        private final RenderResourceCache<CacheKey, ResourceLocation>.Reference reference;
+
+        private TextureReference(RenderResourceCache<CacheKey, ResourceLocation>.Reference reference) {
+            this.reference = reference;
+        }
+
+        public ResourceLocation get() {
+            return reference.get();
+        }
     }
 
     private static ResourceLocation compose(
@@ -103,10 +125,11 @@ public final class RuntimeGarmentTextureCache {
                 }
             }
 
-            ResourceLocation dynamicId = ResourceLocation.fromNamespaceAndPath(
-                    CreateApparel.MOD_ID,
-                    "dynamic/garment/" + NEXT_TEXTURE_ID.getAndIncrement()
-            );
+            ResourceLocation dynamicId = FREE_TEXTURE_IDS.pollFirst();
+            if (dynamicId == null) {
+                dynamicId = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
+                        "dynamic/garment/" + NEXT_TEXTURE_ID.getAndIncrement());
+            }
             Minecraft.getInstance().getTextureManager().register(dynamicId, new DynamicTexture(output));
             return dynamicId;
         } catch (IOException exception) {

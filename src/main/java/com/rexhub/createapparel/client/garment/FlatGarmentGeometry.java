@@ -5,8 +5,46 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Rotation;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public record FlatGarmentGeometry(Bounds originalBounds, Bounds flattenedBounds, float scaleZ) {
+    private static final Map<PartKey, FlatGarmentGeometry> CACHE = new LinkedHashMap<>(32, 0.75F, true);
+
+    public static FlatGarmentGeometry cached(List<GarmentPartModel> parts) {
+        PartKey key = new PartKey(parts);
+        FlatGarmentGeometry found = CACHE.get(key);
+        if (found != null) return found;
+        FlatGarmentGeometry geometry = fromParts(parts);
+        if (CACHE.size() >= 256) CACHE.remove(CACHE.keySet().iterator().next());
+        CACHE.put(key, geometry);
+        return geometry;
+    }
+
+    public static void clearCache() {
+        CACHE.clear();
+    }
+
+    private record PartKey(List<GarmentPartModel> parts) {
+        private PartKey {
+            parts = List.copyOf(parts);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = 1;
+            for (var part : parts) result = 31 * result + System.identityHashCode(part);
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof PartKey key) || parts.size() != key.parts.size()) return false;
+            for (int i = 0; i < parts.size(); i++) if (parts.get(i) != key.parts.get(i)) return false;
+            return true;
+        }
+    }
+
     public static FlatGarmentGeometry fromParts(List<GarmentPartModel> parts) {
         float minX = Float.POSITIVE_INFINITY;
         float minY = Float.POSITIVE_INFINITY;

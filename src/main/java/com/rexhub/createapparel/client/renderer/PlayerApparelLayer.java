@@ -5,16 +5,15 @@ import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
-import com.rexhub.createapparel.client.garment.GarmentHemGeometry;
+import com.rexhub.createapparel.client.garment.ApparelRenderFrame;
+import com.rexhub.createapparel.client.garment.SkirtPoseGeometry;
 import com.rexhub.createapparel.garment.GarmentSlot;
-import com.rexhub.createapparel.garment.GarmentWearContext;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -56,28 +55,25 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
             return;
         }
 
-        ArmProfile armProfile = ClientApparelInventories.armProfile(player);
-        ChestProfile chestProfile = ClientApparelInventories.chestProfile(player);
+        var snapshot = ClientApparelInventories.snapshot(player);
+        ArmProfile armProfile = snapshot.armProfile();
+        ChestProfile chestProfile = snapshot.chestProfile();
         int packedOverlay = LivingEntityRenderer.getOverlayCoords(player, 0.0F);
-        if (ClientApparelInventories.isBodyModeActive(player)) {
+        if (snapshot.bodyMode()) {
             ClientGarmentAssets.INSTANCE.resolveBody(armProfile, chestProfile).ifPresent(parts ->
                     CommonGarmentRenderer.renderHumanoidSupport(
                             parts,
                             getParentModel(),
                             armProfile,
-                            ClientApparelInventories.skinTone(player).tintRgb(),
+                            snapshot.skinTone().tintRgb(),
                             poseStack,
                             buffer,
                             packedLight,
                             packedOverlay
                     )
             );
-            boolean includeDefaultTop = ClientApparelInventories.getStack(player, GarmentSlot.INNER_TOP).isEmpty()
-                    && ClientApparelInventories.getStack(player, GarmentSlot.TOP).isEmpty();
-            boolean includeDefaultBottom = ClientApparelInventories.getStack(
-                    player,
-                    GarmentSlot.INNER_BOTTOM
-            ).isEmpty();
+            boolean includeDefaultTop = snapshot.isEmpty(GarmentSlot.INNER_TOP) && snapshot.isEmpty(GarmentSlot.TOP);
+            boolean includeDefaultBottom = snapshot.isEmpty(GarmentSlot.INNER_BOTTOM);
             ClientGarmentAssets.INSTANCE.resolveDefaultUnderwear(
                     chestProfile,
                     includeDefaultTop,
@@ -96,20 +92,14 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
             );
         }
 
-        var skirtSlope = ClientGarmentAssets.INSTANCE.resolve(
-                ClientApparelInventories.getStack(player, GarmentSlot.BOTTOM),
-                new GarmentWearContext(GarmentSlot.BOTTOM, ClientApparelInventories.styleState(player, GarmentSlot.BOTTOM)),
-                armProfile, chestProfile).flatMap(garment -> GarmentHemGeometry.skirtSlope(garment, getParentModel()));
+        var frame = new ApparelRenderFrame(snapshot::garment, part -> SkirtPoseGeometry.animate(part, getParentModel()));
         for (GarmentSlot slot : RENDER_ORDER) {
-            ItemStack stack = ClientApparelInventories.getStack(player, slot);
-            if (stack.isEmpty()) {
-                continue;
-            }
-            ClientGarmentAssets.INSTANCE.resolve(stack, new GarmentWearContext(slot, ClientApparelInventories.styleState(player, slot)), armProfile, chestProfile).ifPresent(garment ->
+            frame.garment(slot).ifPresent(garment ->
                     CommonGarmentRenderer.renderHumanoidGarment(
                             garment,
                             slot,
-                            skirtSlope,
+                            frame,
+                            snapshot,
                             getParentModel(),
                             armProfile,
                             poseStack,

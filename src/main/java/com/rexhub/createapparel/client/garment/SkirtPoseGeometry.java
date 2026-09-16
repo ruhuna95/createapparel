@@ -106,13 +106,14 @@ public final class SkirtPoseGeometry {
                     top.y() + (float) ((target.y() - top.y()) * factor),
                     top.z() + (float) ((target.z() - top.z()) * factor)));
         }
+        List<Vec3> posedCorners = List.copyOf(corners);
         List<Element> elements = part.elements().stream().map(element -> switch (element.name()) {
             case "front_panel", "back_panel", "left_panel", "right_panel" -> new Element(
-                    element.name(), element.from(), element.to(), element.rotation(), element.faces(), List.copyOf(corners));
+                    element.name(), element.from(), element.to(), element.rotation(), element.faces(), posedCorners);
             default -> element;
         }).toList();
         return new GarmentPartModel(part.id(), part.textureWidth(), part.textureHeight(), part.pivot(), elements,
-                part.variants(), part.designs(), part.materialOverrides(), part.skirtMotion());
+                part.variants(), part.designs(), part.materialOverrides(), part.skirtMotion(), part.hemGeometry());
     }
 
     private static double distance(Vec3 a, Vec3 b) {

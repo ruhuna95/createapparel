@@ -6,6 +6,10 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.BakedFace;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.BakedVertex;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Uv;
 
 public final class GarmentElementGeometry {
     private GarmentElementGeometry() {
@@ -37,7 +41,25 @@ public final class GarmentElementGeometry {
     }
 
     public static List<Vec3> faceVertices(Element element, Face face) {
-        List<Vec3> corners = element.corners();
+        return faceVertices(element.corners(), face);
+    }
+
+    static List<BakedFace> bake(Map<Face, Uv> faces, List<Vec3> corners) {
+        List<BakedFace> result = new ArrayList<>(faces.size());
+        faces.forEach((face, uv) -> {
+            List<Vec3> points = faceVertices(corners, face);
+            List<BakedVertex> vertices = new ArrayList<>(4);
+            for (int i = 0; i < 4; i++) {
+                Vec3 p = points.get(i);
+                var t = uv.corners().get(i);
+                vertices.add(new BakedVertex(p.x(), p.y(), p.z(), t.u(), t.v()));
+            }
+            result.add(new BakedFace(List.copyOf(vertices), normal(points)));
+        });
+        return List.copyOf(result);
+    }
+
+    private static List<Vec3> faceVertices(List<Vec3> corners, Face face) {
         return switch (face) {
             case FRONT -> select(corners, 0, 4, 5, 1);
             case BACK -> select(corners, 2, 6, 7, 3);

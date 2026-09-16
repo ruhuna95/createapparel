@@ -4,25 +4,22 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.rexhub.createapparel.apparel.ArmProfile;
+import com.rexhub.createapparel.client.apparel.ApparelRenderSnapshot;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Element;
-import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Face;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.GarmentPartModel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedGarment;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedPart;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedSupportPart;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Rotation;
-import com.rexhub.createapparel.client.garment.ClientGarmentAssets.TexturePoint;
-import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Uv;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
 import com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache;
 import com.rexhub.createapparel.client.garment.FlatGarmentGeometry;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import net.minecraft.world.item.ItemStack;
-import com.rexhub.createapparel.client.garment.GarmentElementGeometry;
-import com.rexhub.createapparel.client.garment.SkirtPoseGeometry;
 import com.rexhub.createapparel.client.garment.GarmentHemGeometry;
+import com.rexhub.createapparel.client.garment.ApparelRenderFrame;
+import org.joml.Vector3f;
 import com.rexhub.createapparel.garment.GarmentSlot;
-import java.util.Optional;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -56,7 +53,7 @@ public final class CommonGarmentRenderer {
     public static void renderHanger(ItemStack stack, PoseStack poseStack, MultiBufferSource buffer,
                                     int packedLight, int packedOverlay) {
         ClientGarmentAssets.INSTANCE.resolve(stack).ifPresent(garment -> {
-            var flat = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
+            var flat = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
             float height = flat.flattenedBounds().max().y() - flat.flattenedBounds().min().y();
             renderFlat(garment, new Vec3(0, -height * MODEL_UNIT / 2, 0),
                     poseStack, buffer, packedLight, packedOverlay);
@@ -65,14 +62,14 @@ public final class CommonGarmentRenderer {
 
     private static void renderFlat(ResolvedGarment garment, Vec3 anchor, PoseStack poseStack,
                                    MultiBufferSource buffer, int packedLight, int packedOverlay) {
-        var flat = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
+        var flat = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
         renderCentered(garment, anchor, flat.originalBounds().center(), flat.scaleZ(),
                 poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull);
     }
 
     public static void renderPreview(ResolvedGarment garment, PoseStack poseStack,
                                      MultiBufferSource buffer, int packedLight, int packedOverlay) {
-        var geometry = FlatGarmentGeometry.fromParts(garment.parts().stream().map(ResolvedPart::model).toList());
+        var geometry = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
         renderCentered(garment, new Vec3(0, 0, 0), geometry.originalBounds().center(), 1,
                 poseStack, buffer, packedLight, packedOverlay, PreviewRenderType::garment);
     }
@@ -106,7 +103,8 @@ public final class CommonGarmentRenderer {
     public static void renderHumanoidGarment(
             ResolvedGarment garment,
             GarmentSlot slot,
-            Optional<GarmentHemGeometry.Slope> skirtSlope,
+            ApparelRenderFrame frame,
+            ApparelRenderSnapshot snapshot,
             PlayerModel<AbstractClientPlayer> playerModel,
             ArmProfile armProfile,
             PoseStack poseStack,
@@ -118,11 +116,17 @@ public final class CommonGarmentRenderer {
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
         for (ResolvedPart part : garment.parts()) {
             PartMapping mapping = PartMapping.humanoidGarment();
-            var posedModel = SkirtPoseGeometry.animate(part.model(), playerModel);
+            var posedModel = frame.posed(part.model());
+            ResourceLocation texture = snapshot.texture(part);
+            if (frame.skirtSlope().isPresent() && part.model().hemGeometry().applies(
+                    part.semanticName(), slot, frame.skirtSlope().get())) {
+                renderHemPart(part.model(), texture, frame.skirtSlope().get().forSlot(slot),
+                        humanoidGarmentPose(playerModel, armProfile, part), poseStack, buffer, packedLight, packedOverlay);
+                continue;
+            }
             renderPart(
-                    skirtSlope.map(slope -> GarmentHemGeometry.conform(
-                            posedModel, part.semanticName(), slot, slope)).orElse(posedModel),
-                    RuntimeGarmentTextureCache.get(part.model(), part.textures(), garment.data()),
+                    posedModel,
+                    texture,
                     mapping,
                     humanoidGarmentPose(playerModel, armProfile, part),
                     poseStack,
@@ -131,6 +135,35 @@ public final class CommonGarmentRenderer {
                     packedOverlay,
                     WHITE
             );
+        }
+        poseStack.popPose();
+    }
+
+    private static void renderHemPart(GarmentPartModel part, ResourceLocation texture, GarmentHemGeometry.Slope slope,
+                                      HumanoidPartPose humanoidPose, PoseStack poseStack, MultiBufferSource buffer,
+                                      int packedLight, int packedOverlay) {
+        VertexConsumer vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
+        poseStack.pushPose();
+        humanoidPose.apply(poseStack);
+        Vector3f[] points = {new Vector3f(), new Vector3f(), new Vector3f(), new Vector3f()};
+        PoseStack.Pose pose = poseStack.last();
+        for (var quad : part.hemGeometry().quads()) {
+            for (int i = 0; i < 4; i++) {
+                slope.shift(quad.points().get(i), quad.depths().get(i), points[i]);
+            }
+            float ux = points[1].x - points[0].x, uy = points[1].y - points[0].y, uz = points[1].z - points[0].z;
+            float vx = points[2].x - points[0].x, vy = points[2].y - points[0].y, vz = points[2].z - points[0].z;
+            float nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+            float length = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+            for (int i = 0; i < 4; i++) {
+                var point = points[i];
+                var uv = quad.uv().get(i);
+                vertices.vertex(pose.pose(), point.x, BODY_HEIGHT - point.y, point.z)
+                        .color(255, 255, 255, 255)
+                        .uv(uv.u() / part.textureWidth(), uv.v() / part.textureHeight())
+                        .overlayCoords(packedOverlay).uv2(packedLight)
+                        .normal(pose.normal(), nx / length, -ny / length, nz / length).endVertex();
+            }
         }
         poseStack.popPose();
     }
@@ -151,7 +184,7 @@ public final class CommonGarmentRenderer {
             PartMapping mapping = PartMapping.humanoidSupport();
             renderPart(
                     part.model(),
-                    textureResource(part.texture()),
+                    part.textureFile(),
                     mapping,
                     humanoidSupportPose(playerModel, armProfile, part.model()),
                     poseStack,
@@ -190,8 +223,11 @@ public final class CommonGarmentRenderer {
             humanoidPose.apply(poseStack);
         }
         for (Element element : part.elements()) {
-            poseStack.pushPose();
-            applyRotation(element.rotation(), mapping, poseStack);
+            boolean rotated = element.rotation() != null && element.rotation().angle() != 0;
+            if (rotated) {
+                poseStack.pushPose();
+                applyRotation(element.rotation(), mapping, poseStack);
+            }
             renderElement(
                     element,
                     part.textureWidth(),
@@ -203,7 +239,9 @@ public final class CommonGarmentRenderer {
                     packedOverlay,
                     tintRgb
             );
-            poseStack.popPose();
+            if (rotated) {
+                poseStack.popPose();
+            }
         }
         poseStack.popPose();
     }
@@ -298,84 +336,22 @@ public final class CommonGarmentRenderer {
             int packedOverlay,
             int tintRgb
     ) {
-        element.faces().forEach((face, uv) -> renderFace(
-                face,
-                uv,
-                element,
-                textureWidth,
-                textureHeight,
-                mapping,
-                poseStack,
-                vertices,
-                packedLight,
-                packedOverlay,
-                tintRgb
-        ));
-    }
-
-    private static void renderFace(
-            Face face,
-            Uv uv,
-            Element element,
-            int textureWidth,
-            int textureHeight,
-            PartMapping mapping,
-            PoseStack poseStack,
-            VertexConsumer vertices,
-            int packedLight,
-            int packedOverlay,
-            int tintRgb
-    ) {
-        List<Vec3> points = GarmentElementGeometry.faceVertices(element, face);
-        Vec3 normal = GarmentElementGeometry.normal(points);
-        Vertex[] faceVertices = new Vertex[4];
-        for (int index = 0; index < faceVertices.length; index++) {
-            TexturePoint texturePoint = uv.corners().get(index);
-            faceVertices[index] = vertex(
-                    points.get(index), texturePoint.u() / textureWidth, texturePoint.v() / textureHeight
-            );
-        }
-        quad(
-                mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb,
-                normal.x(), normal.y(), normal.z(), faceVertices
-        );
-    }
-
-    private static Vertex vertex(Vec3 point, float u, float v) {
-        return new Vertex(point.x(), point.y(), point.z(), u, v);
-    }
-
-    private static void quad(
-            PartMapping mapping,
-            PoseStack poseStack,
-            VertexConsumer vertices,
-            int packedLight,
-            int packedOverlay,
-            int tintRgb,
-            float normalX,
-            float normalY,
-            float normalZ,
-            Vertex... faceVertices
-    ) {
         PoseStack.Pose pose = poseStack.last();
         int red = tintRgb >> 16 & 255;
         int green = tintRgb >> 8 & 255;
         int blue = tintRgb & 255;
-        float mappedNormalY = mapping.humanoid() ? -normalY : normalY;
-        for (Vertex vertex : faceVertices) {
-            Vec3 position = mapping.point(new Vec3(vertex.x(), vertex.y(), vertex.z()));
-            vertices.vertex(pose.pose(), position.x(), position.y(), position.z())
-                    .color(red, green, blue, 255)
-                    .uv(vertex.u(), vertex.v())
-                    .overlayCoords(packedOverlay)
-                    .uv2(packedLight)
-                    .normal(pose.normal(), normalX, mappedNormalY, normalZ)
-                    .endVertex();
+        for (var face : element.bakedFaces()) {
+            Vec3 normal = face.normal();
+            float normalY = mapping.humanoid() ? -normal.y() : normal.y();
+            for (var vertex : face.vertices()) {
+                float y = mapping.humanoid() ? BODY_HEIGHT - vertex.y() : vertex.y();
+                vertices.vertex(pose.pose(), vertex.x(), y, vertex.z())
+                        .color(red, green, blue, 255)
+                        .uv(vertex.u() / textureWidth, vertex.v() / textureHeight)
+                        .overlayCoords(packedOverlay).uv2(packedLight)
+                        .normal(pose.normal(), normal.x(), normalY, normal.z()).endVertex();
+            }
         }
-    }
-
-    private static ResourceLocation textureResource(ResourceLocation id) {
-        return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/" + id.getPath() + ".png");
     }
 
     private record HumanoidPartPose(ModelPart part, float restX, float restY, float restZ) {
@@ -395,16 +371,19 @@ public final class CommonGarmentRenderer {
     }
 
     private record PartMapping(boolean humanoid) {
+        private static final PartMapping ITEM = new PartMapping(false);
+        private static final PartMapping HUMANOID = new PartMapping(true);
+
         private static PartMapping item() {
-            return new PartMapping(false);
+            return ITEM;
         }
 
         private static PartMapping humanoidGarment() {
-            return new PartMapping(true);
+            return HUMANOID;
         }
 
         private static PartMapping humanoidSupport() {
-            return new PartMapping(true);
+            return HUMANOID;
         }
 
         private Vec3 point(Vec3 point) {
@@ -414,6 +393,4 @@ public final class CommonGarmentRenderer {
         }
     }
 
-    private record Vertex(float x, float y, float z, float u, float v) {
-    }
 }

@@ -1,6 +1,5 @@
 package com.rexhub.createapparel.client.apparel;
 
-import com.rexhub.createapparel.apparel.ApparelBodyMode;
 import com.rexhub.createapparel.apparel.ApparelInventory;
 import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
@@ -9,6 +8,8 @@ import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.garment.EquippedStyleState;
 import com.rexhub.createapparel.garment.ApparelContext;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
+import com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache;
+import com.rexhub.createapparel.client.garment.FlatGarmentGeometry;
 import net.minecraftforge.registries.ForgeRegistries;
 import java.util.EnumMap;
 import net.minecraft.world.entity.player.Player;
@@ -24,7 +25,8 @@ public final class ClientApparelInventories {
             .mapToObj(ignored -> ItemStack.EMPTY)
             .toList();
     private static final Map<Integer, PlayerApparelState> STATE_BY_PLAYER = new HashMap<>();
-    private static PreviewState activePreview;
+    private static final Map<Integer, ApparelRenderSnapshot> RENDER_SNAPSHOTS = new HashMap<>();
+    private static ApparelRenderSnapshot activePreview;
     private static long nextRevision;
 
     private ClientApparelInventories() {
@@ -53,6 +55,25 @@ public final class ClientApparelInventories {
                 chestProfile,
                 skinTone
         ));
+        RENDER_SNAPSHOTS.remove(playerId);
+    }
+
+    public static ApparelRenderSnapshot snapshot(Player player) {
+        if (activePreview != null && activePreview.playerId() == player.getId()) return activePreview;
+        return snapshot(player.getId(), armProfile(player));
+    }
+
+    private static ApparelRenderSnapshot snapshot(int playerId, ArmProfile armProfile) {
+        ApparelRenderSnapshot existing = RENDER_SNAPSHOTS.get(playerId);
+        if (existing != null && existing.armProfile() == armProfile) return existing;
+        return RENDER_SNAPSHOTS.compute(playerId, (ignored, previous) -> {
+            PlayerApparelState state = STATE_BY_PLAYER.get(playerId);
+            return state == null
+                    ? new ApparelRenderSnapshot(playerId, 0, EMPTY_CONTENTS, Map.of(), false, false,
+                            armProfile, ChestProfile.FLAT, SkinTone.NATURAL)
+                    : new ApparelRenderSnapshot(playerId, state.revision(), state.contents(), state.styles(),
+                            state.forceSkin(), state.forceHideArmor(), state.armProfile(), state.chestProfile(), state.skinTone());
+        });
     }
 
     public static long revision(Player player) {
@@ -88,26 +109,15 @@ public final class ClientApparelInventories {
     }
 
     public static ItemStack getStack(Player player, GarmentSlot slot) {
-        if (activePreview != null && activePreview.playerId() == player.getId()) {
-            return activePreview.contents().get(slot.ordinal()).copy();
-        }
-        return contents(player).get(slot.ordinal()).copy();
+        return snapshot(player).stackCopy(slot);
     }
 
     public static boolean isBodyModeActive(Player player) {
-        if (activePreview != null && activePreview.playerId() == player.getId()) {
-            return forceSkin(player) || ApparelBodyMode.isActive(activePreview.contents());
-        }
-        PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
-        return state != null && (state.forceSkin() || ApparelBodyMode.isActive(state.contents()));
+        return snapshot(player).bodyMode();
     }
 
     public static boolean isArmorHidden(Player player) {
-        if (activePreview != null && activePreview.playerId() == player.getId()) {
-            return forceHideArmor(player) || ApparelBodyMode.isActive(activePreview.contents());
-        }
-        PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
-        return state != null && (state.forceHideArmor() || ApparelBodyMode.isActive(state.contents()));
+        return snapshot(player).armorHidden();
     }
 
     public static ArmProfile armProfile(Player player) {
@@ -133,10 +143,15 @@ public final class ClientApparelInventories {
 
     static void remove(int playerId) {
         STATE_BY_PLAYER.remove(playerId);
+        RENDER_SNAPSHOTS.remove(playerId);
     }
 
     static void clear() {
         STATE_BY_PLAYER.clear();
+        RENDER_SNAPSHOTS.clear();
+        activePreview = null;
+        RuntimeGarmentTextureCache.clear();
+        FlatGarmentGeometry.clearCache();
     }
 
     public static void withPreview(
@@ -147,27 +162,26 @@ public final class ClientApparelInventories {
             SkinTone skinTone,
             Runnable renderer
     ) {
+        withPreview(previewSnapshot(player, contents, styles, chestProfile, skinTone), renderer);
+    }
+
+    public static ApparelRenderSnapshot previewSnapshot(Player player, List<ItemStack> contents,
+            Map<GarmentSlot, EquippedStyleState> styles, ChestProfile chestProfile, SkinTone skinTone) {
         if (contents.size() != ApparelInventory.SLOT_COUNT) {
             throw new IllegalArgumentException("Invalid wardrobe preview inventory size: " + contents.size());
         }
-        PreviewState previous = activePreview;
-        activePreview = new PreviewState(
-                player.getId(),
-                contents.stream().map(ItemStack::copy).toList(),
-                Map.copyOf(styles),
-                chestProfile,
-                skinTone
-        );
+        return new ApparelRenderSnapshot(player.getId(), revision(player), contents, styles,
+                forceSkin(player), forceHideArmor(player), armProfile(player), chestProfile, skinTone);
+    }
+
+    public static void withPreview(ApparelRenderSnapshot snapshot, Runnable renderer) {
+        ApparelRenderSnapshot previous = activePreview;
+        activePreview = snapshot;
         try {
             renderer.run();
         } finally {
             activePreview = previous;
         }
-    }
-
-    private static List<ItemStack> contents(Player player) {
-        PlayerApparelState state = STATE_BY_PLAYER.get(player.getId());
-        return state != null ? state.contents() : EMPTY_CONTENTS;
     }
 
     private static boolean forceSkin(Player player) {
@@ -192,12 +206,4 @@ public final class ClientApparelInventories {
     ) {
     }
 
-    private record PreviewState(
-            int playerId,
-            List<ItemStack> contents,
-            Map<GarmentSlot, EquippedStyleState> styles,
-            ChestProfile chestProfile,
-            SkinTone skinTone
-    ) {
-    }
 }

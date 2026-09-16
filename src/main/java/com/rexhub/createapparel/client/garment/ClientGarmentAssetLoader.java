@@ -221,7 +221,8 @@ final class ClientGarmentAssetLoader {
                 Collections.unmodifiableMap(variants),
                 Collections.unmodifiableMap(designs),
                 Collections.unmodifiableMap(materialOverrides),
-                skirtMotion(json, elements)
+                skirtMotion(json, elements),
+                GarmentHemGeometry.prepare(elements)
         );
     }
 
