@@ -4,7 +4,8 @@
     "count": 5,
     "tag": [
       "createapparel:fabrics/cotton",
-      "createapparel:fabrics/hemp"
+      "createapparel:fabrics/hemp",
+      "createapparel:fabrics/synthetic"
     ]
   },
   "pattern": "createapparel:sewing_pattern",

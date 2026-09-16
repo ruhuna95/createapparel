@@ -178,8 +178,8 @@ class DenimPantsAssetTest {
                 assertTrue(underwear.to().x() < pants.to().x());
                 assertTrue(underwear.faces().containsKey(RIGHT));
             }
-            assertEquals(-2.05, underwear.from().z(), 0.000001);
-            assertEquals(2.05, underwear.to().z(), 0.000001);
+            assertEquals(-2.0025, underwear.from().z(), 0.000001);
+            assertEquals(2.0025, underwear.to().z(), 0.000001);
         }
     }
 }

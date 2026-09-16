@@ -5,7 +5,8 @@
     "tag": [
       "createapparel:fabrics/cotton",
       "createapparel:fabrics/hemp",
-      "createapparel:fabrics/wool"
+      "createapparel:fabrics/wool",
+      "createapparel:fabrics/synthetic"
     ]
   },
   "pattern": "createapparel:sewing_pattern",

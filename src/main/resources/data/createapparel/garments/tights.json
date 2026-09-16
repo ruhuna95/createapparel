@@ -1,0 +1,9 @@
+{
+  "default_slot": "legwear",
+  "allowed_slots": ["legwear"],
+  "model_template": "createapparel:tights",
+  "model_variant": "default",
+  "texture_variant": "default",
+  "designs": ["plain"],
+  "styles": {}
+}

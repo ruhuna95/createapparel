@@ -30,6 +30,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -131,6 +132,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                         ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 4);
         sewing("shorts", ModItems.SHORTS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN, ModTags.Items.FABRICS_HEMP), 3);
+        sewing("tights", ModItems.TIGHTS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 2);
         sewing("v_neck_sweater", ModItems.V_NECK_SWEATER,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
@@ -239,7 +242,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
     ) {
         register(consumer -> consumer.accept(new SewingFinishedRecipe(
                 asResource(recipeName),
-                fabricTags,
+                Stream.concat(fabricTags.stream(), Stream.of(ModTags.Items.FABRICS_SYNTHETIC)).distinct().toList(),
                 fabricCount,
                 List.of(ModTags.Items.THREADS),
                 1,

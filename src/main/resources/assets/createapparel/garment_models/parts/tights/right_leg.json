@@ -1,0 +1,24 @@
+{
+  "render_type": "cutout",
+  "texture_size": [16, 16],
+  "geometry": {
+    "pivot": [0, 0, 0],
+    "elements": [{
+      "name": "right_leg",
+      "from": [-4.003, -0.003, -2.003],
+      "to": [0.003, 12.003, 2.003],
+      "faces": {
+        "top": {"uv": [4, 0, 8, 4]},
+        "bottom": {"uv": [8, 0, 12, 4]},
+        "left": {"uv": [0, 4, 4, 16]},
+        "front": {"uv": [4, 4, 8, 16]},
+        "right": {"uv": [8, 4, 12, 16]},
+        "back": {"uv": [12, 4, 16, 16]}
+      }
+    }]
+  },
+  "textures": {
+    "variants": {"default": {"base": "createapparel:garment/tights/right_leg/base/default"}},
+    "designs": {}
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "render_type": "cutout",
+  "texture_size": [32, 32],
+  "geometry": {
+    "pivot": [0, 0, 0],
+    "elements": [{
+      "name": "torso",
+      "from": [-4.003, 11.997, -2.003],
+      "to": [4.003, 14.003, 2.003],
+      "faces": {
+        "bottom": {"uv": [12, 0, 20, 4]},
+        "left": {"uv": [0, 4, 4, 6]},
+        "front": {"uv": [4, 4, 12, 6]},
+        "right": {"uv": [12, 4, 16, 6]},
+        "back": {"uv": [16, 4, 24, 6]}
+      }
+    }]
+  },
+  "textures": {
+    "variants": {"default": {"base": "createapparel:garment/tights/torso/base/default"}},
+    "designs": {}
+  }
+}
