@@ -134,6 +134,16 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN, ModTags.Items.FABRICS_HEMP), 3);
         sewing("tights", ModItems.TIGHTS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("ankle_socks", ModItems.ANKLE_SOCKS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("crew_socks", ModItems.CREW_SOCKS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("knee_high_socks", ModItems.KNEE_HIGH_SOCKS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("over_knee_socks", ModItems.OVER_KNEE_SOCKS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("thigh_high_socks", ModItems.THIGH_HIGH_SOCKS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("v_neck_sweater", ModItems.V_NECK_SWEATER,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,

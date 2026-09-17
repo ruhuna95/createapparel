@@ -1,0 +1,94 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_leg",
+        "from": [
+          -0.003,
+          -0.003,
+          -2.003
+        ],
+        "to": [
+          4.003,
+          12.003,
+          2.003
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              8,
+              0,
+              12,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/socks/left_leg/base/ankle"
+      },
+      "ankle": {
+        "base": "createapparel:garment/socks/left_leg/base/ankle"
+      },
+      "crew": {
+        "base": "createapparel:garment/socks/left_leg/base/crew"
+      },
+      "knee_high": {
+        "base": "createapparel:garment/socks/left_leg/base/knee_high"
+      },
+      "over_knee": {
+        "base": "createapparel:garment/socks/left_leg/base/over_knee"
+      },
+      "thigh_high": {
+        "base": "createapparel:garment/socks/left_leg/base/thigh_high"
+      }
+    },
+    "designs": {}
+  }
+}

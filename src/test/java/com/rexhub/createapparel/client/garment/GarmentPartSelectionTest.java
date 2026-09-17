@@ -14,6 +14,17 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GarmentPartSelectionTest {
+    @Test
+    void legOnlyTemplatesDoNotHideMissingStyledTorsoParts() {
+        var legs = Set.of("left_leg", "right_leg");
+        assertEquals(List.of("tucked_torso", "left_leg", "right_leg"), GarmentPartSelection.select(
+                Map.of("tuck", "tucked"), ArmProfile.CLASSIC, ChestProfile.FLAT, legs));
+        assertEquals(List.of("torso_opened", "left_leg", "right_leg"), GarmentPartSelection.select(
+                Map.of("open", "opened"), ArmProfile.CLASSIC, ChestProfile.FLAT, legs));
+        assertEquals(List.of("torso"), GarmentPartSelection.select(
+                Map.of(), ArmProfile.CLASSIC, ChestProfile.FLAT, Set.of()));
+    }
+
     @ParameterizedTest
     @CsvSource({"down", "up"})
     void hoodStylesSelectExactlyOneHoodForEveryBodyProfile(String hood) {

@@ -1,0 +1,10 @@
+{
+  "default": {
+    "left_leg": {
+      "model": "createapparel:socks/left_leg"
+    },
+    "right_leg": {
+      "model": "createapparel:socks/right_leg"
+    }
+  }
+}

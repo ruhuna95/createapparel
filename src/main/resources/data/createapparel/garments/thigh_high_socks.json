@@ -1,0 +1,13 @@
+{
+  "default_slot": "legwear",
+  "allowed_slots": [
+    "legwear"
+  ],
+  "model_template": "createapparel:socks",
+  "model_variant": "default",
+  "texture_variant": "thigh_high",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

@@ -65,6 +65,11 @@ public final class ModItems {
     public static final RegistryObject<Item> SHORTS = registerGarment("shorts");
     public static final RegistryObject<Item> A_LINE_SKIRT = registerGarment("a_line_skirt");
     public static final RegistryObject<Item> TIGHTS = registerGarment("tights");
+    public static final RegistryObject<Item> ANKLE_SOCKS = registerGarment("ankle_socks");
+    public static final RegistryObject<Item> CREW_SOCKS = registerGarment("crew_socks");
+    public static final RegistryObject<Item> KNEE_HIGH_SOCKS = registerGarment("knee_high_socks");
+    public static final RegistryObject<Item> OVER_KNEE_SOCKS = registerGarment("over_knee_socks");
+    public static final RegistryObject<Item> THIGH_HIGH_SOCKS = registerGarment("thigh_high_socks");
     public static final RegistryObject<Item> BLOUSE_ROUND = registerGarment("blouse_round");
     public static final RegistryObject<Item> BLOUSE_FRILL = registerGarment("blouse_frill");
     public static final RegistryObject<Item> BLOUSE_BOW_TIE = registerGarment("blouse_bow_tie");
@@ -142,7 +147,12 @@ public final class ModItems {
                     SLACKS,
                     SHORTS,
                     A_LINE_SKIRT,
-                    TIGHTS
+                    TIGHTS,
+                    ANKLE_SOCKS,
+                    CREW_SOCKS,
+                    KNEE_HIGH_SOCKS,
+                    OVER_KNEE_SOCKS,
+                    THIGH_HIGH_SOCKS
             );
 
     static {
@@ -296,10 +306,10 @@ public final class ModItems {
         uniqueItems.addAll(uniqueGarmentItems);
         if (CREATIVE_TAB_ITEMS.size() != 142
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 23
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 28
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 165) {
-            throw new IllegalStateException("The creative tabs must contain 165 unique items");
+                || uniqueItems.size() != 170) {
+            throw new IllegalStateException("The creative tabs must contain 170 unique items");
         }
     }
 }
