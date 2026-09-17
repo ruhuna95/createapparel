@@ -15,24 +15,9 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 
-import java.util.List;
+import static com.rexhub.createapparel.client.garment.ResolvedApparelState.RENDER_ORDER;
 
 final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
-    private static final List<GarmentSlot> RENDER_ORDER = List.of(
-            GarmentSlot.INNER_TOP,
-            GarmentSlot.INNER_BOTTOM,
-            GarmentSlot.LEGWEAR,
-            GarmentSlot.TOP,
-            GarmentSlot.BOTTOM,
-            GarmentSlot.HANDS,
-            GarmentSlot.FEET,
-            GarmentSlot.NECK,
-            GarmentSlot.OUTER,
-            GarmentSlot.BACK,
-            GarmentSlot.FACE,
-            GarmentSlot.HEAD
-    );
-
     PlayerApparelLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer) {
         super(renderer);
     }

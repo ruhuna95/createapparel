@@ -8,10 +8,16 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.EnumMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 public final class ResolvedApparelState {
+    public static final List<GarmentSlot> RENDER_ORDER = List.of(
+            GarmentSlot.INNER_TOP, GarmentSlot.INNER_BOTTOM, GarmentSlot.LEGWEAR,
+            GarmentSlot.TOP, GarmentSlot.BOTTOM, GarmentSlot.HANDS, GarmentSlot.FEET,
+            GarmentSlot.NECK, GarmentSlot.OUTER, GarmentSlot.BACK, GarmentSlot.FACE, GarmentSlot.HEAD);
+
     private final Function<GarmentSlot, Optional<ResolvedGarment>> resolver;
     private final Map<GarmentSlot, Optional<ResolvedGarment>> garments = new EnumMap<>(GarmentSlot.class);
     private final Map<ResolvedPart, RuntimeGarmentTextureCache.TextureReference> textures = new IdentityHashMap<>();

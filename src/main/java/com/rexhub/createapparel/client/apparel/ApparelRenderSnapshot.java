@@ -8,11 +8,13 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedGarment;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedPart;
 import com.rexhub.createapparel.client.garment.ResolvedApparelState;
+import com.rexhub.createapparel.client.garment.FirstPersonApparelState;
 import com.rexhub.createapparel.garment.EquippedStyleState;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.garment.GarmentWearContext;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.HumanoidArm;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ public final class ApparelRenderSnapshot {
     private final boolean bodyMode;
     private final boolean armorHidden;
     private final ResolvedApparelState resolved = new ResolvedApparelState(this::resolve);
+    private final FirstPersonApparelState firstPerson = new FirstPersonApparelState(this::garment, this::resolveBody);
 
     ApparelRenderSnapshot(int playerId, long revision, List<ItemStack> contents,
                           Map<GarmentSlot, EquippedStyleState> styles, boolean forceSkin, boolean forceHideArmor,
@@ -57,6 +60,14 @@ public final class ApparelRenderSnapshot {
 
     public ResourceLocation texture(ResolvedPart part) {
         return resolved.texture(part);
+    }
+
+    private Optional<List<ClientGarmentAssets.ResolvedSupportPart>> resolveBody() {
+        return bodyMode ? ClientGarmentAssets.INSTANCE.resolveBody(armProfile, chestProfile) : Optional.empty();
+    }
+
+    public FirstPersonApparelState.ArmParts firstPersonArm(HumanoidArm arm) {
+        return firstPerson.arm(ClientGarmentAssets.INSTANCE.generation(), arm);
     }
 
     public boolean isEmpty(GarmentSlot slot) { return contents.get(slot.ordinal()).isEmpty(); }

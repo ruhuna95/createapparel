@@ -18,6 +18,8 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import net.minecraft.world.item.ItemStack;
 import com.rexhub.createapparel.client.garment.GarmentHemGeometry;
 import com.rexhub.createapparel.client.garment.ApparelRenderFrame;
+import com.rexhub.createapparel.client.garment.FirstPersonApparelState;
+import net.minecraft.world.entity.HumanoidArm;
 import org.joml.Vector3f;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.client.model.PlayerModel;
@@ -38,6 +40,25 @@ public final class CommonGarmentRenderer {
     private static final int WHITE = 0xFFFFFF;
 
     private CommonGarmentRenderer() {
+    }
+
+    public static void renderFirstPersonArm(FirstPersonApparelState.ArmParts parts,
+                                           ApparelRenderSnapshot snapshot, HumanoidArm side, ModelPart arm,
+                                           PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        poseStack.pushPose();
+        arm.translateAndRotate(poseStack);
+        poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
+        poseStack.translate(side == HumanoidArm.RIGHT ? 5 : -5,
+                snapshot.armProfile() == ArmProfile.SLIM ? -2.5F : -2.0F, 0);
+        for (var part : parts.body()) {
+            renderPart(part.model(), part.textureFile(), PartMapping.humanoidSupport(), null,
+                    poseStack, buffer, light, overlay, snapshot.skinTone().tintRgb());
+        }
+        for (var part : parts.garments()) {
+            renderPart(part.model(), snapshot.texture(part), PartMapping.humanoidGarment(), null,
+                    poseStack, buffer, light, overlay, WHITE);
+        }
+        poseStack.popPose();
     }
 
     public static void renderItem(
