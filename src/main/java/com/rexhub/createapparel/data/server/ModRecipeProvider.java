@@ -30,7 +30,6 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -121,17 +120,19 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         );
         sewing("shirt_shortsleeves", ModItems.SHIRT_SHORTSLEEVES, SHIRT_FABRICS, 4);
         sewing("sweater", ModItems.SWEATER,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);
         sewing("denim_pants", ModItems.DENIM_PANTS,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP), 5);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 5);
         sewing("a_line_skirt", ModItems.A_LINE_SKIRT,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
-                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 3);
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
         sewing("slacks", ModItems.SLACKS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
-                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 4);
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 4);
         sewing("shorts", ModItems.SHORTS,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN, ModTags.Items.FABRICS_HEMP), 3);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 3);
         sewing("tights", ModItems.TIGHTS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 2);
         sewing("ankle_socks", ModItems.ANKLE_SOCKS,
@@ -145,11 +146,14 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("thigh_high_socks", ModItems.THIGH_HIGH_SOCKS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("v_neck_sweater", ModItems.V_NECK_SWEATER,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);
         sewing("pullover_hoodie", ModItems.PULLOVER_HOODIE,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL), 5);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);
         sewing("shirt_longsleeves", ModItems.SHIRT_LONGSLEEVES, SHIRT_FABRICS, 4);
         sewing("blouse_round", ModItems.BLOUSE_ROUND, BLOUSE_FABRICS, 4);
         sewing("blouse_frill", ModItems.BLOUSE_FRILL, BLOUSE_FABRICS, 4);
@@ -252,7 +256,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
     ) {
         register(consumer -> consumer.accept(new SewingFinishedRecipe(
                 asResource(recipeName),
-                Stream.concat(fabricTags.stream(), Stream.of(ModTags.Items.FABRICS_SYNTHETIC)).distinct().toList(),
+                fabricTags,
                 fabricCount,
                 List.of(ModTags.Items.THREADS),
                 1,

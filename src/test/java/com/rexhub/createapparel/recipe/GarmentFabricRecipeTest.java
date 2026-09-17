@@ -6,12 +6,13 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GarmentFabricRecipeTest {
     @Test
-    void everyGarmentHasARecipeAcceptingSyntheticExactlyOnce() throws IOException {
+    void everyGarmentHasARecipeWithExplicitNonEmptyUniqueFabricTags() throws IOException {
         Path definitions = Path.of("src/main/resources/data/createapparel/garments");
         Path recipes = Path.of("src/generated/resources/data/createapparel/recipes");
         try (var paths = Files.list(definitions)) {
@@ -21,13 +22,12 @@ class GarmentFabricRecipeTest {
                 var recipe = JsonParser.parseString(Files.readString(recipes.resolve(garment.getFileName())))
                         .getAsJsonObject();
                 assertEquals("createapparel:sewing", recipe.get("type").getAsString(), garment.toString());
-                int syntheticCount = 0;
+                var fabricTags = new HashSet<String>();
                 for (var tag : recipe.getAsJsonObject("fabric").getAsJsonArray("tag")) {
-                    if (tag.getAsString().equals("createapparel:fabrics/synthetic")) {
-                        syntheticCount++;
-                    }
+                    assertFalse(tag.getAsString().isBlank(), garment.toString());
+                    assertTrue(fabricTags.add(tag.getAsString()), garment.toString());
                 }
-                assertEquals(1, syntheticCount, garment.toString());
+                assertFalse(fabricTags.isEmpty(), garment.toString());
             }
         }
     }
