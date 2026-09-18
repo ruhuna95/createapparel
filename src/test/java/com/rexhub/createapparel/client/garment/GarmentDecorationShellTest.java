@@ -65,13 +65,16 @@ class GarmentDecorationShellTest {
             for (Path path : paths.filter(p -> p.toString().endsWith(".json")).toList()) {
                 String name = PARTS.relativize(path).toString().replace('\\', '/').replace(".json", "");
                 var part = part(name);
-                var body = part.elements().get(0);
                 float spacing = name.startsWith("shirt_outer/") || name.startsWith("hoodie_outer/")
+                        || name.startsWith("jacket/")
                         || name.startsWith("denim_pants/") || name.startsWith("shorts/") ? 0.25F : 0.15F;
                 for (var shell : part.elements()) {
                     if (!shell.name().endsWith("_decoration") || shell.name().contains("bust")) {
                         continue;
                     }
+                    var body = part.elements().stream()
+                            .filter(e -> e.name().equals(shell.name().replace("_decoration", "")))
+                            .findFirst().orElse(part.elements().get(0));
                     boolean tapered = name.equals("blouse/tucked_torso");
                     float lowerSpacing = tapered ? 0.25F : spacing;
                     assertEquals(body.from().z() - lowerSpacing, shell.from().z(), EPSILON, name);

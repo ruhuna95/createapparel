@@ -168,7 +168,7 @@ public final class CommonGarmentRenderer {
         humanoidPose.apply(poseStack);
         Vector3f[] points = {new Vector3f(), new Vector3f(), new Vector3f(), new Vector3f()};
         PoseStack.Pose pose = poseStack.last();
-        for (var quad : part.hemGeometry().quads()) {
+        for (var quad : part.hemGeometry().quads(slope)) {
             for (int i = 0; i < 4; i++) {
                 slope.shift(quad.points().get(i), quad.depths().get(i), points[i]);
             }

@@ -12,6 +12,7 @@ import net.minecraft.client.model.PlayerModel;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,7 +74,7 @@ public final class GarmentHemGeometry {
         if (hem >= slope.min().y()) {
             return part;
         }
-        float cut = hem + HEM_HEIGHT;
+        float cut = Math.max(hem + HEM_HEIGHT, slope.min().y());
         Slope surface = slope.forSlot(slot);
         List<Element> elements = split(part.elements(), surface, cut);
         return new GarmentPartModel(part.id(), part.textureWidth(), part.textureHeight(), part.pivot(), List.copyOf(elements),
@@ -84,7 +85,10 @@ public final class GarmentHemGeometry {
         float hem = source.stream().flatMap(element -> element.corners().stream()
                         .map(corner -> FlatGarmentGeometry.rotate(corner, element.rotation())))
                 .map(Vec3::y).min(Float::compare).orElse(0F);
-        float cut = hem + HEM_HEIGHT;
+        return new Prepared(hem, List.copyOf(source));
+    }
+
+    private static List<Quad> prepareQuads(List<Element> source, float cut) {
         Slope identity = new Slope(new Vec3(-1, 0, -1), new Vec3(1, 0, 1), 0, 0, 0, 0);
         List<Quad> quads = new ArrayList<>();
         for (Element element : split(source, identity, cut)) {
@@ -94,13 +98,48 @@ public final class GarmentHemGeometry {
                 quads.add(new Quad(points, uv.corners(), points.stream().map(p -> Math.max(0, cut - p.y())).toList()));
             });
         }
-        return new Prepared(hem, List.copyOf(quads));
+        return List.copyOf(quads);
     }
 
     public record Quad(List<Vec3> points, List<TexturePoint> uv, List<Float> depths) {
     }
 
-    public record Prepared(float hem, List<Quad> quads) {
+    public static final class Prepared {
+        private final float hem;
+        private final List<Element> source;
+        private final List<Quad> quads;
+        private final Map<Float, List<Quad>> skirtQuads = new LinkedHashMap<>();
+
+        private Prepared(float hem, List<Element> source) {
+            this.hem = hem;
+            this.source = source;
+            this.quads = prepareQuads(source, hem + HEM_HEIGHT);
+        }
+
+        public float hem() {
+            return hem;
+        }
+
+        public List<Quad> quads() {
+            return quads;
+        }
+
+        public List<Quad> quads(Slope slope) {
+            float cut = Math.max(hem + HEM_HEIGHT, slope.min().y());
+            if (cut == hem + HEM_HEIGHT) {
+                return quads;
+            }
+            List<Quad> cached = skirtQuads.get(cut);
+            if (cached == null) {
+                cached = prepareQuads(source, cut);
+                if (skirtQuads.size() >= 8) {
+                    skirtQuads.remove(skirtQuads.keySet().iterator().next());
+                }
+                skirtQuads.put(cut, cached);
+            }
+            return cached;
+        }
+
         public boolean applies(String semantic, GarmentSlot slot, Slope slope) {
             return supportsHemConform(semantic, slot) && hem < slope.min().y();
         }

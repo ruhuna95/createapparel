@@ -1,0 +1,18 @@
+{
+  "default_slot": "outer",
+  "allowed_slots": [
+    "outer"
+  ],
+  "model_template": "createapparel:jacket",
+  "model_variant": "default",
+  "texture_variant": "blazer",
+  "designs": [
+    "plain"
+  ],
+  "styles": {
+    "open": [
+      "closed",
+      "open"
+    ]
+  }
+}

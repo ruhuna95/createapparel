@@ -70,6 +70,8 @@ public final class ModItems {
     public static final RegistryObject<Item> KNEE_HIGH_SOCKS = registerGarment("knee_high_socks");
     public static final RegistryObject<Item> OVER_KNEE_SOCKS = registerGarment("over_knee_socks");
     public static final RegistryObject<Item> THIGH_HIGH_SOCKS = registerGarment("thigh_high_socks");
+    public static final RegistryObject<Item> SUIT_JACKET = registerGarment("suit_jacket");
+    public static final RegistryObject<Item> BLAZER_JACKET = registerGarment("blazer_jacket");
     public static final RegistryObject<Item> BLOUSE_ROUND = registerGarment("blouse_round");
     public static final RegistryObject<Item> BLOUSE_FRILL = registerGarment("blouse_frill");
     public static final RegistryObject<Item> BLOUSE_BOW_TIE = registerGarment("blouse_bow_tie");
@@ -152,7 +154,9 @@ public final class ModItems {
                     CREW_SOCKS,
                     KNEE_HIGH_SOCKS,
                     OVER_KNEE_SOCKS,
-                    THIGH_HIGH_SOCKS
+                    THIGH_HIGH_SOCKS,
+                    SUIT_JACKET,
+                    BLAZER_JACKET
             );
 
     static {
@@ -306,10 +310,10 @@ public final class ModItems {
         uniqueItems.addAll(uniqueGarmentItems);
         if (CREATIVE_TAB_ITEMS.size() != 142
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 28
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 30
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 170) {
-            throw new IllegalStateException("The creative tabs must contain 170 unique items");
+                || uniqueItems.size() != 172) {
+            throw new IllegalStateException("The creative tabs must contain 172 unique items");
         }
     }
 }

@@ -78,6 +78,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.KNEE_HIGH_SOCKS.get(), "Knee-High Socks");
         add(ModItems.OVER_KNEE_SOCKS.get(), "Over-Knee Socks");
         add(ModItems.THIGH_HIGH_SOCKS.get(), "Thigh-High Socks");
+        add(ModItems.SUIT_JACKET.get(), "Suit Jacket");
+        add(ModItems.BLAZER_JACKET.get(), "Blazer Jacket");
         add(ModItems.ZIPUP_HOODIE.get(), "Zip-up Hoodie");
         add(ModItems.BLOUSE_FRILL.get(), "Frill Blouse");
         add(ModItems.BLOUSE_BOW_TIE.get(), "Bow Tie Blouse");

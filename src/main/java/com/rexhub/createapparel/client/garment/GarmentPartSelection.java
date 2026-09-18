@@ -39,7 +39,7 @@ final class GarmentPartSelection {
             ChestProfile chestProfile,
             boolean hasBust
     ) {
-        String openSuffix = "opened".equals(styles.get("open")) ? "_opened" : "";
+        String openSuffix = isOpen(styles.get("open")) ? "_opened" : "";
         String sleeveSuffix = "rolled".equals(styles.get("sleeves")) ? "_rolled" : "";
         String torso = "tucked".equals(styles.get("tuck")) ? "tucked_torso" : "torso";
         List<String> selected = new ArrayList<>();
@@ -64,7 +64,7 @@ final class GarmentPartSelection {
         if (tucked) {
             required.add("tucked_torso");
         }
-        if (styles.getOrDefault("open", List.of()).contains("opened")) {
+        if (styles.getOrDefault("open", List.of()).stream().anyMatch(GarmentPartSelection::isOpen)) {
             required.add("torso_opened");
             if (tucked) {
                 required.add("tucked_torso_opened");
@@ -80,5 +80,9 @@ final class GarmentPartSelection {
             }
         }
         return Set.copyOf(required);
+    }
+
+    private static boolean isOpen(String value) {
+        return "opened".equals(value) || "open".equals(value);
     }
 }

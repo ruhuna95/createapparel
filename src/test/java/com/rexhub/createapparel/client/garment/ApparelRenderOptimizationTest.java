@@ -75,7 +75,7 @@ class ApparelRenderOptimizationTest {
         var skirt = model("a_line_skirt/torso");
         Vector3f target = new Vector3f();
         for (String name : List.of("t_shirt/torso", "shirt/torso", "shirt_outer/torso",
-                "hoodie/torso_pullover", "hoodie_outer/torso_zipup_opened")) {
+                "hoodie/torso_pullover", "hoodie_outer/torso_zipup_opened", "jacket/torso", "jacket/torso_opened")) {
             var part = model(name);
             var prepared = part.hemGeometry();
             assertNotSame(prepared, model(name).hemGeometry());
@@ -86,6 +86,8 @@ class ApparelRenderOptimizationTest {
                 for (var slot : List.of(GarmentSlot.TOP, GarmentSlot.OUTER)) {
                     var surface = slope.forSlot(slot);
                     var reference = GarmentHemGeometry.conform(part, "torso", slot, slope);
+                    var quads = prepared.quads(slope);
+                    assertSame(quads, prepared.quads(surface));
                     assertSame(prepared, part.hemGeometry());
                     List<List<Vec3>> positions = new ArrayList<>();
                     List<List<TexturePoint>> uvs = new ArrayList<>();
@@ -96,9 +98,9 @@ class ApparelRenderOptimizationTest {
                             uvs.add(uv.corners());
                         });
                     }
-                    assertEquals(positions.size(), prepared.quads().size());
+                    assertEquals(positions.size(), quads.size());
                     for (int q = 0; q < positions.size(); q++) {
-                        var quad = prepared.quads().get(q);
+                        var quad = quads.get(q);
                         assertEquals(uvs.get(q), quad.uv());
                         List<Vec3> actual = new ArrayList<>();
                         for (int i = 0; i < 4; i++) {

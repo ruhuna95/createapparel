@@ -33,7 +33,7 @@ class GarmentHemGeometryTest {
         var top = model("t_shirt/torso");
         var result = GarmentHemGeometry.conform(top, "torso", GarmentSlot.TOP, slope);
         float hem = top.elements().stream().map(e -> e.from().y()).min(Float::compare).orElseThrow();
-        float cut = hem + 2;
+        float cut = Math.max(hem + 2, slope.min().y());
         assertNotEquals(top, result);
         for (var element : result.elements()) {
             for (Vec3 point : element.corners()) {
@@ -45,7 +45,7 @@ class GarmentHemGeometryTest {
         }
         var original = top.elements().get(0);
         Vec3 bottom = original.corners().get(0);
-        Vec3 expected = slope.forSlot(GarmentSlot.TOP).shift(bottom, 2);
+        Vec3 expected = slope.forSlot(GarmentSlot.TOP).shift(bottom, cut - bottom.y());
         assertTrue(result.elements().stream().flatMap(e -> e.corners().stream()).anyMatch(expected::equals));
         assertEquals(top.variants(), result.variants());
         assertEquals(top.designs(), result.designs());
@@ -55,7 +55,7 @@ class GarmentHemGeometryTest {
     void upperVerticesAndTextureCoordinatesAreUnchangedAndCutIsContinuous() throws Exception {
         var top = model("t_shirt/torso");
         var original = top.elements().get(0);
-        float cut = original.from().y() + 2;
+        float cut = Math.max(original.from().y() + 2, slope().min().y());
         var result = GarmentHemGeometry.conform(top, "torso", GarmentSlot.TOP, slope());
         var frontUv = original.faces().get(Face.FRONT);
         float cutV = frontUv.v0() + (frontUv.v1() - frontUv.v0())
@@ -176,6 +176,44 @@ class GarmentHemGeometryTest {
             for (Vec3 original : originalTop) {
                 assertTrue(transformed.elements().stream().flatMap(e -> e.corners().stream()).anyMatch(original::equals));
             }
+        }
+    }
+
+    @Test
+    void longJacketStaysOutsideAllSkirtPanelsFromTheWaistThroughTheHem() throws Exception {
+        var skirt = model("a_line_skirt/torso");
+        for (String name : List.of("jacket/torso", "jacket/torso_opened")) {
+            var jacket = model(name);
+            for (var legs : List.of(List.<Vec3>of(), List.of(new Vec3(2, 12, -9)),
+                    List.of(new Vec3(-4, 12, 8), new Vec3(4, 12, -8)))) {
+                var posed = SkirtPoseGeometry.deform(skirt, legs);
+                var surface = GarmentHemGeometry.animatedSlope(skirt.elements().get(1), posed.elements().get(1))
+                        .forSlot(GarmentSlot.OUTER);
+                var quads = jacket.hemGeometry().quads(surface);
+                assertSame(quads, jacket.hemGeometry().quads(surface));
+                assertTrue(quads.stream().flatMap(q -> q.depths().stream()).anyMatch(d -> d > 3));
+                for (var face : List.of(Face.LEFT, Face.RIGHT, Face.FRONT, Face.BACK)) {
+                    var panel = posed.elements().stream().filter(e -> e.faces().containsKey(face)).skip(1).findFirst().orElseThrow();
+                    var vertices = GarmentElementGeometry.faceVertices(panel, face);
+                    var normal = GarmentElementGeometry.normal(vertices);
+                    for (float y : new float[]{14, 13.5F, 13, 12, 10.99F}) {
+                        var point = switch (face) {
+                            case LEFT -> new Vec3(-4.1F, y, 0);
+                            case RIGHT -> new Vec3(4.1F, y, 0);
+                            case FRONT -> new Vec3(0, y, -2.5F);
+                            case BACK -> new Vec3(0, y, 2.5F);
+                            default -> throw new AssertionError(face);
+                        };
+                        var shifted = surface.shift(point, 14 - y);
+                        float distance = dot(subtract(shifted, vertices.get(0)), normal);
+                        assertTrue(distance > 0.025F, name + " " + face + " y=" + y + " distance=" + distance);
+                    }
+                }
+            }
+            var higher = new GarmentHemGeometry.Slope(new Vec3(-4, 15, -2), new Vec3(4, 15, 2),
+                    -0.125F, 0.125F, -0.125F, 0.125F);
+            assertNotSame(jacket.hemGeometry().quads(slope()), jacket.hemGeometry().quads(higher));
+            assertNotSame(jacket.hemGeometry().quads(slope()), model(name).hemGeometry().quads(slope()));
         }
     }
 

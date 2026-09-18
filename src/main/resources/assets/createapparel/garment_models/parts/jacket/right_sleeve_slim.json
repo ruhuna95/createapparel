@@ -1,0 +1,108 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_sleeve_slim",
+        "from": [
+          -7.5,
+          11.5,
+          -2.5
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.5
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              7,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_sleeve_slim_buttons",
+        "from": [
+          -7.75,
+          11.25,
+          -2.75
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.75
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              16,
+              4,
+              28
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/jacket/right_sleeve_slim/base/suit"
+      },
+      "suit": {
+        "base": "createapparel:garment/jacket/right_sleeve_slim/base/suit"
+      },
+      "blazer": {
+        "base": "createapparel:garment/jacket/right_sleeve_slim/base/blazer"
+      }
+    },
+    "designs": {}
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 6,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/linen",
+      "createapparel:fabrics/wool",
+      "createapparel:fabrics/synthetic"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:blazer_jacket"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}
