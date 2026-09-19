@@ -1,0 +1,28 @@
+{
+  "default": {
+    "torso": {
+      "model": "createapparel:denim_jacket/torso"
+    },
+    "torso_opened": {
+      "model": "createapparel:denim_jacket/torso_opened"
+    },
+    "bust": {
+      "model": "createapparel:denim_jacket/bust"
+    },
+    "bust_opened": {
+      "model": "createapparel:denim_jacket/bust_opened"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:denim_jacket/left_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:denim_jacket/right_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:denim_jacket/left_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:denim_jacket/right_sleeve_slim"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "render_type": "cutout",
+  "texture_size": [16, 16],
+  "geometry": {
+    "pivot": [0, 0, 0],
+    "elements": [
+      {
+        "name": "bust",
+        "from": [-4, 19, -1.89],
+        "to": [4, 23.3426, 1.375],
+        "rotation": {
+          "origin": [0, 25, -0.9],
+          "axis": "x",
+          "angle": 30
+        },
+        "faces": {
+          "left": {
+            "uv": [0, 0, 3, 4]
+          },
+          "front": {
+            "uv": [3, 0, 10, 4]
+          },
+          "right": {
+            "uv": [10, 0, 13, 4]
+          },
+          "bottom": {
+            "uv": [0, 8, 7, 11]
+          }
+        }
+      },
+      {
+        "name": "bust_decoration",
+        "from": [-4.25, 18.75, -2.14],
+        "to": [4.25, 23.3426, 1.375],
+        "rotation": {
+          "origin": [0, 25, -0.9],
+          "axis": "x",
+          "angle": 30
+        },
+        "faces": {
+          "front": {
+            "uv": [3, 4, 10, 8]
+          },
+          "bottom": {
+            "uv": [0, 11, 7, 14]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/denim_jacket/bust/base/default",
+        "overlay": "createapparel:garment/denim_jacket/bust/overlay/default"
+      }
+    },
+    "designs": {}
+  }
+}

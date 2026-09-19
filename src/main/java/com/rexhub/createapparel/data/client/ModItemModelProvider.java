@@ -49,7 +49,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
                     || item == ModItems.ANKLE_SOCKS || item == ModItems.CREW_SOCKS
                     || item == ModItems.KNEE_HIGH_SOCKS || item == ModItems.OVER_KNEE_SOCKS
                     || item == ModItems.THIGH_HIGH_SOCKS
-                    || item == ModItems.SUIT_JACKET || item == ModItems.BLAZER_JACKET) {
+                    || item == ModItems.SUIT_JACKET || item == ModItems.BLAZER_JACKET
+                    || item == ModItems.DENIM_JACKET) {
                 blouseModel(item);
             } else if (item == ModItems.BLOUSE_ROUND
                     || item == ModItems.BLOUSE_FRILL

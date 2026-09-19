@@ -217,6 +217,47 @@ class GarmentHemGeometryTest {
         }
     }
 
+    @Test
+    void denimJacketUsesSharedSkirtFollowingWithoutChangingItsUpperBody() throws Exception {
+        var skirt = model("a_line_skirt/torso");
+        for (String name : List.of("denim_jacket/torso", "denim_jacket/torso_opened")) {
+            var jacket = model(name);
+            for (var legs : List.of(List.<Vec3>of(), List.of(new Vec3(2, 12, -9)),
+                    List.of(new Vec3(-4, 12, 8), new Vec3(4, 12, -8)))) {
+                var posed = SkirtPoseGeometry.deform(skirt, legs);
+                var surface = GarmentHemGeometry.animatedSlope(skirt.elements().get(1), posed.elements().get(1))
+                        .forSlot(GarmentSlot.OUTER);
+                var quads = jacket.hemGeometry().quads(surface);
+                assertTrue(jacket.hemGeometry().applies("torso", GarmentSlot.OUTER, surface));
+                assertSame(quads, jacket.hemGeometry().quads(surface));
+                assertEquals(11.99F, jacket.hemGeometry().hem());
+                for (var quad : quads) {
+                    for (int i = 0; i < quad.points().size(); i++) {
+                        if (quad.points().get(i).y() >= 14) {
+                            assertEquals(quad.points().get(i), surface.shift(quad.points().get(i), quad.depths().get(i)));
+                        }
+                    }
+                }
+                for (var face : List.of(Face.LEFT, Face.RIGHT, Face.FRONT, Face.BACK)) {
+                    var panel = posed.elements().stream().filter(e -> e.faces().containsKey(face)).skip(1).findFirst().orElseThrow();
+                    var vertices = GarmentElementGeometry.faceVertices(panel, face);
+                    var normal = GarmentElementGeometry.normal(vertices);
+                    for (float y : new float[]{13.5F, 13, 12, 11.99F}) {
+                        var point = switch (face) {
+                            case LEFT -> new Vec3(-4.01F, y, 0);
+                            case RIGHT -> new Vec3(4.01F, y, 0);
+                            case FRONT -> new Vec3(0, y, -2.5F);
+                            case BACK -> new Vec3(0, y, 2.5F);
+                            default -> throw new AssertionError(face);
+                        };
+                        float distance = dot(subtract(surface.shift(point, 14 - y), vertices.get(0)), normal);
+                        assertTrue(distance > 0, name + " " + face + " y=" + y + " distance=" + distance);
+                    }
+                }
+            }
+        }
+    }
+
     private static Vec3 subtract(Vec3 a, Vec3 b) {
         return new Vec3(a.x() - b.x(), a.y() - b.y(), a.z() - b.z());
     }
