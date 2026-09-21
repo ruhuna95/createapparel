@@ -221,16 +221,19 @@ final class ClientGarmentAssetLoader {
                 Collections.unmodifiableMap(variants),
                 Collections.unmodifiableMap(designs),
                 Collections.unmodifiableMap(materialOverrides),
-                skirtMotion(json, elements),
+                legEnvelope(json, elements),
                 GarmentHemGeometry.prepare(elements)
         );
     }
 
-    private static Optional<ClientGarmentAssets.SkirtMotion> skirtMotion(JsonObject json, List<Element> elements) {
-        if (!json.has("skirt_motion")) {
+    private static Optional<ClientGarmentAssets.LegEnvelope> legEnvelope(JsonObject json, List<Element> elements) {
+        if (!json.has("leg_envelope") && !json.has("skirt_motion")) {
             return Optional.empty();
         }
-        JsonObject motion = GsonHelper.getAsJsonObject(json, "skirt_motion");
+        JsonObject motion = GsonHelper.getAsJsonObject(json, json.has("leg_envelope") ? "leg_envelope" : "skirt_motion");
+        if (!GsonHelper.getAsString(motion, "mode", "dual").equals("dual")) {
+            throw new IllegalStateException("Leg envelope mode must be dual");
+        }
         float clearance = GsonHelper.getAsFloat(motion, "clearance", 0.025F);
         if (!Float.isFinite(clearance) || clearance < 0 || clearance > 1) {
             throw new IllegalStateException("Skirt clearance must be in [0, 1]");
@@ -244,7 +247,15 @@ final class ClientGarmentAssetLoader {
             }
             reference = panel;
         }
-        return Optional.of(new ClientGarmentAssets.SkirtMotion(clearance));
+        float response = GsonHelper.getAsFloat(motion, "response_curve", 2);
+        if (!Float.isFinite(response) || response < 1 || response > 4
+                || reference == null || reference.to().y() <= reference.from().y()) {
+            throw new IllegalStateException("Invalid leg envelope response or height");
+        }
+        return Optional.of(new ClientGarmentAssets.LegEnvelope(clearance,
+                new DualEnvelopeDeformer.Prepared(elements, reference,
+                        GsonHelper.getAsBoolean(motion, "front_bridge", true),
+                        GsonHelper.getAsBoolean(motion, "back_bridge", true))));
     }
 
     private static float[] inset(JsonObject element, String key, ResourceLocation id) {

@@ -1,0 +1,265 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_sleeve_classic",
+        "from": [
+          3.99,
+          11.5,
+          -2.5
+        ],
+        "to": [
+          8.5,
+          24.01,
+          2.5
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ],
+            "uv_corners": [
+              [
+                8,
+                4
+              ],
+              [
+                8,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                4
+              ]
+            ]
+          },
+          "left": {
+            "uv": [
+              8,
+              4,
+              12,
+              16
+            ],
+            "uv_corners": [
+              [
+                12,
+                16
+              ],
+              [
+                12,
+                4
+              ],
+              [
+                8,
+                4
+              ],
+              [
+                8,
+                16
+              ]
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              16
+            ],
+            "uv_corners": [
+              [
+                8,
+                16
+              ],
+              [
+                8,
+                4
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                4,
+                16
+              ]
+            ]
+          },
+          "right": {
+            "uv": [
+              0,
+              4,
+              4,
+              16
+            ],
+            "uv_corners": [
+              [
+                4,
+                16
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                0,
+                4
+              ],
+              [
+                0,
+                16
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              16
+            ],
+            "uv_corners": [
+              [
+                16,
+                16
+              ],
+              [
+                16,
+                4
+              ],
+              [
+                12,
+                4
+              ],
+              [
+                12,
+                16
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_sleeve_classic_belt",
+        "from": [
+          3.99,
+          11.25,
+          -2.75
+        ],
+        "to": [
+          8.75,
+          24.01,
+          2.75
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              16,
+              8,
+              28
+            ],
+            "uv_corners": [
+              [
+                8,
+                28
+              ],
+              [
+                8,
+                16
+              ],
+              [
+                4,
+                16
+              ],
+              [
+                4,
+                28
+              ]
+            ]
+          },
+          "right": {
+            "uv": [
+              0,
+              16,
+              4,
+              28
+            ],
+            "uv_corners": [
+              [
+                4,
+                28
+              ],
+              [
+                4,
+                16
+              ],
+              [
+                0,
+                16
+              ],
+              [
+                0,
+                28
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              16,
+              16,
+              28
+            ],
+            "uv_corners": [
+              [
+                16,
+                28
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                12,
+                16
+              ],
+              [
+                12,
+                28
+              ]
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/coat/trench/left_sleeve_classic/base/trench"
+      },
+      "trench": {
+        "base": "createapparel:garment/coat/trench/left_sleeve_classic/base/trench"
+      }
+    },
+    "designs": {}
+  }
+}

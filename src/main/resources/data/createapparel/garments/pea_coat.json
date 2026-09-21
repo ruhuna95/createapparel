@@ -1,0 +1,18 @@
+{
+  "default_slot": "outer",
+  "allowed_slots": [
+    "outer"
+  ],
+  "model_template": "createapparel:coat",
+  "model_variant": "pea",
+  "texture_variant": "pea",
+  "designs": [
+    "plain"
+  ],
+  "styles": {
+    "open": [
+      "closed",
+      "open"
+    ]
+  }
+}

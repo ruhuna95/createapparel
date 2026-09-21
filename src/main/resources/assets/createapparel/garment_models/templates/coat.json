@@ -1,0 +1,112 @@
+{
+  "chesterfield": {
+    "right_sleeve_slim": {
+      "model": "createapparel:coat/chesterfield/right_sleeve_slim"
+    },
+    "bust_opened": {
+      "model": "createapparel:coat/chesterfield/bust_opened"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:coat/chesterfield/right_sleeve_classic"
+    },
+    "bust": {
+      "model": "createapparel:coat/chesterfield/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:coat/chesterfield/left_sleeve_classic"
+    },
+    "torso": {
+      "model": "createapparel:coat/chesterfield/torso"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:coat/chesterfield/left_sleeve_slim"
+    },
+    "torso_opened": {
+      "model": "createapparel:coat/chesterfield/torso_opened"
+    }
+  },
+  "trench": {
+    "right_sleeve_slim": {
+      "model": "createapparel:coat/trench/right_sleeve_slim"
+    },
+    "bust_opened": {
+      "model": "createapparel:coat/trench/bust_opened"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:coat/trench/right_sleeve_classic"
+    },
+    "bust": {
+      "model": "createapparel:coat/trench/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:coat/trench/left_sleeve_classic"
+    },
+    "torso": {
+      "model": "createapparel:coat/trench/torso"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:coat/trench/left_sleeve_slim"
+    },
+    "torso_opened": {
+      "model": "createapparel:coat/trench/torso_opened"
+    }
+  },
+  "duffle": {
+    "right_sleeve_slim": {
+      "model": "createapparel:coat/duffle/right_sleeve_slim"
+    },
+    "bust_opened": {
+      "model": "createapparel:coat/duffle/bust_opened"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:coat/duffle/right_sleeve_classic"
+    },
+    "bust": {
+      "model": "createapparel:coat/duffle/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:coat/duffle/left_sleeve_classic"
+    },
+    "hood_up": {
+      "model": "createapparel:coat/duffle/hood_up"
+    },
+    "torso": {
+      "model": "createapparel:coat/duffle/torso"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:coat/duffle/left_sleeve_slim"
+    },
+    "torso_opened": {
+      "model": "createapparel:coat/duffle/torso_opened"
+    },
+    "hood_down": {
+      "model": "createapparel:coat/duffle/hood_down"
+    }
+  },
+  "pea": {
+    "right_sleeve_slim": {
+      "model": "createapparel:coat/pea/right_sleeve_slim"
+    },
+    "bust_opened": {
+      "model": "createapparel:coat/pea/bust_opened"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:coat/pea/right_sleeve_classic"
+    },
+    "bust": {
+      "model": "createapparel:coat/pea/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:coat/pea/left_sleeve_classic"
+    },
+    "torso": {
+      "model": "createapparel:coat/pea/torso"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:coat/pea/left_sleeve_slim"
+    },
+    "torso_opened": {
+      "model": "createapparel:coat/pea/torso_opened"
+    }
+  }
+}

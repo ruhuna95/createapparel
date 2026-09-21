@@ -157,6 +157,14 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("denim_jacket", ModItems.DENIM_JACKET,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_SYNTHETIC), 6);
+        sewing("chesterfield_coat", ModItems.CHESTERFIELD_COAT,
+                List.of(ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 8);
+        sewing("trench_coat", ModItems.TRENCH_COAT,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SYNTHETIC), 8);
+        sewing("duffle_coat", ModItems.DUFFLE_COAT,
+                List.of(ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 8);
+        sewing("pea_coat", ModItems.PEA_COAT,
+                List.of(ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 8);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);

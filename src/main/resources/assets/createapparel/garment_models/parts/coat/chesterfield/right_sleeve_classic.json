@@ -1,0 +1,105 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_sleeve_classic",
+        "from": [
+          -8.5,
+          11.5,
+          -2.5
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.5
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_sleeve_classic_buttons",
+        "from": [
+          -8.75,
+          11.25,
+          -2.75
+        ],
+        "to": [
+          -3.99,
+          24.01,
+          2.75
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              16,
+              4,
+              28
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/coat/chesterfield/right_sleeve_classic/base/chesterfield"
+      },
+      "chesterfield": {
+        "base": "createapparel:garment/coat/chesterfield/right_sleeve_classic/base/chesterfield"
+      }
+    },
+    "designs": {}
+  }
+}

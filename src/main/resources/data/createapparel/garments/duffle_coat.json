@@ -1,0 +1,22 @@
+{
+  "default_slot": "outer",
+  "allowed_slots": [
+    "outer"
+  ],
+  "model_template": "createapparel:coat",
+  "model_variant": "duffle",
+  "texture_variant": "duffle",
+  "designs": [
+    "plain"
+  ],
+  "styles": {
+    "open": [
+      "closed",
+      "open"
+    ],
+    "hood": [
+      "down",
+      "up"
+    ]
+  }
+}

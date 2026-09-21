@@ -1,0 +1,90 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "hood_up",
+        "from": [
+          -4.6,
+          23.99,
+          -4.6
+        ],
+        "to": [
+          4.6,
+          32.6,
+          4.6
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              8,
+              0,
+              16,
+              8
+            ]
+          },
+          "bottom": {
+            "uv": [
+              16,
+              0,
+              24,
+              8
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              8,
+              8,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              8,
+              16,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              8,
+              24,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              24,
+              8,
+              32,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/coat/duffle/hood_up/base/duffle"
+      },
+      "duffle": {
+        "base": "createapparel:garment/coat/duffle/hood_up/base/duffle"
+      }
+    },
+    "designs": {}
+  }
+}

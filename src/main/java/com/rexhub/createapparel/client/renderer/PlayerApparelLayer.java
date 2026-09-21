@@ -6,7 +6,6 @@ import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.garment.ApparelRenderFrame;
-import com.rexhub.createapparel.client.garment.SkirtPoseGeometry;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -77,7 +76,7 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
             );
         }
 
-        var frame = new ApparelRenderFrame(snapshot::garment, part -> SkirtPoseGeometry.animate(part, getParentModel()));
+        var frame = new ApparelRenderFrame(snapshot::garment, getParentModel());
         for (GarmentSlot slot : RENDER_ORDER) {
             frame.garment(slot).ifPresent(garment ->
                     CommonGarmentRenderer.renderHumanoidGarment(

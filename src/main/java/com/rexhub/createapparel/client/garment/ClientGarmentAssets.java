@@ -533,7 +533,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             Map<String, TextureVariant> variants,
             Map<String, DesignMasks> designs,
             Map<FabricMaterial, ResourceLocation> materialOverrides,
-            Optional<SkirtMotion> skirtMotion,
+            Optional<LegEnvelope> legEnvelope,
             GarmentHemGeometry.Prepared hemGeometry
     ) {
         public ResolvedTextures resolveTextures(GarmentDefinition definition, GarmentData data) {
@@ -554,7 +554,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     public record Vec3(float x, float y, float z) {
     }
 
-    public record SkirtMotion(float clearance) {
+    public record LegEnvelope(float clearance, DualEnvelopeDeformer.Prepared geometry) {
     }
 
     public record Rotation(Vec3 origin, Axis axis, float angle) {

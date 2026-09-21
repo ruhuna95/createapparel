@@ -193,6 +193,7 @@ class BlouseAssetTest {
             for (Path path : paths.filter(p -> p.toString().endsWith(".json") && !p.startsWith(PARTS)
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/a_line_skirt"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/jacket"))
+                    && !p.startsWith(ASSETS.resolve("garment_models/parts/coat"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/left_leg.json"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/right_leg.json"))).toList()) {
                 var part = ClientGarmentAssetLoader.parsePart(id("legacy"), json(path));

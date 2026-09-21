@@ -4,7 +4,8 @@
     32,
     32
   ],
-  "skirt_motion": {
+  "leg_envelope": {
+    "mode": "dual",
     "clearance": 0.025
   },
   "geometry": {

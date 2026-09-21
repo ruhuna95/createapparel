@@ -66,7 +66,7 @@ class GarmentDecorationShellTest {
                 String name = PARTS.relativize(path).toString().replace('\\', '/').replace(".json", "");
                 var part = part(name);
                 float spacing = name.startsWith("shirt_outer/") || name.startsWith("hoodie_outer/")
-                        || name.startsWith("jacket/") || name.startsWith("denim_jacket/")
+                        || name.startsWith("jacket/") || name.startsWith("denim_jacket/") || name.startsWith("coat/")
                         || name.startsWith("denim_pants/") || name.startsWith("shorts/") ? 0.25F : 0.15F;
                 for (var shell : part.elements()) {
                     if (!shell.name().endsWith("_decoration") || shell.name().contains("bust")) {

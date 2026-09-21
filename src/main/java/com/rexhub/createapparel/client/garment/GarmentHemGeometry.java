@@ -8,7 +8,6 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets.TexturePoint;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Uv;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
 import com.rexhub.createapparel.garment.GarmentSlot;
-import net.minecraft.client.model.PlayerModel;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.UnaryOperator;
 
 public final class GarmentHemGeometry {
     private static final float HEM_HEIGHT = 2;
@@ -24,37 +22,18 @@ public final class GarmentHemGeometry {
     private GarmentHemGeometry() {
     }
 
+    static Slope dualSlope(DualEnvelopeDeformer.Pose pose) {
+        Slope rest = slope(pose.geometry().reference());
+        return new Slope(rest.min(), rest.max(), rest.west(), rest.east(), rest.north(), rest.south(),
+                pose.geometry().top() - pose.geometry().bottom(), 0, pose);
+    }
+
     public static Optional<Slope> skirtSlope(ResolvedGarment garment) {
         return garment.parts().stream().map(ClientGarmentAssets.ResolvedPart::model)
-                .filter(part -> part.skirtMotion().isPresent()).flatMap(part -> part.elements().stream())
+                .filter(part -> part.legEnvelope().isPresent()).flatMap(part -> part.elements().stream())
                 .filter(element -> element.name().equals("front_panel")).findFirst().map(GarmentHemGeometry::slope);
     }
 
-    public static Optional<Slope> skirtSlope(ResolvedGarment garment, PlayerModel<?> player) {
-        return skirtSlope(garment, part -> SkirtPoseGeometry.animate(part, player));
-    }
-
-    public static Optional<Slope> skirtSlope(ResolvedGarment garment, UnaryOperator<GarmentPartModel> pose) {
-        return garment.parts().stream().map(ClientGarmentAssets.ResolvedPart::model)
-                .filter(part -> part.skirtMotion().isPresent()).findFirst().map(part -> {
-                    var posed = pose.apply(part);
-                    Element restPanel = part.elements().stream().filter(e -> e.name().equals("front_panel")).findFirst().orElseThrow();
-                    Element posedPanel = posed.elements().stream().filter(e -> e.name().equals("front_panel")).findFirst().orElseThrow();
-                    return animatedSlope(restPanel, posedPanel);
-                });
-    }
-
-    static Slope animatedSlope(Element rest, Element posed) {
-        var base = slope(rest);
-        List<Vec3> movement = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            Vec3 a = rest.corners().get(i);
-            Vec3 b = posed.corners().get(i);
-            movement.add(new Vec3(b.x() - a.x(), b.y() - a.y(), b.z() - a.z()));
-        }
-        return new Slope(base.min(), base.max(), base.west(), base.east(), base.north(), base.south(),
-                rest.corners().get(4).y() - rest.corners().get(0).y(), List.copyOf(movement), 0);
-    }
 
     static Slope slope(Element panel) {
         var c = panel.corners();
@@ -78,7 +57,7 @@ public final class GarmentHemGeometry {
         Slope surface = slope.forSlot(slot);
         List<Element> elements = split(part.elements(), surface, cut);
         return new GarmentPartModel(part.id(), part.textureWidth(), part.textureHeight(), part.pivot(), List.copyOf(elements),
-                part.variants(), part.designs(), part.materialOverrides(), part.skirtMotion(), part.hemGeometry());
+                part.variants(), part.designs(), part.materialOverrides(), part.legEnvelope(), part.hemGeometry());
     }
 
     static Prepared prepare(List<Element> source) {
@@ -109,6 +88,7 @@ public final class GarmentHemGeometry {
         private final List<Element> source;
         private final List<Quad> quads;
         private final Map<Float, List<Quad>> skirtQuads = new LinkedHashMap<>();
+        private final Map<DualEnvelopeDeformer.Prepared, List<Quad>> dualQuads = new LinkedHashMap<>();
 
         private Prepared(float hem, List<Element> source) {
             this.hem = hem;
@@ -126,6 +106,41 @@ public final class GarmentHemGeometry {
 
         public List<Quad> quads(Slope slope) {
             float cut = Math.max(hem + HEM_HEIGHT, slope.min().y());
+            if (slope.envelope() != null) {
+                var geometry = slope.envelope().geometry();
+                if (!dualQuads.containsKey(geometry) && dualQuads.size() >= 8) {
+                    dualQuads.remove(dualQuads.keySet().iterator().next());
+                }
+                return dualQuads.computeIfAbsent(geometry, ignored -> {
+                    float height = cut;
+                    List<Quad> result = new ArrayList<>();
+                    Slope identity = new Slope(new Vec3(-1, 0, -1), new Vec3(1, 0, 1), 0, 0, 0, 0);
+                    List<Element> divided = split(source, identity, height);
+                    for (int row = 1; row < geometry.bands(); row++) {
+                        float plane = geometry.height(row);
+                        if (plane < height && plane > hem) divided = split(divided, identity, plane);
+                    }
+                    for (Quad quad : prepareQuads(divided, height)) {
+                        if (quad.depths().stream().allMatch(depth -> depth == 0)) { result.add(quad); continue; }
+                        int rows = 1;
+                        float[] cuts = Math.abs(quad.points().get(0).x() - quad.points().get(3).x()) > 1
+                                ? new float[]{0, .375F, .4F, .6F, .625F, 1} : new float[]{0, 1};
+                        for (int row = 0; row < rows; row++) for (int col = 0; col < cuts.length - 1; col++) {
+                            float a = row / (float) rows, b = (row + 1F) / rows;
+                            float u = cuts[col], v = cuts[col + 1];
+                            var points = List.of(DualEnvelopeDeformer.point(quad.points(), u, a),
+                                    DualEnvelopeDeformer.point(quad.points(), u, b),
+                                    DualEnvelopeDeformer.point(quad.points(), v, b),
+                                    DualEnvelopeDeformer.point(quad.points(), v, a));
+                            result.add(new Quad(points, List.of(DualEnvelopeDeformer.texture(quad.uv(), u, a),
+                                    DualEnvelopeDeformer.texture(quad.uv(), u, b), DualEnvelopeDeformer.texture(quad.uv(), v, b),
+                                    DualEnvelopeDeformer.texture(quad.uv(), v, a)),
+                                    points.stream().map(p -> Math.max(0, height - p.y())).toList()));
+                        }
+                    }
+                    return List.copyOf(result);
+                });
+            }
             if (cut == hem + HEM_HEIGHT) {
                 return quads;
             }
@@ -250,15 +265,14 @@ public final class GarmentHemGeometry {
     }
 
     public record Slope(Vec3 min, Vec3 max, float west, float east, float north, float south,
-                        float height, List<Vec3> movement, float clearance) {
+                        float height, float clearance, DualEnvelopeDeformer.Pose envelope) {
         public Slope(Vec3 min, Vec3 max, float west, float east, float north, float south) {
-            this(min, max, west, east, north, south, 1,
-                    List.of(new Vec3(0, 0, 0), new Vec3(0, 0, 0), new Vec3(0, 0, 0), new Vec3(0, 0, 0)), 0);
+            this(min, max, west, east, north, south, 1, 0, null);
         }
 
         public Slope forSlot(GarmentSlot slot) {
-            return new Slope(min, max, west, east, north, south, height, movement,
-                    slot == GarmentSlot.OUTER ? 0.05F : 0.025F);
+            return new Slope(min, max, west, east, north, south, height,
+                    LegEnvelopeGeometry.layerClearance(slot), envelope);
         }
 
         Vec3 shift(Vec3 point, float depth) {
@@ -276,24 +290,29 @@ public final class GarmentHemGeometry {
             float z = (point.z() - min.z()) / (max.z() - min.z());
             float s = Math.max(0, Math.min(1, x));
             float t = Math.max(0, Math.min(1, z));
-            Vec3 a = movement.get(0), b = movement.get(1), c = movement.get(3), d = movement.get(2);
-            float dx = lerp(lerp(a.x(), b.x(), s), lerp(c.x(), d.x(), s), t);
-            float dy = lerp(lerp(a.y(), b.y(), s), lerp(c.y(), d.y(), s), t);
-            float dz = lerp(lerp(a.z(), b.z(), s), lerp(c.z(), d.z(), s), t);
-            float ratio = depth / height;
-            float nx = lerp(west, east, s) + dx / height;
-            float nz = lerp(north, south, t) + dz / height;
-            float drop = Math.max(0, 1 - dy / height);
+            if (envelope != null) {
+                float sampleDepth = Math.min(height, depth);
+                float sampleX = lerp(min.x(), max.x(), s) + lerp(west, east, s) * sampleDepth;
+                float sampleZ = lerp(min.z(), max.z(), t) + lerp(north, south, t) * sampleDepth;
+                envelope.shift(sampleX, min.y() - sampleDepth, sampleZ, result);
+                float gap = clearance * Math.min(1, depth / HEM_HEIGHT);
+                result.set(point.x() + lerp(west, east, x) * depth + result.x - sampleX + (2 * s - 1) * gap,
+                        point.y() + result.y - (min.y() - sampleDepth),
+                        point.z() + lerp(north, south, z) * depth + result.z - sampleZ + (2 * t - 1) * gap);
+                return;
+            }
+            float nx = lerp(west, east, s);
+            float nz = lerp(north, south, t);
             float side = 2 * s - 1;
             float front = 2 * t - 1;
-            float normalX = side * drop;
-            float normalZ = front * drop;
+            float normalX = side;
+            float normalZ = front;
             float normalY = Math.abs(side * nx) + Math.abs(front * nz);
             float length = (float) Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
             float gap = length > 0 ? clearance * Math.min(1, depth / HEM_HEIGHT) / length : 0;
-            result.set(point.x() + lerp(west, east, x) * depth + dx * ratio + normalX * gap,
-                    point.y() + dy * ratio + normalY * gap,
-                    point.z() + lerp(north, south, z) * depth + dz * ratio + normalZ * gap);
+            result.set(point.x() + lerp(west, east, x) * depth + normalX * gap,
+                    point.y() + normalY * gap,
+                    point.z() + lerp(north, south, z) * depth + normalZ * gap);
         }
     }
 }

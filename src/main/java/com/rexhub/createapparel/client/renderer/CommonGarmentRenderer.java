@@ -137,8 +137,12 @@ public final class CommonGarmentRenderer {
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
         for (ResolvedPart part : garment.parts()) {
             PartMapping mapping = PartMapping.humanoidGarment();
-            var posedModel = frame.posed(part.model());
             ResourceLocation texture = snapshot.texture(part);
+            if (frame.envelope(part.model()).isPresent()) {
+                renderEnvelopePart(part.model(), texture, frame.envelope(part.model()).orElseThrow(),
+                        humanoidGarmentPose(playerModel, armProfile, part), poseStack, buffer, packedLight, packedOverlay);
+                continue;
+            }
             if (frame.skirtSlope().isPresent() && part.model().hemGeometry().applies(
                     part.semanticName(), slot, frame.skirtSlope().get())) {
                 renderHemPart(part.model(), texture, frame.skirtSlope().get().forSlot(slot),
@@ -146,7 +150,7 @@ public final class CommonGarmentRenderer {
                 continue;
             }
             renderPart(
-                    posedModel,
+                    part.model(),
                     texture,
                     mapping,
                     humanoidGarmentPose(playerModel, armProfile, part),
@@ -156,6 +160,34 @@ public final class CommonGarmentRenderer {
                     packedOverlay,
                     WHITE
             );
+        }
+        poseStack.popPose();
+    }
+
+    private static void renderEnvelopePart(GarmentPartModel part, ResourceLocation texture,
+                                          com.rexhub.createapparel.client.garment.DualEnvelopeDeformer.Pose envelope,
+                                          HumanoidPartPose humanoidPose, PoseStack poseStack, MultiBufferSource buffer,
+                                          int packedLight, int packedOverlay) {
+        VertexConsumer vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
+        poseStack.pushPose();
+        humanoidPose.apply(poseStack);
+        Vector3f[] points = {new Vector3f(), new Vector3f(), new Vector3f(), new Vector3f()};
+        PoseStack.Pose pose = poseStack.last();
+        for (var quad : envelope.geometry().quads()) {
+            for (int i = 0; i < 4; i++) envelope.shift(quad.points().get(i), points[i]);
+            float ux = points[1].x - points[0].x, uy = points[1].y - points[0].y, uz = points[1].z - points[0].z;
+            float vx = points[2].x - points[0].x, vy = points[2].y - points[0].y, vz = points[2].z - points[0].z;
+            float nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+            float length = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+            if (length < 0.000001F) continue;
+            for (int i = 0; i < 4; i++) {
+                var point = points[i];
+                var uv = quad.uv().get(i);
+                vertices.vertex(pose.pose(), point.x, BODY_HEIGHT - point.y, point.z)
+                        .color(255, 255, 255, 255).uv(uv.u() / part.textureWidth(), uv.v() / part.textureHeight())
+                        .overlayCoords(packedOverlay).uv2(packedLight)
+                        .normal(pose.normal(), nx / length, -ny / length, nz / length).endVertex();
+            }
         }
         poseStack.popPose();
     }
