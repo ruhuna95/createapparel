@@ -247,10 +247,8 @@ final class ClientGarmentAssetLoader {
             }
             reference = panel;
         }
-        float response = GsonHelper.getAsFloat(motion, "response_curve", 2);
-        if (!Float.isFinite(response) || response < 1 || response > 4
-                || reference == null || reference.to().y() <= reference.from().y()) {
-            throw new IllegalStateException("Invalid leg envelope response or height");
+        if (reference == null || reference.to().y() <= reference.from().y()) {
+            throw new IllegalStateException("Invalid leg envelope height");
         }
         return Optional.of(new ClientGarmentAssets.LegEnvelope(clearance,
                 new DualEnvelopeDeformer.Prepared(elements, reference,

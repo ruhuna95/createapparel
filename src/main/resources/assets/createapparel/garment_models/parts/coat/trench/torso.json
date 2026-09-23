@@ -8,8 +8,7 @@
                          "mode":  "dual",
                          "clearance":  0.025,
                          "front_bridge":  true,
-                         "back_bridge":  true,
-                         "response_curve":  2
+                         "back_bridge":  true
                      },
     "geometry":  {
                      "pivot":  [
