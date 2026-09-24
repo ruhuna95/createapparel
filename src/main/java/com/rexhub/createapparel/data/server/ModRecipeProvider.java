@@ -166,15 +166,20 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("pea_coat", ModItems.PEA_COAT,
                 List.of(ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 8);
         sewing("undershirt", ModItems.UNDERSHIRT,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK), 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("bra", ModItems.BRA,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK), 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("briefs", ModItems.BRIEFS,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK), 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("boxer_briefs", ModItems.BOXER_BRIEFS,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK), 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("panties", ModItems.PANTIES,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK), 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);

@@ -4,7 +4,8 @@
     "count": 1,
     "tag": [
       "createapparel:fabrics/cotton",
-      "createapparel:fabrics/silk"
+      "createapparel:fabrics/silk",
+      "createapparel:fabrics/synthetic"
     ]
   },
   "pattern": "createapparel:sewing_pattern",
