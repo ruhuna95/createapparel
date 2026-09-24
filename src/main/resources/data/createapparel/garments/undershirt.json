@@ -1,0 +1,13 @@
+{
+  "default_slot": "inner_top",
+  "allowed_slots": [
+    "inner_top"
+  ],
+  "model_template": "createapparel:inner_top",
+  "model_variant": "default",
+  "texture_variant": "undershirt",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

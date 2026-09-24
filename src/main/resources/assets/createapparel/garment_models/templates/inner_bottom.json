@@ -1,0 +1,23 @@
+{
+  "briefs": {
+    "torso": {
+      "model": "createapparel:inner_bottom/torso_briefs"
+    }
+  },
+  "nolegs": {
+    "torso": {
+      "model": "createapparel:inner_bottom/torso"
+    }
+  },
+  "withlegs": {
+    "torso": {
+      "model": "createapparel:inner_bottom/torso_withlegs"
+    },
+    "left_leg": {
+      "model": "createapparel:inner_bottom/left_leg"
+    },
+    "right_leg": {
+      "model": "createapparel:inner_bottom/right_leg"
+    }
+  }
+}

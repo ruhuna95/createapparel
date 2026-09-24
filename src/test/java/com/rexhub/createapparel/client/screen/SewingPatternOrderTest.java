@@ -23,7 +23,8 @@ class SewingPatternOrderTest {
                 "pullover_hoodie", "zipup_hoodie", "sweater", "v_neck_sweater", "denim_pants", "slacks", "shorts",
                 "a_line_skirt", "tights", "ankle_socks", "crew_socks", "knee_high_socks",
                 "over_knee_socks", "thigh_high_socks", "suit_jacket", "blazer_jacket", "denim_jacket",
-                "chesterfield_coat", "trench_coat", "duffle_coat", "pea_coat"
+                "chesterfield_coat", "trench_coat", "duffle_coat", "pea_coat",
+                "undershirt", "bra", "briefs", "boxer_briefs", "panties"
         );
         var recipes = new ArrayList<SewingRecipe>();
         for (int index = 0; index < expected.size(); index++) {

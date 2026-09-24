@@ -1,0 +1,20 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 1,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/silk"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:undershirt"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}

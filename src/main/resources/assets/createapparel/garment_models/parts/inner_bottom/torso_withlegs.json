@@ -1,0 +1,81 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      12.46875,
+      0
+    ],
+    "elements": [
+      {
+        "name": "inner_bottom_torso_withlegs",
+        "from": [
+          -4.0025,
+          11.9975,
+          -2.0025
+        ],
+        "to": [
+          4.0025,
+          13.0025,
+          2.0025
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              0,
+              12,
+              1
+            ]
+          },
+          "right": {
+            "uv": [
+              0,
+              0,
+              4,
+              1
+            ]
+          },
+          "back": {
+            "uv": [
+              4,
+              5,
+              12,
+              6
+            ]
+          },
+          "left": {
+            "uv": [
+              12,
+              0,
+              16,
+              1
+            ]
+          },
+          "bottom": {
+            "uv": [
+              4,
+              1,
+              12,
+              5
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/inner_bottom/torso/base/boxer_briefs"
+      },
+      "boxer_briefs": {
+        "base": "createapparel:garment/inner_bottom/torso/base/boxer_briefs"
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      21.03125,
+      0
+    ],
+    "elements": [
+      {
+        "name": "inner_top_torso",
+        "from": [
+          -4.0025,
+          17.9975,
+          -2.05
+        ],
+        "to": [
+          4.0025,
+          24.0025,
+          2.05
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              10
+            ]
+          },
+          "right": {
+            "uv": [
+              0,
+              4,
+              4,
+              10
+            ]
+          },
+          "back": {
+            "uv": [
+              4,
+              10,
+              12,
+              16
+            ]
+          },
+          "left": {
+            "uv": [
+              12,
+              4,
+              16,
+              10
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/inner_top/torso/base/undershirt"
+      },
+      "undershirt": {
+        "base": "createapparel:garment/inner_top/torso/base/undershirt"
+      },
+      "bra": {
+        "base": "createapparel:garment/inner_top/torso/base/bra"
+      }
+    }
+  }
+}

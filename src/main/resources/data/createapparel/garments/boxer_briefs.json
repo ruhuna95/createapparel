@@ -1,0 +1,13 @@
+{
+  "default_slot": "inner_bottom",
+  "allowed_slots": [
+    "inner_bottom"
+  ],
+  "model_template": "createapparel:inner_bottom",
+  "model_variant": "withlegs",
+  "texture_variant": "boxer_briefs",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

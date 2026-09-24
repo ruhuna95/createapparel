@@ -1,0 +1,27 @@
+{
+  "render_type": "cutout",
+  "texture_size": [16, 16],
+  "geometry": {
+    "pivot": [0, 12.46875, 0],
+    "elements": [
+      {
+        "name": "inner_bottom_torso_briefs",
+        "from": [-4.0025, 11.9975, -2.0025],
+        "to": [4.0025, 14.0025, 2.0025],
+        "faces": {
+          "front": {"uv": [4, 0, 12, 2]},
+          "right": {"uv": [0, 0, 4, 2]},
+          "back": {"uv": [4, 6, 12, 8]},
+          "left": {"uv": [12, 0, 16, 2]},
+          "bottom": {"uv": [4, 2, 12, 6]}
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {"base": "createapparel:garment/inner_bottom/torso/base/briefs"},
+      "briefs": {"base": "createapparel:garment/inner_bottom/torso/base/briefs"}
+    }
+  }
+}

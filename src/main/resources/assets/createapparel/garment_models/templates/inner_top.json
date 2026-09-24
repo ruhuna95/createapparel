@@ -1,0 +1,10 @@
+{
+  "default": {
+    "torso": {
+      "model": "createapparel:inner_top/torso"
+    },
+    "bust": {
+      "model": "createapparel:inner_top/bust"
+    }
+  }
+}

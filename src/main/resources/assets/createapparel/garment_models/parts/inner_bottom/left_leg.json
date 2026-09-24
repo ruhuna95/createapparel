@@ -1,0 +1,81 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      2,
+      11.03125,
+      0
+    ],
+    "elements": [
+      {
+        "name": "inner_bottom_left_leg",
+        "from": [
+          -0.0025,
+          9.9975,
+          -2.0025
+        ],
+        "to": [
+          4.0025,
+          12.0025,
+          2.0025
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              12,
+              4,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              4,
+              12,
+              8,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              0,
+              14,
+              4,
+              16
+            ]
+          },
+          "left": {
+            "uv": [
+              4,
+              14,
+              8,
+              16
+            ]
+          },
+          "top": {
+            "uv": [
+              0,
+              8,
+              4,
+              12
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/inner_bottom/left_leg/base/boxer_briefs"
+      },
+      "boxer_briefs": {
+        "base": "createapparel:garment/inner_bottom/left_leg/base/boxer_briefs"
+      }
+    }
+  }
+}

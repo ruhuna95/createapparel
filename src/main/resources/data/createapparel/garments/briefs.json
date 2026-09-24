@@ -1,0 +1,13 @@
+{
+  "default_slot": "inner_bottom",
+  "allowed_slots": [
+    "inner_bottom"
+  ],
+  "model_template": "createapparel:inner_bottom",
+  "model_variant": "briefs",
+  "texture_variant": "briefs",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

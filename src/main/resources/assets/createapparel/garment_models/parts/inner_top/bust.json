@@ -1,0 +1,101 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      25,
+      -0.9
+    ],
+    "elements": [
+      {
+        "name": "inner_top_bust",
+        "from": [
+          -3.55,
+          19.47,
+          -1.3925
+        ],
+        "to": [
+          3.55,
+          23.57,
+          1.6125
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              3,
+              0,
+              10,
+              4
+            ]
+          },
+          "right": {
+            "uv": [
+              10,
+              0,
+              13,
+              4
+            ]
+          },
+          "back": {
+            "uv": [
+              10,
+              13.5,
+              13.5,
+              15.5
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              0,
+              3,
+              4
+            ]
+          },
+          "top": {
+            "uv": [
+              10,
+              8.5,
+              13.5,
+              10
+            ]
+          },
+          "bottom": {
+            "uv": [
+              3,
+              4,
+              10,
+              7
+            ]
+          }
+        },
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/inner_top/bust/base/undershirt"
+      },
+      "undershirt": {
+        "base": "createapparel:garment/inner_top/bust/base/undershirt"
+      },
+      "bra": {
+        "base": "createapparel:garment/inner_top/bust/base/bra"
+      }
+    }
+  }
+}
