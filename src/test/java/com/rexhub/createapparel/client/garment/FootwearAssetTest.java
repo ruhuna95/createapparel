@@ -90,7 +90,8 @@ class FootwearAssetTest {
                 }
                 if (garment.equals("sandals")) {
                     assertEquals(3, part.elements().size());
-                    for (var e : part.elements()) assertFalse(e.faces().containsKey(TOP));
+                    assertTrue(part.elements().get(0).faces().containsKey(TOP));
+                    for (var e : part.elements().subList(1, 3)) assertFalse(e.faces().containsKey(TOP));
                     continue;
                 }
                 assertEquals(height == 1 ? 2 : 6, part.elements().size());
@@ -263,7 +264,13 @@ class FootwearAssetTest {
             var sole = sandals.elements().get(0);
             var toe = sandals.elements().get(1);
             var heelBand = sandals.elements().get(2);
-            assertEquals(Set.of(BOTTOM), sole.faces().keySet());
+            assertEquals(Set.of(TOP, BOTTOM), sole.faces().keySet());
+            assertEquals(1.01, sole.to().y(), 0.00001);
+            assertEquals(sole.faces().get(BOTTOM), sole.faces().get(TOP));
+            assertEquals(16, opaque(sandalBase, sole.faces().get(TOP)));
+            var topVertices = GarmentElementGeometry.faceVertices(sole, TOP);
+            assertTrue(topVertices.stream().allMatch(vertex -> Math.abs(vertex.y() - 1.01F) < 0.00001F));
+            assertEquals(1, GarmentElementGeometry.normal(topVertices).y(), 0.00001);
             assertEquals(Set.of(LEFT, FRONT, RIGHT), toe.faces().keySet());
             assertEquals(Set.of(LEFT, BACK, RIGHT), heelBand.faces().keySet());
             assertEquals(-1, toe.to().z());
