@@ -1,0 +1,10 @@
+{
+  "default": {
+    "left_leg": {
+      "model": "createapparel:tall_boots/left_leg"
+    },
+    "right_leg": {
+      "model": "createapparel:tall_boots/right_leg"
+    }
+  }
+}

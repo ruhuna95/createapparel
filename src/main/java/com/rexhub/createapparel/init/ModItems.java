@@ -82,6 +82,16 @@ public final class ModItems {
     public static final RegistryObject<Item> BRIEFS = registerGarment("briefs");
     public static final RegistryObject<Item> BOXER_BRIEFS = registerGarment("boxer_briefs");
     public static final RegistryObject<Item> PANTIES = registerGarment("panties");
+    public static final RegistryObject<Item> SNEAKERS = registerGarment("sneakers");
+    public static final RegistryObject<Item> CANVAS_SNEAKERS = registerGarment("canvas_sneakers");
+    public static final RegistryObject<Item> DRESS_SHOES = registerGarment("dress_shoes");
+    public static final RegistryObject<Item> LOAFERS = registerGarment("loafers");
+    public static final RegistryObject<Item> ANKLE_BOOTS = registerGarment("ankle_boots");
+    public static final RegistryObject<Item> WORK_BOOTS = registerGarment("work_boots");
+    public static final RegistryObject<Item> KNEE_HIGH_BOOTS = registerGarment("knee_high_boots");
+    public static final RegistryObject<Item> PUMPS = registerGarment("pumps");
+    public static final RegistryObject<Item> SANDALS = registerGarment("sandals");
+    public static final RegistryObject<Item> SLIPPERS = registerGarment("slippers");
     public static final RegistryObject<Item> BLOUSE_ROUND = registerGarment("blouse_round");
     public static final RegistryObject<Item> BLOUSE_FRILL = registerGarment("blouse_frill");
     public static final RegistryObject<Item> BLOUSE_BOW_TIE = registerGarment("blouse_bow_tie");
@@ -169,7 +179,9 @@ public final class ModItems {
                     BLAZER_JACKET,
                     DENIM_JACKET,
                     CHESTERFIELD_COAT, TRENCH_COAT, DUFFLE_COAT, PEA_COAT,
-                    UNDERSHIRT, BRA, BRIEFS, BOXER_BRIEFS, PANTIES
+                    UNDERSHIRT, BRA, BRIEFS, BOXER_BRIEFS, PANTIES,
+                    SNEAKERS, CANVAS_SNEAKERS, DRESS_SHOES, LOAFERS,
+                    ANKLE_BOOTS, WORK_BOOTS, KNEE_HIGH_BOOTS, PUMPS, SANDALS, SLIPPERS
             );
 
     static {
@@ -323,10 +335,10 @@ public final class ModItems {
         uniqueItems.addAll(uniqueGarmentItems);
         if (CREATIVE_TAB_ITEMS.size() != 142
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 40
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 50
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 182) {
-            throw new IllegalStateException("The creative tabs must contain 182 unique items");
+                || uniqueItems.size() != 192) {
+            throw new IllegalStateException("The creative tabs must contain 192 unique items");
         }
     }
 }

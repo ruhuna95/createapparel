@@ -24,7 +24,9 @@ class SewingPatternOrderTest {
                 "a_line_skirt", "tights", "ankle_socks", "crew_socks", "knee_high_socks",
                 "over_knee_socks", "thigh_high_socks", "suit_jacket", "blazer_jacket", "denim_jacket",
                 "chesterfield_coat", "trench_coat", "duffle_coat", "pea_coat",
-                "undershirt", "bra", "briefs", "boxer_briefs", "panties"
+                "undershirt", "bra", "briefs", "boxer_briefs", "panties",
+                "sneakers", "canvas_sneakers", "dress_shoes", "loafers",
+                "ankle_boots", "work_boots", "knee_high_boots", "pumps", "sandals", "slippers"
         );
         var recipes = new ArrayList<SewingRecipe>();
         for (int index = 0; index < expected.size(); index++) {

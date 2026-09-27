@@ -182,23 +182,17 @@ final class ClientGarmentAssetLoader {
                 throw new IllegalStateException("Garment brightness must be finite and between 0 and 4: " + id);
             }
             Optional<ResourceLocation> brightnessMask = optionalResourceLocation(variant, "brightness_mask", id);
-            variants.put(entry.getKey(), new TextureVariant(base, overlay, brightness, brightnessMask));
+            Optional<Map<String, DesignMasks>> variantDesigns = variant.has("designs")
+                    ? Optional.of(parseDesigns(GsonHelper.getAsJsonObject(variant, "designs"), id))
+                    : Optional.empty();
+            variants.put(entry.getKey(), new TextureVariant(base, overlay, brightness, brightnessMask, variantDesigns));
         }
         if (!variants.containsKey("default")) {
             throw new IllegalStateException("Garment part has no default texture variant: " + id);
         }
 
-        LinkedHashMap<String, DesignMasks> designs = new LinkedHashMap<>();
-        JsonObject designsJson = GsonHelper.getAsJsonObject(texturesJson, "designs", new JsonObject());
-        for (Map.Entry<String, JsonElement> entry : designsJson.entrySet()) {
-            JsonObject masks = GsonHelper.convertToJsonObject(entry.getValue(), entry.getKey());
-            Optional<ResourceLocation> secondary = optionalResourceLocation(masks, "secondary_mask", id);
-            Optional<ResourceLocation> accent = optionalResourceLocation(masks, "accent_mask", id);
-            if (secondary.isEmpty() && accent.isEmpty()) {
-                throw new IllegalStateException("Garment design has no masks: " + id + " / " + entry.getKey());
-            }
-            designs.put(entry.getKey(), new DesignMasks(secondary, accent));
-        }
+        Map<String, DesignMasks> designs = parseDesigns(
+                GsonHelper.getAsJsonObject(texturesJson, "designs", new JsonObject()), id);
 
         EnumMap<FabricMaterial, ResourceLocation> materialOverrides = new EnumMap<>(FabricMaterial.class);
         JsonObject overridesJson = GsonHelper.getAsJsonObject(json, "material_overrides", new JsonObject());
@@ -256,6 +250,20 @@ final class ClientGarmentAssetLoader {
                         GsonHelper.getAsBoolean(motion, "back_bridge", true))));
     }
 
+    private static Map<String, DesignMasks> parseDesigns(JsonObject json, ResourceLocation id) {
+        LinkedHashMap<String, DesignMasks> designs = new LinkedHashMap<>();
+        for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+            JsonObject masks = GsonHelper.convertToJsonObject(entry.getValue(), entry.getKey());
+            Optional<ResourceLocation> secondary = optionalResourceLocation(masks, "secondary_mask", id);
+            Optional<ResourceLocation> accent = optionalResourceLocation(masks, "accent_mask", id);
+            if (secondary.isEmpty() && accent.isEmpty()) {
+                throw new IllegalStateException("Garment design has no masks: " + id + " / " + entry.getKey());
+            }
+            designs.put(entry.getKey(), new DesignMasks(secondary, accent));
+        }
+        return Collections.unmodifiableMap(designs);
+    }
+
     private static float[] inset(JsonObject element, String key, ResourceLocation id) {
         return element.has(key)
                 ? floatQuad(GsonHelper.getAsJsonArray(element, key), id + " " + key)
@@ -301,6 +309,10 @@ final class ClientGarmentAssetLoader {
                 validateTexture(manager, part, variant.base(), baseKind);
                 variant.overlay().ifPresent(id -> validateTexture(manager, part, id, TextureKind.OVERLAY));
                 variant.brightnessMask().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
+                variant.designs().ifPresent(designs -> designs.values().forEach(masks -> {
+                    masks.secondary().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
+                    masks.accent().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
+                }));
             }
             for (DesignMasks masks : part.designs().values()) {
                 masks.secondary().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));

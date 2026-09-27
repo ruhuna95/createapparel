@@ -1,0 +1,294 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_leg",
+        "from": [
+          -4.01,
+          -0.01,
+          -2.5
+        ],
+        "to": [
+          0.01,
+          2.01,
+          2.01
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              8,
+              0,
+              12,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              5,
+              4,
+              7
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              5,
+              8,
+              7
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              5,
+              12,
+              7
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              5,
+              16,
+              7
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_leg_decoration",
+        "from": [
+          -4.015,
+          -0.01,
+          -2.75
+        ],
+        "to": [
+          0.01,
+          2.015,
+          2.015
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              8,
+              7,
+              12,
+              11
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              12,
+              4,
+              14
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              12,
+              8,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              12,
+              16,
+              14
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_leg_upper",
+        "from": [
+          -4.01,
+          2.01,
+          -2.01
+        ],
+        "to": [
+          0.01,
+          3.01,
+          2.01
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              5
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              5
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_leg_toe",
+        "from": [
+          -4.01,
+          -0.01,
+          -2.5
+        ],
+        "to": [
+          0.01,
+          2.01,
+          -2.01
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              3,
+              8,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_leg_upper_decoration",
+        "from": [
+          -4.015,
+          2.015,
+          -2.015
+        ],
+        "to": [
+          0.01,
+          3.015,
+          2.015
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              11,
+              4,
+              12
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              11,
+              8,
+              12
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              11,
+              16,
+              12
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_leg_toe_decoration",
+        "from": [
+          -4.015,
+          -0.01,
+          -2.75
+        ],
+        "to": [
+          0.01,
+          2.015,
+          -2.015
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              10,
+              8,
+              11
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/shoes/right_leg/base/sneakers",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/shoes/right_leg/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/shoes/right_leg/masks/plain/accent"
+          }
+        }
+      },
+      "sneakers": {
+        "base": "createapparel:garment/shoes/right_leg/base/sneakers",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/shoes/right_leg/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/shoes/right_leg/masks/plain/accent"
+          }
+        }
+      },
+      "canvas_sneakers": {
+        "base": "createapparel:garment/shoes/right_leg/base/canvas_sneakers",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/shoes/right_leg/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/shoes/right_leg/masks/plain/accent"
+          }
+        }
+      },
+      "dress_shoes": {
+        "base": "createapparel:garment/shoes/right_leg/base/dress_shoes",
+        "designs": {
+          "plain": {
+            "accent_mask": "createapparel:garment/shoes/right_leg/masks/plain/accent"
+          }
+        }
+      },
+      "loafers": {
+        "base": "createapparel:garment/shoes/right_leg/base/loafers",
+        "designs": {}
+      }
+    },
+    "designs": {}
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_leg_sole",
+        "from": [
+          -0.01,
+          -0.01,
+          -2.5
+        ],
+        "to": [
+          4.01,
+          1.01,
+          2.01
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              8,
+              0,
+              12,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_leg_toe_band",
+        "from": [
+          -0.01,
+          -0.01,
+          -2.5
+        ],
+        "to": [
+          4.01,
+          1.01,
+          -1
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              3,
+              4,
+              4,
+              5
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              5
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              9,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_leg_heel_band",
+        "from": [
+          -0.01,
+          -0.01,
+          1
+        ],
+        "to": [
+          4.01,
+          1.01,
+          2.01
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              1,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              5
+            ]
+          },
+          "right": {
+            "uv": [
+              11,
+              4,
+              12,
+              5
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/sandals/left_leg/base/sandals"
+      },
+      "sandals": {
+        "base": "createapparel:garment/sandals/left_leg/base/sandals"
+      }
+    },
+    "designs": {}
+  }
+}

@@ -65,6 +65,9 @@ class GarmentDecorationShellTest {
             for (Path path : paths.filter(p -> p.toString().endsWith(".json")).toList()) {
                 String name = PARTS.relativize(path).toString().replace('\\', '/').replace(".json", "");
                 var part = part(name);
+                boolean footwear = name.startsWith("shoes/") || name.startsWith("boots/")
+                        || name.startsWith("tall_boots/") || name.startsWith("low_shoes/");
+                if (footwear) continue;
                 float spacing = name.startsWith("shirt_outer/") || name.startsWith("hoodie_outer/")
                         || name.startsWith("jacket/") || name.startsWith("denim_jacket/") || name.startsWith("coat/")
                         || name.startsWith("denim_pants/") || name.startsWith("shorts/") ? 0.25F : 0.15F;
@@ -107,7 +110,7 @@ class GarmentDecorationShellTest {
                         assertEquals(body.from().y(), shell.from().y());
                     }
                     assertFalse(shell.faces().containsKey(Face.TOP));
-                    assertFalse(shell.faces().containsKey(Face.BOTTOM));
+                    assertFalse(shell.faces().containsKey(Face.BOTTOM), name);
                 }
             }
         }

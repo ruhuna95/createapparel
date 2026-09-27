@@ -1,0 +1,140 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_leg",
+        "from": [
+          -0.01,
+          -0.01,
+          -2.5
+        ],
+        "to": [
+          4.01,
+          1.01,
+          2.01
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              8,
+              0,
+              12,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              5
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              5
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              5
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_leg_decoration",
+        "from": [
+          -0.01,
+          -0.01,
+          -2.75
+        ],
+        "to": [
+          4.015,
+          1.015,
+          2.015
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              9,
+              8,
+              10
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              9,
+              12,
+              10
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              9,
+              16,
+              10
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              5,
+              8,
+              9
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/low_shoes/left_leg/base/pumps"
+      },
+      "pumps": {
+        "base": "createapparel:garment/low_shoes/left_leg/base/pumps"
+      },
+      "slippers": {
+        "base": "createapparel:garment/low_shoes/left_leg/base/slippers"
+      }
+    },
+    "designs": {}
+  }
+}

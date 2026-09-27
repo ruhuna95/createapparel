@@ -180,6 +180,36 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("panties", ModItems.PANTIES,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SILK,
                         ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("sneakers", ModItems.SNEAKERS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("canvas_sneakers", ModItems.CANVAS_SNEAKERS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("dress_shoes", ModItems.DRESS_SHOES,
+                List.of(ModTags.Items.FABRICS_LEATHER,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("loafers", ModItems.LOAFERS,
+                List.of(ModTags.Items.FABRICS_LEATHER,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("ankle_boots", ModItems.ANKLE_BOOTS,
+                List.of(ModTags.Items.FABRICS_LEATHER,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("work_boots", ModItems.WORK_BOOTS,
+                List.of(ModTags.Items.FABRICS_LEATHER,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("knee_high_boots", ModItems.KNEE_HIGH_BOOTS,
+                List.of(ModTags.Items.FABRICS_LEATHER,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("pumps", ModItems.PUMPS,
+                List.of(ModTags.Items.FABRICS_LEATHER,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("sandals", ModItems.SANDALS,
+                List.of(ModTags.Items.FABRICS_LEATHER,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("slippers", ModItems.SLIPPERS,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_SYNTHETIC), 2);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);

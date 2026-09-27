@@ -1,0 +1,13 @@
+{
+  "default_slot": "feet",
+  "allowed_slots": [
+    "feet"
+  ],
+  "model_template": "createapparel:low_shoes",
+  "model_variant": "default",
+  "texture_variant": "pumps",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

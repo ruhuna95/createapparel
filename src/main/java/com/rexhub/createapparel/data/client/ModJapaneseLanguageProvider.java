@@ -89,6 +89,16 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.BRIEFS.get(), "ブリーフ");
         add(ModItems.BOXER_BRIEFS.get(), "ボクサーブリーフ");
         add(ModItems.PANTIES.get(), "ショーツ");
+        add(ModItems.SNEAKERS.get(), "スニーカー");
+        add(ModItems.CANVAS_SNEAKERS.get(), "キャンバススニーカー");
+        add(ModItems.DRESS_SHOES.get(), "革靴");
+        add(ModItems.LOAFERS.get(), "ローファー");
+        add(ModItems.ANKLE_BOOTS.get(), "アンクルブーツ");
+        add(ModItems.WORK_BOOTS.get(), "ワークブーツ");
+        add(ModItems.KNEE_HIGH_BOOTS.get(), "ロングブーツ");
+        add(ModItems.PUMPS.get(), "パンプス");
+        add(ModItems.SANDALS.get(), "サンダル");
+        add(ModItems.SLIPPERS.get(), "スリッパ");
         add(ModItems.ZIPUP_HOODIE.get(), "ジップアップパーカー");
         add(ModItems.BLOUSE_FRILL.get(), "フリルブラウス");
         add(ModItems.BLOUSE_BOW_TIE.get(), "ボウタイブラウス");

@@ -84,7 +84,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         Map<String, ResourceLocation> variant = getModelVariant(definition, snapshot.garmentTemplates()).orElse(null);
         return variant == null
                 ? Optional.empty()
-                : Optional.of(colorChannels(variant, design, snapshot.garmentParts()));
+                : Optional.of(colorChannels(variant, definition.textureVariant(), design, snapshot.garmentParts()));
     }
 
     @Override
@@ -385,7 +385,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                     if (!"plain".equals(design) && variant.values().stream()
                             .map(partsToValidate::get)
                             .filter(java.util.Objects::nonNull)
-                            .noneMatch(part -> part.designs().containsKey(design))) {
+                            .noneMatch(part -> part.designsFor(definition.textureVariant()).containsKey(design))) {
                         throw new IllegalStateException(
                                 "Garment design has no reachable mask: " + definition.id() + " / " + design
                         );
@@ -479,8 +479,9 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         }
     }
 
-    private static ColorChannels colorChannels(
+    static ColorChannels colorChannels(
             Map<String, ResourceLocation> variant,
+            String textureVariant,
             String design,
             Map<ResourceLocation, GarmentPartModel> parts
     ) {
@@ -491,7 +492,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             if (part == null) {
                 continue;
             }
-            DesignMasks masks = part.designs().get(design);
+            DesignMasks masks = part.designsFor(textureVariant).get(design);
             if (masks != null) {
                 secondary |= masks.secondary().isPresent();
                 accent |= masks.accent().isPresent();
@@ -539,7 +540,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         public ResolvedTextures resolveTextures(GarmentDefinition definition, GarmentData data) {
             TextureVariant variant = variants.getOrDefault(definition.textureVariant(), variants.get("default"));
             ResourceLocation base = materialOverrides.getOrDefault(data.material(), variant.base());
-            DesignMasks masks = designs.getOrDefault(data.design(), DesignMasks.NONE);
+            DesignMasks masks = designsFor(definition.textureVariant()).getOrDefault(data.design(), DesignMasks.NONE);
             return new ResolvedTextures(
                     base, masks.secondary(), masks.accent(), variant.overlay(),
                     variant.brightness(), variant.brightnessMask()
@@ -548,6 +549,10 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
 
         public ResourceLocation defaultTexture() {
             return variants.get("default").base();
+        }
+
+        public Map<String, DesignMasks> designsFor(String textureVariant) {
+            return variants.getOrDefault(textureVariant, variants.get("default")).designs().orElse(designs);
         }
     }
 
@@ -591,7 +596,8 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             ResourceLocation base,
             Optional<ResourceLocation> overlay,
             float brightness,
-            Optional<ResourceLocation> brightnessMask
+            Optional<ResourceLocation> brightnessMask,
+            Optional<Map<String, DesignMasks>> designs
     ) {
     }
 

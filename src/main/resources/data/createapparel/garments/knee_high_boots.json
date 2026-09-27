@@ -1,0 +1,13 @@
+{
+  "default_slot": "feet",
+  "allowed_slots": [
+    "feet"
+  ],
+  "model_template": "createapparel:tall_boots",
+  "model_variant": "default",
+  "texture_variant": "knee_high_boots",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

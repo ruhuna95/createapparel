@@ -1,0 +1,20 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 2,
+    "tag": [
+      "createapparel:fabrics/leather",
+      "createapparel:fabrics/synthetic"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:ankle_boots"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}

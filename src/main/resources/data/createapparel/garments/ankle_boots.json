@@ -1,0 +1,13 @@
+{
+  "default_slot": "feet",
+  "allowed_slots": [
+    "feet"
+  ],
+  "model_template": "createapparel:boots",
+  "model_variant": "default",
+  "texture_variant": "ankle_boots",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}
