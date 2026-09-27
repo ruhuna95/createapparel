@@ -16,6 +16,7 @@ import com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache;
 import com.rexhub.createapparel.client.garment.FlatGarmentGeometry;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemDisplayContext;
 import com.rexhub.createapparel.client.garment.GarmentHemGeometry;
 import com.rexhub.createapparel.client.garment.ApparelRenderFrame;
 import com.rexhub.createapparel.client.garment.FirstPersonApparelState;
@@ -63,12 +64,33 @@ public final class CommonGarmentRenderer {
 
     public static void renderItem(
             ResolvedGarment garment,
+            ItemDisplayContext displayContext,
             PoseStack poseStack,
             MultiBufferSource buffer,
             int packedLight,
             int packedOverlay
     ) {
-        renderFlat(garment, new Vec3(0.5F, 0.5F, 0.5F), poseStack, buffer, packedLight, packedOverlay);
+        var geometry = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
+        poseStack.pushPose();
+        poseStack.translate(0.5F, 0.5F, 0.5F);
+        applyItemShape(poseStack, garment.definition().defaultSlot(), displayContext, geometry.scaleZ());
+        renderCentered(garment, new Vec3(0, 0, 0), geometry.originalBounds().center(), 1,
+                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull);
+        poseStack.popPose();
+    }
+
+    private static void applyItemShape(PoseStack poseStack, GarmentSlot slot,
+                                       ItemDisplayContext displayContext, float flatScaleZ) {
+        if (slot == GarmentSlot.HEAD) {
+            switch (displayContext) {
+                case FIRST_PERSON_LEFT_HAND, FIRST_PERSON_RIGHT_HAND,
+                        THIRD_PERSON_LEFT_HAND, THIRD_PERSON_RIGHT_HAND ->
+                        poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+                default -> { }
+            }
+        } else if (slot != GarmentSlot.FEET) {
+            poseStack.scale(1, 1, flatScaleZ);
+        }
     }
 
     public static void renderHanger(ItemStack stack, PoseStack poseStack, MultiBufferSource buffer,
@@ -305,7 +327,7 @@ public final class CommonGarmentRenderer {
             ResolvedPart part
     ) {
         String semanticName = part.semanticName();
-        if (semanticName.equals("head") || semanticName.equals("hood_up")) {
+        if (semanticName.equals("head") || semanticName.equals("head_back") || semanticName.equals("hood_up")) {
             return new HumanoidPartPose(model.head, 0.0F, 0.0F, 0.0F);
         }
         if (semanticName.startsWith("left_sleeve") || semanticName.startsWith("right_sleeve")) {

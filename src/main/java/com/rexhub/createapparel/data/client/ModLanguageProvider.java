@@ -154,6 +154,9 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("style_category.createapparel.sleeves", "Sleeves");
         add("style_category.createapparel.open", "Open");
         add("style_category.createapparel.hood", "Hood");
+        add("style_category.createapparel.wear", "Wear");
+        add("style.createapparel.wear.front", "Forward");
+        add("style.createapparel.wear.back", "Backward");
         add("style.createapparel.tuck.untucked", "Untucked");
         add("style.createapparel.tuck.tucked", "Tucked");
         add("style.createapparel.sleeves.normal", "Normal");

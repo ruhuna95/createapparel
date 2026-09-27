@@ -8,6 +8,8 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Element;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.GarmentPartModel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedPart;
 import com.rexhub.createapparel.client.renderer.CommonGarmentRenderer;
+import com.rexhub.createapparel.garment.EquippedStyleState;
+import com.rexhub.createapparel.garment.GarmentDefinition;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.resources.ResourceLocation;
@@ -39,11 +41,12 @@ class HeadwearAssetTest {
             assertEquals("default", definition.get("model_variant").getAsString());
             assertEquals(id, definition.get("texture_variant").getAsString());
             assertEquals(JsonParser.parseString("[\"plain\"]"), definition.get("designs"));
-            assertEquals(0, definition.getAsJsonObject("styles").size());
+            assertEquals(id.equals("cap") ? JsonParser.parseString("{\"wear\":[\"front\",\"back\"]}")
+                    : new JsonObject(), definition.getAsJsonObject("styles"));
             var template = json(ASSETS.resolve("garment_models/templates/" + id + ".json"));
             assertEquals(Set.of("default"), template.keySet());
             var names = template.getAsJsonObject("default");
-            assertEquals(Set.of("head"), names.keySet());
+            assertEquals(id.equals("cap") ? Set.of("head", "head_back") : Set.of("head"), names.keySet());
             assertEquals("createapparel:" + id + "/head", names.getAsJsonObject("head").get("model").getAsString());
             for (var arms : ArmProfile.values()) {
                 for (var chest : ChestProfile.values()) {
@@ -94,6 +97,113 @@ class HeadwearAssetTest {
             if (Set.of("cap", "beret", "casquette").contains(id)) {
                 assertTrue((image.getRGB(12, 15) & 255) + 40 < (image.getRGB(12, 4) & 255));
             }
+        }
+    }
+
+    @Test
+    void capBackHasASteppedOpeningAndContinuousTexture() throws IOException {
+        var cap = part("cap");
+        assertEquals(Set.of(TOP, FRONT, LEFT, RIGHT), element(cap, "head_crown").faces().keySet());
+        var panels = cap.elements().stream().filter(e -> e.faces().containsKey(BACK)).toList();
+        assertEquals(6, panels.size());
+        assertEquals(-2F, element(cap, "back_left").to().x());
+        assertEquals(2F, element(cap, "back_right").from().x());
+        assertEquals(31.4F, element(cap, "back_top").from().y());
+        assertEquals(30.4F, element(cap, "back_upper_left").from().y());
+        assertEquals(30.4F, element(cap, "back_upper_right").from().y());
+        assertEquals(29.4F, element(cap, "back_band").to().y());
+        float area = 0;
+        for (var panel : panels) {
+            assertEquals(Set.of(BACK), panel.faces().keySet());
+            assertTrue(panel.to().x() <= -2 || panel.from().x() >= 2
+                    || panel.to().y() <= 29.4F || panel.from().y() >= 30.4F);
+            assertTrue(panel.to().x() <= -1 || panel.from().x() >= 1
+                    || panel.to().y() <= 30.4F || panel.from().y() >= 31.4F);
+            var points = GarmentElementGeometry.faceVertices(panel, BACK);
+            var uv = panel.faces().get(BACK).corners();
+            for (int i = 0; i < 4; i++) {
+                var point = points.get(i);
+                assertEquals(4.6F, point.z());
+                assertEquals(24 + (4.6F - point.x()) * 8 / 9.2F, uv.get(i).u(), 0.00001);
+                assertEquals(8 + (32.6F - point.y()) * 3 / 4.2F, uv.get(i).v(), 0.00001);
+            }
+            area += (panel.to().x() - panel.from().x()) * (panel.to().y() - panel.from().y());
+        }
+        assertEquals(9.2F * 4.2F - 6, area, 0.0001);
+    }
+
+    @Test
+    void capWearStylesDefaultToFrontAndSelectExactlyOneHead() throws IOException {
+        var definition = GarmentDefinition.fromJson(resource("cap"),
+                json(Path.of("src/main/resources/data/createapparel/garments/cap.json")));
+        assertEquals(Map.of("wear", "front"), EquippedStyleState.defaultsFor(definition).styles());
+        assertEquals(Map.of("wear", "front"), new EquippedStyleState(Map.of("wear", "invalid"))
+                .normalize(definition).styles());
+        assertEquals(Map.of("wear", "back"), new EquippedStyleState(Map.of("wear", "back"))
+                .normalize(definition).styles());
+        var template = json(ASSETS.resolve("garment_models/templates/cap.json")).getAsJsonObject("default");
+        assertEquals("createapparel:cap/head_back", template.getAsJsonObject("head_back").get("model").getAsString());
+        assertEquals(Set.of("head", "head_back"), GarmentPartSelection.requiredStyleParts(definition.styles(), false));
+        for (var arms : ArmProfile.values()) {
+            for (var chest : ChestProfile.values()) {
+                for (String wear : List.of("front", "back")) {
+                    String expected = wear.equals("back") ? "head_back" : "head";
+                    assertEquals(List.of(expected), GarmentPartSelection.select(
+                            Map.of("wear", wear), arms, chest, template.keySet()));
+                }
+                assertEquals(List.of("head_back"), GarmentPartSelection.select(
+                        Map.of("wear", "back"), arms, chest, Set.of("head")));
+            }
+        }
+    }
+
+    @Test
+    void backwardCapRotatesEveryVertexAndTextureWithTheBrim() throws IOException {
+        var front = part("cap");
+        var back = ClientGarmentAssetLoader.parsePart(resource("cap/head_back"),
+                json(ASSETS.resolve("garment_models/parts/cap/head_back.json")));
+        assertEquals(front.variants(), back.variants());
+        assertEquals(front.elements().size(), back.elements().size());
+        for (var original : front.elements()) {
+            var rotated = element(back, original.name());
+            assertEquals(original.faces().size(), rotated.faces().size());
+            for (var face : original.faces().keySet()) {
+                var opposite = switch (face) {
+                    case FRONT -> BACK;
+                    case BACK -> FRONT;
+                    case LEFT -> RIGHT;
+                    case RIGHT -> LEFT;
+                    default -> face;
+                };
+                var points = GarmentElementGeometry.faceVertices(original, face);
+                var reversed = GarmentElementGeometry.faceVertices(rotated, opposite);
+                for (int i = 0; i < 4; i++) {
+                    int j = face == TOP || face == BOTTOM ? (i + 2) % 4 : i;
+                    var a = FlatGarmentGeometry.rotate(points.get(i), original.rotation());
+                    var b = FlatGarmentGeometry.rotate(reversed.get(j), rotated.rotation());
+                    assertEquals(-a.x(), b.x(), 0.00001);
+                    assertEquals(a.y(), b.y(), 0.00001);
+                    assertEquals(-a.z(), b.z(), 0.00001);
+                    assertEquals(original.faces().get(face).corners().get(i), rotated.faces().get(opposite).corners().get(j));
+                }
+            }
+        }
+    }
+
+    @Test
+    void frontBrimsShareTheCapAngleAndKeepTheirRootsAndLengths() throws IOException {
+        var cap = element(part("cap"), "brim");
+        for (String id : List.of("cap", "casquette", "sun_visor")) {
+            var brim = element(part(id), "brim");
+            assertEquals(cap.rotation(), brim.rotation());
+            var root = FlatGarmentGeometry.rotate(brim.corners().get(7), brim.rotation());
+            var tip = FlatGarmentGeometry.rotate(brim.corners().get(4), brim.rotation());
+            assertEquals(-4.6F, root.z(), 0.00001);
+            assertEquals(28.4F, root.y(), 0.00001);
+            assertTrue(tip.y() < root.y());
+            int length = id.equals("cap") ? 4 : id.equals("casquette") ? 2 : 3;
+            assertEquals(length, Math.hypot(tip.y() - root.y(), tip.z() - root.z()), 0.00001);
+            assertEquals(7.5, Math.toDegrees(Math.atan2(root.y() - tip.y(), root.z() - tip.z())), 0.0001);
         }
     }
 
@@ -208,7 +318,7 @@ class HeadwearAssetTest {
         var method = CommonGarmentRenderer.class.getDeclaredMethod("humanoidGarmentPose",
                 PlayerModel.class, ArmProfile.class, ResolvedPart.class);
         method.setAccessible(true);
-        for (String semantic : List.of("head", "hood_up", "torso")) {
+        for (String semantic : List.of("head", "head_back", "hood_up", "torso")) {
             var result = method.invoke(null, player, ArmProfile.CLASSIC, new ResolvedPart(semantic, part("cap"), null));
             var accessor = result.getClass().getDeclaredMethod("part");
             accessor.setAccessible(true);

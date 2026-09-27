@@ -196,6 +196,7 @@ class BlouseAssetTest {
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/coat"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/hat"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/beret"))
+                    && !p.equals(ASSETS.resolve("garment_models/parts/cap/head_back.json"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/left_leg.json"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/right_leg.json"))).toList()) {
                 var part = ClientGarmentAssetLoader.parsePart(id("legacy"), json(path));

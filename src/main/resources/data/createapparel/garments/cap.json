@@ -9,5 +9,5 @@
   "designs": [
     "plain"
   ],
-  "styles": {}
+  "styles": { "wear": ["front", "back"] }
 }

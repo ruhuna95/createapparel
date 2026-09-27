@@ -2,6 +2,9 @@
   "default": {
     "head": {
       "model": "createapparel:cap/head"
+    },
+    "head_back": {
+      "model": "createapparel:cap/head_back"
     }
   }
 }

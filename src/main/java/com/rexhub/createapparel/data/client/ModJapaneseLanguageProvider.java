@@ -153,6 +153,9 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("style_category.createapparel.sleeves", "袖");
         add("style_category.createapparel.open", "前開き");
         add("style_category.createapparel.hood", "フード");
+        add("style_category.createapparel.wear", "被り方");
+        add("style.createapparel.wear.front", "前被り");
+        add("style.createapparel.wear.back", "後ろ被り");
         add("style.createapparel.tuck.untucked", "裾出し");
         add("style.createapparel.tuck.tucked", "タックイン");
         add("style.createapparel.sleeves.normal", "通常");

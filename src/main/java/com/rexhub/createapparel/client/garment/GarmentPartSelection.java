@@ -27,7 +27,7 @@ final class GarmentPartSelection {
         selected.removeIf(name -> (name.startsWith("left_sleeve") || name.startsWith("right_sleeve"))
                 && !availableParts.contains(name.replace("_rolled", "")));
         if (availableParts.contains("head")) {
-            selected.add("head");
+            selected.add("back".equals(styles.get("wear")) ? "head_back" : "head");
         }
         for (String leg : List.of("left_leg", "right_leg")) {
             if (availableParts.contains(leg)) {
@@ -61,6 +61,9 @@ final class GarmentPartSelection {
 
     static Set<String> requiredStyleParts(Map<String, List<String>> styles, boolean hasBust) {
         Set<String> required = new LinkedHashSet<>();
+        for (String wear : styles.getOrDefault("wear", List.of())) {
+            required.add("back".equals(wear) ? "head_back" : "head");
+        }
         for (String hood : styles.getOrDefault("hood", List.of())) {
             required.add("hood_" + hood);
         }
