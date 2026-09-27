@@ -15,6 +15,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GarmentPartSelectionTest {
     @Test
+    void headOnlyTemplatesResolveForEveryProfileAndKeepMissingStyleErrors() {
+        for (ArmProfile arms : ArmProfile.values()) {
+            for (ChestProfile chest : ChestProfile.values()) {
+                assertEquals(List.of("head"), GarmentPartSelection.select(
+                        Map.of(), arms, chest, Set.of("head")));
+                assertEquals(List.of("torso_opened", "head"), GarmentPartSelection.select(
+                        Map.of("open", "opened"), arms, chest, Set.of("head")));
+                assertEquals(List.of("torso", "head"), GarmentPartSelection.select(
+                        Map.of(), arms, chest, Set.of("head", "torso")));
+            }
+        }
+    }
+
+    @Test
     void legOnlyTemplatesDoNotHideMissingStyledTorsoParts() {
         var legs = Set.of("left_leg", "right_leg");
         assertEquals(List.of("tucked_torso", "left_leg", "right_leg"), GarmentPartSelection.select(

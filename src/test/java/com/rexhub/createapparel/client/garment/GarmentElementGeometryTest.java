@@ -72,6 +72,38 @@ class GarmentElementGeometryTest {
     }
 
     @Test
+    void raisedBottomCutsTaperedEdgesWithoutMovingTheTopOrWarpingFaces() {
+        for (String offsets : List.of("[0.5,0]", "[0,0.5]", "[1,2]")) {
+            JsonObject json = model();
+            element(json).add("bottom_inset", JsonParser.parseString("[0.25,0.5,0.75,1]"));
+            element(json).add("bottom_raise", JsonParser.parseString(offsets));
+            var raised = ClientGarmentAssetLoader.parsePart(ID, json).elements().get(0);
+            float frontRaise = JsonParser.parseString(offsets).getAsJsonArray().get(0).getAsFloat();
+            assertVector(new Vec3(0.25F * (1 - frontRaise / 8), frontRaise,
+                    0.5F * (1 - frontRaise / 8)), raised.corners().get(0));
+            assertEquals(new Vec3(0, 8, 0), raised.corners().get(4));
+            for (Face face : Face.values()) {
+                var points = GarmentElementGeometry.faceVertices(raised, face);
+                Vec3 normal = GarmentElementGeometry.normal(points);
+                Vec3 a = points.get(0);
+                Vec3 d = points.get(3);
+                assertEquals(0, normal.x() * (d.x() - a.x()) + normal.y() * (d.y() - a.y())
+                        + normal.z() * (d.z() - a.z()), 0.00001);
+            }
+        }
+    }
+
+    @Test
+    void invalidBottomRaiseFailsAtLoadTime() {
+        for (String offsets : List.of("[]", "[0]", "[0,0,0]", "[-1,0]", "[0,-1]", "[8,0]",
+                "[0,9]", "[1e100,0]", "[0,1e100]")) {
+            JsonObject json = model();
+            element(json).add("bottom_raise", JsonParser.parseString(offsets));
+            assertThrows(IllegalStateException.class, () -> ClientGarmentAssetLoader.parsePart(ID, json));
+        }
+    }
+
+    @Test
     void invalidInsetsAndUvCornersFailAtLoadTime() {
         for (String inset : List.of("[-1,0,0,0]", "[2,0,2,0]", "[0,3,0,2]", "[0,0,0]", "[1e100,0,0,0]")) {
             JsonObject json = model();

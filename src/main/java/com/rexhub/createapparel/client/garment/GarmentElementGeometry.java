@@ -16,6 +16,16 @@ public final class GarmentElementGeometry {
     }
 
     static List<Vec3> corners(Vec3 from, Vec3 to, float[] topInset, float[] bottomInset) {
+        return corners(from, to, topInset, bottomInset, new float[2]);
+    }
+
+    static List<Vec3> corners(Vec3 from, Vec3 to, float[] topInset, float[] bottomInset, float[] bottomRaise) {
+        float height = to.y() - from.y();
+        for (float value : bottomRaise) {
+            if (!Float.isFinite(value) || value < 0.0F || value >= height) {
+                throw new IllegalStateException("Garment bottom raise must be finite, nonnegative and below element height");
+            }
+        }
         List<Vec3> corners = new ArrayList<>(8);
         for (boolean top : new boolean[]{false, true}) {
             float[] inset = top ? topInset : bottomInset;
@@ -36,6 +46,17 @@ public final class GarmentElementGeometry {
             corners.add(new Vec3(right, y, front));
             corners.add(new Vec3(right, y, back));
             corners.add(new Vec3(left, y, back));
+        }
+        for (int i = 0; i < 4; i++) {
+            float raise = bottomRaise[i < 2 ? 0 : 1];
+            if (raise == 0.0F) {
+                continue;
+            }
+            Vec3 bottom = corners.get(i);
+            Vec3 top = corners.get(i + 4);
+            float fraction = raise / height;
+            corners.set(i, new Vec3(bottom.x() + (top.x() - bottom.x()) * fraction,
+                    bottom.y() + raise, bottom.z() + (top.z() - bottom.z()) * fraction));
         }
         return List.copyOf(corners);
     }

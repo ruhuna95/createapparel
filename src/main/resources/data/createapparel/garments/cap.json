@@ -1,0 +1,13 @@
+{
+  "default_slot": "head",
+  "allowed_slots": [
+    "head"
+  ],
+  "model_template": "createapparel:cap",
+  "model_variant": "default",
+  "texture_variant": "cap",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

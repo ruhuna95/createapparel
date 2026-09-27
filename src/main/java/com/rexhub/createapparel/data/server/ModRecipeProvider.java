@@ -210,6 +210,24 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("slippers", ModItems.SLIPPERS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_SYNTHETIC), 2);
+        sewing("cap", ModItems.CAP,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("beanie", ModItems.BEANIE,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("beret", ModItems.BERET,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("hat", ModItems.HAT,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("casquette", ModItems.CASQUETTE,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("sun_visor", ModItems.SUN_VISOR,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);

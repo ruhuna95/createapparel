@@ -1,0 +1,13 @@
+{
+  "default_slot": "head",
+  "allowed_slots": [
+    "head"
+  ],
+  "model_template": "createapparel:sun_visor",
+  "model_variant": "default",
+  "texture_variant": "sun_visor",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

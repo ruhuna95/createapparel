@@ -26,7 +26,8 @@ class SewingPatternOrderTest {
                 "chesterfield_coat", "trench_coat", "duffle_coat", "pea_coat",
                 "undershirt", "bra", "briefs", "boxer_briefs", "panties",
                 "sneakers", "canvas_sneakers", "dress_shoes", "loafers",
-                "ankle_boots", "work_boots", "knee_high_boots", "pumps", "sandals", "slippers"
+                "ankle_boots", "work_boots", "knee_high_boots", "pumps", "sandals", "slippers",
+                "cap", "beanie", "beret", "hat", "casquette", "sun_visor"
         );
         var recipes = new ArrayList<SewingRecipe>();
         for (int index = 0; index < expected.size(); index++) {

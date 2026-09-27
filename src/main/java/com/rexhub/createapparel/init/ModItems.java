@@ -92,6 +92,12 @@ public final class ModItems {
     public static final RegistryObject<Item> PUMPS = registerGarment("pumps");
     public static final RegistryObject<Item> SANDALS = registerGarment("sandals");
     public static final RegistryObject<Item> SLIPPERS = registerGarment("slippers");
+    public static final RegistryObject<Item> CAP = registerGarment("cap");
+    public static final RegistryObject<Item> BEANIE = registerGarment("beanie");
+    public static final RegistryObject<Item> BERET = registerGarment("beret");
+    public static final RegistryObject<Item> HAT = registerGarment("hat");
+    public static final RegistryObject<Item> CASQUETTE = registerGarment("casquette");
+    public static final RegistryObject<Item> SUN_VISOR = registerGarment("sun_visor");
     public static final RegistryObject<Item> BLOUSE_ROUND = registerGarment("blouse_round");
     public static final RegistryObject<Item> BLOUSE_FRILL = registerGarment("blouse_frill");
     public static final RegistryObject<Item> BLOUSE_BOW_TIE = registerGarment("blouse_bow_tie");
@@ -181,7 +187,8 @@ public final class ModItems {
                     CHESTERFIELD_COAT, TRENCH_COAT, DUFFLE_COAT, PEA_COAT,
                     UNDERSHIRT, BRA, BRIEFS, BOXER_BRIEFS, PANTIES,
                     SNEAKERS, CANVAS_SNEAKERS, DRESS_SHOES, LOAFERS,
-                    ANKLE_BOOTS, WORK_BOOTS, KNEE_HIGH_BOOTS, PUMPS, SANDALS, SLIPPERS
+                    ANKLE_BOOTS, WORK_BOOTS, KNEE_HIGH_BOOTS, PUMPS, SANDALS, SLIPPERS,
+                    CAP, BEANIE, BERET, HAT, CASQUETTE, SUN_VISOR
             );
 
     static {
@@ -335,10 +342,10 @@ public final class ModItems {
         uniqueItems.addAll(uniqueGarmentItems);
         if (CREATIVE_TAB_ITEMS.size() != 142
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 50
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 56
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 192) {
-            throw new IllegalStateException("The creative tabs must contain 192 unique items");
+                || uniqueItems.size() != 198) {
+            throw new IllegalStateException("The creative tabs must contain 198 unique items");
         }
     }
 }

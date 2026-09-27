@@ -99,6 +99,12 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.PUMPS.get(), "パンプス");
         add(ModItems.SANDALS.get(), "サンダル");
         add(ModItems.SLIPPERS.get(), "スリッパ");
+        add(ModItems.CAP.get(), "キャップ");
+        add(ModItems.BEANIE.get(), "ニットキャップ");
+        add(ModItems.BERET.get(), "ベレー帽");
+        add(ModItems.HAT.get(), "ハット");
+        add(ModItems.CASQUETTE.get(), "キャスケット");
+        add(ModItems.SUN_VISOR.get(), "サンバイザー");
         add(ModItems.ZIPUP_HOODIE.get(), "ジップアップパーカー");
         add(ModItems.BLOUSE_FRILL.get(), "フリルブラウス");
         add(ModItems.BLOUSE_BOW_TIE.get(), "ボウタイブラウス");

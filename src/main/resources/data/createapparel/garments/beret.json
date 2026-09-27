@@ -1,0 +1,13 @@
+{
+  "default_slot": "head",
+  "allowed_slots": [
+    "head"
+  ],
+  "model_template": "createapparel:beret",
+  "model_variant": "default",
+  "texture_variant": "beret",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

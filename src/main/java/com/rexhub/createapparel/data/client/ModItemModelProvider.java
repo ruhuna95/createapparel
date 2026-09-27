@@ -63,7 +63,13 @@ public final class ModItemModelProvider extends ItemModelProvider {
                     || item == ModItems.KNEE_HIGH_BOOTS
                     || item == ModItems.PUMPS
                     || item == ModItems.SANDALS
-                    || item == ModItems.SLIPPERS) {
+                    || item == ModItems.SLIPPERS
+                    || item == ModItems.CAP
+                    || item == ModItems.BEANIE
+                    || item == ModItems.BERET
+                    || item == ModItems.HAT
+                    || item == ModItems.CASQUETTE
+                    || item == ModItems.SUN_VISOR) {
                 blouseModel(item);
             } else if (item == ModItems.BLOUSE_ROUND
                     || item == ModItems.BLOUSE_FRILL

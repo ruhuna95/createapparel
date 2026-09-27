@@ -1,0 +1,267 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "head_crown",
+        "from": [
+          -4.85,
+          30,
+          -4.85
+        ],
+        "to": [
+          4.85,
+          32.85,
+          4.85
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              8,
+              0,
+              16,
+              8
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              8,
+              8,
+              10
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              8,
+              16,
+              10
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              8,
+              24,
+              10
+            ]
+          },
+          "back": {
+            "uv": [
+              24,
+              8,
+              32,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "name": "head_band",
+        "from": [
+          -4.6,
+          28.4,
+          -4.6
+        ],
+        "to": [
+          4.6,
+          30,
+          4.6
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              10,
+              8,
+              11
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              10,
+              16,
+              11
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              10,
+              24,
+              11
+            ]
+          },
+          "back": {
+            "uv": [
+              24,
+              10,
+              32,
+              11
+            ]
+          }
+        }
+      },
+      {
+        "name": "crown_step_west",
+        "from": [
+          -4.85,
+          30,
+          -4.85
+        ],
+        "to": [
+          -4.6,
+          30.01,
+          4.85
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              16,
+              0,
+              17,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "name": "crown_step_north",
+        "from": [
+          -4.6,
+          30,
+          -4.85
+        ],
+        "to": [
+          4.6,
+          30.01,
+          -4.6
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              17,
+              0,
+              23,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "name": "crown_step_east",
+        "from": [
+          4.6,
+          30,
+          -4.85
+        ],
+        "to": [
+          4.85,
+          30.01,
+          4.85
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              23,
+              0,
+              24,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "name": "crown_step_south",
+        "from": [
+          -4.6,
+          30,
+          4.6
+        ],
+        "to": [
+          4.6,
+          30.01,
+          4.85
+        ],
+        "faces": {
+          "bottom": {
+            "uv": [
+              17,
+              7,
+              23,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "name": "brim",
+        "from": [
+          -4.6,
+          28.39,
+          -6.6
+        ],
+        "to": [
+          4.6,
+          28.4,
+          -4.6
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              0,
+              20,
+              8,
+              22
+            ]
+          }
+        }
+      },
+      {
+        "name": "crown_button",
+        "from": [
+          -0.5,
+          33.09,
+          -0.5
+        ],
+        "to": [
+          0.5,
+          33.1,
+          0.5
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              12,
+              15,
+              13,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/casquette/head/base/casquette"
+      },
+      "casquette": {
+        "base": "createapparel:garment/casquette/head/base/casquette"
+      }
+    },
+    "designs": {}
+  }
+}

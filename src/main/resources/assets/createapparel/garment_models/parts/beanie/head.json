@@ -1,0 +1,129 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "head_crown",
+        "from": [
+          -4.6,
+          28.4,
+          -4.6
+        ],
+        "to": [
+          4.6,
+          32.6,
+          4.6
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              8,
+              0,
+              16,
+              8
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              8,
+              8,
+              11
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              8,
+              16,
+              11
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              8,
+              24,
+              11
+            ]
+          },
+          "back": {
+            "uv": [
+              24,
+              8,
+              32,
+              11
+            ]
+          }
+        }
+      },
+      {
+        "name": "folded_rib",
+        "from": [
+          -4.85,
+          28.15,
+          -4.85
+        ],
+        "to": [
+          4.85,
+          32.85,
+          4.85
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              19,
+              8,
+              22
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              19,
+              16,
+              22
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              19,
+              24,
+              22
+            ]
+          },
+          "back": {
+            "uv": [
+              24,
+              19,
+              32,
+              22
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/beanie/head/base/beanie"
+      },
+      "beanie": {
+        "base": "createapparel:garment/beanie/head/base/beanie"
+      }
+    },
+    "designs": {}
+  }
+}

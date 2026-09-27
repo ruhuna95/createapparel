@@ -1,0 +1,129 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "head_crown",
+        "from": [
+          -4.85,
+          29.4,
+          -4.85
+        ],
+        "to": [
+          4.85,
+          32.35,
+          4.85
+        ],
+        "bottom_inset": [0.25, 0.25, 0.25, 0.25],
+        "bottom_raise": [0.5, 0],
+        "faces": {
+          "bottom": {
+            "uv": [16, 0, 24, 8]
+          },
+          "left": {
+            "uv": [
+              0,
+              8,
+              8,
+              9.5
+            ],
+            "uv_corners": [[0, 9.5], [0, 8], [8, 8], [8, 9]]
+          },
+          "front": {
+            "uv": [
+              8,
+              8,
+              16,
+              9
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              8,
+              24,
+              9.5
+            ],
+            "uv_corners": [[16, 9], [16, 8], [24, 8], [24, 9.5]]
+          },
+          "back": {
+            "uv": [
+              24,
+              8,
+              32,
+              9.5
+            ]
+          }
+        }
+      },
+      {
+        "name": "crown_plate",
+        "from": [-4.85, 32.35, -4.85],
+        "to": [4.85, 33.35, 4.85],
+        "top_inset": [3, 3, 3, 3],
+        "faces": {
+          "top": { "uv": [11, 3, 13, 5] },
+          "left": {
+            "uv": [8, 0, 11, 8],
+            "uv_corners": [[8, 0], [11, 3], [11, 5], [8, 8]]
+          },
+          "front": {
+            "uv": [8, 5, 16, 8],
+            "uv_corners": [[8, 8], [11, 5], [13, 5], [16, 8]]
+          },
+          "right": {
+            "uv": [13, 0, 16, 8],
+            "uv_corners": [[16, 8], [13, 5], [13, 3], [16, 0]]
+          },
+          "back": {
+            "uv": [8, 0, 16, 3],
+            "uv_corners": [[16, 0], [13, 3], [11, 3], [8, 0]]
+          }
+        }
+      },
+      {
+        "name": "crown_button",
+        "from": [
+          -0.5,
+          33.59,
+          -0.5
+        ],
+        "to": [
+          0.5,
+          33.6,
+          0.5
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              12,
+              15,
+              13,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/beret/head/base/beret"
+      },
+      "beret": {
+        "base": "createapparel:garment/beret/head/base/beret"
+      }
+    },
+    "designs": {}
+  }
+}

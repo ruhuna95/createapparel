@@ -159,7 +159,8 @@ final class ClientGarmentAssetLoader {
                     rotation,
                     Collections.unmodifiableMap(faces),
                     GarmentElementGeometry.corners(
-                            from, to, inset(elementJson, "top_inset", id), inset(elementJson, "bottom_inset", id)
+                            from, to, inset(elementJson, "top_inset", id), inset(elementJson, "bottom_inset", id),
+                            bottomRaise(elementJson, id)
                     )
             ));
         }
@@ -262,6 +263,17 @@ final class ClientGarmentAssetLoader {
             designs.put(entry.getKey(), new DesignMasks(secondary, accent));
         }
         return Collections.unmodifiableMap(designs);
+    }
+
+    private static float[] bottomRaise(JsonObject element, ResourceLocation id) {
+        if (!element.has("bottom_raise")) {
+            return new float[2];
+        }
+        JsonArray values = GsonHelper.getAsJsonArray(element, "bottom_raise");
+        if (values.size() != 2) {
+            throw new IllegalStateException(id + " bottom_raise must contain front and back offsets");
+        }
+        return new float[]{values.get(0).getAsFloat(), values.get(1).getAsFloat()};
     }
 
     private static float[] inset(JsonObject element, String key, ResourceLocation id) {

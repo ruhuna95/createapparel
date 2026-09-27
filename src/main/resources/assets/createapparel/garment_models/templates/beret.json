@@ -1,0 +1,7 @@
+{
+  "default": {
+    "head": {
+      "model": "createapparel:beret/head"
+    }
+  }
+}

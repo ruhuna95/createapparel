@@ -1,0 +1,13 @@
+{
+  "default_slot": "head",
+  "allowed_slots": [
+    "head"
+  ],
+  "model_template": "createapparel:hat",
+  "model_variant": "default",
+  "texture_variant": "hat",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

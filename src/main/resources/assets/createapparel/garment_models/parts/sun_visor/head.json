@@ -1,0 +1,97 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "head_band",
+        "from": [
+          -4.6,
+          28.4,
+          -4.6
+        ],
+        "to": [
+          4.6,
+          30.6,
+          4.6
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              0,
+              8,
+              1
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              0,
+              16,
+              1
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              0,
+              24,
+              1
+            ]
+          },
+          "back": {
+            "uv": [
+              24,
+              0,
+              32,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "name": "brim",
+        "from": [
+          -4.6,
+          28.39,
+          -7.6
+        ],
+        "to": [
+          4.6,
+          28.4,
+          -4.6
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              0,
+              1,
+              8,
+              4
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/sun_visor/head/base/sun_visor"
+      },
+      "sun_visor": {
+        "base": "createapparel:garment/sun_visor/head/base/sun_visor"
+      }
+    },
+    "designs": {}
+  }
+}
