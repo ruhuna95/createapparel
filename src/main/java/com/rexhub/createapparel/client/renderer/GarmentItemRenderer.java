@@ -26,7 +26,7 @@ public final class GarmentItemRenderer extends BlockEntityWithoutLevelRenderer {
             int packedLight,
             int packedOverlay
     ) {
-        ClientGarmentAssets.INSTANCE.resolve(stack).ifPresent(garment ->
+        ClientGarmentAssets.INSTANCE.resolveForItem(stack).ifPresent(garment ->
                 CommonGarmentRenderer.renderItem(
                         garment,
                         displayContext,

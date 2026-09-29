@@ -56,7 +56,7 @@ public final class GarmentHemGeometry {
         float cut = Math.max(hem + HEM_HEIGHT, slope.min().y());
         Slope surface = slope.forSlot(slot);
         List<Element> elements = split(part.elements(), surface, cut);
-        return new GarmentPartModel(part.id(), part.textureWidth(), part.textureHeight(), part.pivot(), List.copyOf(elements),
+        return new GarmentPartModel(part.id(), part.translucent(), part.textureWidth(), part.textureHeight(), part.pivot(), List.copyOf(elements),
                 part.variants(), part.designs(), part.materialOverrides(), part.legEnvelope(), part.hemGeometry());
     }
 

@@ -1,0 +1,56 @@
+{
+  "render_type": "translucent",
+  "texture_size": [
+    8,
+    8
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "face",
+        "from": [
+          -4.25,
+          23.75,
+          -4.25
+        ],
+        "to": [
+          4.25,
+          32.25,
+          4.25
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              0,
+              8,
+              8
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/glasses/face/base/glasses",
+        "overlay": "createapparel:garment/glasses/face/overlay/glasses"
+      },
+      "glasses": {
+        "base": "createapparel:garment/glasses/face/base/glasses",
+        "overlay": "createapparel:garment/glasses/face/overlay/glasses"
+      },
+      "sunglasses": {
+        "base": "createapparel:garment/glasses/face/base/glasses",
+        "overlay": "createapparel:garment/glasses/face/overlay/sunglasses"
+      }
+    },
+    "designs": {}
+  }
+}

@@ -228,6 +228,15 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("sun_visor", ModItems.SUN_VISOR,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
                         ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("mask", ModItems.MASK, T_SHIRT_FABRICS, 1);
+        for (FabricColor color : FabricColor.values()) {
+            register(consumer -> consumer.accept(new EyewearFinishedRecipe(
+                    asResource("glasses/" + color.getSerializedName()), color,
+                    ModItems.GLASSES.getId(), Items.GLASS_PANE)));
+            register(consumer -> consumer.accept(new EyewearFinishedRecipe(
+                    asResource("sunglasses/" + color.getSerializedName()), color,
+                    ModItems.SUNGLASSES.getId(), Items.BLACK_STAINED_GLASS_PANE)));
+        }
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);
@@ -350,6 +359,51 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .filter(entry -> entry.getValue().material() == material)
                 .filter(entry -> !dyedOnly || entry.getValue().isDyed())
                 .map(entry -> entry.getKey().get().getDefaultInstance()));
+    }
+
+    private record EyewearFinishedRecipe(ResourceLocation id, FabricColor color,
+                                         ResourceLocation resultId, Item glassPane) implements FinishedRecipe {
+        @Override
+        public void serializeRecipeData(JsonObject json) {
+            json.addProperty("category", "equipment");
+            JsonArray pattern = new JsonArray();
+            pattern.add(" C ");
+            pattern.add("GIG");
+            json.add("pattern", pattern);
+            JsonObject key = new JsonObject();
+            key.add("G", Ingredient.of(glassPane).toJson());
+            key.add("I", Ingredient.of(Items.IRON_NUGGET).toJson());
+            key.add("C", Ingredient.of(DyeItem.byColor(color.dyeColor())).toJson());
+            json.add("key", key);
+            JsonObject result = new JsonObject();
+            result.addProperty("item", resultId.toString());
+            result.addProperty("count", 1);
+            result.addProperty("nbt", "{GarmentData:{material:\"cotton\",design:\"plain\",primary_color:\""
+                    + color.getSerializedName() + "\"}}");
+            json.add("result", result);
+        }
+
+        @Override
+        public ResourceLocation getId() {
+            return id;
+        }
+
+        @Override
+        public RecipeSerializer<?> getType() {
+            return RecipeSerializer.SHAPED_RECIPE;
+        }
+
+        @Override
+        @Nullable
+        public JsonObject serializeAdvancement() {
+            return null;
+        }
+
+        @Override
+        @Nullable
+        public ResourceLocation getAdvancementId() {
+            return null;
+        }
     }
 
     private record SewingFinishedRecipe(

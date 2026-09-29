@@ -1,0 +1,71 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "face",
+        "from": [
+          -4.25,
+          23.75,
+          -4.25
+        ],
+        "to": [
+          4.25,
+          32.25,
+          4.25
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              8,
+              8,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              8,
+              8,
+              16,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              16,
+              8,
+              24,
+              16
+            ]
+          },
+          "bottom": {
+            "uv": [
+              16,
+              0,
+              24,
+              8
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/mask/face/base/default"
+      }
+    },
+    "designs": {}
+  }
+}

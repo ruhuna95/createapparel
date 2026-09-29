@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GarmentItemDisplayTest {
     @Test
-    void headAndFeetStaySolidWhileOnlyHeldHeadsPitchForward() throws Exception {
+    void headFaceAndFeetStaySolidWhileHeldHeadAndFacePitchForward() throws Exception {
         var method = CommonGarmentRenderer.class.getDeclaredMethod(
                 "applyItemShape", PoseStack.class, GarmentSlot.class, ItemDisplayContext.class, float.class);
         method.setAccessible(true);
@@ -26,8 +26,8 @@ class GarmentItemDisplayTest {
             for (var context : ItemDisplayContext.values()) {
                 boolean held = List.of(ItemDisplayContext.FIRST_PERSON_LEFT_HAND, ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
                         ItemDisplayContext.THIRD_PERSON_LEFT_HAND, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND).contains(context);
-                boolean pitched = slot == GarmentSlot.HEAD && held;
-                boolean solid = slot == GarmentSlot.HEAD || slot == GarmentSlot.FEET;
+                boolean pitched = (slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE) && held;
+                boolean solid = slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE || slot == GarmentSlot.FEET;
                 var pose = new PoseStack();
                 method.invoke(null, pose, slot, context, 0.25F);
                 var transformed = pose.last().pose().transformPosition(new Vector3f(2, 3, 4));

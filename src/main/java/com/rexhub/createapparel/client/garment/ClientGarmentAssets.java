@@ -115,6 +115,10 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         return resolve(stack, ArmProfile.CLASSIC, ChestProfile.FLAT);
     }
 
+    public Optional<ResolvedGarment> resolveForItem(ItemStack stack) {
+        return resolve(stack, null, ArmProfile.CLASSIC, ChestProfile.FLAT, true);
+    }
+
     public Optional<ResolvedGarment> resolve(
             ItemStack stack,
             ArmProfile armProfile,
@@ -129,6 +133,11 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             ArmProfile armProfile,
             ChestProfile chestProfile
     ) {
+        return resolve(stack, wearContext, armProfile, chestProfile, false);
+    }
+
+    private Optional<ResolvedGarment> resolve(ItemStack stack, GarmentWearContext wearContext,
+                                             ArmProfile armProfile, ChestProfile chestProfile, boolean itemDisplay) {
         AssetState snapshot = state;
         ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
         if (itemId == null) {
@@ -155,9 +164,10 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             data = GarmentData.defaultFor(definition);
         }
 
-        List<String> selectedNames = GarmentPartSelection.select(
-                effectiveContext.styleState().normalize(definition, effectiveContext.slot()).styles(), armProfile, chestProfile, variant.keySet()
-        );
+        Map<String, String> styles = itemDisplay
+                ? snapshot.garmentTemplates().get(definition.modelTemplate()).stylesForItem(definition)
+                : effectiveContext.styleState().normalize(definition, effectiveContext.slot()).styles();
+        List<String> selectedNames = GarmentPartSelection.select(styles, armProfile, chestProfile, variant.keySet());
 
         List<ResolvedPart> resolvedParts = new ArrayList<>();
         for (String name : selectedNames) {
@@ -356,6 +366,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             if (template == null) {
                 throw new IllegalStateException("Unknown garment model template: " + definition.modelTemplate());
             }
+            template.stylesForItem(definition);
             for (var slot : definition.allowedSlots()) {
                 Map<String, ResourceLocation> variant = template.variants().get(definition.modelVariantFor(slot));
                 if (variant == null) {
@@ -521,12 +532,24 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
 
     public record GarmentModelTemplate(
             ResourceLocation id,
-            Map<String, Map<String, ResourceLocation>> variants
+            Map<String, Map<String, ResourceLocation>> variants,
+            Map<String, String> itemStyles
     ) {
+        Map<String, String> stylesForItem(GarmentDefinition definition) {
+            Map<String, String> styles = new LinkedHashMap<>(GarmentWearContext.defaultsFor(definition).styleState().styles());
+            itemStyles.forEach((category, value) -> {
+                if (!definition.stylesFor(definition.defaultSlot()).getOrDefault(category, List.of()).contains(value)) {
+                    throw new IllegalStateException("Invalid item style: " + id + " / " + category + "=" + value);
+                }
+                styles.put(category, value);
+            });
+            return Map.copyOf(styles);
+        }
     }
 
     public record GarmentPartModel(
             ResourceLocation id,
+            boolean translucent,
             int textureWidth,
             int textureHeight,
             Vec3 pivot,

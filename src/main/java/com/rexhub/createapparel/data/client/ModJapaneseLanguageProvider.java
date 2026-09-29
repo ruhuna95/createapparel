@@ -105,6 +105,9 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.HAT.get(), "ハット");
         add(ModItems.CASQUETTE.get(), "キャスケット");
         add(ModItems.SUN_VISOR.get(), "サンバイザー");
+        add(ModItems.GLASSES.get(), "メガネ");
+        add(ModItems.SUNGLASSES.get(), "サングラス");
+        add(ModItems.MASK.get(), "マスク");
         add(ModItems.ZIPUP_HOODIE.get(), "ジップアップパーカー");
         add(ModItems.BLOUSE_FRILL.get(), "フリルブラウス");
         add(ModItems.BLOUSE_BOW_TIE.get(), "ボウタイブラウス");
@@ -156,6 +159,8 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("style_category.createapparel.wear", "被り方");
         add("style.createapparel.wear.front", "前被り");
         add("style.createapparel.wear.back", "後ろ被り");
+        add("style.createapparel.wear.up", "上げる");
+        add("style.createapparel.wear.down", "下げる");
         add("style.createapparel.tuck.untucked", "裾出し");
         add("style.createapparel.tuck.tucked", "タックイン");
         add("style.createapparel.sleeves.normal", "通常");

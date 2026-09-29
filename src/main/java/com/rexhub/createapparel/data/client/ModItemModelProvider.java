@@ -69,7 +69,10 @@ public final class ModItemModelProvider extends ItemModelProvider {
                     || item == ModItems.BERET
                     || item == ModItems.HAT
                     || item == ModItems.CASQUETTE
-                    || item == ModItems.SUN_VISOR) {
+                    || item == ModItems.SUN_VISOR
+                    || item == ModItems.GLASSES
+                    || item == ModItems.SUNGLASSES
+                    || item == ModItems.MASK) {
                 blouseModel(item);
             } else if (item == ModItems.BLOUSE_ROUND
                     || item == ModItems.BLOUSE_FRILL

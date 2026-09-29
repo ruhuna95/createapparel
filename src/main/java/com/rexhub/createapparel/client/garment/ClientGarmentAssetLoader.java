@@ -86,9 +86,13 @@ final class ClientGarmentAssetLoader {
         return Collections.unmodifiableMap(loaded);
     }
 
-    private static GarmentModelTemplate parseTemplate(ResourceLocation id, JsonObject json) {
+    static GarmentModelTemplate parseTemplate(ResourceLocation id, JsonObject json) {
+        Map<String, String> itemStyles = new LinkedHashMap<>();
+        GsonHelper.getAsJsonObject(json, "item_styles", new JsonObject()).entrySet().forEach(entry ->
+                itemStyles.put(entry.getKey(), GsonHelper.convertToString(entry.getValue(), entry.getKey())));
         LinkedHashMap<String, Map<String, ResourceLocation>> variants = new LinkedHashMap<>();
         for (Map.Entry<String, JsonElement> variantEntry : json.entrySet()) {
+            if (variantEntry.getKey().equals("item_styles")) continue;
             JsonObject partsJson = GsonHelper.convertToJsonObject(variantEntry.getValue(), variantEntry.getKey());
             LinkedHashMap<String, ResourceLocation> variantParts = new LinkedHashMap<>();
             for (Map.Entry<String, JsonElement> partEntry : partsJson.entrySet()) {
@@ -109,12 +113,12 @@ final class ClientGarmentAssetLoader {
         if (variants.isEmpty()) {
             throw new IllegalStateException("Garment model template has no variants: " + id);
         }
-        return new GarmentModelTemplate(id, Collections.unmodifiableMap(variants));
+        return new GarmentModelTemplate(id, Collections.unmodifiableMap(variants), Map.copyOf(itemStyles));
     }
 
     static GarmentPartModel parsePart(ResourceLocation id, JsonObject json) {
         String renderType = GsonHelper.getAsString(json, "render_type");
-        if (!"cutout".equals(renderType)) {
+        if (!"cutout".equals(renderType) && !"translucent".equals(renderType)) {
             throw new IllegalStateException("Unsupported garment render type: " + id + " / " + renderType);
         }
         int[] textureSize = intPair(GsonHelper.getAsJsonArray(json, "texture_size"), id + " texture_size");
@@ -209,6 +213,7 @@ final class ClientGarmentAssetLoader {
         }
         return new GarmentPartModel(
                 id,
+                "translucent".equals(renderType),
                 textureSize[0],
                 textureSize[1],
                 pivot,

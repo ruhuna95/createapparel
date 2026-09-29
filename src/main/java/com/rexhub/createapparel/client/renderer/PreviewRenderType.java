@@ -27,6 +27,16 @@ public final class PreviewRenderType extends RenderType {
                     .setLightmapState(LIGHTMAP)
                     .setOverlayState(OVERLAY)
                     .createCompositeState(true)));
+    private static final Function<ResourceLocation, RenderType> TRANSLUCENT_TYPES = Util.memoize(texture -> create(
+            "createapparel_garment_preview_translucent", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS,
+            256, true, true, CompositeState.builder()
+                    .setShaderState(new ShaderStateShard(() -> shader))
+                    .setTextureState(new TextureStateShard(texture, false, false))
+                    .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                    .setCullState(NO_CULL)
+                    .setLightmapState(LIGHTMAP)
+                    .setOverlayState(OVERLAY)
+                    .createCompositeState(true)));
 
     private PreviewRenderType(String name, VertexFormat format, VertexFormat.Mode mode, int size,
                               boolean crumbling, boolean sorting, Runnable setup, Runnable clear) {
@@ -35,6 +45,10 @@ public final class PreviewRenderType extends RenderType {
 
     public static RenderType garment(ResourceLocation texture) {
         return TYPES.apply(texture);
+    }
+
+    public static RenderType translucentGarment(ResourceLocation texture) {
+        return TRANSLUCENT_TYPES.apply(texture);
     }
 
     @SubscribeEvent

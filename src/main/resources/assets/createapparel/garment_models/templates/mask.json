@@ -1,0 +1,11 @@
+{
+  "item_styles": {"wear": "up"},
+  "default": {
+    "head": {
+      "model": "createapparel:mask/face"
+    },
+    "head_up": {
+      "model": "createapparel:mask/face_up"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "default_slot": "face",
+  "allowed_slots": [
+    "face"
+  ],
+  "model_template": "createapparel:mask",
+  "model_variant": "default",
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {
+    "wear": ["down", "up"]
+  }
+}

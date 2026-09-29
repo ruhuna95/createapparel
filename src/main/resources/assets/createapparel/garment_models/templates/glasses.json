@@ -1,0 +1,10 @@
+{
+  "default": {
+    "head": {
+      "model": "createapparel:glasses/face"
+    },
+    "head_up": {
+      "model": "createapparel:glasses/face_up"
+    }
+  }
+}

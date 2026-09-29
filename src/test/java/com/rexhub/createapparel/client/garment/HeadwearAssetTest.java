@@ -318,7 +318,7 @@ class HeadwearAssetTest {
         var method = CommonGarmentRenderer.class.getDeclaredMethod("humanoidGarmentPose",
                 PlayerModel.class, ArmProfile.class, ResolvedPart.class);
         method.setAccessible(true);
-        for (String semantic : List.of("head", "head_back", "hood_up", "torso")) {
+        for (String semantic : List.of("head", "head_back", "head_up", "hood_up", "torso")) {
             var result = method.invoke(null, player, ArmProfile.CLASSIC, new ResolvedPart(semantic, part("cap"), null));
             var accessor = result.getClass().getDeclaredMethod("part");
             accessor.setAccessible(true);

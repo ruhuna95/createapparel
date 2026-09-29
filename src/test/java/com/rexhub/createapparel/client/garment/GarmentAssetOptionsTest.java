@@ -15,6 +15,7 @@ class GarmentAssetOptionsTest {
     @Test
     void oldJsonKeepsNeutralDefaults() {
         var part = ClientGarmentAssetLoader.parsePart(ID, model());
+        assertEquals(false, part.translucent());
         var variant = part.variants().get("default");
         assertEquals(1.0F, variant.brightness());
         assertTrue(variant.brightnessMask().isEmpty());
@@ -52,7 +53,7 @@ class GarmentAssetOptionsTest {
             variant(json).addProperty("brightness", value);
             assertThrows(IllegalStateException.class, () -> ClientGarmentAssetLoader.parsePart(ID, json));
         }
-        for (String renderType : new String[]{"translucent", "unsupported"}) {
+        for (String renderType : new String[]{"unsupported"}) {
             JsonObject json = model();
             json.addProperty("render_type", renderType);
             assertThrows(IllegalStateException.class, () -> ClientGarmentAssetLoader.parsePart(ID, json));

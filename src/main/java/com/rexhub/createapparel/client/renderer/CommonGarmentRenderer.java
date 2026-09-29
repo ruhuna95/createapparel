@@ -75,13 +75,13 @@ public final class CommonGarmentRenderer {
         poseStack.translate(0.5F, 0.5F, 0.5F);
         applyItemShape(poseStack, garment.definition().defaultSlot(), displayContext, geometry.scaleZ());
         renderCentered(garment, new Vec3(0, 0, 0), geometry.originalBounds().center(), 1,
-                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull);
+                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull, RenderType::entityTranslucent);
         poseStack.popPose();
     }
 
     private static void applyItemShape(PoseStack poseStack, GarmentSlot slot,
                                        ItemDisplayContext displayContext, float flatScaleZ) {
-        if (slot == GarmentSlot.HEAD) {
+        if (slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE) {
             switch (displayContext) {
                 case FIRST_PERSON_LEFT_HAND, FIRST_PERSON_RIGHT_HAND,
                         THIRD_PERSON_LEFT_HAND, THIRD_PERSON_RIGHT_HAND ->
@@ -107,19 +107,20 @@ public final class CommonGarmentRenderer {
                                    MultiBufferSource buffer, int packedLight, int packedOverlay) {
         var flat = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
         renderCentered(garment, anchor, flat.originalBounds().center(), flat.scaleZ(),
-                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull);
+                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull, RenderType::entityTranslucent);
     }
 
     public static void renderPreview(ResolvedGarment garment, PoseStack poseStack,
                                      MultiBufferSource buffer, int packedLight, int packedOverlay) {
         var geometry = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
         renderCentered(garment, new Vec3(0, 0, 0), geometry.originalBounds().center(), 1,
-                poseStack, buffer, packedLight, packedOverlay, PreviewRenderType::garment);
+                poseStack, buffer, packedLight, packedOverlay, PreviewRenderType::garment, PreviewRenderType::translucentGarment);
     }
 
     private static void renderCentered(ResolvedGarment garment, Vec3 anchor, Vec3 center, float scaleZ,
                                        PoseStack poseStack, MultiBufferSource buffer,
-                                       int packedLight, int packedOverlay, Function<ResourceLocation, RenderType> renderType) {
+                                       int packedLight, int packedOverlay, Function<ResourceLocation, RenderType> renderType,
+                                       Function<ResourceLocation, RenderType> translucentRenderType) {
         poseStack.pushPose();
         poseStack.translate(anchor.x(), anchor.y(), anchor.z());
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
@@ -137,7 +138,7 @@ public final class CommonGarmentRenderer {
                     packedLight,
                     packedOverlay,
                     WHITE,
-                    renderType
+                    part.model().translucent() ? translucentRenderType : renderType
             );
         }
         poseStack.popPose();
@@ -284,7 +285,7 @@ public final class CommonGarmentRenderer {
             int tintRgb
     ) {
         renderPart(part, texture, mapping, humanoidPose, poseStack, buffer, packedLight, packedOverlay,
-                tintRgb, RenderType::entityCutoutNoCull);
+                tintRgb, part.translucent() ? RenderType::entityTranslucent : RenderType::entityCutoutNoCull);
     }
 
     private static void renderPart(
@@ -327,7 +328,7 @@ public final class CommonGarmentRenderer {
             ResolvedPart part
     ) {
         String semanticName = part.semanticName();
-        if (semanticName.equals("head") || semanticName.equals("head_back") || semanticName.equals("hood_up")) {
+        if (semanticName.equals("head") || semanticName.equals("head_back") || semanticName.equals("head_up") || semanticName.equals("hood_up")) {
             return new HumanoidPartPose(model.head, 0.0F, 0.0F, 0.0F);
         }
         if (semanticName.startsWith("left_sleeve") || semanticName.startsWith("right_sleeve")) {

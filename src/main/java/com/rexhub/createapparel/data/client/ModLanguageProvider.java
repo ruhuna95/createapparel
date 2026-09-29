@@ -106,6 +106,9 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.HAT.get(), "Hat");
         add(ModItems.CASQUETTE.get(), "Casquette");
         add(ModItems.SUN_VISOR.get(), "Sun Visor");
+        add(ModItems.GLASSES.get(), "Glasses");
+        add(ModItems.SUNGLASSES.get(), "Sunglasses");
+        add(ModItems.MASK.get(), "Mask");
         add(ModItems.ZIPUP_HOODIE.get(), "Zip-up Hoodie");
         add(ModItems.BLOUSE_FRILL.get(), "Frill Blouse");
         add(ModItems.BLOUSE_BOW_TIE.get(), "Bow Tie Blouse");
@@ -157,6 +160,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("style_category.createapparel.wear", "Wear");
         add("style.createapparel.wear.front", "Forward");
         add("style.createapparel.wear.back", "Backward");
+        add("style.createapparel.wear.up", "Up");
+        add("style.createapparel.wear.down", "Down");
         add("style.createapparel.tuck.untucked", "Untucked");
         add("style.createapparel.tuck.tucked", "Tucked");
         add("style.createapparel.sleeves.normal", "Normal");
