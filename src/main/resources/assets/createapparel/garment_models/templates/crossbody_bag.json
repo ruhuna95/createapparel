@@ -1,0 +1,16 @@
+{
+  "default": {
+    "torso_back": {
+      "model": "createapparel:crossbody_bag/torso_back"
+    },
+    "back_back": {
+      "model": "createapparel:crossbody_bag/back_back"
+    },
+    "torso_front": {
+      "model": "createapparel:crossbody_bag/torso_front"
+    },
+    "back_front": {
+      "model": "createapparel:crossbody_bag/back_front"
+    }
+  }
+}

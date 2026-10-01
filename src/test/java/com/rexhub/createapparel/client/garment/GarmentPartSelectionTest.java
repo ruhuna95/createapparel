@@ -15,6 +15,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GarmentPartSelectionTest {
     @Test
+    void bagsSelectOnlyTheMatchingTorsoAndBagForEveryProfile() {
+        var crossbodyParts = Set.of("torso_back", "back_back", "torso_front", "back_front");
+        for (ArmProfile arms : ArmProfile.values()) {
+            for (ChestProfile chest : ChestProfile.values()) {
+                assertEquals(List.of("torso", "back"), GarmentPartSelection.select(
+                        Map.of(), arms, chest, Set.of("torso", "back")));
+                assertEquals(List.of("torso_back", "back_back"), GarmentPartSelection.select(
+                        Map.of(), arms, chest, crossbodyParts));
+                for (String carry : List.of("back", "front")) {
+                    assertEquals(List.of("torso_" + carry, "back_" + carry), GarmentPartSelection.select(
+                            Map.of("carry", carry), arms, chest, crossbodyParts));
+                }
+            }
+        }
+        assertEquals(crossbodyParts, GarmentPartSelection.requiredStyleParts(
+                Map.of("carry", List.of("back", "front")), false));
+    }
+
+    @Test
     void headOnlyTemplatesResolveForEveryProfileAndKeepMissingStyleErrors() {
         for (ArmProfile arms : ArmProfile.values()) {
             for (ChestProfile chest : ChestProfile.values()) {

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GarmentItemDisplayTest {
     @Test
-    void headFaceAndFeetStaySolidWhileHeldHeadAndFacePitchForward() throws Exception {
+    void headFaceBackAndFeetStaySolidWhileHeldAccessoriesPitchForward() throws Exception {
         var method = CommonGarmentRenderer.class.getDeclaredMethod(
                 "applyItemShape", PoseStack.class, GarmentSlot.class, ItemDisplayContext.class, float.class);
         method.setAccessible(true);
@@ -26,14 +26,16 @@ class GarmentItemDisplayTest {
             for (var context : ItemDisplayContext.values()) {
                 boolean held = List.of(ItemDisplayContext.FIRST_PERSON_LEFT_HAND, ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
                         ItemDisplayContext.THIRD_PERSON_LEFT_HAND, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND).contains(context);
-                boolean pitched = (slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE) && held;
-                boolean solid = slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE || slot == GarmentSlot.FEET;
+                boolean pitched = (slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE || slot == GarmentSlot.BACK) && held;
+                boolean solid = slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE
+                        || slot == GarmentSlot.BACK || slot == GarmentSlot.FEET;
+                boolean reversed = slot == GarmentSlot.BACK && context == ItemDisplayContext.GUI;
                 var pose = new PoseStack();
                 method.invoke(null, pose, slot, context, 0.25F);
                 var transformed = pose.last().pose().transformPosition(new Vector3f(2, 3, 4));
-                assertEquals(2, transformed.x(), 0.00001);
+                assertEquals(reversed ? -2 : 2, transformed.x(), 0.00001);
                 assertEquals(pitched ? 4 : 3, transformed.y(), 0.00001);
-                assertEquals(pitched ? -3 : solid ? 4 : 1, transformed.z(), 0.00001);
+                assertEquals(reversed ? -4 : pitched ? -3 : solid ? 4 : 1, transformed.z(), 0.00001);
                 if (solid) {
                     assertEquals(new Vector3f(2, 3, 4).length(), transformed.length(), 0.00001);
                 }

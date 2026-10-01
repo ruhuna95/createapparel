@@ -1,0 +1,13 @@
+{
+  "default_slot": "back",
+  "allowed_slots": [
+    "back"
+  ],
+  "model_template": "createapparel:backpack",
+  "model_variant": "default",
+  "texture_variant": "backpack",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

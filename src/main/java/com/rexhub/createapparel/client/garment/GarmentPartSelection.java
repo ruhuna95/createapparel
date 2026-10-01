@@ -20,6 +20,14 @@ final class GarmentPartSelection {
             Set<String> availableParts
     ) {
         List<String> selected = new ArrayList<>(select(styles, armProfile, chestProfile, availableParts.contains("bust")));
+        if (availableParts.contains("torso_back")) {
+            selected.remove("torso");
+            String carry = "front".equals(styles.get("carry")) ? "front" : "back";
+            selected.add("torso_" + carry);
+            selected.add("back_" + carry);
+        } else if (availableParts.contains("back")) {
+            selected.add("back");
+        }
         if (!availableParts.contains("torso") && (availableParts.contains("head")
                 || availableParts.contains("left_leg") && availableParts.contains("right_leg"))) {
             selected.remove("torso");
@@ -61,6 +69,10 @@ final class GarmentPartSelection {
 
     static Set<String> requiredStyleParts(Map<String, List<String>> styles, boolean hasBust) {
         Set<String> required = new LinkedHashSet<>();
+        for (String carry : styles.getOrDefault("carry", List.of())) {
+            required.add("torso_" + carry);
+            required.add("back_" + carry);
+        }
         for (String wear : styles.getOrDefault("wear", List.of())) {
             required.add(headPart(wear));
         }

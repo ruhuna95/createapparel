@@ -75,13 +75,17 @@ public final class CommonGarmentRenderer {
         poseStack.translate(0.5F, 0.5F, 0.5F);
         applyItemShape(poseStack, garment.definition().defaultSlot(), displayContext, geometry.scaleZ());
         renderCentered(garment, new Vec3(0, 0, 0), geometry.originalBounds().center(), 1,
-                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull, RenderType::entityTranslucent);
+                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull, RenderType::entityTranslucent,
+                displayContext);
         poseStack.popPose();
     }
 
     private static void applyItemShape(PoseStack poseStack, GarmentSlot slot,
                                        ItemDisplayContext displayContext, float flatScaleZ) {
-        if (slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE) {
+        if (slot == GarmentSlot.BACK && displayContext == ItemDisplayContext.GUI) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(180));
+        }
+        if (slot == GarmentSlot.HEAD || slot == GarmentSlot.FACE || slot == GarmentSlot.BACK) {
             switch (displayContext) {
                 case FIRST_PERSON_LEFT_HAND, FIRST_PERSON_RIGHT_HAND,
                         THIRD_PERSON_LEFT_HAND, THIRD_PERSON_RIGHT_HAND ->
@@ -121,6 +125,15 @@ public final class CommonGarmentRenderer {
                                        PoseStack poseStack, MultiBufferSource buffer,
                                        int packedLight, int packedOverlay, Function<ResourceLocation, RenderType> renderType,
                                        Function<ResourceLocation, RenderType> translucentRenderType) {
+        renderCentered(garment, anchor, center, scaleZ, poseStack, buffer, packedLight, packedOverlay,
+                renderType, translucentRenderType, ItemDisplayContext.NONE);
+    }
+
+    private static void renderCentered(ResolvedGarment garment, Vec3 anchor, Vec3 center, float scaleZ,
+                                       PoseStack poseStack, MultiBufferSource buffer,
+                                       int packedLight, int packedOverlay, Function<ResourceLocation, RenderType> renderType,
+                                       Function<ResourceLocation, RenderType> translucentRenderType,
+                                       ItemDisplayContext displayContext) {
         poseStack.pushPose();
         poseStack.translate(anchor.x(), anchor.y(), anchor.z());
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
@@ -128,6 +141,8 @@ public final class CommonGarmentRenderer {
         poseStack.scale(1, 1, scaleZ);
         poseStack.translate(-center.x(), -center.y(), -center.z());
         for (ResolvedPart part : garment.parts()) {
+            poseStack.pushPose();
+            applyItemPartShape(poseStack, garment.definition().defaultSlot(), displayContext, part);
             renderPart(
                     part.model(),
                     RuntimeGarmentTextureCache.get(part.model(), part.textures(), garment.data()),
@@ -140,8 +155,31 @@ public final class CommonGarmentRenderer {
                     WHITE,
                     part.model().translucent() ? translucentRenderType : renderType
             );
+            poseStack.popPose();
         }
         poseStack.popPose();
+    }
+
+    private static void applyItemPartShape(PoseStack poseStack, GarmentSlot slot,
+                                           ItemDisplayContext displayContext, ResolvedPart part) {
+        if (slot != GarmentSlot.BACK || !flattensBackStraps(displayContext)
+                || !(part.semanticName().equals("torso") || part.semanticName().startsWith("torso_"))) {
+            return;
+        }
+        var flat = FlatGarmentGeometry.cached(List.of(part.model()));
+        float attachmentZ = part.semanticName().equals("torso_front")
+                ? flat.originalBounds().min().z() : flat.originalBounds().max().z();
+        poseStack.translate(0, 0, attachmentZ);
+        poseStack.scale(1, 1, flat.scaleZ());
+        poseStack.translate(0, 0, -attachmentZ);
+    }
+
+    private static boolean flattensBackStraps(ItemDisplayContext displayContext) {
+        return switch (displayContext) {
+            case GROUND, FIRST_PERSON_LEFT_HAND, FIRST_PERSON_RIGHT_HAND,
+                    THIRD_PERSON_LEFT_HAND, THIRD_PERSON_RIGHT_HAND -> true;
+            default -> false;
+        };
     }
 
     public static void renderHumanoidGarment(

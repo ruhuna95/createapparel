@@ -196,6 +196,9 @@ class BlouseAssetTest {
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/coat"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/hat"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/beret"))
+                    && !p.startsWith(ASSETS.resolve("garment_models/parts/backpack"))
+                    && !p.startsWith(ASSETS.resolve("garment_models/parts/daypack"))
+                    && !p.startsWith(ASSETS.resolve("garment_models/parts/crossbody_bag"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/cap/head_back.json"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/left_leg.json"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/right_leg.json"))).toList()) {

@@ -1,0 +1,10 @@
+{
+  "default": {
+    "torso": {
+      "model": "createapparel:daypack/torso"
+    },
+    "back": {
+      "model": "createapparel:daypack/back"
+    }
+  }
+}

@@ -109,6 +109,12 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.GLASSES.get(), "Glasses");
         add(ModItems.SUNGLASSES.get(), "Sunglasses");
         add(ModItems.MASK.get(), "Mask");
+        add(ModItems.BACKPACK.get(), "Backpack");
+        add(ModItems.DAYPACK.get(), "Daypack");
+        add(ModItems.CROSSBODY_BAG.get(), "Crossbody Bag");
+        add("style_category.createapparel.carry", "Carry");
+        add("style.createapparel.carry.back", "On back");
+        add("style.createapparel.carry.front", "On front");
         add(ModItems.ZIPUP_HOODIE.get(), "Zip-up Hoodie");
         add(ModItems.BLOUSE_FRILL.get(), "Frill Blouse");
         add(ModItems.BLOUSE_BOW_TIE.get(), "Bow Tie Blouse");

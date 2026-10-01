@@ -1,0 +1,10 @@
+{
+  "default": {
+    "torso": {
+      "model": "createapparel:backpack/torso"
+    },
+    "back": {
+      "model": "createapparel:backpack/back"
+    }
+  }
+}

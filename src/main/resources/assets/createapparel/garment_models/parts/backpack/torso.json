@@ -1,0 +1,332 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "shoulder_belt",
+        "from": [
+          -4.02,
+          11.98,
+          -2.8
+        ],
+        "to": [
+          4.02,
+          24.02,
+          2.8
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              16
+            ],
+            "uv_corners": [
+              [
+                4,
+                16
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                12,
+                4
+              ],
+              [
+                12,
+                16
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              4,
+              24,
+              16
+            ],
+            "uv_corners": [
+              [
+                16,
+                16
+              ],
+              [
+                16,
+                4
+              ],
+              [
+                24,
+                4
+              ],
+              [
+                24,
+                16
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_side_belt",
+        "from": [
+          -4.51,
+          12,
+          -2.8
+        ],
+        "to": [
+          -4.49,
+          14,
+          2.8
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              14,
+              4,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_front_join",
+        "from": [
+          -4.51,
+          12,
+          -2.8
+        ],
+        "to": [
+          -4.02,
+          14,
+          -2.78
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              14,
+              1,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_back_join",
+        "from": [
+          -4.51,
+          12,
+          2.78
+        ],
+        "to": [
+          -3.5,
+          14,
+          2.8
+        ],
+        "faces": {
+          "back": {
+            "uv": [
+              0,
+              14,
+              1,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_side_belt",
+        "from": [
+          4.49,
+          12,
+          -2.8
+        ],
+        "to": [
+          4.51,
+          14,
+          2.8
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              12,
+              14,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_front_join",
+        "from": [
+          4.02,
+          12,
+          -2.8
+        ],
+        "to": [
+          4.51,
+          14,
+          -2.78
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              12,
+              14,
+              13,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_back_join",
+        "from": [
+          3.5,
+          12,
+          2.78
+        ],
+        "to": [
+          4.51,
+          14,
+          2.8
+        ],
+        "faces": {
+          "back": {
+            "uv": [
+              12,
+              14,
+              13,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_lower_attachment",
+        "from": [
+          -3.52,
+          12,
+          2.8
+        ],
+        "to": [
+          -3.5,
+          14,
+          2.82
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              24,
+              0,
+              25,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_upper_attachment",
+        "from": [
+          -3.01,
+          20.99,
+          2.8
+        ],
+        "to": [
+          -1.01,
+          21.01,
+          2.82
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              25,
+              0,
+              27,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_lower_attachment",
+        "from": [
+          3.5,
+          12,
+          2.8
+        ],
+        "to": [
+          3.52,
+          14,
+          2.82
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              24,
+              0,
+              25,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_upper_attachment",
+        "from": [
+          1.01,
+          20.99,
+          2.8
+        ],
+        "to": [
+          3.01,
+          21.01,
+          2.82
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              25,
+              0,
+              27,
+              1
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/backpack/torso/base/backpack"
+      },
+      "backpack": {
+        "base": "createapparel:garment/backpack/torso/base/backpack"
+      }
+    },
+    "designs": {}
+  }
+}

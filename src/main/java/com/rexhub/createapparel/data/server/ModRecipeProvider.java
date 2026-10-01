@@ -229,6 +229,15 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
                         ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("mask", ModItems.MASK, T_SHIRT_FABRICS, 1);
+        sewing("backpack", ModItems.BACKPACK,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("daypack", ModItems.DAYPACK,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("crossbody_bag", ModItems.CROSSBODY_BAG,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
+                        ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 3);
         for (FabricColor color : FabricColor.values()) {
             register(consumer -> consumer.accept(new EyewearFinishedRecipe(
                     asResource("glasses/" + color.getSerializedName()), color,

@@ -1,0 +1,18 @@
+{
+  "default_slot": "back",
+  "allowed_slots": [
+    "back"
+  ],
+  "model_template": "createapparel:crossbody_bag",
+  "model_variant": "default",
+  "texture_variant": "crossbody_bag",
+  "designs": [
+    "plain"
+  ],
+  "styles": {
+    "carry": [
+      "back",
+      "front"
+    ]
+  }
+}
