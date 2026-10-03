@@ -1,0 +1,67 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "bust",
+        "from": [
+          -1,
+          19.11,
+          -1.8
+        ],
+        "to": [
+          1,
+          23.4633,
+          1.37
+        ],
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        },
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              0,
+              2,
+              4
+            ]
+          },
+          "bottom": {
+            "uv": [
+              0,
+              4,
+              2,
+              7
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/necktie/bust/base/necktie"
+      },
+      "necktie": {
+        "base": "createapparel:garment/necktie/bust/base/necktie"
+      }
+    },
+    "designs": {}
+  }
+}

@@ -3,6 +3,8 @@ package com.rexhub.createapparel.client.garment;
 import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Either;
 import com.rexhub.createapparel.garment.GarmentDefinition;
+import com.rexhub.createapparel.material.FabricMaterial;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
@@ -12,10 +14,73 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GarmentTooltipEventsTest {
+    @Test
+    void fabricAppearanceListsAllFiveValuesBeforeAdvancedDetails() {
+        var group = Component.translatable("itemGroup.createapparel.garment");
+        var advanced = Component.literal("createapparel:shirt_longsleeves");
+        List<Component> tooltip = new ArrayList<>(List.of(Component.literal("Shirt"), group, advanced));
+        GarmentTooltipEvents.appendSlots(tooltip, definition("\"top\",\"outer\""));
+        GarmentTooltipEvents.appendFabricAppearance(tooltip, "silk", "blue", "stripe",
+                Optional.of("red"), Optional.of("yellow"));
+        assertEquals(10, tooltip.size());
+        assertSlot(tooltip.get(2), "top");
+        assertSlot(tooltip.get(3), "outer");
+        assertAppearance(tooltip.get(4), "material", "fabric_material.createapparel.silk");
+        assertAppearance(tooltip.get(5), "primary_color", "color.minecraft.blue");
+        assertAppearance(tooltip.get(6), "design", "design.createapparel.stripe");
+        assertAppearance(tooltip.get(7), "secondary_color", "color.minecraft.red");
+        assertAppearance(tooltip.get(8), "accent_color", "color.minecraft.yellow");
+        assertSame(advanced, tooltip.get(9));
+    }
+
+    @Test
+    void defaultAppearanceUsesSyntheticAndOmitsUnsetOptionalColors() {
+        List<Component> tooltip = new ArrayList<>();
+        GarmentTooltipEvents.appendFabricAppearance(tooltip, FabricMaterial.SYNTHETIC.getSerializedName(),
+                "white", "plain", Optional.empty(), Optional.empty());
+        assertEquals(3, tooltip.size());
+        assertAppearance(tooltip.get(0), "material", "fabric_material.createapparel.synthetic");
+        assertAppearance(tooltip.get(1), "primary_color", "color.minecraft.white");
+        assertAppearance(tooltip.get(2), "design", "design.createapparel.plain");
+    }
+
+    @Test
+    void secondaryColorAloneIsShownBeforeAdvancedDetails() {
+        var advanced = Component.literal("createapparel:shirt_longsleeves");
+        List<Component> tooltip = new ArrayList<>(List.of(
+                Component.translatable("itemGroup.createapparel.garment"), advanced));
+        GarmentTooltipEvents.appendFabricAppearance(tooltip, "silk", "white", "stripe",
+                Optional.of("red"), Optional.empty());
+        assertEquals(6, tooltip.size());
+        assertAppearance(tooltip.get(4), "secondary_color", "color.minecraft.red");
+        assertSame(advanced, tooltip.get(5));
+    }
+
+    @Test
+    void accentColorAloneIsShownBeforeAdvancedDetails() {
+        var advanced = Component.literal("createapparel:shirt_longsleeves");
+        List<Component> tooltip = new ArrayList<>(List.of(
+                Component.translatable("itemGroup.createapparel.garment"), advanced));
+        GarmentTooltipEvents.appendFabricAppearance(tooltip, "silk", "white", "stripe",
+                Optional.empty(), Optional.of("blue"));
+        assertEquals(6, tooltip.size());
+        assertAppearance(tooltip.get(4), "accent_color", "color.minecraft.blue");
+        assertSame(advanced, tooltip.get(5));
+    }
+
+    private static void assertAppearance(Component component, String field, String valueKey) {
+        var text = assertInstanceOf(TranslatableContents.class, component.getContents());
+        assertEquals("tooltip.createapparel.garment." + field, text.getKey());
+        var value = assertInstanceOf(Component.class, text.getArgs()[0]);
+        assertEquals(valueKey, assertInstanceOf(TranslatableContents.class, value.getContents()).getKey());
+        assertEquals(ChatFormatting.GRAY.getColor(), component.getStyle().getColor().getValue());
+    }
+
     @Test
     void creativeGroupIsRemovedWhileTheGroupAboveSlotsIsKept() {
         var name = Component.literal("Zip-up Hoodie");

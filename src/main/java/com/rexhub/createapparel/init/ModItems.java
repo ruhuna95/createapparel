@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.init;
 
 import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.item.SewingPatternItem;
 import com.rexhub.createapparel.material.FabricAttribute;
 import com.rexhub.createapparel.material.FabricColor;
@@ -104,6 +105,11 @@ public final class ModItems {
     public static final RegistryObject<Item> BACKPACK = registerGarment("backpack");
     public static final RegistryObject<Item> DAYPACK = registerGarment("daypack");
     public static final RegistryObject<Item> CROSSBODY_BAG = registerGarment("crossbody_bag");
+    public static final RegistryObject<Item> NECKLACE = ModRegistries.ITEMS.register("necklace",
+            () -> new MetalAccessoryItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> NECKTIE = registerGarment("necktie");
+    public static final RegistryObject<Item> GOLD_NECKLACE_BASE = registerSimple("gold_necklace_base");
+    public static final RegistryObject<Item> SILVER_NECKLACE_BASE = registerSimple("silver_necklace_base");
     public static final RegistryObject<Item> BLOUSE_ROUND = registerGarment("blouse_round");
     public static final RegistryObject<Item> BLOUSE_FRILL = registerGarment("blouse_frill");
     public static final RegistryObject<Item> BLOUSE_BOW_TIE = registerGarment("blouse_bow_tie");
@@ -195,7 +201,7 @@ public final class ModItems {
                     SNEAKERS, CANVAS_SNEAKERS, DRESS_SHOES, LOAFERS,
                     ANKLE_BOOTS, WORK_BOOTS, KNEE_HIGH_BOOTS, PUMPS, SANDALS, SLIPPERS,
                     CAP, BEANIE, BERET, HAT, CASQUETTE, SUN_VISOR, GLASSES, SUNGLASSES, MASK,
-                    BACKPACK, DAYPACK, CROSSBODY_BAG
+                    BACKPACK, DAYPACK, CROSSBODY_BAG, NECKLACE, NECKTIE
             );
 
     static {
@@ -317,6 +323,8 @@ public final class ModItems {
                 FabricMaterial.SYNTHETIC,
                 List.of(SYNTHETIC_FIBER, SYNTHETIC_THREAD)
         );
+        items.add(GOLD_NECKLACE_BASE);
+        items.add(SILVER_NECKLACE_BASE);
         return List.copyOf(items);
     }
 
@@ -347,12 +355,12 @@ public final class ModItems {
         Set<RegistryObject<Item>> uniqueGarmentItems = new HashSet<>(GARMENT_CREATIVE_TAB_ITEMS);
         Set<RegistryObject<Item>> uniqueItems = new HashSet<>(uniqueMainItems);
         uniqueItems.addAll(uniqueGarmentItems);
-        if (CREATIVE_TAB_ITEMS.size() != 142
+        if (CREATIVE_TAB_ITEMS.size() != 144
                 || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 62
+                || GARMENT_CREATIVE_TAB_ITEMS.size() != 64
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 204) {
-            throw new IllegalStateException("The creative tabs must contain 204 unique items");
+                || uniqueItems.size() != 208) {
+            throw new IllegalStateException("The creative tabs must contain 208 unique items");
         }
     }
 }

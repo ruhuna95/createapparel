@@ -4,8 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.GarmentPartModel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedTextures;
-import com.rexhub.createapparel.garment.GarmentData;
-import com.rexhub.createapparel.material.FabricColor;
+import com.rexhub.createapparel.garment.GarmentAppearance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -34,16 +33,16 @@ public final class RuntimeGarmentTextureCache {
     public static ResourceLocation get(
             GarmentPartModel part,
             ResolvedTextures textures,
-            GarmentData data
+            GarmentAppearance data
     ) {
         return CACHE.get(key(part, textures, data), () -> compose(part, textures, data));
     }
 
-    public static TextureReference reference(GarmentPartModel part, ResolvedTextures textures, GarmentData data) {
+    public static TextureReference reference(GarmentPartModel part, ResolvedTextures textures, GarmentAppearance data) {
         return new TextureReference(CACHE.reference(key(part, textures, data), () -> compose(part, textures, data)));
     }
 
-    private static CacheKey key(GarmentPartModel part, ResolvedTextures textures, GarmentData data) {
+    private static CacheKey key(GarmentPartModel part, ResolvedTextures textures, GarmentAppearance data) {
         return new CacheKey(
                 part.id(),
                 textures.base(),
@@ -52,9 +51,9 @@ public final class RuntimeGarmentTextureCache {
                 textures.overlay(),
                 textures.brightness(),
                 textures.brightnessMask(),
-                data.primaryColor(),
-                data.secondaryColor(),
-                data.accentColor()
+                data.primaryTintRgb(),
+                data.secondaryTintRgb(),
+                data.accentTintRgb()
         );
     }
 
@@ -81,7 +80,7 @@ public final class RuntimeGarmentTextureCache {
     private static ResourceLocation compose(
             GarmentPartModel part,
             ResolvedTextures textures,
-            GarmentData data
+            GarmentAppearance data
     ) {
         ResourceManager manager = ClientGarmentAssets.INSTANCE.resourceManager();
         try (NativeImage base = read(manager, textures.base());
@@ -90,9 +89,9 @@ public final class RuntimeGarmentTextureCache {
              NativeImage overlay = readOptional(manager, textures.overlay());
              NativeImage brightnessMask = readOptional(manager, textures.brightnessMask())) {
             NativeImage output = new NativeImage(part.textureWidth(), part.textureHeight(), false);
-            int primaryTint = data.primaryColor().tintRgb();
-            OptionalInt secondaryTint = tintRgb(data.secondaryColor());
-            OptionalInt accentTint = tintRgb(data.accentColor());
+            int primaryTint = data.primaryTintRgb();
+            OptionalInt secondaryTint = data.secondaryTintRgb();
+            OptionalInt accentTint = data.accentTintRgb();
             for (int y = 0; y < part.textureHeight(); y++) {
                 for (int x = 0; x < part.textureWidth(); x++) {
                     int basePixel = base.getPixelRGBA(x, y);
@@ -145,10 +144,6 @@ public final class RuntimeGarmentTextureCache {
         return overlay == null ? OptionalInt.empty() : OptionalInt.of(overlay.getPixelRGBA(x, y));
     }
 
-    private static OptionalInt tintRgb(Optional<FabricColor> color) {
-        return color.isPresent() ? OptionalInt.of(color.get().tintRgb()) : OptionalInt.empty();
-    }
-
     private static NativeImage read(ResourceManager manager, ResourceLocation texture) throws IOException {
         Resource resource = manager.getResource(textureResource(texture))
                 .orElseThrow(() -> new IOException("Missing texture " + texture));
@@ -174,9 +169,9 @@ public final class RuntimeGarmentTextureCache {
             Optional<ResourceLocation> overlay,
             float brightness,
             Optional<ResourceLocation> brightnessMask,
-            FabricColor primaryColor,
-            Optional<FabricColor> secondaryColor,
-            Optional<FabricColor> accentColor
+            int primaryTint,
+            OptionalInt secondaryTint,
+            OptionalInt accentTint
     ) {
     }
 }

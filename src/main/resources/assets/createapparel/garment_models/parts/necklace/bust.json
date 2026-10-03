@@ -1,0 +1,79 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "bust",
+        "from": [
+          -3.91,
+          19.11,
+          -1.8
+        ],
+        "to": [
+          3.91,
+          23.4633,
+          1.37
+        ],
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        },
+        "faces": {
+          "front": {
+            "uv": [
+              3,
+              0,
+              10,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              0,
+              3,
+              4
+            ]
+          },
+          "right": {
+            "uv": [
+              10,
+              0,
+              13,
+              4
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/necklace/bust/base/necklace"
+      },
+      "necklace": {
+        "base": "createapparel:garment/necklace/bust/base/necklace"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/necklace/bust/masks/plain/secondary"
+      }
+    }
+  }
+}

@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 
-public final class GarmentItem extends Item {
+public class GarmentItem extends Item {
     public GarmentItem(Properties properties) {
         super(properties);
     }

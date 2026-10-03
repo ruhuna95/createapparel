@@ -10,6 +10,9 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.garment.GarmentData;
+import com.rexhub.createapparel.garment.GarmentAppearance;
+import com.rexhub.createapparel.garment.MetalAccessoryData;
+import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentDefinitionManager;
 import com.rexhub.createapparel.garment.GarmentItem;
@@ -58,6 +61,12 @@ public final class ApparelCommand {
     private static final DynamicCommandExceptionType UNKNOWN_COLOR = new DynamicCommandExceptionType(
             value -> Component.literal("Unknown color: " + value)
     );
+    private static final DynamicCommandExceptionType UNKNOWN_METAL = new DynamicCommandExceptionType(
+            value -> Component.literal("Unknown metal color: " + value)
+    );
+    private static final DynamicCommandExceptionType UNKNOWN_GEM = new DynamicCommandExceptionType(
+            value -> Component.literal("Unknown gem: " + value)
+    );
     private static final DynamicCommandExceptionType UNKNOWN_SKIN_TONE = new DynamicCommandExceptionType(
             value -> Component.literal("Unknown skin tone: " + value)
     );
@@ -103,7 +112,9 @@ public final class ApparelCommand {
                                 ))
                                 .executes(context -> giveGarment(context, null, null, null, null, null))
                                 .then(Commands.argument("material", StringArgumentType.word())
-                                        .suggests((context, builder) -> suggestSerialized(FabricMaterial.values(), builder))
+                                        .suggests((context, builder) -> isMetalAccessory(context)
+                                                ? suggestSerialized(MetalAccessoryData.MetalColor.values(), builder)
+                                                : suggestSerialized(FabricMaterial.values(), builder))
                                         .executes(context -> giveGarment(
                                                 context,
                                                 string(context, "material"),
@@ -113,10 +124,9 @@ public final class ApparelCommand {
                                                 null
                                         ))
                                         .then(Commands.argument("primary_color", StringArgumentType.word())
-                                                .suggests((context, builder) -> suggestSerialized(
-                                                        FabricColor.values(),
-                                                        builder
-                                                ))
+                                                .suggests((context, builder) -> isMetalAccessory(context)
+                                                        ? suggestSerialized(MetalAccessoryData.Gem.values(), builder)
+                                                        : suggestSerialized(FabricColor.values(), builder))
                                                 .executes(context -> giveGarment(
                                                         context,
                                                         string(context, "material"),
@@ -130,14 +140,22 @@ public final class ApparelCommand {
                                                                 designSuggestions(context),
                                                                 builder
                                                         ))
+                                                        .executes(context -> giveGarment(context,
+                                                                string(context, "material"),
+                                                                string(context, "primary_color"),
+                                                                string(context, "design"), null, null))
                                                         .then(Commands.argument("secondary_color", StringArgumentType.word())
-                                                                .suggests((context, builder) -> suggestOptionalColors(builder))
+                                                                .suggests(ApparelCommand::suggestOptionalColors)
+                                                                .executes(context -> giveGarment(context,
+                                                                        string(context, "material"),
+                                                                        string(context, "primary_color"),
+                                                                        string(context, "design"),
+                                                                        string(context, "secondary_color"), null))
                                                                 .then(Commands.argument(
                                                                                 "accent_color",
                                                                                 StringArgumentType.word()
                                                                         )
-                                                                        .suggests((context, builder) ->
-                                                                                suggestOptionalColors(builder))
+                                                                        .suggests(ApparelCommand::suggestOptionalColors)
                                                                         .executes(context -> giveGarment(
                                                                                 context,
                                                                                 string(context, "material"),
@@ -146,6 +164,11 @@ public final class ApparelCommand {
                                                                                 string(context, "secondary_color"),
                                                                                 string(context, "accent_color")
                                                                         )))))))));
+    }
+
+    private static boolean isMetalAccessory(CommandContext<CommandSourceStack> context) {
+        return ForgeRegistries.ITEMS.getValue(ResourceLocationArgument.getId(context, "garment_item"))
+                instanceof MetalAccessoryItem;
     }
 
     private static java.util.stream.Stream<String> designSuggestions(CommandContext<CommandSourceStack> context) {
@@ -255,31 +278,34 @@ public final class ApparelCommand {
             throw UNKNOWN_GARMENT.create(garmentId);
         }
 
-        FabricMaterial material = materialName == null
-                ? FabricMaterial.COTTON
-                : parseMaterial(materialName);
-        FabricColor primaryColor = primaryColorName == null
-                ? FabricColor.WHITE
-                : parseColor(primaryColorName);
-        GarmentData defaults = GarmentData.defaultFor(definition);
-        String design = designName == null ? defaults.design() : designName;
+        String design = designName == null ? "plain" : designName;
         if (!definition.designs().contains(design)) {
             throw UNKNOWN_DESIGN.create(garmentId + " / " + design);
         }
-        Optional<FabricColor> secondaryColor = secondaryColorName == null
-                ? defaults.secondaryColor()
-                : parseOptionalColor(secondaryColorName);
-        Optional<FabricColor> accentColor = accentColorName == null
-                ? defaults.accentColor()
-                : parseOptionalColor(accentColorName);
-
-        GarmentData data = new GarmentData(
-                material,
-                design,
-                primaryColor,
-                secondaryColor,
-                accentColor
-        );
+        GarmentAppearance data;
+        if (item instanceof MetalAccessoryItem) {
+            if (!"plain".equals(design)) {
+                throw UNKNOWN_DESIGN.create(garmentId + " / " + design);
+            }
+            if (secondaryColorName != null && !NO_COLOR.equals(secondaryColorName)) {
+                throw UNKNOWN_COLOR.create(secondaryColorName);
+            }
+            if (accentColorName != null && !NO_COLOR.equals(accentColorName)) {
+                throw UNKNOWN_COLOR.create(accentColorName);
+            }
+            data = new MetalAccessoryData(
+                    materialName == null ? MetalAccessoryData.DEFAULT.metalColor()
+                            : parseSerialized(MetalAccessoryData.MetalColor.values(), materialName, UNKNOWN_METAL),
+                    primaryColorName == null ? MetalAccessoryData.DEFAULT.gem()
+                            : parseSerialized(MetalAccessoryData.Gem.values(), primaryColorName, UNKNOWN_GEM));
+        } else {
+            data = new GarmentData(
+                    materialName == null ? FabricMaterial.SYNTHETIC : parseMaterial(materialName),
+                    design,
+                    primaryColorName == null ? FabricColor.WHITE : parseColor(primaryColorName),
+                    secondaryColorName == null ? Optional.empty() : parseOptionalColor(secondaryColorName),
+                    accentColorName == null ? Optional.empty() : parseOptionalColor(accentColorName));
+        }
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "target");
         for (ServerPlayer target : targets) {
             ItemStack stack = new ItemStack(item);
@@ -502,7 +528,11 @@ public final class ApparelCommand {
     }
 
     private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions>
-    suggestOptionalColors(com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+    suggestOptionalColors(CommandContext<CommandSourceStack> context,
+                          com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+        if (isMetalAccessory(context)) {
+            return SharedSuggestionProvider.suggest(List.of(NO_COLOR), builder);
+        }
         return SharedSuggestionProvider.suggest(
                 java.util.stream.Stream.concat(
                         java.util.stream.Stream.of(NO_COLOR),
@@ -528,6 +558,13 @@ public final class ApparelCommand {
 
     private static FabricMaterial parseMaterial(String value) throws CommandSyntaxException {
         return FabricMaterial.fromSerializedName(value).orElseThrow(() -> UNKNOWN_MATERIAL.create(value));
+    }
+
+    private static <T extends Enum<T> & net.minecraft.util.StringRepresentable> T parseSerialized(
+            T[] values, String value, DynamicCommandExceptionType error
+    ) throws CommandSyntaxException {
+        return Arrays.stream(values).filter(candidate -> candidate.getSerializedName().equals(value))
+                .findFirst().orElseThrow(() -> error.create(value));
     }
 
     private static FabricColor parseColor(String value) throws CommandSyntaxException {

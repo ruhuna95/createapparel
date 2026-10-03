@@ -1,0 +1,109 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "torso",
+        "from": [
+          -4.005,
+          11.995,
+          -2.41
+        ],
+        "to": [
+          4.005,
+          24.005,
+          2.41
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              4,
+              16,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              4,
+              24,
+              16
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "pendant",
+        "from": [
+          -0.5,
+          19.995,
+          -2.41
+        ],
+        "to": [
+          0.5,
+          20.995,
+          -1.995
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              0,
+              16,
+              1,
+              17
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/necklace/torso/base/necklace"
+      },
+      "necklace": {
+        "base": "createapparel:garment/necklace/torso/base/necklace"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/necklace/torso/masks/plain/secondary"
+      }
+    }
+  }
+}

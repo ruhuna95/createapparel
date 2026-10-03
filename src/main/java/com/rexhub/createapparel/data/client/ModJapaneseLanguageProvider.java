@@ -22,9 +22,18 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("itemGroup.createapparel", "Create: Apparel");
         add("itemGroup.createapparel.garment", "Create Apparel - 衣服");
         add("tooltip.createapparel.garment.slot", "%s用衣服");
+        add("tooltip.createapparel.garment.material", "生地: %s");
+        add("tooltip.createapparel.garment.primary_color", "生地色: %s");
+        add("tooltip.createapparel.garment.design", "デザイン: %s");
+        add("tooltip.createapparel.garment.secondary_color", "サブカラー: %s");
+        add("tooltip.createapparel.garment.accent_color", "アクセントカラー: %s");
+        for (FabricMaterial material : FabricMaterial.values()) {
+            add("fabric_material.createapparel." + material.getSerializedName(), materialName(material));
+        }
         add("tooltip.createapparel.machine.fiber", "繊維：%s");
         add("tooltip.createapparel.machine.thread", "糸：%s");
         add("tooltip.createapparel.machine.fabric", "生地：%s");
+        add("tooltip.createapparel.machine.empty", "なし");
         add("tooltip.createapparel.machine.pattern", "型紙：%s");
 
         addBlock(ModBlocks.COTTON_CROP, "綿花の作物");
@@ -111,6 +120,20 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.BACKPACK.get(), "バックパック");
         add(ModItems.DAYPACK.get(), "デイパック");
         add(ModItems.CROSSBODY_BAG.get(), "ボディバッグ");
+        add(ModItems.NECKLACE.get(), "ネックレス");
+        add(ModItems.NECKTIE.get(), "ネクタイ");
+        add(ModItems.GOLD_NECKLACE_BASE.get(), "金のネックレス素体");
+        add(ModItems.SILVER_NECKLACE_BASE.get(), "銀のネックレス素体");
+        add("tooltip.createapparel.accessory.metal", "金属: %s");
+        add("tooltip.createapparel.accessory.gem", "ジェム: %s");
+        add("metal_color.createapparel.gold", "金");
+        add("metal_color.createapparel.silver", "銀");
+        add("gem.createapparel.diamond", "ダイヤモンド");
+        add("gem.createapparel.emerald", "エメラルド");
+        add("gem.createapparel.amethyst", "アメジスト");
+        add("gem.createapparel.ruby", "ルビー");
+        add("gem.createapparel.sapphire", "サファイア");
+        add("gem.createapparel.pearl", "パール");
         add("style_category.createapparel.carry", "掛け方");
         add("style.createapparel.carry.back", "後ろ掛け");
         add("style.createapparel.carry.front", "前掛け");
@@ -138,6 +161,8 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("screen.createapparel.sewing_pattern.secondary_color", "サブカラー: %s");
         add("screen.createapparel.sewing_pattern.accent_color", "アクセント: %s");
         add("screen.createapparel.sewing_pattern.preview", "完成プレビュー");
+        add("screen.createapparel.sewing_pattern.fabric_required", "必要な生地：%s");
+        add("screen.createapparel.sewing_pattern.thread_required", "必要な糸：%s");
         add("container.createapparel.wardrobe", "ワードローブ");
         add("screen.createapparel.wardrobe.apparel_slots", "アパレルスロット");
         add("screen.createapparel.wardrobe.selected_garment", "選択中の衣服: %s");

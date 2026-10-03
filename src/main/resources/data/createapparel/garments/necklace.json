@@ -1,0 +1,9 @@
+{
+  "default_slot": "neck",
+  "allowed_slots": ["neck"],
+  "model_template": "createapparel:necklace",
+  "model_variant": "default",
+  "texture_variant": "necklace",
+  "designs": ["plain"],
+  "styles": {}
+}

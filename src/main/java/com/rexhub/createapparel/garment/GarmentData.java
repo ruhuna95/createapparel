@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public record GarmentData(
         FabricMaterial material,
@@ -13,7 +14,7 @@ public record GarmentData(
         FabricColor primaryColor,
         Optional<FabricColor> secondaryColor,
         Optional<FabricColor> accentColor
-) {
+) implements GarmentAppearance {
     public static final String TAG_NAME = "GarmentData";
 
     public GarmentData {
@@ -26,7 +27,7 @@ public record GarmentData(
                 ? "plain"
                 : definition.designs().iterator().next();
         return new GarmentData(
-                FabricMaterial.COTTON,
+                FabricMaterial.SYNTHETIC,
                 design,
                 FabricColor.WHITE,
                 Optional.empty(),
@@ -60,6 +61,21 @@ public record GarmentData(
         secondaryColor.ifPresent(color -> tag.putString("secondary_color", color.getSerializedName()));
         accentColor.ifPresent(color -> tag.putString("accent_color", color.getSerializedName()));
         stack.getOrCreateTag().put(TAG_NAME, tag);
+    }
+
+    @Override
+    public int primaryTintRgb() {
+        return primaryColor.tintRgb();
+    }
+
+    @Override
+    public OptionalInt secondaryTintRgb() {
+        return secondaryColor.isPresent() ? OptionalInt.of(secondaryColor.get().tintRgb()) : OptionalInt.empty();
+    }
+
+    @Override
+    public OptionalInt accentTintRgb() {
+        return accentColor.isPresent() ? OptionalInt.of(accentColor.get().tintRgb()) : OptionalInt.empty();
     }
 
     private static Optional<FabricColor> optionalColor(CompoundTag tag, String key) {

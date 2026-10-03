@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.data.server;
 
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.garment.MetalAccessoryData.Gem;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModTags;
 import com.rexhub.createapparel.material.FabricColor;
@@ -32,6 +33,16 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         addFiberTags();
         addThreadTags();
         addFabricTags();
+        for (Gem gem : Gem.values()) {
+            tag(gem.tag()).add(switch (gem) {
+                case DIAMOND -> Items.DIAMOND;
+                case EMERALD -> Items.EMERALD;
+                case AMETHYST -> Items.AMETHYST_SHARD;
+                case RUBY -> Items.REDSTONE;
+                case SAPPHIRE -> Items.LAPIS_LAZULI;
+                case PEARL -> Items.QUARTZ;
+            });
+        }
         tag(ModTags.Items.SILKWORM_FOOD).addTag(ItemTags.LEAVES);
     }
 

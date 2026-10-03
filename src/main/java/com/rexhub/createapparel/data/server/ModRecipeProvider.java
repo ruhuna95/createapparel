@@ -3,6 +3,9 @@ package com.rexhub.createapparel.data.server;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.garment.MetalAccessoryData;
+import com.rexhub.createapparel.garment.MetalAccessoryData.Gem;
+import com.rexhub.createapparel.garment.MetalAccessoryData.MetalColor;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModTags;
 import com.rexhub.createapparel.material.FabricColor;
@@ -13,6 +16,8 @@ import com.rexhub.createapparel.recipe.WeavingRecipe;
 import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
 import com.simibubi.create.content.kinetics.millstone.MillingRecipe;
 import com.simibubi.create.content.kinetics.mixer.MixingRecipe;
+import com.simibubi.create.content.kinetics.mixer.CompactingRecipe;
+import com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.FinishedRecipe;
@@ -22,6 +27,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.ItemLike;
@@ -66,6 +72,26 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
+
+        sewing("necktie", ModItems.NECKTIE,
+                List.of(ModTags.Items.FABRICS_SILK, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        for (MetalColor metal : MetalColor.values()) {
+            RegistryObject<Item> base = metal == MetalColor.GOLD
+                    ? ModItems.GOLD_NECKLACE_BASE : ModItems.SILVER_NECKLACE_BASE;
+            Item nugget = metal == MetalColor.GOLD ? Items.GOLD_NUGGET : Items.IRON_NUGGET;
+            register(consumer -> new ProcessingRecipeBuilder<>(CompactingRecipe::new,
+                    asResource(base.getId().getPath()))
+                    .require(nugget).require(nugget).require(nugget).output(base.get()).build(consumer));
+            for (Gem gem : Gem.values()) {
+                register(consumer -> {
+                    ItemStack result = new ItemStack(ModItems.NECKLACE.get());
+                    new MetalAccessoryData(metal, gem).write(result);
+                    new ProcessingRecipeBuilder<>(DeployerApplicationRecipe::new,
+                            asResource("necklace/" + metal.getSerializedName() + "_" + gem.getSerializedName()))
+                            .require(base.get()).require(gem.tag()).output(result).build(consumer);
+                });
+            }
+        }
 
         milling("cotton_boll", ModItems.COTTON_BOLL, ModItems.COTTON_FIBER);
         milling("flax", ModItems.FLAX, ModItems.FLAX_FIBER);

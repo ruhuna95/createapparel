@@ -5,6 +5,7 @@ import com.rexhub.createapparel.init.ModBlocks;
 import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.material.FabricAttribute;
+import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.data.LanguageProvider;
@@ -23,9 +24,18 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("itemGroup.createapparel", "Create: Apparel");
         add("itemGroup.createapparel.garment", "Create: Apparel - Garment");
         add("tooltip.createapparel.garment.slot", "Garment for %s");
+        add("tooltip.createapparel.garment.material", "Fabric: %s");
+        add("tooltip.createapparel.garment.primary_color", "Fabric Color: %s");
+        add("tooltip.createapparel.garment.design", "Design: %s");
+        add("tooltip.createapparel.garment.secondary_color", "Secondary Color: %s");
+        add("tooltip.createapparel.garment.accent_color", "Accent Color: %s");
+        for (FabricMaterial material : FabricMaterial.values()) {
+            add("fabric_material.createapparel." + material.getSerializedName(), material.displayName());
+        }
         add("tooltip.createapparel.machine.fiber", "Fiber: %s");
         add("tooltip.createapparel.machine.thread", "Thread: %s");
         add("tooltip.createapparel.machine.fabric", "Fabric: %s");
+        add("tooltip.createapparel.machine.empty", "Empty");
         add("tooltip.createapparel.machine.pattern", "Pattern: %s");
 
         addBlock(ModBlocks.COTTON_CROP, "Cotton Crop");
@@ -112,6 +122,20 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.BACKPACK.get(), "Backpack");
         add(ModItems.DAYPACK.get(), "Daypack");
         add(ModItems.CROSSBODY_BAG.get(), "Crossbody Bag");
+        add(ModItems.NECKLACE.get(), "Necklace");
+        add(ModItems.NECKTIE.get(), "Necktie");
+        add(ModItems.GOLD_NECKLACE_BASE.get(), "Gold Necklace Base");
+        add(ModItems.SILVER_NECKLACE_BASE.get(), "Silver Necklace Base");
+        add("tooltip.createapparel.accessory.metal", "Metal: %s");
+        add("tooltip.createapparel.accessory.gem", "Gem: %s");
+        add("metal_color.createapparel.gold", "Gold");
+        add("metal_color.createapparel.silver", "Silver");
+        add("gem.createapparel.diamond", "Diamond");
+        add("gem.createapparel.emerald", "Emerald");
+        add("gem.createapparel.amethyst", "Amethyst");
+        add("gem.createapparel.ruby", "Ruby");
+        add("gem.createapparel.sapphire", "Sapphire");
+        add("gem.createapparel.pearl", "Pearl");
         add("style_category.createapparel.carry", "Carry");
         add("style.createapparel.carry.back", "On back");
         add("style.createapparel.carry.front", "On front");
@@ -139,6 +163,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("screen.createapparel.sewing_pattern.secondary_color", "Secondary: %s");
         add("screen.createapparel.sewing_pattern.accent_color", "Accent: %s");
         add("screen.createapparel.sewing_pattern.preview", "Finished Preview");
+        add("screen.createapparel.sewing_pattern.fabric_required", "Fabric required: %s");
+        add("screen.createapparel.sewing_pattern.thread_required", "Thread required: %s");
         add("container.createapparel.wardrobe", "Wardrobe");
         add("screen.createapparel.wardrobe.apparel_slots", "Apparel Slots");
         add("screen.createapparel.wardrobe.selected_garment", "Selected Garment: %s");

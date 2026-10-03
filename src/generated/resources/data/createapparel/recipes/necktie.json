@@ -1,0 +1,20 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 1,
+    "tag": [
+      "createapparel:fabrics/silk",
+      "createapparel:fabrics/synthetic"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:necktie"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}

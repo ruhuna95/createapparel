@@ -1,0 +1,50 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "torso",
+        "from": [
+          -4.005,
+          11.995,
+          -2.41
+        ],
+        "to": [
+          4.005,
+          24.005,
+          2.25
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/necktie/torso/base/necktie"
+      },
+      "necktie": {
+        "base": "createapparel:garment/necktie/torso/base/necktie"
+      }
+    },
+    "designs": {}
+  }
+}

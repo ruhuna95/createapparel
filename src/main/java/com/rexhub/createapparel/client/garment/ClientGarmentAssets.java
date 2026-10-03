@@ -4,6 +4,7 @@ import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.garment.GarmentData;
+import com.rexhub.createapparel.garment.GarmentAppearance;
 import com.rexhub.createapparel.garment.GarmentWearContext;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentDefinitionManager;
@@ -157,11 +158,11 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         if (variant == null) {
             return Optional.empty();
         }
-        GarmentData data;
+        GarmentAppearance data;
         try {
-            data = GarmentData.fromStack(stack, definition);
+            data = GarmentAppearance.fromStack(stack, definition);
         } catch (IllegalArgumentException exception) {
-            data = GarmentData.defaultFor(definition);
+            data = GarmentAppearance.defaultFor(stack, definition);
         }
 
         Map<String, String> styles = itemDisplay
@@ -560,9 +561,10 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             Optional<LegEnvelope> legEnvelope,
             GarmentHemGeometry.Prepared hemGeometry
     ) {
-        public ResolvedTextures resolveTextures(GarmentDefinition definition, GarmentData data) {
+        public ResolvedTextures resolveTextures(GarmentDefinition definition, GarmentAppearance data) {
             TextureVariant variant = variants.getOrDefault(definition.textureVariant(), variants.get("default"));
-            ResourceLocation base = materialOverrides.getOrDefault(data.material(), variant.base());
+            ResourceLocation base = data instanceof GarmentData fabric
+                    ? materialOverrides.getOrDefault(fabric.material(), variant.base()) : variant.base();
             DesignMasks masks = designsFor(definition.textureVariant()).getOrDefault(data.design(), DesignMasks.NONE);
             return new ResolvedTextures(
                     base, masks.secondary(), masks.accent(), variant.overlay(),
@@ -662,7 +664,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
 
     public record ResolvedGarment(
             GarmentDefinition definition,
-            GarmentData data,
+            GarmentAppearance data,
             List<ResolvedPart> parts
     ) {
     }

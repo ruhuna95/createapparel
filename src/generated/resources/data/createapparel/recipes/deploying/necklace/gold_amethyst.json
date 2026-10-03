@@ -1,0 +1,22 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "createapparel:gold_necklace_base"
+    },
+    {
+      "tag": "createapparel:gems/amethyst"
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:necklace",
+      "nbt": {
+        "MetalAccessoryData": {
+          "gem": "amethyst",
+          "metal_color": "gold"
+        }
+      }
+    }
+  ]
+}

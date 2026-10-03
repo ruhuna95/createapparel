@@ -1,0 +1,22 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "createapparel:silver_necklace_base"
+    },
+    {
+      "tag": "createapparel:gems/emerald"
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:necklace",
+      "nbt": {
+        "MetalAccessoryData": {
+          "gem": "emerald",
+          "metal_color": "silver"
+        }
+      }
+    }
+  ]
+}

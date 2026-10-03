@@ -3,7 +3,9 @@ package com.rexhub.createapparel.client.garment;
 import com.rexhub.createapparel.CreateApparel;
 import com.mojang.datafixers.util.Either;
 import com.rexhub.createapparel.garment.GarmentDefinition;
+import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -17,7 +19,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class GarmentTooltipEvents {
@@ -31,9 +35,54 @@ public final class GarmentTooltipEvents {
         }
         var id = ForgeRegistries.ITEMS.getKey(event.getItemStack().getItem());
         if (id != null) {
-            ClientGarmentAssets.getDefinition(id).ifPresent(definition ->
-                    appendSlots(event.getToolTip(), definition));
+            ClientGarmentAssets.getDefinition(id).ifPresent(definition -> {
+                appendSlots(event.getToolTip(), definition);
+                if (!(event.getItemStack().getItem() instanceof MetalAccessoryItem)) {
+                    GarmentData data;
+                    try {
+                        data = GarmentData.fromStack(event.getItemStack(), definition);
+                    } catch (IllegalArgumentException exception) {
+                        data = GarmentData.defaultFor(definition);
+                    }
+                    appendFabricAppearance(event.getToolTip(), data);
+                }
+            });
         }
+    }
+
+    static void appendFabricAppearance(List<Component> tooltip, GarmentData data) {
+        appendFabricAppearance(tooltip, data.material().getSerializedName(), data.primaryColor().getSerializedName(),
+                data.design(), data.secondaryColor().map(color -> color.getSerializedName()),
+                data.accentColor().map(color -> color.getSerializedName()));
+    }
+
+    static void appendFabricAppearance(List<Component> tooltip, String material, String primaryColor, String design,
+                                       Optional<String> secondaryColor, Optional<String> accentColor) {
+        int insertion = tooltip.size();
+        for (int index = 0; index < tooltip.size(); index++) {
+            if (tooltip.get(index).getContents() instanceof TranslatableContents text
+                    && (text.getKey().equals("itemGroup.createapparel.garment")
+                    || text.getKey().equals("tooltip.createapparel.garment.slot"))) {
+                insertion = index + 1;
+            }
+        }
+        List<Component> appearance = new ArrayList<>(List.of(
+                appearanceLine("material", Component.translatable(
+                        "fabric_material.createapparel." + material)),
+                appearanceLine("primary_color", colorName(primaryColor)),
+                appearanceLine("design", Component.translatable("design.createapparel." + design))));
+        secondaryColor.ifPresent(color -> appearance.add(appearanceLine("secondary_color", colorName(color))));
+        accentColor.ifPresent(color -> appearance.add(appearanceLine("accent_color", colorName(color))));
+        tooltip.addAll(insertion, appearance);
+    }
+
+    private static Component appearanceLine(String field, Component value) {
+        return Component.translatable("tooltip.createapparel.garment." + field, value)
+                .withStyle(ChatFormatting.GRAY);
+    }
+
+    private static Component colorName(String color) {
+        return Component.translatable("color.minecraft." + color);
     }
 
     static void appendSlots(List<Component> tooltip, GarmentDefinition definition) {

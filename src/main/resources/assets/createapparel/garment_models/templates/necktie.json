@@ -1,0 +1,6 @@
+{
+  "default": {
+    "torso": {"model": "createapparel:necktie/torso"},
+    "bust": {"model": "createapparel:necktie/bust"}
+  }
+}

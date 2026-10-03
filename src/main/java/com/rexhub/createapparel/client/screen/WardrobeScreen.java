@@ -6,7 +6,7 @@ import com.rexhub.createapparel.apparel.SkinTone;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
 import com.rexhub.createapparel.client.apparel.ApparelRenderSnapshot;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
-import com.rexhub.createapparel.garment.GarmentData;
+import com.rexhub.createapparel.garment.GarmentAppearance;
 import com.rexhub.createapparel.garment.EquippedStyleState;
 import com.rexhub.createapparel.garment.GarmentStyleResolver;
 import java.util.Map;
@@ -70,7 +70,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private GarmentSlot selectedSlot = GarmentSlot.TOP;
     private ItemStack observedStack = ItemStack.EMPTY;
     private GarmentDefinition selectedDefinition;
-    private GarmentData previewData;
+    private GarmentAppearance previewData;
     private EquippedStyleState previewStyles = EquippedStyleState.EMPTY;
     private EquippedStyleState observedStyles = EquippedStyleState.EMPTY;
     private long observedRevision = -1;
@@ -172,7 +172,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         cachedPreview = null;
 
         GarmentDefinition definition = definitionFor(actual).orElse(null);
-        GarmentData actualData = readData(actual, definition).orElse(null);
+        GarmentAppearance actualData = readData(actual, definition).orElse(null);
         if (force || !ItemStack.matches(actual, observedStack)) {
             selectedNameChangedAt = Util.getMillis();
         }
@@ -328,12 +328,12 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         return itemId == null ? Optional.empty() : ClientGarmentAssets.getDefinition(itemId);
     }
 
-    private static Optional<GarmentData> readData(ItemStack stack, GarmentDefinition definition) {
+    private static Optional<GarmentAppearance> readData(ItemStack stack, GarmentDefinition definition) {
         if (stack.isEmpty() || definition == null) {
             return Optional.empty();
         }
         try {
-            return Optional.of(GarmentData.fromStack(stack, definition));
+            return Optional.of(GarmentAppearance.fromStack(stack, definition));
         } catch (IllegalArgumentException exception) {
             return Optional.empty();
         }
