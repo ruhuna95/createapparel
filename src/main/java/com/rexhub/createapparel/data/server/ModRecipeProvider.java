@@ -79,7 +79,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         metalAccessory("necklace", ModItems.NECKLACE,
                 ModItems.GOLD_NECKLACE_BASE, ModItems.SILVER_NECKLACE_BASE, 3);
         metalAccessory("bracelet", ModItems.BRACELET,
-                ModItems.GOLD_BRACELET_BASE, ModItems.SILVER_BRACELET_BASE, 3);
+                ModItems.GOLD_BRACELET_BASE, ModItems.SILVER_BRACELET_BASE, 2);
         sewing("wristband", ModItems.WRISTBAND,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SYNTHETIC), 1);
         sewing("gloves", ModItems.GLOVES,

@@ -187,6 +187,25 @@ class HandAccessoryAssetTest {
         assertFalse(Files.exists(GENERATED.resolve("bracelet.json")));
     }
 
+    @Test
+    void braceletBasesRequireTwoMatchingNuggets() throws Exception {
+        for (var metal : Map.of("gold", "gold", "silver", "iron").entrySet()) {
+            String baseId = metal.getKey() + "_bracelet_base";
+            var recipe = json(GENERATED.resolve("compacting/" + baseId + ".json"));
+            assertEquals("create:compacting", recipe.get("type").getAsString());
+            var ingredients = recipe.getAsJsonArray("ingredients");
+            assertEquals(2, ingredients.size(), baseId);
+            for (var ingredient : ingredients) {
+                assertEquals("minecraft:" + metal.getValue() + "_nugget",
+                        ingredient.getAsJsonObject().get("item").getAsString());
+            }
+            var results = recipe.getAsJsonArray("results");
+            assertEquals(1, results.size());
+            assertEquals("createapparel:" + baseId,
+                    results.get(0).getAsJsonObject().get("item").getAsString());
+        }
+    }
+
     private static GarmentPartModel part(String id, String semantic) throws Exception {
         return ClientGarmentAssetLoader.parsePart(ResourceLocation.parse("createapparel:" + id + "/" + semantic),
                 json(ASSETS.resolve("garment_models/parts/" + id + "/" + semantic + ".json")));
