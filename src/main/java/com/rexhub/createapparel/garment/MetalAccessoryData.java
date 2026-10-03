@@ -1,9 +1,7 @@
 package com.rexhub.createapparel.garment;
 
-import com.rexhub.createapparel.CreateApparel;
-import net.minecraft.core.registries.Registries;
+import com.rexhub.createapparel.init.ModTags;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.Item;
@@ -108,8 +106,14 @@ public record MetalAccessoryData(MetalColor metalColor, Gem gem) implements Garm
         }
 
         public TagKey<Item> tag() {
-            return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(
-                    CreateApparel.MOD_ID, "gems/" + getSerializedName()));
+            return switch (this) {
+                case DIAMOND -> ModTags.Items.GEMS_DIAMOND;
+                case EMERALD -> ModTags.Items.GEMS_EMERALD;
+                case AMETHYST -> ModTags.Items.GEMS_AMETHYST;
+                case RUBY -> ModTags.Items.GEMS_RUBY;
+                case SAPPHIRE -> ModTags.Items.GEMS_SAPPHIRE;
+                case PEARL -> ModTags.Items.GEMS_PEARL;
+            };
         }
 
         @Override

@@ -39,6 +39,13 @@ public final class ModTags {
         public static final TagKey<Item> FABRICS_SYNTHETIC = create("fabrics/synthetic");
         public static final TagKey<Item> DYEABLE_FABRICS = create("dyeable_fabrics");
 
+        public static final TagKey<Item> GEMS_DIAMOND = create("gems/diamond");
+        public static final TagKey<Item> GEMS_EMERALD = create("gems/emerald");
+        public static final TagKey<Item> GEMS_AMETHYST = create("gems/amethyst");
+        public static final TagKey<Item> GEMS_RUBY = create("gems/ruby");
+        public static final TagKey<Item> GEMS_SAPPHIRE = create("gems/sapphire");
+        public static final TagKey<Item> GEMS_PEARL = create("gems/pearl");
+
         public static final TagKey<Item> SILKWORM_FOOD = create("silkworm_food");
 
         private Items() {

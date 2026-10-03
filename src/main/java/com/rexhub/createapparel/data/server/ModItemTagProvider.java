@@ -1,7 +1,6 @@
 package com.rexhub.createapparel.data.server;
 
 import com.rexhub.createapparel.CreateApparel;
-import com.rexhub.createapparel.garment.MetalAccessoryData.Gem;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModTags;
 import com.rexhub.createapparel.material.FabricColor;
@@ -33,16 +32,7 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         addFiberTags();
         addThreadTags();
         addFabricTags();
-        for (Gem gem : Gem.values()) {
-            tag(gem.tag()).add(switch (gem) {
-                case DIAMOND -> Items.DIAMOND;
-                case EMERALD -> Items.EMERALD;
-                case AMETHYST -> Items.AMETHYST_SHARD;
-                case RUBY -> Items.REDSTONE;
-                case SAPPHIRE -> Items.LAPIS_LAZULI;
-                case PEARL -> Items.QUARTZ;
-            });
-        }
+        addGemTags();
         tag(ModTags.Items.SILKWORM_FOOD).addTag(ItemTags.LEAVES);
     }
 
@@ -95,6 +85,15 @@ public final class ModItemTagProvider extends ItemTagsProvider {
 
         var dyeableFabrics = tag(ModTags.Items.DYEABLE_FABRICS);
         ModItems.fabricItems().keySet().forEach(item -> dyeableFabrics.add(item.get()));
+    }
+
+    private void addGemTags() {
+        tag(ModTags.Items.GEMS_DIAMOND).add(Items.DIAMOND);
+        tag(ModTags.Items.GEMS_EMERALD).add(Items.EMERALD);
+        tag(ModTags.Items.GEMS_AMETHYST).add(Items.AMETHYST_SHARD);
+        tag(ModTags.Items.GEMS_RUBY).add(Items.REDSTONE);
+        tag(ModTags.Items.GEMS_SAPPHIRE).add(Items.LAPIS_LAZULI);
+        tag(ModTags.Items.GEMS_PEARL).add(Items.QUARTZ);
     }
 
     private static TagKey<Item> fabricTag(FabricMaterial material) {

@@ -11,6 +11,7 @@ import com.rexhub.createapparel.garment.GarmentDefinitionManager;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.garment.MetalAccessoryData;
 import com.rexhub.createapparel.init.ModItems;
+import com.rexhub.createapparel.init.ModTags;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -21,6 +22,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -161,6 +163,16 @@ public final class NeckAccessoryGameTests {
 
     @GameTest(template = "apparel_state", batch = "apparel_state")
     public static void recipeAppearanceSurvivesEquipmentAndInventoryPersistence(GameTestHelper helper) {
+        var gemTags = Map.of(
+                MetalAccessoryData.Gem.DIAMOND, ModTags.Items.GEMS_DIAMOND,
+                MetalAccessoryData.Gem.EMERALD, ModTags.Items.GEMS_EMERALD,
+                MetalAccessoryData.Gem.AMETHYST, ModTags.Items.GEMS_AMETHYST,
+                MetalAccessoryData.Gem.RUBY, ModTags.Items.GEMS_RUBY,
+                MetalAccessoryData.Gem.SAPPHIRE, ModTags.Items.GEMS_SAPPHIRE,
+                MetalAccessoryData.Gem.PEARL, ModTags.Items.GEMS_PEARL);
+        for (var gem : MetalAccessoryData.Gem.values()) {
+            helper.assertTrue(gem.tag() == gemTags.get(gem), "Gem tags must use the shared ModTags constants");
+        }
         var definition = GarmentDefinitionManager.get(ModItems.NECKLACE.getId()).orElseThrow();
         for (var metal : MetalAccessoryData.MetalColor.values()) {
             for (var gem : MetalAccessoryData.Gem.values()) {
