@@ -388,6 +388,15 @@ public final class SewingPatternScreen extends Screen {
         renderBackground(graphics);
         graphics.fill(width / 2, height / 2 - 104, width / 2 + 1, height / 2 + 82, 0x55FFFFFF);
         graphics.drawCenteredString(font, title, leftPanelCenter, height / 2 - 98, 0xFFFFFF);
+        if (!recipes.isEmpty()) {
+            SewingRecipe recipe = recipes.get(recipeIndex);
+            graphics.drawCenteredString(font,
+                    Component.translatable("screen.createapparel.sewing_pattern.fabric_required", recipe.getFabricCount()),
+                    leftPanelCenter, height / 2 + 54, 0xFFFFFF);
+            graphics.drawCenteredString(font,
+                    Component.translatable("screen.createapparel.sewing_pattern.thread_required", recipe.getThreadCount()),
+                    leftPanelCenter, height / 2 + 66, 0xFFFFFF);
+        }
         graphics.drawCenteredString(
                 font,
                 Component.translatable("screen.createapparel.sewing_pattern.preview"),

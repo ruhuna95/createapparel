@@ -2,6 +2,7 @@ package com.rexhub.createapparel.block.entity;
 
 import com.rexhub.createapparel.init.ModBlockEntities;
 import com.rexhub.createapparel.init.ModItems;
+import com.rexhub.createapparel.garment.PatternData;
 import com.rexhub.createapparel.item.SewingPatternItem;
 import com.rexhub.createapparel.recipe.ModRecipeTypes;
 import com.rexhub.createapparel.recipe.SewingRecipe;
@@ -168,17 +169,28 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         boolean added = super.addToGoggleTooltip(tooltip, isPlayerSneaking);
+        return addContentsToGoggleTooltip(tooltip) || added;
+    }
+
+    boolean addContentsToGoggleTooltip(List<Component> tooltip) {
+        ItemStack pattern = recipeInventory.getStackInSlot(SewingRecipe.PATTERN_SLOT);
+        Optional<SewingRecipe> configuredRecipe = level == null ? Optional.empty() : PatternData.fromStack(pattern)
+                .flatMap(data -> level.getRecipeManager().byKey(data.recipe()))
+                .filter(SewingRecipe.class::isInstance)
+                .map(SewingRecipe.class::cast)
+                .filter(recipe -> recipe.matchesPatternItem(pattern));
         boolean contentsAdded = MachineGoggleTooltip.addStack(
                 tooltip,
                 "tooltip.createapparel.machine.fabric",
-                recipeInventory.getStackInSlot(SewingRecipe.FABRIC_SLOT)
+                recipeInventory.getStackInSlot(SewingRecipe.FABRIC_SLOT),
+                configuredRecipe.map(SewingRecipe::getFabricCount).orElse(0)
         );
         contentsAdded |= MachineGoggleTooltip.addStack(
                 tooltip,
                 "tooltip.createapparel.machine.thread",
-                recipeInventory.getStackInSlot(SewingRecipe.THREAD_SLOT)
+                recipeInventory.getStackInSlot(SewingRecipe.THREAD_SLOT),
+                configuredRecipe.map(SewingRecipe::getThreadCount).orElse(0)
         );
-        ItemStack pattern = recipeInventory.getStackInSlot(SewingRecipe.PATTERN_SLOT);
         if (!pattern.isEmpty()) {
             contentsAdded |= MachineGoggleTooltip.addValue(
                     tooltip,
@@ -186,7 +198,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
                     SewingPatternItem.getConfiguredGarmentName(pattern, level)
             );
         }
-        return contentsAdded || added;
+        return contentsAdded;
     }
 
     public InteractionResult interact(Player player, InteractionHand hand) {

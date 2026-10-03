@@ -11,11 +11,17 @@ final class MachineGoggleTooltip {
     }
 
     static boolean addStack(List<Component> tooltip, String labelKey, ItemStack stack) {
-        if (stack.isEmpty()) {
+        return addStack(tooltip, labelKey, stack, 0);
+    }
+
+    static boolean addStack(List<Component> tooltip, String labelKey, ItemStack stack, int requiredCount) {
+        if (stack.isEmpty() && requiredCount <= 0) {
             return false;
         }
-        Component line = Component.translatable(labelKey, stack.getHoverName())
-                .append(Component.literal(" x" + stack.getCount()));
+        Component name = stack.isEmpty() ? Component.translatable("tooltip.createapparel.machine.empty")
+                : stack.getHoverName();
+        String quantity = " x" + stack.getCount() + (requiredCount > 0 ? "/" + requiredCount : "");
+        Component line = Component.translatable(labelKey, name).append(Component.literal(quantity));
         tooltip.add(line.copy().withStyle(ChatFormatting.GREEN));
         return true;
     }
