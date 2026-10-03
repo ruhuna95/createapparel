@@ -145,6 +145,26 @@ public final class NeckAccessoryGameTests {
                 new GameProfile(UUID.randomUUID(), "apparel-command-test"));
     }
 
+    @GameTest(template = "apparel_state", batch = "apparel_state")
+    public static void appearanceWritesReplaceOnlyTheOtherAppearance(GameTestHelper helper) {
+        var definition = GarmentDefinitionManager.get(ModItems.NECKTIE.getId()).orElseThrow();
+        var stack = new ItemStack(ModItems.NECKTIE.get());
+        stack.getOrCreateTag().putString("unrelated", "preserve");
+        var fabric = GarmentData.defaultFor(definition);
+        var metal = new MetalAccessoryData(MetalAccessoryData.MetalColor.SILVER, MetalAccessoryData.Gem.RUBY);
+        for (int index = 0; index < 2; index++) {
+            metal.write(stack);
+            helper.assertTrue(!stack.getOrCreateTag().contains(GarmentData.TAG_NAME), "Metal write removes fabric NBT");
+            helper.assertTrue(metal.equals(MetalAccessoryData.fromStack(stack)), "Metal write preserves appearance");
+            helper.assertTrue("preserve".equals(stack.getOrCreateTag().getString("unrelated")), "Metal preserves unrelated NBT");
+            fabric.write(stack);
+            helper.assertTrue(!stack.getOrCreateTag().contains(MetalAccessoryData.TAG_NAME), "Fabric write removes metal NBT");
+            helper.assertTrue(fabric.equals(GarmentData.fromStack(stack, definition)), "Fabric write preserves appearance");
+            helper.assertTrue("preserve".equals(stack.getOrCreateTag().getString("unrelated")), "Fabric preserves unrelated NBT");
+        }
+        helper.succeed();
+    }
+
     private static Set<String> suggestions(CommandDispatcher<CommandSourceStack> dispatcher,
                                            CommandSourceStack source, String input) {
         return dispatcher.getCompletionSuggestions(dispatcher.parse(input, source)).join().getList().stream()

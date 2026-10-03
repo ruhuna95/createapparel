@@ -60,7 +60,9 @@ public record GarmentData(
         tag.putString("primary_color", primaryColor.getSerializedName());
         secondaryColor.ifPresent(color -> tag.putString("secondary_color", color.getSerializedName()));
         accentColor.ifPresent(color -> tag.putString("accent_color", color.getSerializedName()));
-        stack.getOrCreateTag().put(TAG_NAME, tag);
+        CompoundTag root = stack.getOrCreateTag();
+        root.remove(MetalAccessoryData.TAG_NAME);
+        root.put(TAG_NAME, tag);
     }
 
     @Override

@@ -19,6 +19,6 @@
   "result": {
     "count": 1,
     "item": "createapparel:glasses",
-    "nbt": "{GarmentData:{material:\"cotton\",design:\"plain\",primary_color:\"orange\"}}"
+    "nbt": "{GarmentData:{material:\"synthetic\",design:\"plain\",primary_color:\"orange\"}}"
   }
 }

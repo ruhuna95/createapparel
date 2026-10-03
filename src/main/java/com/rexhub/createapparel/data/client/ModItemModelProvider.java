@@ -3,6 +3,7 @@ package com.rexhub.createapparel.data.client;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.garment.GarmentItem;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModRegistries;
 import com.rexhub.createapparel.material.FabricAttribute;
@@ -42,61 +43,11 @@ public final class ModItemModelProvider extends ItemModelProvider {
                         .texture("layer0", modLoc("item/sewing_pattern"));
             } else if (item == ModItems.WARDROBE) {
                 wardrobeModel();
-            } else if (item == ModItems.PULLOVER_HOODIE || item == ModItems.ZIPUP_HOODIE
-                    || item == ModItems.SWEATER || item == ModItems.V_NECK_SWEATER
-                    || item == ModItems.DENIM_PANTS || item == ModItems.SLACKS || item == ModItems.SHORTS
-                    || item == ModItems.A_LINE_SKIRT || item == ModItems.TIGHTS
-                    || item == ModItems.ANKLE_SOCKS || item == ModItems.CREW_SOCKS
-                    || item == ModItems.KNEE_HIGH_SOCKS || item == ModItems.OVER_KNEE_SOCKS
-                    || item == ModItems.THIGH_HIGH_SOCKS
-                    || item == ModItems.SUIT_JACKET || item == ModItems.BLAZER_JACKET
-                    || item == ModItems.DENIM_JACKET || item == ModItems.CHESTERFIELD_COAT
-                    || item == ModItems.TRENCH_COAT || item == ModItems.DUFFLE_COAT || item == ModItems.PEA_COAT
-                    || item == ModItems.UNDERSHIRT || item == ModItems.BRA || item == ModItems.BRIEFS
-                    || item == ModItems.BOXER_BRIEFS || item == ModItems.PANTIES
-                    || item == ModItems.SNEAKERS
-                    || item == ModItems.CANVAS_SNEAKERS
-                    || item == ModItems.DRESS_SHOES
-                    || item == ModItems.LOAFERS
-                    || item == ModItems.ANKLE_BOOTS
-                    || item == ModItems.WORK_BOOTS
-                    || item == ModItems.KNEE_HIGH_BOOTS
-                    || item == ModItems.PUMPS
-                    || item == ModItems.SANDALS
-                    || item == ModItems.SLIPPERS
-                    || item == ModItems.CAP
-                    || item == ModItems.BEANIE
-                    || item == ModItems.BERET
-                    || item == ModItems.HAT
-                    || item == ModItems.CASQUETTE
-                    || item == ModItems.SUN_VISOR
-                    || item == ModItems.GLASSES
-                    || item == ModItems.SUNGLASSES
-                    || item == ModItems.MASK
-                    || item == ModItems.BACKPACK
-                    || item == ModItems.DAYPACK
-                    || item == ModItems.CROSSBODY_BAG
-                    || item == ModItems.NECKLACE
-                    || item == ModItems.NECKTIE) {
-                blouseModel(item);
-            } else if (item == ModItems.BLOUSE_ROUND
-                    || item == ModItems.BLOUSE_FRILL
-                    || item == ModItems.BLOUSE_BOW_TIE
-                    || item == ModItems.BLOUSE_ROUND_THREE_QUARTER_SLEEVE
-                    || item == ModItems.BLOUSE_FRILL_THREE_QUARTER_SLEEVE
-                    || item == ModItems.BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE) {
-                blouseModel(item);
+            } else if (item.get() instanceof GarmentItem) {
+                garmentModel(item);
             } else if (item == ModItems.SPINNING_MACHINE
                     || item == ModItems.LOOM
-                    || item == ModItems.SEWING_MACHINE
-                    || item == ModItems.T_SHIRT
-                    || item == ModItems.T_SHIRT_U_NECK
-                    || item == ModItems.T_SHIRT_V_NECK
-                    || item == ModItems.T_SHIRT_LONGSLEEVES
-                    || item == ModItems.T_SHIRT_LONGSLEEVES_U_NECK
-                    || item == ModItems.T_SHIRT_LONGSLEEVES_V_NECK
-                    || item == ModItems.SHIRT_SHORTSLEEVES
-                    || item == ModItems.SHIRT_LONGSLEEVES) {
+                    || item == ModItems.SEWING_MACHINE) {
                 continue;
             } else {
                 basicItem(item.get());
@@ -153,7 +104,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
         }
     }
 
-    private void blouseModel(RegistryObject<Item> item) {
+    private void garmentModel(RegistryObject<Item> item) {
         getBuilder(item.getId().getPath()).parent(new ModelFile.UncheckedModelFile(mcLoc("builtin/entity")))
                 .transforms()
                 .transform(ItemDisplayContext.GUI).rotation(0, 180, 0).translation(0, -1, 0).scale(0.82F).end()

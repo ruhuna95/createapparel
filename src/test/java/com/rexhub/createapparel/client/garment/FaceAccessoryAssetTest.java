@@ -175,7 +175,10 @@ class FaceAccessoryAssetTest {
                     assertEquals("minecraft:iron_nugget", key.getAsJsonObject("I").get("item").getAsString());
                     var result = recipe.getAsJsonObject("result");
                     assertEquals("createapparel:" + eyewear, result.get("item").getAsString());
-                    assertEquals(color, TagParser.parseTag(result.get("nbt").getAsString()).getCompound("GarmentData").getString("primary_color"));
+                    var data = TagParser.parseTag(result.get("nbt").getAsString()).getCompound("GarmentData");
+                    assertEquals(color, data.getString("primary_color"));
+                    assertEquals("synthetic", data.getString("material"));
+                    assertEquals("plain", data.getString("design"));
                 }
             }
         }

@@ -3,6 +3,7 @@ package com.rexhub.createapparel.client.garment;
 import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Either;
 import com.rexhub.createapparel.garment.GarmentDefinition;
+import com.rexhub.createapparel.garment.MetalAccessoryData;
 import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -19,6 +20,28 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GarmentTooltipEventsTest {
+    @Test
+    void metalAppearanceListsOnlyMetalAndGemAfterSlotsBeforeAdvancedDetails() {
+        for (var metal : MetalAccessoryData.MetalColor.values()) {
+            for (var gem : MetalAccessoryData.Gem.values()) {
+                var group = Component.translatable("itemGroup.createapparel.garment");
+                var slot = Component.translatable("tooltip.createapparel.garment.slot",
+                        Component.translatable("garment_slot.createapparel.neck"));
+                var advanced = Component.literal("createapparel:necklace");
+                List<Component> tooltip = new ArrayList<>(List.of(group, slot, advanced));
+                GarmentTooltipEvents.appendAppearance(tooltip, new MetalAccessoryData(metal, gem));
+                assertEquals(5, tooltip.size());
+                assertSame(group, tooltip.get(0));
+                assertSame(slot, tooltip.get(1));
+                assertTranslatedAppearance(tooltip.get(2), "tooltip.createapparel.accessory.metal",
+                        "metal_color.createapparel." + metal.getSerializedName());
+                assertTranslatedAppearance(tooltip.get(3), "tooltip.createapparel.accessory.gem",
+                        "gem.createapparel." + gem.getSerializedName());
+                assertSame(advanced, tooltip.get(4));
+            }
+        }
+    }
+
     @Test
     void fabricAppearanceListsAllFiveValuesBeforeAdvancedDetails() {
         var group = Component.translatable("itemGroup.createapparel.garment");
@@ -74,8 +97,12 @@ class GarmentTooltipEventsTest {
     }
 
     private static void assertAppearance(Component component, String field, String valueKey) {
+        assertTranslatedAppearance(component, "tooltip.createapparel.garment." + field, valueKey);
+    }
+
+    private static void assertTranslatedAppearance(Component component, String key, String valueKey) {
         var text = assertInstanceOf(TranslatableContents.class, component.getContents());
-        assertEquals("tooltip.createapparel.garment." + field, text.getKey());
+        assertEquals(key, text.getKey());
         var value = assertInstanceOf(Component.class, text.getArgs()[0]);
         assertEquals(valueKey, assertInstanceOf(TranslatableContents.class, value.getContents()).getKey());
         assertEquals(ChatFormatting.GRAY.getColor(), component.getStyle().getColor().getValue());

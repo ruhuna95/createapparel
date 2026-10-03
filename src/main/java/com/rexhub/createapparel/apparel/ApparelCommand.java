@@ -278,7 +278,9 @@ public final class ApparelCommand {
             throw UNKNOWN_GARMENT.create(garmentId);
         }
 
-        String design = designName == null ? "plain" : designName;
+        GarmentAppearance defaults = item instanceof MetalAccessoryItem
+                ? MetalAccessoryData.DEFAULT : GarmentData.defaultFor(definition);
+        String design = designName == null ? defaults.design() : designName;
         if (!definition.designs().contains(design)) {
             throw UNKNOWN_DESIGN.create(garmentId + " / " + design);
         }
@@ -299,12 +301,13 @@ public final class ApparelCommand {
                     primaryColorName == null ? MetalAccessoryData.DEFAULT.gem()
                             : parseSerialized(MetalAccessoryData.Gem.values(), primaryColorName, UNKNOWN_GEM));
         } else {
+            GarmentData fabricDefaults = (GarmentData) defaults;
             data = new GarmentData(
-                    materialName == null ? FabricMaterial.SYNTHETIC : parseMaterial(materialName),
+                    materialName == null ? fabricDefaults.material() : parseMaterial(materialName),
                     design,
-                    primaryColorName == null ? FabricColor.WHITE : parseColor(primaryColorName),
-                    secondaryColorName == null ? Optional.empty() : parseOptionalColor(secondaryColorName),
-                    accentColorName == null ? Optional.empty() : parseOptionalColor(accentColorName));
+                    primaryColorName == null ? fabricDefaults.primaryColor() : parseColor(primaryColorName),
+                    secondaryColorName == null ? fabricDefaults.secondaryColor() : parseOptionalColor(secondaryColorName),
+                    accentColorName == null ? fabricDefaults.accentColor() : parseOptionalColor(accentColorName));
         }
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "target");
         for (ServerPlayer target : targets) {

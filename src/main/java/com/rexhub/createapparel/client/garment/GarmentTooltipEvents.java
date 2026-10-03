@@ -2,10 +2,11 @@ package com.rexhub.createapparel.client.garment;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.mojang.datafixers.util.Either;
+import com.rexhub.createapparel.garment.GarmentAppearance;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.GarmentItem;
-import com.rexhub.createapparel.garment.MetalAccessoryItem;
+import com.rexhub.createapparel.garment.MetalAccessoryData;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -37,27 +38,46 @@ public final class GarmentTooltipEvents {
         if (id != null) {
             ClientGarmentAssets.getDefinition(id).ifPresent(definition -> {
                 appendSlots(event.getToolTip(), definition);
-                if (!(event.getItemStack().getItem() instanceof MetalAccessoryItem)) {
-                    GarmentData data;
-                    try {
-                        data = GarmentData.fromStack(event.getItemStack(), definition);
-                    } catch (IllegalArgumentException exception) {
-                        data = GarmentData.defaultFor(definition);
-                    }
-                    appendFabricAppearance(event.getToolTip(), data);
+                GarmentAppearance appearance;
+                try {
+                    appearance = GarmentAppearance.fromStack(event.getItemStack(), definition);
+                } catch (IllegalArgumentException exception) {
+                    appearance = GarmentAppearance.defaultFor(event.getItemStack(), definition);
                 }
+                appendAppearance(event.getToolTip(), appearance);
             });
         }
     }
 
-    static void appendFabricAppearance(List<Component> tooltip, GarmentData data) {
-        appendFabricAppearance(tooltip, data.material().getSerializedName(), data.primaryColor().getSerializedName(),
-                data.design(), data.secondaryColor().map(color -> color.getSerializedName()),
-                data.accentColor().map(color -> color.getSerializedName()));
+    static void appendAppearance(List<Component> tooltip, GarmentAppearance appearance) {
+        if (appearance instanceof GarmentData data) {
+            appendFabricAppearance(tooltip, data.material().getSerializedName(), data.primaryColor().getSerializedName(),
+                    data.design(), data.secondaryColor().map(color -> color.getSerializedName()),
+                    data.accentColor().map(color -> color.getSerializedName()));
+        } else if (appearance instanceof MetalAccessoryData data) {
+            insertAppearance(tooltip, List.of(
+                    Component.translatable("tooltip.createapparel.accessory.metal",
+                            Component.translatable("metal_color.createapparel." + data.metalColor().getSerializedName()))
+                            .withStyle(ChatFormatting.GRAY),
+                    Component.translatable("tooltip.createapparel.accessory.gem",
+                            Component.translatable("gem.createapparel." + data.gem().getSerializedName()))
+                            .withStyle(ChatFormatting.GRAY)));
+        }
     }
 
     static void appendFabricAppearance(List<Component> tooltip, String material, String primaryColor, String design,
                                        Optional<String> secondaryColor, Optional<String> accentColor) {
+        List<Component> appearance = new ArrayList<>(List.of(
+                appearanceLine("material", Component.translatable(
+                        "fabric_material.createapparel." + material)),
+                appearanceLine("primary_color", colorName(primaryColor)),
+                appearanceLine("design", Component.translatable("design.createapparel." + design))));
+        secondaryColor.ifPresent(color -> appearance.add(appearanceLine("secondary_color", colorName(color))));
+        accentColor.ifPresent(color -> appearance.add(appearanceLine("accent_color", colorName(color))));
+        insertAppearance(tooltip, appearance);
+    }
+
+    private static void insertAppearance(List<Component> tooltip, List<Component> appearance) {
         int insertion = tooltip.size();
         for (int index = 0; index < tooltip.size(); index++) {
             if (tooltip.get(index).getContents() instanceof TranslatableContents text
@@ -66,13 +86,6 @@ public final class GarmentTooltipEvents {
                 insertion = index + 1;
             }
         }
-        List<Component> appearance = new ArrayList<>(List.of(
-                appearanceLine("material", Component.translatable(
-                        "fabric_material.createapparel." + material)),
-                appearanceLine("primary_color", colorName(primaryColor)),
-                appearanceLine("design", Component.translatable("design.createapparel." + design))));
-        secondaryColor.ifPresent(color -> appearance.add(appearanceLine("secondary_color", colorName(color))));
-        accentColor.ifPresent(color -> appearance.add(appearanceLine("accent_color", colorName(color))));
         tooltip.addAll(insertion, appearance);
     }
 

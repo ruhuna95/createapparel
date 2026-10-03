@@ -75,23 +75,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
         sewing("necktie", ModItems.NECKTIE,
                 List.of(ModTags.Items.FABRICS_SILK, ModTags.Items.FABRICS_SYNTHETIC), 1);
-        for (MetalColor metal : MetalColor.values()) {
-            RegistryObject<Item> base = metal == MetalColor.GOLD
-                    ? ModItems.GOLD_NECKLACE_BASE : ModItems.SILVER_NECKLACE_BASE;
-            Item nugget = metal == MetalColor.GOLD ? Items.GOLD_NUGGET : Items.IRON_NUGGET;
-            register(consumer -> new ProcessingRecipeBuilder<>(CompactingRecipe::new,
-                    asResource(base.getId().getPath()))
-                    .require(nugget).require(nugget).require(nugget).output(base.get()).build(consumer));
-            for (Gem gem : Gem.values()) {
-                register(consumer -> {
-                    ItemStack result = new ItemStack(ModItems.NECKLACE.get());
-                    new MetalAccessoryData(metal, gem).write(result);
-                    new ProcessingRecipeBuilder<>(DeployerApplicationRecipe::new,
-                            asResource("necklace/" + metal.getSerializedName() + "_" + gem.getSerializedName()))
-                            .require(base.get()).require(gem.tag()).output(result).build(consumer);
-                });
-            }
-        }
+        metalAccessory("necklace", ModItems.NECKLACE,
+                ModItems.GOLD_NECKLACE_BASE, ModItems.SILVER_NECKLACE_BASE, 3);
 
         milling("cotton_boll", ModItems.COTTON_BOLL, ModItems.COTTON_FIBER);
         milling("flax", ModItems.FLAX, ModItems.FLAX_FIBER);
@@ -287,6 +272,31 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("blouse_bow_tie_three_quarter_sleeve", ModItems.BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE, BLOUSE_FABRICS, 4);
     }
 
+    private void metalAccessory(String recipeName, RegistryObject<Item> accessory,
+                                RegistryObject<Item> goldBase, RegistryObject<Item> silverBase, int nuggetCount) {
+        for (MetalColor metal : MetalColor.values()) {
+            RegistryObject<Item> base = metal == MetalColor.GOLD ? goldBase : silverBase;
+            Item nugget = metal == MetalColor.GOLD ? Items.GOLD_NUGGET : Items.IRON_NUGGET;
+            register(consumer -> {
+                var builder = new ProcessingRecipeBuilder<>(CompactingRecipe::new,
+                        asResource(base.getId().getPath()));
+                for (int index = 0; index < nuggetCount; index++) {
+                    builder.require(nugget);
+                }
+                builder.output(base.get()).build(consumer);
+            });
+            for (Gem gem : Gem.values()) {
+                register(consumer -> {
+                    ItemStack result = new ItemStack(accessory.get());
+                    new MetalAccessoryData(metal, gem).write(result);
+                    new ProcessingRecipeBuilder<>(DeployerApplicationRecipe::new,
+                            asResource(recipeName + "/" + metal.getSerializedName() + "_" + gem.getSerializedName()))
+                            .require(base.get()).require(gem.tag()).output(result).build(consumer);
+                });
+            }
+        }
+    }
+
     private void milling(
             String recipeName,
             Supplier<? extends ItemLike> input,
@@ -413,7 +423,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             JsonObject result = new JsonObject();
             result.addProperty("item", resultId.toString());
             result.addProperty("count", 1);
-            result.addProperty("nbt", "{GarmentData:{material:\"cotton\",design:\"plain\",primary_color:\""
+            result.addProperty("nbt", "{GarmentData:{material:\"" + FabricMaterial.SYNTHETIC.getSerializedName()
+                    + "\",design:\"plain\",primary_color:\""
                     + color.getSerializedName() + "\"}}");
             json.add("result", result);
         }

@@ -14,9 +14,26 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GarmentItemDisplayTest {
+    @Test
+    void garmentItemModelsAreGeneratedWithoutHandwrittenOverrides() throws IOException {
+        try (var definitions = Files.list(Path.of("src/main/resources/data/createapparel/garments"))) {
+            var items = definitions.filter(path -> path.toString().endsWith(".json")).toList();
+            assertFalse(items.isEmpty());
+            for (var item : items) {
+                String relative = "assets/createapparel/models/item/" + item.getFileName();
+                assertFalse(Files.exists(Path.of("src/main/resources", relative)), "Handwritten model: " + item);
+                var generated = Path.of("src/generated/resources", relative);
+                assertTrue(Files.exists(generated), "Missing generated model: " + item);
+                var model = JsonParser.parseString(Files.readString(generated)).getAsJsonObject();
+                assertEquals("minecraft:builtin/entity", model.get("parent").getAsString(), item.toString());
+            }
+        }
+    }
+
     @Test
     void headFaceBackAndFeetStaySolidWhileHeldAccessoriesPitchForward() throws Exception {
         var method = CommonGarmentRenderer.class.getDeclaredMethod(
@@ -45,28 +62,6 @@ class GarmentItemDisplayTest {
                     assertEquals(pitched ? -1 : 0, normal.z(), 0.00001);
                 }
             }
-        }
-    }
-
-    @Test
-    void allGarmentGuiModelsFaceForward() throws IOException {
-        var items = List.of("t_shirt", "t_shirt_u_neck", "t_shirt_v_neck",
-                "t_shirt_longsleeves", "t_shirt_longsleeves_u_neck", "t_shirt_longsleeves_v_neck",
-                "shirt_shortsleeves", "shirt_longsleeves", "blouse_round", "blouse_frill", "blouse_bow_tie",
-                "blouse_round_three_quarter_sleeve", "blouse_frill_three_quarter_sleeve",
-                "blouse_bow_tie_three_quarter_sleeve");
-        for (String item : items) {
-            String relative = "assets/createapparel/models/item/" + item + ".json";
-            Path path = Path.of("src/main/resources", relative);
-            if (!Files.exists(path)) {
-                path = Path.of("src/generated/resources", relative);
-            }
-            assertTrue(Files.exists(path), item);
-            var model = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
-            var rotation = model.getAsJsonObject("display").getAsJsonObject("gui").getAsJsonArray("rotation");
-            assertEquals(0, rotation.get(0).getAsFloat(), item);
-            assertEquals(180, rotation.get(1).getAsFloat(), item);
-            assertEquals(0, rotation.get(2).getAsFloat(), item);
         }
     }
 }

@@ -105,8 +105,7 @@ public final class ModItems {
     public static final RegistryObject<Item> BACKPACK = registerGarment("backpack");
     public static final RegistryObject<Item> DAYPACK = registerGarment("daypack");
     public static final RegistryObject<Item> CROSSBODY_BAG = registerGarment("crossbody_bag");
-    public static final RegistryObject<Item> NECKLACE = ModRegistries.ITEMS.register("necklace",
-            () -> new MetalAccessoryItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> NECKLACE = registerMetalAccessory("necklace");
     public static final RegistryObject<Item> NECKTIE = registerGarment("necktie");
     public static final RegistryObject<Item> GOLD_NECKLACE_BASE = registerSimple("gold_necklace_base");
     public static final RegistryObject<Item> SILVER_NECKLACE_BASE = registerSimple("silver_necklace_base");
@@ -251,6 +250,10 @@ public final class ModItems {
         return ModRegistries.ITEMS.register(name, () -> new GarmentItem(new Item.Properties().stacksTo(1)));
     }
 
+    private static RegistryObject<Item> registerMetalAccessory(String name) {
+        return ModRegistries.ITEMS.register(name, () -> new MetalAccessoryItem(new Item.Properties().stacksTo(1)));
+    }
+
     private static RegistryObject<Item> registerSeeds(String name, RegistryObject<Block> crop) {
         return ModRegistries.ITEMS.register(
                 name,
@@ -355,12 +358,11 @@ public final class ModItems {
         Set<RegistryObject<Item>> uniqueGarmentItems = new HashSet<>(GARMENT_CREATIVE_TAB_ITEMS);
         Set<RegistryObject<Item>> uniqueItems = new HashSet<>(uniqueMainItems);
         uniqueItems.addAll(uniqueGarmentItems);
-        if (CREATIVE_TAB_ITEMS.size() != 144
-                || uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
-                || GARMENT_CREATIVE_TAB_ITEMS.size() != 64
+        if (uniqueMainItems.size() != CREATIVE_TAB_ITEMS.size()
                 || uniqueGarmentItems.size() != GARMENT_CREATIVE_TAB_ITEMS.size()
-                || uniqueItems.size() != 208) {
-            throw new IllegalStateException("The creative tabs must contain 208 unique items");
+                || !Collections.disjoint(uniqueMainItems, uniqueGarmentItems)
+                || !uniqueItems.equals(new HashSet<>(ModRegistries.ITEMS.getEntries()))) {
+            throw new IllegalStateException("The creative tabs must contain every registered item exactly once");
         }
     }
 }
