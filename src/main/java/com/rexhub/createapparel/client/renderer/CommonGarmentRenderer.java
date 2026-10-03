@@ -20,6 +20,8 @@ import net.minecraft.world.item.ItemDisplayContext;
 import com.rexhub.createapparel.client.garment.GarmentHemGeometry;
 import com.rexhub.createapparel.client.garment.ApparelRenderFrame;
 import com.rexhub.createapparel.client.garment.FirstPersonApparelState;
+import com.rexhub.createapparel.client.garment.HudArmGeometry;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.BakedFace;
 import net.minecraft.world.entity.HumanoidArm;
 import org.joml.Vector3f;
 import com.rexhub.createapparel.garment.GarmentSlot;
@@ -46,6 +48,13 @@ public final class CommonGarmentRenderer {
     public static void renderFirstPersonArm(FirstPersonApparelState.ArmParts parts,
                                            ApparelRenderSnapshot snapshot, HumanoidArm side, ModelPart arm,
                                            PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        renderFirstPersonArm(parts, snapshot, side, arm, poseStack, buffer, light, overlay, false);
+    }
+
+    public static void renderFirstPersonArm(FirstPersonApparelState.ArmParts parts,
+                                           ApparelRenderSnapshot snapshot, HumanoidArm side, ModelPart arm,
+                                           PoseStack poseStack, MultiBufferSource buffer, int light, int overlay,
+                                           boolean rolledSleeves) {
         poseStack.pushPose();
         arm.translateAndRotate(poseStack);
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
@@ -56,8 +65,15 @@ public final class CommonGarmentRenderer {
                     poseStack, buffer, light, overlay, snapshot.skinTone().tintRgb());
         }
         for (var part : parts.garments()) {
-            renderPart(part.model(), snapshot.texture(part), PartMapping.humanoidGarment(), null,
-                    poseStack, buffer, light, overlay, WHITE);
+            if (rolledSleeves && !part.semanticName().contains("_hand_")) {
+                var type = part.model().translucent() ? RenderType.entityTranslucent(snapshot.texture(part))
+                        : RenderType.entityCutoutNoCull(snapshot.texture(part));
+                renderFaces(HudArmGeometry.rolledSleeve(part.model()), part.model().textureWidth(), part.model().textureHeight(),
+                        PartMapping.humanoidGarment(), poseStack, buffer.getBuffer(type), light, overlay, WHITE);
+            } else {
+                renderPart(part.model(), snapshot.texture(part), PartMapping.humanoidGarment(), null,
+                        poseStack, buffer, light, overlay, WHITE);
+            }
         }
         poseStack.popPose();
     }
@@ -369,7 +385,7 @@ public final class CommonGarmentRenderer {
         if (semanticName.equals("head") || semanticName.equals("head_back") || semanticName.equals("head_up") || semanticName.equals("hood_up")) {
             return new HumanoidPartPose(model.head, 0.0F, 0.0F, 0.0F);
         }
-        if (semanticName.startsWith("left_sleeve") || semanticName.startsWith("right_sleeve")) {
+        if (FirstPersonApparelState.isGarmentArm(semanticName)) {
             float armY = armProfile == ArmProfile.SLIM ? 2.5F : 2.0F;
             float centerX = partCenterX(part.model());
             return centerX < 0.0F
@@ -450,11 +466,18 @@ public final class CommonGarmentRenderer {
             int packedOverlay,
             int tintRgb
     ) {
+        renderFaces(element.bakedFaces(), textureWidth, textureHeight, mapping, poseStack, vertices,
+                packedLight, packedOverlay, tintRgb);
+    }
+
+    private static void renderFaces(List<BakedFace> faces, int textureWidth, int textureHeight, PartMapping mapping,
+                                    PoseStack poseStack, VertexConsumer vertices, int packedLight, int packedOverlay,
+                                    int tintRgb) {
         PoseStack.Pose pose = poseStack.last();
         int red = tintRgb >> 16 & 255;
         int green = tintRgb >> 8 & 255;
         int blue = tintRgb & 255;
-        for (var face : element.bakedFaces()) {
+        for (var face : faces) {
             Vec3 normal = face.normal();
             float normalY = mapping.humanoid() ? -normal.y() : normal.y();
             for (var vertex : face.vertices()) {

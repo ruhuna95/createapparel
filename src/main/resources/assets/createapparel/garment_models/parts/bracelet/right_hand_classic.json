@@ -1,0 +1,78 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "right_hand_classic",
+        "from": [
+          -8.24,
+          13,
+          -2.24
+        ],
+        "to": [
+          -3.996,
+          14,
+          2.24
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              5
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              5
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              5
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/bracelet/hand_classic/base/bracelet"
+      },
+      "bracelet": {
+        "base": "createapparel:garment/bracelet/hand_classic/base/bracelet"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/bracelet/right_hand_classic/masks/plain/secondary"
+      }
+    }
+  }
+}

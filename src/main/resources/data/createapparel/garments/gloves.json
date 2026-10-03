@@ -1,0 +1,13 @@
+{
+  "default_slot": "hands",
+  "allowed_slots": [
+    "hands"
+  ],
+  "model_template": "createapparel:gloves",
+  "model_variant": "default",
+  "texture_variant": "gloves",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

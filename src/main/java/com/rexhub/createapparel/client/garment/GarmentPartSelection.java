@@ -29,7 +29,9 @@ final class GarmentPartSelection {
             selected.add("back");
         }
         if (!availableParts.contains("torso") && (availableParts.contains("head")
-                || availableParts.contains("left_leg") && availableParts.contains("right_leg"))) {
+                || availableParts.contains("left_leg") && availableParts.contains("right_leg")
+                || availableParts.contains("left_hand_" + armProfile.getSerializedName())
+                || availableParts.contains("right_hand_" + armProfile.getSerializedName()))) {
             selected.remove("torso");
         }
         selected.removeIf(name -> (name.startsWith("left_sleeve") || name.startsWith("right_sleeve"))
@@ -40,6 +42,12 @@ final class GarmentPartSelection {
         for (String leg : List.of("left_leg", "right_leg")) {
             if (availableParts.contains(leg)) {
                 selected.add(leg);
+            }
+        }
+        for (String side : List.of("left", "right")) {
+            String hand = side + "_hand_" + armProfile.getSerializedName();
+            if (availableParts.contains(hand) && (!styles.containsKey("wear") || side.equals(styles.get("wear")))) {
+                selected.add(hand);
             }
         }
         return List.copyOf(selected);
@@ -74,7 +82,13 @@ final class GarmentPartSelection {
             required.add("back_" + carry);
         }
         for (String wear : styles.getOrDefault("wear", List.of())) {
-            required.add(headPart(wear));
+            if ("left".equals(wear) || "right".equals(wear)) {
+                for (ArmProfile profile : ArmProfile.values()) {
+                    required.add(wear + "_hand_" + profile.getSerializedName());
+                }
+            } else {
+                required.add(headPart(wear));
+            }
         }
         for (String hood : styles.getOrDefault("hood", List.of())) {
             required.add("hood_" + hood);

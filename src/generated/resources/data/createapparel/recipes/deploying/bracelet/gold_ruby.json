@@ -1,0 +1,22 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "createapparel:gold_bracelet_base"
+    },
+    {
+      "tag": "createapparel:gems/ruby"
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:bracelet",
+      "nbt": {
+        "MetalAccessoryData": {
+          "gem": "ruby",
+          "metal_color": "gold"
+        }
+      }
+    }
+  ]
+}

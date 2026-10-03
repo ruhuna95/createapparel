@@ -1,0 +1,137 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_hand_classic",
+        "from": [
+          3.996,
+          13,
+          -2.24
+        ],
+        "to": [
+          8.24,
+          14,
+          2.24
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              5
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "outer_front",
+        "from": [
+          3.996,
+          13,
+          -2.24
+        ],
+        "to": [
+          8.24,
+          14,
+          0
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              8,
+              4,
+              10,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "watch_dial",
+        "from": [
+          3.996,
+          13,
+          0
+        ],
+        "to": [
+          8.24,
+          14,
+          1
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              10,
+              4,
+              11,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "outer_back",
+        "from": [
+          3.996,
+          13,
+          1
+        ],
+        "to": [
+          8.24,
+          14,
+          2.24
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              11,
+              4,
+              12,
+              5
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/watch/hand_classic/base/watch",
+        "overlay": "createapparel:garment/watch/left_hand_classic/overlay/watch"
+      },
+      "watch": {
+        "base": "createapparel:garment/watch/hand_classic/base/watch",
+        "overlay": "createapparel:garment/watch/left_hand_classic/overlay/watch"
+      }
+    },
+    "designs": {}
+  }
+}

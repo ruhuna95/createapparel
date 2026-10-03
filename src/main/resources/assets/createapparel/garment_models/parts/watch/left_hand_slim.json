@@ -1,0 +1,137 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_hand_slim",
+        "from": [
+          3.996,
+          13,
+          -2.24
+        ],
+        "to": [
+          7.24,
+          14,
+          2.24
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              5
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "outer_front",
+        "from": [
+          3.996,
+          13,
+          -2.24
+        ],
+        "to": [
+          7.24,
+          14,
+          0
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              7,
+              4,
+              9,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "watch_dial",
+        "from": [
+          3.996,
+          13,
+          0
+        ],
+        "to": [
+          7.24,
+          14,
+          1
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              9,
+              4,
+              10,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "name": "outer_back",
+        "from": [
+          3.996,
+          13,
+          1
+        ],
+        "to": [
+          7.24,
+          14,
+          2.24
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              10,
+              4,
+              11,
+              5
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/watch/hand_slim/base/watch",
+        "overlay": "createapparel:garment/watch/left_hand_slim/overlay/watch"
+      },
+      "watch": {
+        "base": "createapparel:garment/watch/hand_slim/base/watch",
+        "overlay": "createapparel:garment/watch/left_hand_slim/overlay/watch"
+      }
+    },
+    "designs": {}
+  }
+}

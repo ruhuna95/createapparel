@@ -14,6 +14,7 @@ import com.rexhub.createapparel.recipe.ModRecipeTypes;
 import com.rexhub.createapparel.recipe.SpinningRecipe;
 import com.rexhub.createapparel.recipe.WeavingRecipe;
 import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
+import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.millstone.MillingRecipe;
 import com.simibubi.create.content.kinetics.mixer.MixingRecipe;
 import com.simibubi.create.content.kinetics.mixer.CompactingRecipe;
@@ -77,6 +78,16 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_SILK, ModTags.Items.FABRICS_SYNTHETIC), 1);
         metalAccessory("necklace", ModItems.NECKLACE,
                 ModItems.GOLD_NECKLACE_BASE, ModItems.SILVER_NECKLACE_BASE, 3);
+        metalAccessory("bracelet", ModItems.BRACELET,
+                ModItems.GOLD_BRACELET_BASE, ModItems.SILVER_BRACELET_BASE, 3);
+        sewing("wristband", ModItems.WRISTBAND,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        sewing("gloves", ModItems.GLOVES,
+                List.of(ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 1);
+        for (FabricColor color : FabricColor.values()) {
+            register(consumer -> consumer.accept(new WatchFinishedRecipe(
+                    asResource("watch/" + color.getSerializedName()), color)));
+        }
 
         milling("cotton_boll", ModItems.COTTON_BOLL, ModItems.COTTON_FIBER);
         milling("flax", ModItems.FLAX, ModItems.FLAX_FIBER);
@@ -425,6 +436,52 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             result.addProperty("count", 1);
             result.addProperty("nbt", "{GarmentData:{material:\"" + FabricMaterial.SYNTHETIC.getSerializedName()
                     + "\",design:\"plain\",primary_color:\""
+                    + color.getSerializedName() + "\"}}");
+            json.add("result", result);
+        }
+
+        @Override
+        public ResourceLocation getId() {
+            return id;
+        }
+
+        @Override
+        public RecipeSerializer<?> getType() {
+            return RecipeSerializer.SHAPED_RECIPE;
+        }
+
+        @Override
+        @Nullable
+        public JsonObject serializeAdvancement() {
+            return null;
+        }
+
+        @Override
+        @Nullable
+        public ResourceLocation getAdvancementId() {
+            return null;
+        }
+    }
+
+    private record WatchFinishedRecipe(ResourceLocation id, FabricColor color) implements FinishedRecipe {
+        @Override
+        public void serializeRecipeData(JsonObject json) {
+            json.addProperty("category", "equipment");
+            JsonArray pattern = new JsonArray();
+            pattern.add(" C ");
+            pattern.add("IPI");
+            pattern.add(" D ");
+            json.add("pattern", pattern);
+            JsonObject key = new JsonObject();
+            key.add("C", Ingredient.of(Items.CLOCK).toJson());
+            key.add("I", Ingredient.of(Items.IRON_NUGGET).toJson());
+            key.add("P", Ingredient.of(AllItems.PRECISION_MECHANISM.get()).toJson());
+            key.add("D", Ingredient.of(DyeItem.byColor(color.dyeColor())).toJson());
+            json.add("key", key);
+            JsonObject result = new JsonObject();
+            result.addProperty("item", ModItems.WATCH.getId().toString());
+            result.addProperty("count", 1);
+            result.addProperty("nbt", "{GarmentData:{material:\"synthetic\",design:\"plain\",primary_color:\""
                     + color.getSerializedName() + "\"}}");
             json.add("result", result);
         }

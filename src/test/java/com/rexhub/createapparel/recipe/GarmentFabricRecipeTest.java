@@ -21,7 +21,9 @@ class GarmentFabricRecipeTest {
             for (Path garment : garments) {
                 if (garment.getFileName().toString().equals("glasses.json")
                         || garment.getFileName().toString().equals("sunglasses.json")
-                        || garment.getFileName().toString().equals("necklace.json")) continue;
+                        || garment.getFileName().toString().equals("necklace.json")
+                        || garment.getFileName().toString().equals("bracelet.json")
+                        || garment.getFileName().toString().equals("watch.json")) continue;
                 var recipe = JsonParser.parseString(Files.readString(recipes.resolve(garment.getFileName())))
                         .getAsJsonObject();
                 assertEquals("createapparel:sewing", recipe.get("type").getAsString(), garment.toString());

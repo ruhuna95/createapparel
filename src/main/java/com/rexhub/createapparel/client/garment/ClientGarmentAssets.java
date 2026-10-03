@@ -331,6 +331,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         bodyCache.clear();
         underwearCache.clear();
         FlatGarmentGeometry.clearCache();
+        HudArmGeometry.clearCache();
     }
 
     private static Optional<Map<String, ResourceLocation>> getModelVariant(

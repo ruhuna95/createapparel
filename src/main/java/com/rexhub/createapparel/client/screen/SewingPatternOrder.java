@@ -22,7 +22,7 @@ final class SewingPatternOrder {
             "sneakers", "canvas_sneakers", "dress_shoes", "loafers",
             "ankle_boots", "work_boots", "knee_high_boots", "pumps", "sandals", "slippers",
             "cap", "beanie", "beret", "hat", "casquette", "sun_visor", "mask",
-            "backpack", "daypack", "crossbody_bag", "necktie"
+            "backpack", "daypack", "crossbody_bag", "necktie", "wristband", "gloves"
     ).stream().map(path -> ResourceLocation.fromNamespaceAndPath("createapparel", path)).toList();
 
     static final Comparator<SewingRecipe> RECIPES = Comparator

@@ -107,6 +107,12 @@ public final class ModItems {
     public static final RegistryObject<Item> CROSSBODY_BAG = registerGarment("crossbody_bag");
     public static final RegistryObject<Item> NECKLACE = registerMetalAccessory("necklace");
     public static final RegistryObject<Item> NECKTIE = registerGarment("necktie");
+    public static final RegistryObject<Item> WATCH = registerGarment("watch");
+    public static final RegistryObject<Item> BRACELET = registerMetalAccessory("bracelet");
+    public static final RegistryObject<Item> WRISTBAND = registerGarment("wristband");
+    public static final RegistryObject<Item> GLOVES = registerGarment("gloves");
+    public static final RegistryObject<Item> GOLD_BRACELET_BASE = registerSimple("gold_bracelet_base");
+    public static final RegistryObject<Item> SILVER_BRACELET_BASE = registerSimple("silver_bracelet_base");
     public static final RegistryObject<Item> GOLD_NECKLACE_BASE = registerSimple("gold_necklace_base");
     public static final RegistryObject<Item> SILVER_NECKLACE_BASE = registerSimple("silver_necklace_base");
     public static final RegistryObject<Item> BLOUSE_ROUND = registerGarment("blouse_round");
@@ -200,7 +206,8 @@ public final class ModItems {
                     SNEAKERS, CANVAS_SNEAKERS, DRESS_SHOES, LOAFERS,
                     ANKLE_BOOTS, WORK_BOOTS, KNEE_HIGH_BOOTS, PUMPS, SANDALS, SLIPPERS,
                     CAP, BEANIE, BERET, HAT, CASQUETTE, SUN_VISOR, GLASSES, SUNGLASSES, MASK,
-                    BACKPACK, DAYPACK, CROSSBODY_BAG, NECKLACE, NECKTIE
+                    BACKPACK, DAYPACK, CROSSBODY_BAG, NECKLACE, NECKTIE,
+                    WATCH, BRACELET, WRISTBAND, GLOVES
             );
 
     static {
@@ -328,6 +335,8 @@ public final class ModItems {
         );
         items.add(GOLD_NECKLACE_BASE);
         items.add(SILVER_NECKLACE_BASE);
+        items.add(GOLD_BRACELET_BASE);
+        items.add(SILVER_BRACELET_BASE);
         return List.copyOf(items);
     }
 

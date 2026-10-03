@@ -29,6 +29,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.garment.design", "Design: %s");
         add("tooltip.createapparel.garment.secondary_color", "Secondary Color: %s");
         add("tooltip.createapparel.garment.accent_color", "Accent Color: %s");
+        add("tooltip.createapparel.watch.check_time", "While equipped, hold Left Shift with both hands empty to check the time.");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), material.displayName());
         }
@@ -124,6 +125,12 @@ public final class ModLanguageProvider extends LanguageProvider {
         add(ModItems.CROSSBODY_BAG.get(), "Crossbody Bag");
         add(ModItems.NECKLACE.get(), "Necklace");
         add(ModItems.NECKTIE.get(), "Necktie");
+        add(ModItems.WATCH.get(), "Watch");
+        add(ModItems.BRACELET.get(), "Bracelet");
+        add(ModItems.WRISTBAND.get(), "Wristband");
+        add(ModItems.GLOVES.get(), "Gloves");
+        add(ModItems.GOLD_BRACELET_BASE.get(), "Gold Bracelet Base");
+        add(ModItems.SILVER_BRACELET_BASE.get(), "Silver Bracelet Base");
         add(ModItems.GOLD_NECKLACE_BASE.get(), "Gold Necklace Base");
         add(ModItems.SILVER_NECKLACE_BASE.get(), "Silver Necklace Base");
         add("tooltip.createapparel.accessory.metal", "Metal: %s");
@@ -194,6 +201,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("style.createapparel.wear.back", "Backward");
         add("style.createapparel.wear.up", "Up");
         add("style.createapparel.wear.down", "Down");
+        add("style.createapparel.wear.left", "Left Wrist");
+        add("style.createapparel.wear.right", "Right Wrist");
         add("style.createapparel.tuck.untucked", "Untucked");
         add("style.createapparel.tuck.tucked", "Tucked");
         add("style.createapparel.sleeves.normal", "Normal");

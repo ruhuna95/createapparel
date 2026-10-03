@@ -13,10 +13,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -26,6 +28,8 @@ import java.util.Optional;
 
 @Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class GarmentTooltipEvents {
+    private static final ResourceLocation WATCH_ID = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "watch");
+
     private GarmentTooltipEvents() {
     }
 
@@ -62,6 +66,19 @@ public final class GarmentTooltipEvents {
                     Component.translatable("tooltip.createapparel.accessory.gem",
                             Component.translatable("gem.createapparel." + data.gem().getSerializedName()))
                             .withStyle(ChatFormatting.GRAY)));
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void addWatchUsage(ItemTooltipEvent event) {
+        var id = ForgeRegistries.ITEMS.getKey(event.getItemStack().getItem());
+        if (id != null) appendWatchUsage(event.getToolTip(), id);
+    }
+
+    static void appendWatchUsage(List<Component> tooltip, ResourceLocation itemId) {
+        if (WATCH_ID.equals(itemId)) {
+            tooltip.add(Component.translatable("tooltip.createapparel.watch.check_time")
+                    .withStyle(ChatFormatting.GRAY));
         }
     }
 

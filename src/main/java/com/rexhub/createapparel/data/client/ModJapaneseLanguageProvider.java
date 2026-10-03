@@ -27,6 +27,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.garment.design", "デザイン: %s");
         add("tooltip.createapparel.garment.secondary_color", "サブカラー: %s");
         add("tooltip.createapparel.garment.accent_color", "アクセントカラー: %s");
+        add("tooltip.createapparel.watch.check_time", "装備中、両手が空なら左Shift長押しで時間を確認できます");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), materialName(material));
         }
@@ -122,6 +123,12 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add(ModItems.CROSSBODY_BAG.get(), "ボディバッグ");
         add(ModItems.NECKLACE.get(), "ネックレス");
         add(ModItems.NECKTIE.get(), "ネクタイ");
+        add(ModItems.WATCH.get(), "腕時計");
+        add(ModItems.BRACELET.get(), "ブレスレット");
+        add(ModItems.WRISTBAND.get(), "リストバンド");
+        add(ModItems.GLOVES.get(), "手袋");
+        add(ModItems.GOLD_BRACELET_BASE.get(), "金のブレスレット素体");
+        add(ModItems.SILVER_BRACELET_BASE.get(), "銀のブレスレット素体");
         add(ModItems.GOLD_NECKLACE_BASE.get(), "金のネックレス素体");
         add(ModItems.SILVER_NECKLACE_BASE.get(), "銀のネックレス素体");
         add("tooltip.createapparel.accessory.metal", "金属: %s");
@@ -187,11 +194,13 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("style_category.createapparel.sleeves", "袖");
         add("style_category.createapparel.open", "前開き");
         add("style_category.createapparel.hood", "フード");
-        add("style_category.createapparel.wear", "被り方");
+        add("style_category.createapparel.wear", "着用方法");
         add("style.createapparel.wear.front", "前被り");
         add("style.createapparel.wear.back", "後ろ被り");
         add("style.createapparel.wear.up", "上げる");
         add("style.createapparel.wear.down", "下げる");
+        add("style.createapparel.wear.left", "左腕");
+        add("style.createapparel.wear.right", "右腕");
         add("style.createapparel.tuck.untucked", "裾出し");
         add("style.createapparel.tuck.tucked", "タックイン");
         add("style.createapparel.sleeves.normal", "通常");

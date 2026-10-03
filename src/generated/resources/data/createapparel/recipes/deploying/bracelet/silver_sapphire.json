@@ -1,0 +1,22 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "createapparel:silver_bracelet_base"
+    },
+    {
+      "tag": "createapparel:gems/sapphire"
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:bracelet",
+      "nbt": {
+        "MetalAccessoryData": {
+          "gem": "sapphire",
+          "metal_color": "silver"
+        }
+      }
+    }
+  ]
+}

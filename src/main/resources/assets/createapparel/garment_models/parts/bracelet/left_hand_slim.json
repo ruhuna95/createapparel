@@ -1,0 +1,78 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_hand_slim",
+        "from": [
+          3.996,
+          13,
+          -2.24
+        ],
+        "to": [
+          7.24,
+          14,
+          2.24
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              5
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              5
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              5
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              5
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/bracelet/hand_slim/base/bracelet"
+      },
+      "bracelet": {
+        "base": "createapparel:garment/bracelet/hand_slim/base/bracelet"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/bracelet/left_hand_slim/masks/plain/secondary"
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "default": {
+    "left_hand_classic": {
+      "model": "createapparel:bracelet/left_hand_classic"
+    },
+    "right_hand_classic": {
+      "model": "createapparel:bracelet/right_hand_classic"
+    },
+    "left_hand_slim": {
+      "model": "createapparel:bracelet/left_hand_slim"
+    },
+    "right_hand_slim": {
+      "model": "createapparel:bracelet/right_hand_slim"
+    }
+  }
+}

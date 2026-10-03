@@ -12,6 +12,7 @@ import com.rexhub.createapparel.client.renderer.SewingMachineRenderer;
 import com.rexhub.createapparel.client.renderer.SilkwormRenderer;
 import com.rexhub.createapparel.client.renderer.SpinningMachineRenderer;
 import com.rexhub.createapparel.client.renderer.WardrobeRenderer;
+import com.rexhub.createapparel.client.renderer.WatchHud;
 import com.rexhub.createapparel.client.screen.SewingPatternScreen;
 import com.rexhub.createapparel.client.screen.WardrobeScreen;
 import com.rexhub.createapparel.init.ModBlockEntities;
@@ -30,6 +31,8 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -114,5 +117,10 @@ public final class CreateApparelClient {
     @SubscribeEvent
     public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(ClientGarmentAssets.INSTANCE);
+    }
+
+    @SubscribeEvent
+    public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+        event.registerBelow(VanillaGuiOverlay.HOTBAR.id(), "watch", WatchHud::render);
     }
 }

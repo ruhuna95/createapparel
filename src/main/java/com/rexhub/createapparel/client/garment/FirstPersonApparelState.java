@@ -45,7 +45,7 @@ public final class FirstPersonApparelState {
                     continue;
                 }
                 for (var part : garment.get().parts()) {
-                    if (isSleeve(part.semanticName()) && !part.model().elements().isEmpty()) {
+                    if (isGarmentArm(part.semanticName()) && !part.model().elements().isEmpty()) {
                         (side(part.model()) == HumanoidArm.RIGHT ? rightGarments : leftGarments).add(part);
                     }
                 }
@@ -63,6 +63,10 @@ public final class FirstPersonApparelState {
 
     private static boolean isSleeve(String name) {
         return name.startsWith("left_sleeve") || name.startsWith("right_sleeve");
+    }
+
+    public static boolean isGarmentArm(String name) {
+        return isSleeve(name) || name.startsWith("left_hand_") || name.startsWith("right_hand_");
     }
 
     private static HumanoidArm side(GarmentPartModel model) {

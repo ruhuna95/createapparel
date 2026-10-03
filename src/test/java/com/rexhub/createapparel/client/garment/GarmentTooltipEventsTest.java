@@ -21,6 +21,45 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GarmentTooltipEventsTest {
     @Test
+    void watchUsageIsTheLastLineAfterAppearanceAndAdvancedDetails() {
+        var watch = GarmentDefinition.fromJson(ResourceLocation.fromNamespaceAndPath("createapparel", "watch"),
+                JsonParser.parseString("""
+                        {"default_slot":"hands","allowed_slots":["hands"],
+                         "model_template":"createapparel:watch","model_variant":"default",
+                         "texture_variant":"watch","designs":["plain"]}
+                        """).getAsJsonObject());
+        for (boolean advanced : List.of(false, true)) {
+            List<Component> tooltip = new ArrayList<>(List.of(Component.literal("Watch"),
+                    Component.translatable("itemGroup.createapparel.garment")));
+            GarmentTooltipEvents.appendSlots(tooltip, watch);
+            GarmentTooltipEvents.appendFabricAppearance(tooltip, "synthetic", "white", "plain",
+                    Optional.empty(), Optional.empty());
+            if (advanced) tooltip.add(Component.literal("createapparel:watch"));
+            var original = List.copyOf(tooltip);
+
+            GarmentTooltipEvents.appendWatchUsage(tooltip, ResourceLocation.fromNamespaceAndPath("createapparel", "watch"));
+
+            assertEquals(original, tooltip.subList(0, original.size()));
+            assertEquals(original.size() + 1, tooltip.size());
+            var hint = tooltip.get(tooltip.size() - 1);
+            assertEquals("tooltip.createapparel.watch.check_time",
+                    assertInstanceOf(TranslatableContents.class, hint.getContents()).getKey());
+            assertEquals(ChatFormatting.GRAY.getColor(), hint.getStyle().getColor().getValue());
+        }
+    }
+
+    @Test
+    void otherItemsDoNotReceiveTheWatchUsageHint() {
+        for (String id : List.of("createapparel:bracelet", "createapparel:wristband", "createapparel:gloves",
+                "createapparel:shirt_longsleeves", "minecraft:clock", "other:watch")) {
+            List<Component> tooltip = new ArrayList<>(List.of(Component.literal("Item")));
+            var original = List.copyOf(tooltip);
+            GarmentTooltipEvents.appendWatchUsage(tooltip, ResourceLocation.parse(id));
+            assertEquals(original, tooltip, id);
+        }
+    }
+
+    @Test
     void metalAppearanceListsOnlyMetalAndGemAfterSlotsBeforeAdvancedDetails() {
         for (var metal : MetalAccessoryData.MetalColor.values()) {
             for (var gem : MetalAccessoryData.Gem.values()) {

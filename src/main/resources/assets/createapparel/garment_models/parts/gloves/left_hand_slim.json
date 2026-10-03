@@ -1,0 +1,82 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_hand_slim",
+        "from": [
+          3.996,
+          11.76,
+          -2.24
+        ],
+        "to": [
+          7.24,
+          14,
+          2.24
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              6
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              7,
+              6
+            ]
+          },
+          "right": {
+            "uv": [
+              7,
+              4,
+              11,
+              6
+            ]
+          },
+          "back": {
+            "uv": [
+              11,
+              4,
+              14,
+              6
+            ]
+          },
+          "bottom": {
+            "uv": [
+              7,
+              0,
+              10,
+              4
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/gloves/hand_slim/base/gloves"
+      },
+      "gloves": {
+        "base": "createapparel:garment/gloves/hand_slim/base/gloves"
+      }
+    },
+    "designs": {}
+  }
+}
