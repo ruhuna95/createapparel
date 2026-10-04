@@ -1,0 +1,83 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "left_sleeve_classic",
+        "from": [
+          3.9965,
+          13,
+          -2.15
+        ],
+        "to": [
+          8.15,
+          24.0035,
+          2.15
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              15
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              15
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              15
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              15
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/dress_inner/left_long_sleeve_classic/base/default"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/dress_inner/left_long_sleeve_classic/masks/plain/secondary"
+      }
+    }
+  }
+}

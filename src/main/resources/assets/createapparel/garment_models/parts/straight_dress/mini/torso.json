@@ -1,0 +1,199 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    64,
+    64
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "torso",
+        "from": [
+          -4.005,
+          14,
+          -2.25
+        ],
+        "to": [
+          4.005,
+          24.005,
+          2.25
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              4,
+              16,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              4,
+              24,
+              14
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              14
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_panel",
+        "from": [
+          -4.005,
+          7.996,
+          -2.25
+        ],
+        "to": [
+          4.005,
+          14,
+          2.25
+        ],
+        "top_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              33,
+              4,
+              39
+            ]
+          }
+        }
+      },
+      {
+        "name": "front_panel",
+        "from": [
+          -4.005,
+          7.996,
+          -2.25
+        ],
+        "to": [
+          4.005,
+          14,
+          2.25
+        ],
+        "top_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              33,
+              12,
+              39
+            ]
+          }
+        }
+      },
+      {
+        "name": "left_panel",
+        "from": [
+          -4.005,
+          7.996,
+          -2.25
+        ],
+        "to": [
+          4.005,
+          14,
+          2.25
+        ],
+        "top_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              12,
+              33,
+              16,
+              39
+            ]
+          }
+        }
+      },
+      {
+        "name": "back_panel",
+        "from": [
+          -4.005,
+          7.996,
+          -2.25
+        ],
+        "to": [
+          4.005,
+          14,
+          2.25
+        ],
+        "top_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "back": {
+            "uv": [
+              16,
+              33,
+              24,
+              39
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/straight_dress/mini/torso/base/default"
+      }
+    },
+    "designs": {}
+  },
+  "leg_envelope": {
+    "mode": "dual",
+    "clearance": 0.025
+  }
+}

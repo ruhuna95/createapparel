@@ -1,0 +1,13 @@
+{
+  "default_slot": "top",
+  "allowed_slots": [
+    "top"
+  ],
+  "model_template": "createapparel:camisole_dress",
+  "model_variant": "knee_longsleeves",
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

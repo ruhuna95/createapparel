@@ -129,6 +129,32 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             decolorizing(material);
         }
 
+        sewing("a_line_dress_knee", ModItems.A_LINE_DRESS_KNEE, LONG_SLEEVE_T_SHIRT_FABRICS, 6);
+        sewing("a_line_dress_midi", ModItems.A_LINE_DRESS_MIDI, LONG_SLEEVE_T_SHIRT_FABRICS, 7);
+        sewing("fit_and_flare_dress_knee", ModItems.FIT_AND_FLARE_DRESS_KNEE, LONG_SLEEVE_T_SHIRT_FABRICS, 6);
+        sewing("fit_and_flare_dress_midi", ModItems.FIT_AND_FLARE_DRESS_MIDI, LONG_SLEEVE_T_SHIRT_FABRICS, 7);
+        sewing("straight_dress_mini", ModItems.STRAIGHT_DRESS_MINI, LONG_SLEEVE_T_SHIRT_FABRICS, 5);
+        sewing("straight_dress_knee", ModItems.STRAIGHT_DRESS_KNEE, LONG_SLEEVE_T_SHIRT_FABRICS, 6);
+        sewing("straight_dress_midi", ModItems.STRAIGHT_DRESS_MIDI, LONG_SLEEVE_T_SHIRT_FABRICS, 7);
+        sewing("shirt_dress_knee", ModItems.SHIRT_DRESS_KNEE, SHIRT_FABRICS, 7);
+        sewing("shirt_dress_midi", ModItems.SHIRT_DRESS_MIDI, SHIRT_FABRICS, 8);
+        sewing("jumper_dress_mini_shortsleeves", ModItems.JUMPER_DRESS_MINI_SHORTSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 8);
+        sewing("jumper_dress_mini_longsleeves", ModItems.JUMPER_DRESS_MINI_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 9);
+        sewing("jumper_dress_knee_shortsleeves", ModItems.JUMPER_DRESS_KNEE_SHORTSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 9);
+        sewing("jumper_dress_knee_longsleeves", ModItems.JUMPER_DRESS_KNEE_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 10);
+        sewing("jumper_dress_midi_shortsleeves", ModItems.JUMPER_DRESS_MIDI_SHORTSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 10);
+        sewing("jumper_dress_midi_longsleeves", ModItems.JUMPER_DRESS_MIDI_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 11);
+        sewing("camisole_dress_knee_shortsleeves", ModItems.CAMISOLE_DRESS_KNEE_SHORTSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 9);
+        sewing("camisole_dress_knee_longsleeves", ModItems.CAMISOLE_DRESS_KNEE_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 10);
+        sewing("camisole_dress_midi_shortsleeves", ModItems.CAMISOLE_DRESS_MIDI_SHORTSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 10);
+        sewing("camisole_dress_midi_longsleeves", ModItems.CAMISOLE_DRESS_MIDI_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 11);
+        sewing("camisole_dress_long_shortsleeves", ModItems.CAMISOLE_DRESS_LONG_SHORTSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 11);
+        sewing("camisole_dress_long_longsleeves", ModItems.CAMISOLE_DRESS_LONG_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 12);
+        sewing("camisole_dress_maxi_shortsleeves", ModItems.CAMISOLE_DRESS_MAXI_SHORTSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 11);
+        sewing("camisole_dress_maxi_longsleeves", ModItems.CAMISOLE_DRESS_MAXI_LONGSLEEVES, LONG_SLEEVE_T_SHIRT_FABRICS, 12);
+        sewing("bodycon_dress_mini", ModItems.BODYCON_DRESS_MINI, LONG_SLEEVE_T_SHIRT_FABRICS, 5);
+        sewing("bodycon_dress_knee", ModItems.BODYCON_DRESS_KNEE, LONG_SLEEVE_T_SHIRT_FABRICS, 6);
+        sewing("bodycon_dress_midi", ModItems.BODYCON_DRESS_MIDI, LONG_SLEEVE_T_SHIRT_FABRICS, 7);
         sewing("t_shirt", ModItems.T_SHIRT, T_SHIRT_FABRICS, 3);
         sewing("t_shirt_u_neck", ModItems.T_SHIRT_U_NECK, T_SHIRT_FABRICS, 3);
         sewing("t_shirt_v_neck", ModItems.T_SHIRT_V_NECK, T_SHIRT_FABRICS, 3);

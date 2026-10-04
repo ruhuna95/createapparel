@@ -1,0 +1,162 @@
+{
+  "knee_shortsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/knee/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_short_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_short_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_short_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_short_sleeve_slim"
+    }
+  },
+  "knee_longsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/knee/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_long_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_long_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_long_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_long_sleeve_slim"
+    }
+  },
+  "midi_shortsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/midi/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_short_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_short_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_short_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_short_sleeve_slim"
+    }
+  },
+  "midi_longsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/midi/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_long_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_long_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_long_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_long_sleeve_slim"
+    }
+  },
+  "long_shortsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/long/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_short_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_short_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_short_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_short_sleeve_slim"
+    }
+  },
+  "long_longsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/long/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_long_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_long_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_long_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_long_sleeve_slim"
+    }
+  },
+  "maxi_shortsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/maxi/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_short_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_short_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_short_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_short_sleeve_slim"
+    }
+  },
+  "maxi_longsleeves": {
+    "torso": {
+      "model": "createapparel:camisole_dress/maxi/torso"
+    },
+    "bust": {
+      "model": "createapparel:camisole_dress/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:dress_inner/left_long_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:dress_inner/left_long_sleeve_slim"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:dress_inner/right_long_sleeve_classic"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:dress_inner/right_long_sleeve_slim"
+    }
+  }
+}

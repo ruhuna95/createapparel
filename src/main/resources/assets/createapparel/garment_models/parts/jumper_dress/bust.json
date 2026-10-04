@@ -1,0 +1,140 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "bust",
+        "from": [
+          -3.75,
+          19.27,
+          -1.64
+        ],
+        "to": [
+          3.75,
+          23.4633,
+          1.37
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              3,
+              0,
+              10,
+              4
+            ]
+          },
+          "right": {
+            "uv": [
+              10,
+              0,
+              13,
+              4
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              0,
+              3,
+              4
+            ]
+          },
+          "bottom": {
+            "uv": [
+              3,
+              4,
+              10,
+              7
+            ]
+          }
+        },
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        }
+      },
+      {
+        "name": "bust_inner",
+        "from": [
+          -3.65,
+          19.37,
+          -1.54
+        ],
+        "to": [
+          3.65,
+          23.4633,
+          1.37
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              3,
+              8,
+              10,
+              12
+            ]
+          },
+          "right": {
+            "uv": [
+              10,
+              8,
+              13,
+              12
+            ]
+          },
+          "left": {
+            "uv": [
+              0,
+              8,
+              3,
+              12
+            ]
+          },
+          "bottom": {
+            "uv": [
+              3,
+              12,
+              10,
+              15
+            ]
+          }
+        },
+        "rotation": {
+          "origin": [
+            0,
+            25,
+            -0.9
+          ],
+          "axis": "x",
+          "angle": 30
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/jumper_dress/bust/base/default"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/jumper_dress/bust/masks/plain/secondary"
+      }
+    }
+  }
+}

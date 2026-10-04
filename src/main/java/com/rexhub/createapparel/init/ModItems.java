@@ -59,6 +59,32 @@ public final class ModItems {
     public static final RegistryObject<Item> SHIRT_LONGSLEEVES = registerGarment("shirt_longsleeves");
     public static final RegistryObject<Item> SAILOR_BLOUSE_SHORTSLEEVES = registerGarment("sailor_blouse_shortsleeves");
     public static final RegistryObject<Item> SAILOR_BLOUSE_LONGSLEEVES = registerGarment("sailor_blouse_longsleeves");
+    public static final RegistryObject<Item> A_LINE_DRESS_KNEE = registerGarment("a_line_dress_knee");
+    public static final RegistryObject<Item> A_LINE_DRESS_MIDI = registerGarment("a_line_dress_midi");
+    public static final RegistryObject<Item> FIT_AND_FLARE_DRESS_KNEE = registerGarment("fit_and_flare_dress_knee");
+    public static final RegistryObject<Item> FIT_AND_FLARE_DRESS_MIDI = registerGarment("fit_and_flare_dress_midi");
+    public static final RegistryObject<Item> STRAIGHT_DRESS_MINI = registerGarment("straight_dress_mini");
+    public static final RegistryObject<Item> STRAIGHT_DRESS_KNEE = registerGarment("straight_dress_knee");
+    public static final RegistryObject<Item> STRAIGHT_DRESS_MIDI = registerGarment("straight_dress_midi");
+    public static final RegistryObject<Item> SHIRT_DRESS_KNEE = registerGarment("shirt_dress_knee");
+    public static final RegistryObject<Item> SHIRT_DRESS_MIDI = registerGarment("shirt_dress_midi");
+    public static final RegistryObject<Item> JUMPER_DRESS_MINI_SHORTSLEEVES = registerGarment("jumper_dress_mini_shortsleeves");
+    public static final RegistryObject<Item> JUMPER_DRESS_MINI_LONGSLEEVES = registerGarment("jumper_dress_mini_longsleeves");
+    public static final RegistryObject<Item> JUMPER_DRESS_KNEE_SHORTSLEEVES = registerGarment("jumper_dress_knee_shortsleeves");
+    public static final RegistryObject<Item> JUMPER_DRESS_KNEE_LONGSLEEVES = registerGarment("jumper_dress_knee_longsleeves");
+    public static final RegistryObject<Item> JUMPER_DRESS_MIDI_SHORTSLEEVES = registerGarment("jumper_dress_midi_shortsleeves");
+    public static final RegistryObject<Item> JUMPER_DRESS_MIDI_LONGSLEEVES = registerGarment("jumper_dress_midi_longsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_KNEE_SHORTSLEEVES = registerGarment("camisole_dress_knee_shortsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_KNEE_LONGSLEEVES = registerGarment("camisole_dress_knee_longsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_MIDI_SHORTSLEEVES = registerGarment("camisole_dress_midi_shortsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_MIDI_LONGSLEEVES = registerGarment("camisole_dress_midi_longsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_LONG_SHORTSLEEVES = registerGarment("camisole_dress_long_shortsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_LONG_LONGSLEEVES = registerGarment("camisole_dress_long_longsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_MAXI_SHORTSLEEVES = registerGarment("camisole_dress_maxi_shortsleeves");
+    public static final RegistryObject<Item> CAMISOLE_DRESS_MAXI_LONGSLEEVES = registerGarment("camisole_dress_maxi_longsleeves");
+    public static final RegistryObject<Item> BODYCON_DRESS_MINI = registerGarment("bodycon_dress_mini");
+    public static final RegistryObject<Item> BODYCON_DRESS_KNEE = registerGarment("bodycon_dress_knee");
+    public static final RegistryObject<Item> BODYCON_DRESS_MIDI = registerGarment("bodycon_dress_midi");
     public static final RegistryObject<Item> ZIPUP_HOODIE = registerGarment("zipup_hoodie");
     public static final RegistryObject<Item> PULLOVER_HOODIE = registerGarment("pullover_hoodie");
     public static final RegistryObject<Item> SWEATER = registerGarment("sweater");
@@ -211,6 +237,32 @@ public final class ModItems {
                     ZIPUP_HOODIE,
                     SWEATER,
                     V_NECK_SWEATER,
+                    A_LINE_DRESS_KNEE,
+                    A_LINE_DRESS_MIDI,
+                    FIT_AND_FLARE_DRESS_KNEE,
+                    FIT_AND_FLARE_DRESS_MIDI,
+                    STRAIGHT_DRESS_MINI,
+                    STRAIGHT_DRESS_KNEE,
+                    STRAIGHT_DRESS_MIDI,
+                    SHIRT_DRESS_KNEE,
+                    SHIRT_DRESS_MIDI,
+                    JUMPER_DRESS_MINI_SHORTSLEEVES,
+                    JUMPER_DRESS_MINI_LONGSLEEVES,
+                    JUMPER_DRESS_KNEE_SHORTSLEEVES,
+                    JUMPER_DRESS_KNEE_LONGSLEEVES,
+                    JUMPER_DRESS_MIDI_SHORTSLEEVES,
+                    JUMPER_DRESS_MIDI_LONGSLEEVES,
+                    CAMISOLE_DRESS_KNEE_SHORTSLEEVES,
+                    CAMISOLE_DRESS_KNEE_LONGSLEEVES,
+                    CAMISOLE_DRESS_MIDI_SHORTSLEEVES,
+                    CAMISOLE_DRESS_MIDI_LONGSLEEVES,
+                    CAMISOLE_DRESS_LONG_SHORTSLEEVES,
+                    CAMISOLE_DRESS_LONG_LONGSLEEVES,
+                    CAMISOLE_DRESS_MAXI_SHORTSLEEVES,
+                    CAMISOLE_DRESS_MAXI_LONGSLEEVES,
+                    BODYCON_DRESS_MINI,
+                    BODYCON_DRESS_KNEE,
+                    BODYCON_DRESS_MIDI,
                     DENIM_PANTS,
                     SLACKS,
                     SHORTS,

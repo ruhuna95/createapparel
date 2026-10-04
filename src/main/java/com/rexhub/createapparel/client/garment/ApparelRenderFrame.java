@@ -25,19 +25,30 @@ public final class ApparelRenderFrame {
                     part.model().legEnvelope().ifPresent(motion -> envelopes.computeIfAbsent(part.model(),
                             ignored -> new DualEnvelopeDeformer.Pose(motion.geometry(), legs,
                                     motion.clearance() + (slot == GarmentSlot.OUTER
-                                            ? LegEnvelopeGeometry.layerClearance(slot) : 0), slot == GarmentSlot.BOTTOM)));
+                                            ? LegEnvelopeGeometry.layerClearance(slot) : 0), slot != GarmentSlot.OUTER)));
                 }
             });
         }
-        skirtSlope = garment(GarmentSlot.BOTTOM).flatMap(garment -> garment.parts().stream()
-                .map(part -> envelopes.get(part.model())).filter(java.util.Objects::nonNull).findFirst()
-                .map(GarmentHemGeometry::dualSlope));
+        Optional<GarmentHemGeometry.Slope> bottomSlope = envelopeSlope(GarmentSlot.BOTTOM);
+        bottomSlope.ifPresent(slope -> garment(GarmentSlot.TOP).ifPresent(garment -> {
+            for (var part : garment.parts()) {
+                var envelope = envelopes.get(part.model());
+                if (envelope != null) envelope.enclose(slope.envelope(), LegEnvelopeGeometry.layerClearance(GarmentSlot.TOP));
+            }
+        }));
+        skirtSlope = envelopeSlope(GarmentSlot.TOP).or(() -> bottomSlope);
         skirtSlope.ifPresent(slope -> garment(GarmentSlot.OUTER).ifPresent(garment -> {
             for (var part : garment.parts()) {
                 var envelope = envelopes.get(part.model());
                 if (envelope != null) envelope.enclose(slope.envelope(), LegEnvelopeGeometry.layerClearance(GarmentSlot.OUTER));
             }
         }));
+    }
+
+    private Optional<GarmentHemGeometry.Slope> envelopeSlope(GarmentSlot slot) {
+        return garment(slot).flatMap(garment -> garment.parts().stream()
+                .map(part -> envelopes.get(part.model())).filter(java.util.Objects::nonNull).findFirst()
+                .map(GarmentHemGeometry::dualSlope));
     }
 
     public Optional<DualEnvelopeDeformer.Pose> envelope(GarmentPartModel part) {

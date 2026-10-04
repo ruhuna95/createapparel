@@ -1,0 +1,13 @@
+{
+  "default_slot": "top",
+  "allowed_slots": [
+    "top"
+  ],
+  "model_template": "createapparel:straight_dress",
+  "model_variant": "midi",
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

@@ -1,0 +1,23 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 6,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/linen",
+      "createapparel:fabrics/hemp",
+      "createapparel:fabrics/wool",
+      "createapparel:fabrics/synthetic"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:bodycon_dress_knee"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}

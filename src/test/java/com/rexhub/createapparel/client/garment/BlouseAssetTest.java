@@ -191,6 +191,7 @@ class BlouseAssetTest {
     void existingAssetsKeepTheirOriginalBoxBoundsAndUvRectangles() throws IOException {
         try (var paths = Files.walk(ASSETS.resolve("garment_models/parts"))) {
             for (Path path : paths.filter(p -> p.toString().endsWith(".json") && !p.startsWith(PARTS)
+                    && !ASSETS.resolve("garment_models/parts").relativize(p).getName(0).toString().endsWith("_dress")
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/a_line_skirt"))
                     && !p.getParent().getFileName().toString().matches("(a_line|pleated|flared|tight)_skirt_.*")
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/jacket"))

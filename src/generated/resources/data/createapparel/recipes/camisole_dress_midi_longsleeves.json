@@ -1,0 +1,23 @@
+{
+  "type": "createapparel:sewing",
+  "fabric": {
+    "count": 11,
+    "tag": [
+      "createapparel:fabrics/cotton",
+      "createapparel:fabrics/linen",
+      "createapparel:fabrics/hemp",
+      "createapparel:fabrics/wool",
+      "createapparel:fabrics/synthetic"
+    ]
+  },
+  "pattern": "createapparel:sewing_pattern",
+  "result": {
+    "id": "createapparel:camisole_dress_midi_longsleeves"
+  },
+  "thread": {
+    "count": 1,
+    "tag": [
+      "createapparel:threads"
+    ]
+  }
+}
