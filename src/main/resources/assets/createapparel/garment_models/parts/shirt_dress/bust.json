@@ -137,7 +137,8 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/shirt/bust/base/default",
-        "overlay": "createapparel:garment/shirt/bust/overlay/default"
+        "overlay": "createapparel:garment/shirt/bust/overlay/default",
+        "brightness_mask": "createapparel:garment/shirt_dress/bust/masks/brightness/default"
       }
     },
     "designs": {}

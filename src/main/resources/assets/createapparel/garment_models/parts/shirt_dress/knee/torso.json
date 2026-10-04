@@ -330,7 +330,8 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/shirt_dress/knee/torso/base/default",
-        "overlay": "createapparel:garment/shirt_dress/knee/torso/overlay/default"
+        "overlay": "createapparel:garment/shirt_dress/knee/torso/overlay/default",
+        "brightness_mask": "createapparel:garment/shirt_dress/knee/torso/masks/brightness/default"
       }
     },
     "designs": {}

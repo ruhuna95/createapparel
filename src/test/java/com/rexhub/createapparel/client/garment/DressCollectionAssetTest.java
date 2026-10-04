@@ -109,7 +109,8 @@ class DressCollectionAssetTest {
                         assertEquals(part.model().textureHeight(), base.getHeight(), id);
                         assertEquals(layered(kind), part.textures().secondary().isPresent(), id);
                         assertTrue(part.textures().accent().isEmpty(), id);
-                        assertTrue(part.textures().brightnessMask().isEmpty(), id);
+                        assertEquals(kind.equals("shirt_dress") && Set.of("torso", "bust").contains(part.semanticName()),
+                                part.textures().brightnessMask().isPresent(), id);
                         assertEquals(1, part.textures().brightness());
                     }
                 }
@@ -268,6 +269,47 @@ class DressCollectionAssetTest {
         var shifted = new Vector3f();
         pose.shift(0, pose.geometry().bottom(), -2.25F, shifted);
         assertTrue(shifted.z < -2.25F);
+    }
+
+    @Test
+    void shirtCollarsMatchExistingShirtCutoutsAndBrightnessWithoutBrighteningOtherPixels() throws Exception {
+        for (String name : List.of("knee/torso", "midi/torso", "bust")) {
+            boolean bust = name.equals("bust");
+            var original = DualEnvelopeDeformerTest.part("shirt/" + (bust ? "bust" : "torso"));
+            var dress = DualEnvelopeDeformerTest.part("shirt_dress/" + name);
+            var originalBase = texture(original.defaultTexture());
+            var originalMask = texture(original.variants().get("default").brightnessMask().orElseThrow());
+            var dressBase = texture(dress.defaultTexture());
+            var dressMask = texture(dress.variants().get("default").brightnessMask().orElseThrow());
+            assertEquals(dressBase.getWidth(), dressMask.getWidth());
+            assertEquals(dressBase.getHeight(), dressMask.getHeight());
+            var originalDecoration = original.elements().stream()
+                    .filter(e -> e.name().equals(bust ? "bust_front_decoration" : "torso_decoration"))
+                    .findFirst().orElseThrow();
+            var dressDecoration = dress.elements().stream()
+                    .filter(e -> e.name().equals(originalDecoration.name())).findFirst().orElseThrow();
+            assertEquals(originalDecoration.to(), dressDecoration.to());
+            assertEquals(originalDecoration.from().x(), dressDecoration.from().x());
+            assertEquals(originalDecoration.from().z(), dressDecoration.from().z());
+            assertEquals(originalDecoration.rotation(), dressDecoration.rotation());
+            var uv = originalDecoration.faces().get(Face.FRONT);
+            int brightened = 0;
+            for (int y = 0; y < dressMask.getHeight(); y++) for (int x = 0; x < dressMask.getWidth(); x++) {
+                boolean collar = x >= uv.u0() && x < uv.u1() && y >= uv.v0() && y < uv.v0() + 2
+                        && originalBase.getRGB(x, y) >>> 24 != 0;
+                int expected = collar ? originalMask.getRGB(x, y) & 255 : 100;
+                assertEquals(0xFF000000 | expected << 16 | expected << 8 | expected,
+                        dressMask.getRGB(x, y), name + " / " + x + "," + y);
+                if (collar) {
+                    assertEquals(originalBase.getRGB(x, y), dressBase.getRGB(x, y), name);
+                    int tinted = 0xFF367094;
+                    assertEquals(GarmentTexturePixelOps.applyBrightness(tinted, 1, originalMask.getRGB(x, y) & 255),
+                            GarmentTexturePixelOps.applyBrightness(tinted, 1, expected), name);
+                    brightened++;
+                }
+            }
+            assertEquals(6, brightened, name);
+        }
     }
 
     @Test

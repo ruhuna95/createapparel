@@ -330,7 +330,8 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/shirt_dress/midi/torso/base/default",
-        "overlay": "createapparel:garment/shirt_dress/midi/torso/overlay/default"
+        "overlay": "createapparel:garment/shirt_dress/midi/torso/overlay/default",
+        "brightness_mask": "createapparel:garment/shirt_dress/midi/torso/masks/brightness/default"
       }
     },
     "designs": {}
