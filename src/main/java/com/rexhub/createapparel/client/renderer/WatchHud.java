@@ -32,6 +32,7 @@ public final class WatchHud {
         var minecraft = Minecraft.getInstance();
         var player = minecraft.player;
         if (player == null || minecraft.level == null || minecraft.screen != null || minecraft.options.hideGui
+                || !minecraft.options.getCameraType().isFirstPerson()
                 || !minecraft.options.keyShift.isDown()
                 || player.isInvisible() || player.isSpectator()
                 || !player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty()) return;
