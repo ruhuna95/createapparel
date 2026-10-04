@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "createapparel:khaki_dye"
+    },
+    "G": {
+      "item": "minecraft:glass_pane"
+    },
+    "I": {
+      "item": "minecraft:iron_nugget"
+    }
+  },
+  "pattern": [
+    " C ",
+    "GIG"
+  ],
+  "result": {
+    "count": 1,
+    "item": "createapparel:glasses",
+    "nbt": "{GarmentData:{material:\"synthetic\",design:\"plain\",primary_color:\"khaki\"}}"
+  }
+}

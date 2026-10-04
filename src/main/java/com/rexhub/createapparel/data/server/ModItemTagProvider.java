@@ -33,6 +33,8 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         addThreadTags();
         addFabricTags();
         addGemTags();
+        var apparelDyes = tag(ModTags.Items.APPAREL_DYES);
+        ModItems.apparelDyes().values().forEach(item -> apparelDyes.add(item.get()));
         tag(ModTags.Items.SILKWORM_FOOD).addTag(ItemTags.LEAVES);
     }
 

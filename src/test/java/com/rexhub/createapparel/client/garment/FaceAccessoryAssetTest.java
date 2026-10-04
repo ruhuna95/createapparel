@@ -162,14 +162,16 @@ class FaceAccessoryAssetTest {
         for (String eyewear : List.of("glasses", "sunglasses")) {
             try (var paths = Files.list(RECIPES.resolve(eyewear))) {
                 var recipes = paths.toList();
-                assertEquals(16, recipes.size());
+                assertEquals(com.rexhub.createapparel.material.FabricColor.values().length, recipes.size());
                 for (var path : recipes) {
                     String color = path.getFileName().toString().replace(".json", "");
                     var recipe = json(path);
                     assertEquals("minecraft:crafting_shaped", recipe.get("type").getAsString());
                     assertEquals(JsonParser.parseString("[\" C \",\"GIG\"]"), recipe.get("pattern"));
                     var key = recipe.getAsJsonObject("key");
-                    assertEquals("minecraft:" + color + "_dye", key.getAsJsonObject("C").get("item").getAsString());
+                    var fabricColor = com.rexhub.createapparel.material.FabricColor.fromSerializedName(color).orElseThrow();
+                    assertEquals((fabricColor.isVanilla() ? "minecraft:" : "createapparel:")
+                            + color + "_dye", key.getAsJsonObject("C").get("item").getAsString());
                     assertEquals(eyewear.equals("glasses") ? "minecraft:glass_pane" : "minecraft:black_stained_glass_pane",
                             key.getAsJsonObject("G").get("item").getAsString());
                     assertEquals("minecraft:iron_nugget", key.getAsJsonObject("I").get("item").getAsString());

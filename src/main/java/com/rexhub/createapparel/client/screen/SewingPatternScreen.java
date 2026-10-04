@@ -195,7 +195,7 @@ public final class SewingPatternScreen extends Screen {
     private void selectColor(Button anchor, int current, java.util.function.IntConsumer onSelect) {
         List<FabricColor> colors = List.of(FabricColor.values());
         selectionMenu.open(anchor, width, height, colors.stream()
-                .map(color -> (Component) Component.translatable("color.minecraft." + color.getSerializedName()))
+                .map(color -> (Component) Component.translatable(color.translationKey()))
                 .toList(), colors.stream().map(FabricColor::tintRgb).toList(), current, index -> {
                     onSelect.accept(index);
                     updateButtons();
@@ -340,7 +340,7 @@ public final class SewingPatternScreen extends Screen {
     private Component colorMessage(String labelKey, FabricColor color) {
         return Component.translatable(
                 labelKey,
-                Component.translatable("color.minecraft." + color.getSerializedName())
+                Component.translatable(color.translationKey())
         );
     }
 

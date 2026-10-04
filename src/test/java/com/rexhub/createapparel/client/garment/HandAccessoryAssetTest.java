@@ -170,7 +170,7 @@ class HandAccessoryAssetTest {
         }
         try (var recipes = Files.list(GENERATED.resolve("watch"))) {
             var paths = recipes.toList();
-            assertEquals(16, paths.size());
+            assertEquals(com.rexhub.createapparel.material.FabricColor.values().length, paths.size());
             for (Path path : paths) {
                 var recipe = json(path);
                 assertEquals("minecraft:crafting_shaped", recipe.get("type").getAsString());
@@ -179,7 +179,10 @@ class HandAccessoryAssetTest {
                 assertEquals("minecraft:clock", key.getAsJsonObject("C").get("item").getAsString());
                 assertEquals("minecraft:iron_nugget", key.getAsJsonObject("I").get("item").getAsString());
                 assertEquals("create:precision_mechanism", key.getAsJsonObject("P").get("item").getAsString());
-                assertEquals("minecraft:" + path.getFileName().toString().replace(".json", "_dye"),
+                var color = com.rexhub.createapparel.material.FabricColor.fromSerializedName(
+                        path.getFileName().toString().replace(".json", "")).orElseThrow();
+                assertEquals((color.isVanilla() ? "minecraft:" : "createapparel:")
+                                + color.getSerializedName() + "_dye",
                         key.getAsJsonObject("D").get("item").getAsString());
             }
         }

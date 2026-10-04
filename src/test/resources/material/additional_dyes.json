@@ -1,0 +1,189 @@
+{
+  "colors": [
+    {
+      "id": "cream",
+      "display_name": "Cream",
+      "display_name_ja": "クリーム",
+      "hex": "#EDE0C0",
+      "ingredients": [
+        "minecraft:white_dye",
+        "minecraft:white_dye",
+        "minecraft:yellow_dye"
+      ]
+    },
+    {
+      "id": "beige",
+      "display_name": "Beige",
+      "display_name_ja": "ベージュ",
+      "hex": "#CDBB9A",
+      "ingredients": [
+        "minecraft:white_dye",
+        "minecraft:brown_dye"
+      ]
+    },
+    {
+      "id": "greige",
+      "display_name": "Greige",
+      "display_name_ja": "グレージュ",
+      "hex": "#AAA294",
+      "ingredients": [
+        "minecraft:white_dye",
+        "minecraft:light_gray_dye",
+        "minecraft:brown_dye"
+      ]
+    },
+    {
+      "id": "tan",
+      "display_name": "Tan",
+      "display_name_ja": "タン",
+      "hex": "#B58D67",
+      "ingredients": [
+        "minecraft:orange_dye",
+        "minecraft:light_gray_dye",
+        "minecraft:light_gray_dye"
+      ]
+    },
+    {
+      "id": "navy",
+      "display_name": "Navy",
+      "display_name_ja": "ネイビー",
+      "hex": "#25354D",
+      "ingredients": [
+        "minecraft:blue_dye",
+        "minecraft:black_dye",
+        "minecraft:black_dye"
+      ]
+    },
+    {
+      "id": "cerulean",
+      "display_name": "Cerulean",
+      "display_name_ja": "セルリアン",
+      "hex": "#007BA7",
+      "ingredients": [
+        "minecraft:cyan_dye",
+        "minecraft:cyan_dye",
+        "minecraft:blue_dye"
+      ]
+    },
+    {
+      "id": "sky",
+      "display_name": "Sky",
+      "display_name_ja": "スカイ",
+      "hex": "#91B8CE",
+      "ingredients": [
+        "minecraft:light_blue_dye",
+        "minecraft:white_dye",
+        "minecraft:light_gray_dye"
+      ]
+    },
+    {
+      "id": "olive",
+      "display_name": "Olive",
+      "display_name_ja": "オリーブ",
+      "hex": "#6D7045",
+      "ingredients": [
+        "minecraft:green_dye",
+        "minecraft:brown_dye",
+        "minecraft:gray_dye"
+      ]
+    },
+    {
+      "id": "khaki",
+      "display_name": "Khaki",
+      "display_name_ja": "カーキ",
+      "hex": "#827C56",
+      "ingredients": [
+        "minecraft:green_dye",
+        "minecraft:brown_dye",
+        "minecraft:light_gray_dye"
+      ]
+    },
+    {
+      "id": "forest",
+      "display_name": "Forest",
+      "display_name_ja": "フォレスト",
+      "hex": "#334C3A",
+      "ingredients": [
+        "minecraft:green_dye",
+        "minecraft:black_dye",
+        "minecraft:gray_dye"
+      ]
+    },
+    {
+      "id": "mint",
+      "display_name": "Mint",
+      "display_name_ja": "ミント",
+      "hex": "#A3C6B0",
+      "ingredients": [
+        "minecraft:white_dye",
+        "minecraft:green_dye",
+        "minecraft:light_blue_dye"
+      ]
+    },
+    {
+      "id": "burgundy",
+      "display_name": "Burgundy",
+      "display_name_ja": "バーガンディ",
+      "hex": "#672F3B",
+      "ingredients": [
+        "minecraft:red_dye",
+        "minecraft:black_dye",
+        "minecraft:gray_dye"
+      ]
+    },
+    {
+      "id": "coral",
+      "display_name": "Coral",
+      "display_name_ja": "コーラル",
+      "hex": "#D78374",
+      "ingredients": [
+        "minecraft:orange_dye",
+        "minecraft:pink_dye",
+        "minecraft:light_gray_dye"
+      ]
+    },
+    {
+      "id": "rose",
+      "display_name": "Rose",
+      "display_name_ja": "ローズ",
+      "hex": "#B96070",
+      "ingredients": [
+        "minecraft:pink_dye",
+        "minecraft:red_dye",
+        "minecraft:light_gray_dye"
+      ]
+    },
+    {
+      "id": "mustard",
+      "display_name": "Mustard",
+      "display_name_ja": "マスタード",
+      "hex": "#B49642",
+      "ingredients": [
+        "minecraft:yellow_dye",
+        "minecraft:brown_dye"
+      ]
+    },
+    {
+      "id": "lavender",
+      "display_name": "Lavender",
+      "display_name_ja": "ラベンダー",
+      "hex": "#ACA0BD",
+      "ingredients": [
+        "minecraft:purple_dye",
+        "minecraft:white_dye",
+        "minecraft:light_gray_dye"
+      ]
+    },
+    {
+      "id": "plum",
+      "display_name": "Plum",
+      "display_name_ja": "プラム",
+      "hex": "#68485F",
+      "ingredients": [
+        "minecraft:purple_dye",
+        "minecraft:brown_dye",
+        "minecraft:black_dye"
+      ]
+    }
+  ]
+}

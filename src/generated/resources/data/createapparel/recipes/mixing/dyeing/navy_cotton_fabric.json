@@ -1,0 +1,122 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    [
+      {
+        "item": "createapparel:cotton_fabric"
+      },
+      {
+        "item": "createapparel:white_cotton_fabric"
+      },
+      {
+        "item": "createapparel:orange_cotton_fabric"
+      },
+      {
+        "item": "createapparel:magenta_cotton_fabric"
+      },
+      {
+        "item": "createapparel:light_blue_cotton_fabric"
+      },
+      {
+        "item": "createapparel:yellow_cotton_fabric"
+      },
+      {
+        "item": "createapparel:lime_cotton_fabric"
+      },
+      {
+        "item": "createapparel:pink_cotton_fabric"
+      },
+      {
+        "item": "createapparel:gray_cotton_fabric"
+      },
+      {
+        "item": "createapparel:light_gray_cotton_fabric"
+      },
+      {
+        "item": "createapparel:cyan_cotton_fabric"
+      },
+      {
+        "item": "createapparel:purple_cotton_fabric"
+      },
+      {
+        "item": "createapparel:blue_cotton_fabric"
+      },
+      {
+        "item": "createapparel:brown_cotton_fabric"
+      },
+      {
+        "item": "createapparel:green_cotton_fabric"
+      },
+      {
+        "item": "createapparel:red_cotton_fabric"
+      },
+      {
+        "item": "createapparel:black_cotton_fabric"
+      },
+      {
+        "item": "createapparel:cream_cotton_fabric"
+      },
+      {
+        "item": "createapparel:beige_cotton_fabric"
+      },
+      {
+        "item": "createapparel:greige_cotton_fabric"
+      },
+      {
+        "item": "createapparel:tan_cotton_fabric"
+      },
+      {
+        "item": "createapparel:navy_cotton_fabric"
+      },
+      {
+        "item": "createapparel:cerulean_cotton_fabric"
+      },
+      {
+        "item": "createapparel:sky_cotton_fabric"
+      },
+      {
+        "item": "createapparel:olive_cotton_fabric"
+      },
+      {
+        "item": "createapparel:khaki_cotton_fabric"
+      },
+      {
+        "item": "createapparel:forest_cotton_fabric"
+      },
+      {
+        "item": "createapparel:mint_cotton_fabric"
+      },
+      {
+        "item": "createapparel:burgundy_cotton_fabric"
+      },
+      {
+        "item": "createapparel:coral_cotton_fabric"
+      },
+      {
+        "item": "createapparel:rose_cotton_fabric"
+      },
+      {
+        "item": "createapparel:mustard_cotton_fabric"
+      },
+      {
+        "item": "createapparel:lavender_cotton_fabric"
+      },
+      {
+        "item": "createapparel:plum_cotton_fabric"
+      }
+    ],
+    {
+      "item": "createapparel:navy_dye"
+    },
+    {
+      "amount": 250,
+      "fluid": "minecraft:water",
+      "nbt": {}
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:navy_cotton_fabric"
+    }
+  ]
+}

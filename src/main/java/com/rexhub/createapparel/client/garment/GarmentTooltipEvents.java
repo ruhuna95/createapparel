@@ -8,6 +8,7 @@ import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.GarmentItem;
 import com.rexhub.createapparel.garment.MetalAccessoryData;
 import com.rexhub.createapparel.garment.GarmentSlot;
+import com.rexhub.createapparel.material.FabricColor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -112,7 +113,8 @@ public final class GarmentTooltipEvents {
     }
 
     private static Component colorName(String color) {
-        return Component.translatable("color.minecraft." + color);
+        return Component.translatable(FabricColor.fromSerializedName(color)
+                .map(value -> value.translationKey()).orElse("color.minecraft." + color));
     }
 
     static void appendSlots(List<Component> tooltip, GarmentDefinition definition) {

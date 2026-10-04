@@ -3,10 +3,12 @@ package com.rexhub.createapparel.init;
 import com.rexhub.createapparel.garment.GarmentItem;
 import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.item.SewingPatternItem;
+import com.rexhub.createapparel.item.ApparelDyeItem;
 import com.rexhub.createapparel.material.FabricAttribute;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.level.block.Block;
@@ -26,6 +28,25 @@ public final class ModItems {
     private static final Map<FabricMaterial, RegistryObject<Item>> UNDYED_FABRICS =
             new EnumMap<>(FabricMaterial.class);
     private static final Map<RegistryObject<Item>, FabricAttribute> FABRIC_ITEMS = new LinkedHashMap<>();
+
+    public static final RegistryObject<Item> CREAM_DYE = registerDye(FabricColor.CREAM);
+    public static final RegistryObject<Item> BEIGE_DYE = registerDye(FabricColor.BEIGE);
+    public static final RegistryObject<Item> GREIGE_DYE = registerDye(FabricColor.GREIGE);
+    public static final RegistryObject<Item> TAN_DYE = registerDye(FabricColor.TAN);
+    public static final RegistryObject<Item> NAVY_DYE = registerDye(FabricColor.NAVY);
+    public static final RegistryObject<Item> CERULEAN_DYE = registerDye(FabricColor.CERULEAN);
+    public static final RegistryObject<Item> SKY_DYE = registerDye(FabricColor.SKY);
+    public static final RegistryObject<Item> OLIVE_DYE = registerDye(FabricColor.OLIVE);
+    public static final RegistryObject<Item> KHAKI_DYE = registerDye(FabricColor.KHAKI);
+    public static final RegistryObject<Item> FOREST_DYE = registerDye(FabricColor.FOREST);
+    public static final RegistryObject<Item> MINT_DYE = registerDye(FabricColor.MINT);
+    public static final RegistryObject<Item> BURGUNDY_DYE = registerDye(FabricColor.BURGUNDY);
+    public static final RegistryObject<Item> CORAL_DYE = registerDye(FabricColor.CORAL);
+    public static final RegistryObject<Item> ROSE_DYE = registerDye(FabricColor.ROSE);
+    public static final RegistryObject<Item> MUSTARD_DYE = registerDye(FabricColor.MUSTARD);
+    public static final RegistryObject<Item> LAVENDER_DYE = registerDye(FabricColor.LAVENDER);
+    public static final RegistryObject<Item> PLUM_DYE = registerDye(FabricColor.PLUM);
+    private static final Map<FabricColor, RegistryObject<Item>> APPAREL_DYES = createDyeCatalog();
 
     public static final RegistryObject<Item> SPINNING_MACHINE = ModRegistries.ITEMS.register(
             "spinning_machine",
@@ -335,6 +356,36 @@ public final class ModItems {
         return Collections.unmodifiableMap(FABRIC_ITEMS);
     }
 
+    public static Map<FabricColor, RegistryObject<Item>> apparelDyes() {
+        return APPAREL_DYES;
+    }
+
+    public static Item dye(FabricColor color) {
+        return color.vanillaDyeColor().<Item>map(DyeItem::byColor)
+                .orElseGet(() -> APPAREL_DYES.get(color).get());
+    }
+
+    private static RegistryObject<Item> registerDye(FabricColor color) {
+        return ModRegistries.ITEMS.register(color.getSerializedName() + "_dye",
+                () -> new ApparelDyeItem(color, new Item.Properties()));
+    }
+
+    private static Map<FabricColor, RegistryObject<Item>> createDyeCatalog() {
+        EnumMap<FabricColor, RegistryObject<Item>> dyes = new EnumMap<>(FabricColor.class);
+        List<RegistryObject<Item>> items = List.of(CREAM_DYE, BEIGE_DYE, GREIGE_DYE, TAN_DYE,
+                NAVY_DYE, CERULEAN_DYE, SKY_DYE, OLIVE_DYE, KHAKI_DYE, FOREST_DYE, MINT_DYE,
+                BURGUNDY_DYE, CORAL_DYE, ROSE_DYE, MUSTARD_DYE, LAVENDER_DYE, PLUM_DYE);
+        var colors = java.util.Arrays.stream(FabricColor.values())
+                .filter(color -> !color.isVanilla()).toList();
+        if (colors.size() != items.size()) {
+            throw new IllegalStateException("Incomplete apparel dye catalog");
+        }
+        for (int index = 0; index < colors.size(); index++) {
+            dyes.put(colors.get(index), items.get(index));
+        }
+        return Collections.unmodifiableMap(dyes);
+    }
+
     public static List<RegistryObject<Item>> creativeTabItems() {
         return CREATIVE_TAB_ITEMS;
     }
@@ -431,6 +482,7 @@ public final class ModItems {
         items.add(SILVER_NECKLACE_BASE);
         items.add(GOLD_BRACELET_BASE);
         items.add(SILVER_BRACELET_BASE);
+        items.addAll(APPAREL_DYES.values());
         return List.copyOf(items);
     }
 
@@ -452,7 +504,7 @@ public final class ModItems {
         if (UNDYED_FABRICS.size() != materialCount
                 || dyedFabricCount != materialCount * colorCount
                 || FABRIC_ITEMS.size() != expectedFabricCount) {
-            throw new IllegalStateException("The standard fabric catalog must contain 119 items");
+            throw new IllegalStateException("The standard fabric catalog must contain " + expectedFabricCount + " items");
         }
     }
 

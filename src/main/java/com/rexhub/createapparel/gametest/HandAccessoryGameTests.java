@@ -16,7 +16,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.TransientCraftingContainer;
-import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.ShapedRecipe;
@@ -51,7 +50,7 @@ public final class HandAccessoryGameTests {
         grid.setItem(5, new ItemStack(Items.IRON_NUGGET));
         var definition = GarmentDefinitionManager.get(ModItems.WATCH.getId()).orElseThrow();
         for (FabricColor color : FabricColor.values()) {
-            grid.setItem(7, new ItemStack(DyeItem.byColor(color.dyeColor())));
+            grid.setItem(7, new ItemStack(ModItems.dye(color)));
             var recipe = (ShapedRecipe) helper.getLevel().getRecipeManager().byKey(
                     id("watch/" + color.getSerializedName())).orElseThrow();
             helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Watch ingredients match");

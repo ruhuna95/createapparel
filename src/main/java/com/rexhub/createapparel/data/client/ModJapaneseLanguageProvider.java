@@ -280,6 +280,11 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         for (var entry : ModItems.fabricItems().entrySet()) {
             add(entry.getKey(), fabricName(entry.getValue()));
         }
+        ModItems.apparelDyes().forEach((color, item) -> {
+            String name = colorName(color);
+            add(color.translationKey(), name.substring(0, name.length() - 1));
+            add(item, name + "の染料");
+        });
     }
 
     private void add(RegistryObject<? extends Item> item, String translation) {
@@ -323,6 +328,23 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
             case GREEN -> "緑色";
             case RED -> "赤色";
             case BLACK -> "黒色";
+            case CREAM -> "クリーム色";
+            case BEIGE -> "ベージュ色";
+            case GREIGE -> "グレージュ色";
+            case TAN -> "タン色";
+            case NAVY -> "ネイビー色";
+            case CERULEAN -> "セルリアン色";
+            case SKY -> "スカイ色";
+            case OLIVE -> "オリーブ色";
+            case KHAKI -> "カーキ色";
+            case FOREST -> "フォレスト色";
+            case MINT -> "ミント色";
+            case BURGUNDY -> "バーガンディ色";
+            case CORAL -> "コーラル色";
+            case ROSE -> "ローズ色";
+            case MUSTARD -> "マスタード色";
+            case LAVENDER -> "ラベンダー色";
+            case PLUM -> "プラム色";
         };
     }
 }

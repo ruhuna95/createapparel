@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.item.ApparelDyeItem;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModRegistries;
 import com.rexhub.createapparel.material.FabricAttribute;
@@ -30,10 +31,14 @@ public final class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
+        var dyeModel = withExistingParent("apparel_dye", mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/apparel_dye_base"));
         for (RegistryObject<Item> item : ModRegistries.ITEMS.getEntries()) {
             FabricAttribute attribute = ModItems.fabricItems().get(item);
             if (attribute != null && attribute.isDyed()) {
                 dyedFabric(item, attribute);
+            } else if (item.get() instanceof ApparelDyeItem) {
+                getBuilder(item.getId().getPath()).parent(dyeModel);
             } else if (item == ModItems.COTTON_BOLL) {
                 generatedItem(item, "cotton_ball");
             } else if (item == ModItems.SILKWORM_SPAWN_EGG) {

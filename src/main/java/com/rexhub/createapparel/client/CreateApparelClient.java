@@ -20,6 +20,7 @@ import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModMenuTypes;
 import com.rexhub.createapparel.material.FabricAttributeMap;
+import com.rexhub.createapparel.material.FabricColor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -103,6 +104,12 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
+        event.register(
+                (stack, tintIndex) -> tintIndex == 0
+                        ? FabricColor.fromDye(stack).map(color -> 0xFF000000 | color.tintRgb()).orElse(0xFFFFFFFF)
+                        : 0xFFFFFFFF,
+                ModItems.apparelDyes().values().stream().map(item -> item.get()).toArray(Item[]::new)
+        );
         event.register(
                 (stack, tintIndex) -> tintIndex == 0
                         ? FabricAttributeMap.color(stack).map(color -> color.tintRgb()).orElse(0xFFFFFF)

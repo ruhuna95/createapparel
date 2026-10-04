@@ -50,11 +50,11 @@ public final class SewingPatternItem extends Item {
             ).withStyle(ChatFormatting.GRAY));
             data.secondaryColor().ifPresent(color -> tooltip.add(Component.translatable(
                     "tooltip.createapparel.sewing_pattern.secondary_color",
-                    Component.translatable("color.minecraft." + color.getSerializedName())
+                    Component.translatable(color.translationKey())
             ).withStyle(ChatFormatting.GRAY)));
             data.accentColor().ifPresent(color -> tooltip.add(Component.translatable(
                     "tooltip.createapparel.sewing_pattern.accent_color",
-                    Component.translatable("color.minecraft." + color.getSerializedName())
+                    Component.translatable(color.translationKey())
             ).withStyle(ChatFormatting.GRAY)));
         }, () -> tooltip.add(Component.translatable(
                 "tooltip.createapparel.sewing_pattern.unset"

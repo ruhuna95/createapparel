@@ -71,6 +71,23 @@ class SelectionMenuTest {
         assertEquals(8, selected.get());
     }
 
+    @Test
+    void additionalColorsFollowVanillaColorsAndTheLastPartialRowIsReachable() {
+        var colors = IntStream.range(0, 33).boxed().toList();
+        open(20, 33, colors, 15);
+        menu.keyPressed(GLFW.GLFW_KEY_RIGHT);
+        menu.keyPressed(GLFW.GLFW_KEY_ENTER);
+        assertEquals(16, selected.get());
+        open(20, 33, colors, 0);
+        menu.mouseScrolled(-1);
+        menu.mouseClicked(15, 187, 0);
+        assertEquals(32, selected.get());
+        selected.set(-1);
+        open(20, 33, colors, 32);
+        menu.mouseClicked(35, 187, 0);
+        assertEquals(-1, selected.get());
+    }
+
     private void open(int y, int count, List<Integer> colors, int current) {
         var anchor = Button.builder(Component.empty(), button -> { }).bounds(10, y, 120, 20).build();
         menu.open(anchor, 320, 240, IntStream.range(0, count)

@@ -22,10 +22,12 @@ import com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
@@ -78,6 +80,24 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
+
+        apparelDye(FabricColor.CREAM, Items.WHITE_DYE, Items.WHITE_DYE, Items.YELLOW_DYE);
+        apparelDye(FabricColor.BEIGE, Items.WHITE_DYE, Items.BROWN_DYE);
+        apparelDye(FabricColor.GREIGE, Items.WHITE_DYE, Items.LIGHT_GRAY_DYE, Items.BROWN_DYE);
+        apparelDye(FabricColor.TAN, Items.ORANGE_DYE, Items.LIGHT_GRAY_DYE, Items.LIGHT_GRAY_DYE);
+        apparelDye(FabricColor.NAVY, Items.BLUE_DYE, Items.BLACK_DYE, Items.BLACK_DYE);
+        apparelDye(FabricColor.CERULEAN, Items.CYAN_DYE, Items.CYAN_DYE, Items.BLUE_DYE);
+        apparelDye(FabricColor.SKY, Items.LIGHT_BLUE_DYE, Items.WHITE_DYE, Items.LIGHT_GRAY_DYE);
+        apparelDye(FabricColor.OLIVE, Items.GREEN_DYE, Items.BROWN_DYE, Items.GRAY_DYE);
+        apparelDye(FabricColor.KHAKI, Items.GREEN_DYE, Items.BROWN_DYE, Items.LIGHT_GRAY_DYE);
+        apparelDye(FabricColor.FOREST, Items.GREEN_DYE, Items.BLACK_DYE, Items.GRAY_DYE);
+        apparelDye(FabricColor.MINT, Items.WHITE_DYE, Items.GREEN_DYE, Items.LIGHT_BLUE_DYE);
+        apparelDye(FabricColor.BURGUNDY, Items.RED_DYE, Items.BLACK_DYE, Items.GRAY_DYE);
+        apparelDye(FabricColor.CORAL, Items.ORANGE_DYE, Items.PINK_DYE, Items.LIGHT_GRAY_DYE);
+        apparelDye(FabricColor.ROSE, Items.PINK_DYE, Items.RED_DYE, Items.LIGHT_GRAY_DYE);
+        apparelDye(FabricColor.MUSTARD, Items.YELLOW_DYE, Items.BROWN_DYE);
+        apparelDye(FabricColor.LAVENDER, Items.PURPLE_DYE, Items.WHITE_DYE, Items.LIGHT_GRAY_DYE);
+        apparelDye(FabricColor.PLUM, Items.PURPLE_DYE, Items.BROWN_DYE, Items.BLACK_DYE);
 
         sewing("necktie", ModItems.NECKTIE,
                 List.of(ModTags.Items.FABRICS_SILK, ModTags.Items.FABRICS_SYNTHETIC), 1);
@@ -458,6 +478,17 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .build(consumer));
     }
 
+    private void apparelDye(FabricColor color, Item... ingredients) {
+        register(consumer -> {
+            var builder = ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.dye(color), ingredients.length);
+            for (Item ingredient : ingredients) {
+                builder.requires(ingredient);
+            }
+            builder.unlockedBy("has_dye", InventoryChangeTrigger.TriggerInstance.hasItems(ingredients[0]))
+                    .save(consumer, asResource("apparel_dyes/" + color.getSerializedName() + "_dye"));
+        });
+    }
+
     private void dyeing(FabricMaterial material, FabricColor color) {
         String outputName = color.getSerializedName() + "_" + material.getSerializedName() + "_fabric";
         register(consumer -> new ProcessingRecipeBuilder<>(
@@ -465,7 +496,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 asResource("dyeing/" + outputName)
         )
                 .require(standardFabricIngredient(material, false))
-                .require(DyeItem.byColor(color.dyeColor()))
+                .require(ModItems.dye(color))
                 .require(Fluids.WATER, FABRIC_TREATMENT_WATER_AMOUNT)
                 .output(ModItems.dyedFabric(material, color).get())
                 .build(consumer));
@@ -519,7 +550,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             JsonObject key = new JsonObject();
             key.add("G", Ingredient.of(glassPane).toJson());
             key.add("I", Ingredient.of(Items.IRON_NUGGET).toJson());
-            key.add("C", Ingredient.of(DyeItem.byColor(color.dyeColor())).toJson());
+            key.add("C", Ingredient.of(ModItems.dye(color)).toJson());
             json.add("key", key);
             JsonObject result = new JsonObject();
             result.addProperty("item", resultId.toString());
@@ -566,7 +597,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             key.add("C", Ingredient.of(Items.CLOCK).toJson());
             key.add("I", Ingredient.of(Items.IRON_NUGGET).toJson());
             key.add("P", Ingredient.of(AllItems.PRECISION_MECHANISM.get()).toJson());
-            key.add("D", Ingredient.of(DyeItem.byColor(color.dyeColor())).toJson());
+            key.add("D", Ingredient.of(ModItems.dye(color)).toJson());
             json.add("key", key);
             JsonObject result = new JsonObject();
             result.addProperty("item", ModItems.WATCH.getId().toString());

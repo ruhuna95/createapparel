@@ -282,6 +282,11 @@ public final class ModLanguageProvider extends LanguageProvider {
         for (var entry : ModItems.fabricItems().entrySet()) {
             add(entry.getKey(), fabricName(entry.getValue()));
         }
+        ModItems.apparelDyes().forEach((color, item) -> {
+            String name = titleCase(color.getSerializedName());
+            add(color.translationKey(), name);
+            add(item, name + " Dye");
+        });
     }
 
     private void add(RegistryObject<? extends Item> item, String translation) {

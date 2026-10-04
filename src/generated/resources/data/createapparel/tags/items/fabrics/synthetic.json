@@ -16,6 +16,23 @@
     "createapparel:brown_synthetic_fabric",
     "createapparel:green_synthetic_fabric",
     "createapparel:red_synthetic_fabric",
-    "createapparel:black_synthetic_fabric"
+    "createapparel:black_synthetic_fabric",
+    "createapparel:cream_synthetic_fabric",
+    "createapparel:beige_synthetic_fabric",
+    "createapparel:greige_synthetic_fabric",
+    "createapparel:tan_synthetic_fabric",
+    "createapparel:navy_synthetic_fabric",
+    "createapparel:cerulean_synthetic_fabric",
+    "createapparel:sky_synthetic_fabric",
+    "createapparel:olive_synthetic_fabric",
+    "createapparel:khaki_synthetic_fabric",
+    "createapparel:forest_synthetic_fabric",
+    "createapparel:mint_synthetic_fabric",
+    "createapparel:burgundy_synthetic_fabric",
+    "createapparel:coral_synthetic_fabric",
+    "createapparel:rose_synthetic_fabric",
+    "createapparel:mustard_synthetic_fabric",
+    "createapparel:lavender_synthetic_fabric",
+    "createapparel:plum_synthetic_fabric"
   ]
 }
