@@ -1,0 +1,124 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              14
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              12,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              12,
+              4,
+              16,
+              14
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              4,
+              24,
+              14
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              12,
+              4
+            ]
+          }
+        },
+        "from": [
+          -4.005,
+          13.995,
+          -2.25
+        ],
+        "to": [
+          4.005,
+          24.005,
+          2.25
+        ],
+        "name": "torso"
+      },
+      {
+        "faces": {
+          "front": {
+            "uv": [
+              4,
+              18,
+              12,
+              27
+            ]
+          },
+          "back": {
+            "uv": [
+              16,
+              18,
+              24,
+              27
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              14,
+              12,
+              18
+            ]
+          }
+        },
+        "from": [
+          -4.005,
+          15,
+          -2.4
+        ],
+        "to": [
+          4.005,
+          24.005,
+          2.4
+        ],
+        "name": "torso_decoration"
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/sailor_blouse/torso/base/default",
+        "overlay": "createapparel:garment/sailor_blouse/torso/overlay/default"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/sailor_blouse/torso/masks/plain/secondary",
+        "accent_mask": "createapparel:garment/sailor_blouse/torso/masks/plain/accent"
+      }
+    }
+  }
+}

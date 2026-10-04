@@ -1,0 +1,42 @@
+{
+  "shortsleeves": {
+    "torso": {
+      "model": "createapparel:sailor_blouse/torso"
+    },
+    "bust": {
+      "model": "createapparel:sailor_blouse/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:sailor_blouse/left_short_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:sailor_blouse/right_short_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:sailor_blouse/left_short_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:sailor_blouse/right_short_sleeve_slim"
+    }
+  },
+  "longsleeves": {
+    "torso": {
+      "model": "createapparel:sailor_blouse/torso"
+    },
+    "bust": {
+      "model": "createapparel:sailor_blouse/bust"
+    },
+    "left_sleeve_classic": {
+      "model": "createapparel:sailor_blouse/left_long_sleeve_classic"
+    },
+    "right_sleeve_classic": {
+      "model": "createapparel:sailor_blouse/right_long_sleeve_classic"
+    },
+    "left_sleeve_slim": {
+      "model": "createapparel:sailor_blouse/left_long_sleeve_slim"
+    },
+    "right_sleeve_slim": {
+      "model": "createapparel:sailor_blouse/right_long_sleeve_slim"
+    }
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "rotation": {
+          "angle": 30,
+          "axis": "x",
+          "origin": [
+            0,
+            25,
+            -0.9
+          ]
+        },
+        "from": [
+          -3.75,
+          19.27,
+          -1.64
+        ],
+        "to": [
+          3.75,
+          23.4633,
+          1.37
+        ],
+        "name": "bust",
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              3,
+              3,
+              7
+            ]
+          },
+          "right": {
+            "uv": [
+              10,
+              3,
+              13,
+              7
+            ]
+          },
+          "bottom": {
+            "uv": [
+              10,
+              0,
+              17,
+              3
+            ]
+          },
+          "front": {
+            "uv": [
+              3,
+              3,
+              10,
+              7
+            ]
+          }
+        }
+      },
+      {
+        "rotation": {
+          "angle": 30,
+          "axis": "x",
+          "origin": [
+            0,
+            25,
+            -0.9
+          ]
+        },
+        "from": [
+          -3.9,
+          19.12,
+          -1.79
+        ],
+        "to": [
+          3.9,
+          23.4633,
+          1.37
+        ],
+        "name": "bust_decoration",
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              10,
+              3,
+              14
+            ]
+          },
+          "right": {
+            "uv": [
+              10,
+              10,
+              13,
+              14
+            ]
+          },
+          "front": {
+            "uv": [
+              3,
+              10,
+              10,
+              14
+            ]
+          },
+          "bottom": {
+            "uv": [
+              10,
+              7,
+              17,
+              10
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/sailor_blouse/bust/base/default",
+        "overlay": "createapparel:garment/sailor_blouse/bust/overlay/default"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/sailor_blouse/bust/masks/plain/secondary",
+        "accent_mask": "createapparel:garment/sailor_blouse/bust/masks/plain/accent"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "model_template": "createapparel:sailor_blouse",
+  "model_variant": "shortsleeves",
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {},
+  "default_slot": "top",
+  "allowed_slots": [
+    "top"
+  ]
+}

@@ -20,6 +20,7 @@ class SewingPatternOrderTest {
                 "blouse_round", "blouse_frill", "blouse_bow_tie",
                 "blouse_round_three_quarter_sleeve", "blouse_frill_three_quarter_sleeve",
                 "blouse_bow_tie_three_quarter_sleeve",
+                "sailor_blouse_shortsleeves", "sailor_blouse_longsleeves",
                 "pullover_hoodie", "zipup_hoodie", "sweater", "v_neck_sweater", "denim_pants", "slacks", "shorts",
                 "a_line_skirt_mini", "a_line_skirt_knee", "a_line_skirt_midi", "a_line_skirt_long", "a_line_skirt_maxi",
                 "pleated_skirt_micro", "pleated_skirt_mini", "pleated_skirt_knee", "pleated_skirt_midi", "pleated_skirt_long",

@@ -1,0 +1,78 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    16,
+    16
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              9
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              9
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              9
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              9
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          }
+        },
+        "from": [
+          3.995,
+          19,
+          -2.25
+        ],
+        "to": [
+          8.25,
+          24.005,
+          2.25
+        ],
+        "name": "left_short_sleeve_classic"
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/sailor_blouse/short_sleeve_classic/base/default"
+      }
+    }
+  }
+}

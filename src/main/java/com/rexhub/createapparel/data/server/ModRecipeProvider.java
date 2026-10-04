@@ -70,6 +70,11 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             ModTags.Items.FABRICS_SILK,
             ModTags.Items.FABRICS_SYNTHETIC
     );
+    private static final List<TagKey<Item>> SAILOR_BLOUSE_FABRICS = List.of(
+            ModTags.Items.FABRICS_COTTON,
+            ModTags.Items.FABRICS_WOOL,
+            ModTags.Items.FABRICS_SYNTHETIC
+    );
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
@@ -338,6 +343,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         sewing("blouse_round_three_quarter_sleeve", ModItems.BLOUSE_ROUND_THREE_QUARTER_SLEEVE, BLOUSE_FABRICS, 4);
         sewing("blouse_frill_three_quarter_sleeve", ModItems.BLOUSE_FRILL_THREE_QUARTER_SLEEVE, BLOUSE_FABRICS, 4);
         sewing("blouse_bow_tie_three_quarter_sleeve", ModItems.BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE, BLOUSE_FABRICS, 4);
+        sewing("sailor_blouse_shortsleeves", ModItems.SAILOR_BLOUSE_SHORTSLEEVES, SAILOR_BLOUSE_FABRICS, 4);
+        sewing("sailor_blouse_longsleeves", ModItems.SAILOR_BLOUSE_LONGSLEEVES, SAILOR_BLOUSE_FABRICS, 4);
     }
 
     private void metalAccessory(String recipeName, RegistryObject<Item> accessory,

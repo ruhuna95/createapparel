@@ -57,6 +57,8 @@ public final class ModItems {
             registerGarment("t_shirt_longsleeves_v_neck");
     public static final RegistryObject<Item> SHIRT_SHORTSLEEVES = registerGarment("shirt_shortsleeves");
     public static final RegistryObject<Item> SHIRT_LONGSLEEVES = registerGarment("shirt_longsleeves");
+    public static final RegistryObject<Item> SAILOR_BLOUSE_SHORTSLEEVES = registerGarment("sailor_blouse_shortsleeves");
+    public static final RegistryObject<Item> SAILOR_BLOUSE_LONGSLEEVES = registerGarment("sailor_blouse_longsleeves");
     public static final RegistryObject<Item> ZIPUP_HOODIE = registerGarment("zipup_hoodie");
     public static final RegistryObject<Item> PULLOVER_HOODIE = registerGarment("pullover_hoodie");
     public static final RegistryObject<Item> SWEATER = registerGarment("sweater");
@@ -203,6 +205,8 @@ public final class ModItems {
                     BLOUSE_ROUND_THREE_QUARTER_SLEEVE,
                     BLOUSE_FRILL_THREE_QUARTER_SLEEVE,
                     BLOUSE_BOW_TIE_THREE_QUARTER_SLEEVE,
+                    SAILOR_BLOUSE_SHORTSLEEVES,
+                    SAILOR_BLOUSE_LONGSLEEVES,
                     PULLOVER_HOODIE,
                     ZIPUP_HOODIE,
                     SWEATER,

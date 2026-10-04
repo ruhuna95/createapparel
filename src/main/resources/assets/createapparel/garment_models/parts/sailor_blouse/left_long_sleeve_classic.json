@@ -1,0 +1,131 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              16
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              8,
+              16
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              4,
+              12,
+              16
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              4,
+              16,
+              16
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              8,
+              4
+            ]
+          }
+        },
+        "from": [
+          3.995,
+          11.75,
+          -2.25
+        ],
+        "to": [
+          8.25,
+          24.005,
+          2.25
+        ],
+        "name": "left_long_sleeve_classic"
+      },
+      {
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              16,
+              4,
+              28
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              16,
+              8,
+              28
+            ]
+          },
+          "right": {
+            "uv": [
+              8,
+              16,
+              12,
+              28
+            ]
+          },
+          "back": {
+            "uv": [
+              12,
+              16,
+              16,
+              28
+            ]
+          }
+        },
+        "from": [
+          3.9945,
+          11.6,
+          -2.4
+        ],
+        "to": [
+          8.4,
+          24.005,
+          2.4
+        ],
+        "name": "left_long_sleeve_classic_cuff"
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/sailor_blouse/long_sleeve_classic/base/default",
+        "overlay": "createapparel:garment/sailor_blouse/long_sleeve_classic/overlay/default"
+      }
+    },
+    "designs": {
+      "plain": {
+        "secondary_mask": "createapparel:garment/sailor_blouse/long_sleeve_classic/masks/plain/secondary"
+      }
+    }
+  }
+}
