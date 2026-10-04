@@ -250,7 +250,7 @@ public final class CommonGarmentRenderer {
         humanoidPose.apply(poseStack);
         Vector3f[] points = {new Vector3f(), new Vector3f(), new Vector3f(), new Vector3f()};
         PoseStack.Pose pose = poseStack.last();
-        for (var quad : envelope.geometry().quads()) {
+        for (var quad : envelope.quads()) {
             for (int i = 0; i < 4; i++) envelope.shift(quad.points().get(i), points[i]);
             float ux = points[1].x - points[0].x, uy = points[1].y - points[0].y, uz = points[1].z - points[0].z;
             float vx = points[2].x - points[0].x, vy = points[2].y - points[0].y, vz = points[2].z - points[0].z;

@@ -25,7 +25,7 @@ public final class ApparelRenderFrame {
                     part.model().legEnvelope().ifPresent(motion -> envelopes.computeIfAbsent(part.model(),
                             ignored -> new DualEnvelopeDeformer.Pose(motion.geometry(), legs,
                                     motion.clearance() + (slot == GarmentSlot.OUTER
-                                            ? LegEnvelopeGeometry.layerClearance(slot) : 0))));
+                                            ? LegEnvelopeGeometry.layerClearance(slot) : 0), slot == GarmentSlot.BOTTOM)));
                 }
             });
         }

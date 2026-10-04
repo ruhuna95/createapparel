@@ -1,5 +1,6 @@
 package com.rexhub.createapparel.client.garment;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -8,11 +9,61 @@ import org.joml.Vector3f;
 
 public final class LegEnvelopeGeometry {
     private final float[][] legs = new float[2][24];
+    private final float[] crouchingRearSlopes = {Float.NaN, Float.NaN};
+    private final Vector3f[] axes = new Vector3f[2];
+    private final Vector3f[] frontNormals = new Vector3f[2];
+    private float torsoBottom = Float.NaN;
+    private float torsoFront;
 
     public LegEnvelopeGeometry(PlayerModel<?> player) {
         Matrix4f inverse = pose(player.body).invert();
-        sample(legs[0], new Matrix4f(inverse).mul(pose(player.rightLeg)));
-        sample(legs[1], new Matrix4f(inverse).mul(pose(player.leftLeg)));
+        Matrix4f right = new Matrix4f(inverse).mul(pose(player.rightLeg));
+        Matrix4f left = new Matrix4f(inverse).mul(pose(player.leftLeg));
+        sample(legs[0], right);
+        sample(legs[1], left);
+        axes[0] = direction(right, 0, 1, 0);
+        axes[1] = direction(left, 0, 1, 0);
+        frontNormals[0] = direction(right, 0, 0, -1);
+        frontNormals[1] = direction(left, 0, 0, -1);
+        if (player.crouching && !player.riding) {
+            crouchingRearSlopes[0] = rearSlope(right);
+            crouchingRearSlopes[1] = rearSlope(left);
+            player.body.visit(new PoseStack(), (pose, path, index, cube) -> {
+                float bottom = 24 - cube.maxY;
+                if (!Float.isFinite(torsoBottom) || bottom < torsoBottom) {
+                    torsoBottom = bottom;
+                    torsoFront = cube.minZ;
+                }
+            });
+        }
+    }
+
+    private static Vector3f direction(Matrix4f matrix, float x, float y, float z) {
+        Vector3f result = matrix.transformDirection(new Vector3f(x, y, z)).normalize();
+        result.y = -result.y;
+        return result;
+    }
+
+    boolean hasBodyEdges() { return Float.isFinite(torsoBottom); }
+    float torsoBottom() { return torsoBottom; }
+    float torsoFront() { return torsoFront; }
+
+    void axis(int side, Vector3f result) { result.set(axes[side]); }
+
+    void frontEdge(int side, float across, float clearance, Vector3f result) {
+        float[] box = legs[side];
+        result.set(box[0] + (box[3] - box[0]) * across,
+                box[1] + (box[4] - box[1]) * across,
+                box[2] + (box[5] - box[2]) * across).fma(clearance, frontNormals[side]);
+    }
+
+    float crouchingRearSlope(int side) {
+        return crouchingRearSlopes[side];
+    }
+
+    private static float rearSlope(Matrix4f pose) {
+        Vector3f direction = pose.transformDirection(new Vector3f(0, 1, 0)).normalize();
+        return direction.y > 0.000001F ? direction.z / direction.y : Float.NaN;
     }
 
     public static float layerClearance(GarmentSlot slot) {
@@ -50,6 +101,20 @@ public final class LegEnvelopeGeometry {
             }
         }
         return Float.isFinite(result[0]);
+    }
+
+    float lateralSlope(int side, float waistX, float waistY, float front, float back, float clearance) {
+        float slope = 0;
+        float[] box = legs[side];
+        for (int i = 0; i < 8; i++) {
+            int index = i * 3;
+            float depth = waistY - box[index + 1];
+            if (depth <= 0) continue;
+            float reach = Math.max(0, Math.max(front - box[index + 2], box[index + 2] - back));
+            float protrusion = side == 0 ? waistX - box[index] + clearance : box[index] + clearance - waistX;
+            slope = Math.max(slope, protrusion / (float) Math.hypot(depth, reach));
+        }
+        return slope;
     }
 
     private static void intersect(float[] box, int a, int b, float y, float[] result) {

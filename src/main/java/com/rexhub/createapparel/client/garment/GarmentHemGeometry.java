@@ -30,8 +30,8 @@ public final class GarmentHemGeometry {
 
     public static Optional<Slope> skirtSlope(ResolvedGarment garment) {
         return garment.parts().stream().map(ClientGarmentAssets.ResolvedPart::model)
-                .filter(part -> part.legEnvelope().isPresent()).flatMap(part -> part.elements().stream())
-                .filter(element -> element.name().equals("front_panel")).findFirst().map(GarmentHemGeometry::slope);
+                .flatMap(part -> part.legEnvelope().stream())
+                .map(envelope -> envelope.geometry().reference()).findFirst().map(GarmentHemGeometry::slope);
     }
 
 
@@ -88,7 +88,7 @@ public final class GarmentHemGeometry {
         private final List<Element> source;
         private final List<Quad> quads;
         private final Map<Float, List<Quad>> skirtQuads = new LinkedHashMap<>();
-        private final Map<DualEnvelopeDeformer.Prepared, List<Quad>> dualQuads = new LinkedHashMap<>();
+        private final Map<EnvelopeKey, List<Quad>> dualQuads = new LinkedHashMap<>();
 
         private Prepared(float hem, List<Element> source) {
             this.hem = hem;
@@ -108,14 +108,21 @@ public final class GarmentHemGeometry {
             float cut = Math.max(hem + HEM_HEIGHT, slope.min().y());
             if (slope.envelope() != null) {
                 var geometry = slope.envelope().geometry();
-                if (!dualQuads.containsKey(geometry) && dualQuads.size() >= 8) {
+                var key = new EnvelopeKey(geometry, slope.envelope().bodyEdgeHeight());
+                if (!dualQuads.containsKey(key) && dualQuads.size() >= 8) {
                     dualQuads.remove(dualQuads.keySet().iterator().next());
                 }
-                return dualQuads.computeIfAbsent(geometry, ignored -> {
+                return dualQuads.computeIfAbsent(key, ignored -> {
                     float height = cut;
                     List<Quad> result = new ArrayList<>();
                     Slope identity = new Slope(new Vec3(-1, 0, -1), new Vec3(1, 0, 1), 0, 0, 0, 0);
                     List<Element> divided = split(source, identity, height);
+                    if (key.bodyEdgeHeight() < height && key.bodyEdgeHeight() > hem) {
+                        divided = split(divided, identity, key.bodyEdgeHeight());
+                    }
+                    for (float plane : geometry.sectionHeights()) {
+                        if (plane < height && plane > hem) divided = split(divided, identity, plane);
+                    }
                     for (int row = 1; row < geometry.bands(); row++) {
                         float plane = geometry.height(row);
                         if (plane < height && plane > hem) divided = split(divided, identity, plane);
@@ -157,6 +164,9 @@ public final class GarmentHemGeometry {
 
         public boolean applies(String semantic, GarmentSlot slot, Slope slope) {
             return supportsHemConform(semantic, slot) && hem < slope.min().y();
+        }
+
+        private record EnvelopeKey(DualEnvelopeDeformer.Prepared geometry, float bodyEdgeHeight) {
         }
     }
 
@@ -291,6 +301,10 @@ public final class GarmentHemGeometry {
             float s = Math.max(0, Math.min(1, x));
             float t = Math.max(0, Math.min(1, z));
             if (envelope != null) {
+                if (envelope.geometry().segmented()) {
+                    shiftSegmented(point, depth, s, t, result);
+                    return;
+                }
                 float sampleDepth = Math.min(height, depth);
                 float sampleX = lerp(min.x(), max.x(), s) + lerp(west, east, s) * sampleDepth;
                 float sampleZ = lerp(min.z(), max.z(), t) + lerp(north, south, t) * sampleDepth;
@@ -313,6 +327,22 @@ public final class GarmentHemGeometry {
             result.set(point.x() + lerp(west, east, x) * depth + normalX * gap,
                     point.y() + normalY * gap,
                     point.z() + lerp(north, south, z) * depth + normalZ * gap);
+        }
+
+        private void shiftSegmented(Vec3 point, float depth, float x, float z, Vector3f result) {
+            var geometry = envelope.geometry();
+            float sampleDepth = Math.min(height, depth);
+            float ring = sampleDepth / height;
+            float sampleX = lerp(geometry.boundary(0, ring, true), geometry.boundary(1, ring, true), x);
+            float sampleZ = lerp(geometry.boundary(0, ring, false), geometry.boundary(2, ring, false), z);
+            float fullRing = depth / height;
+            float staticX = lerp(geometry.boundary(0, fullRing, true), geometry.boundary(1, fullRing, true), x);
+            float staticZ = lerp(geometry.boundary(0, fullRing, false), geometry.boundary(2, fullRing, false), z);
+            envelope.shift(sampleX, min.y() - sampleDepth, sampleZ, result);
+            float gap = clearance * Math.min(1, depth / HEM_HEIGHT);
+            result.set(point.x() + staticX - lerp(min.x(), max.x(), x) + result.x - sampleX + (2 * x - 1) * gap,
+                    point.y() + result.y - (min.y() - sampleDepth),
+                    point.z() + staticZ - lerp(min.z(), max.z(), z) + result.z - sampleZ + (2 * z - 1) * gap);
         }
     }
 }

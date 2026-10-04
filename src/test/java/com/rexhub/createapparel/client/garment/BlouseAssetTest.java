@@ -192,6 +192,7 @@ class BlouseAssetTest {
         try (var paths = Files.walk(ASSETS.resolve("garment_models/parts"))) {
             for (Path path : paths.filter(p -> p.toString().endsWith(".json") && !p.startsWith(PARTS)
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/a_line_skirt"))
+                    && !p.getParent().getFileName().toString().matches("(a_line|pleated|flared|tight)_skirt_.*")
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/jacket"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/coat"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/hat"))

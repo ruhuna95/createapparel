@@ -12,7 +12,7 @@
   },
   "pattern": "createapparel:sewing_pattern",
   "result": {
-    "id": "createapparel:a_line_skirt"
+    "id": "createapparel:tight_skirt_knee"
   },
   "thread": {
     "count": 1,

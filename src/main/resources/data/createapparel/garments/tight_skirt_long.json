@@ -1,0 +1,13 @@
+{
+  "default_slot": "bottom",
+  "allowed_slots": [
+    "bottom"
+  ],
+  "model_template": "createapparel:tight_skirt_long",
+  "model_variant": "default",
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

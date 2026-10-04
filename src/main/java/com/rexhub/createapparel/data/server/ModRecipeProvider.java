@@ -146,7 +146,64 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                         ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5);
         sewing("denim_pants", ModItems.DENIM_PANTS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 5);
-        sewing("a_line_skirt", ModItems.A_LINE_SKIRT,
+        sewing("a_line_skirt_mini", ModItems.A_LINE_SKIRT_MINI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("a_line_skirt_knee", ModItems.A_LINE_SKIRT_KNEE,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("a_line_skirt_midi", ModItems.A_LINE_SKIRT_MIDI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("a_line_skirt_long", ModItems.A_LINE_SKIRT_LONG,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("a_line_skirt_maxi", ModItems.A_LINE_SKIRT_MAXI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("pleated_skirt_micro", ModItems.PLEATED_SKIRT_MICRO,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("pleated_skirt_mini", ModItems.PLEATED_SKIRT_MINI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("pleated_skirt_knee", ModItems.PLEATED_SKIRT_KNEE,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("pleated_skirt_midi", ModItems.PLEATED_SKIRT_MIDI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("pleated_skirt_long", ModItems.PLEATED_SKIRT_LONG,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("flared_skirt_mini", ModItems.FLARED_SKIRT_MINI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("flared_skirt_knee", ModItems.FLARED_SKIRT_KNEE,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("flared_skirt_midi", ModItems.FLARED_SKIRT_MIDI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("flared_skirt_long", ModItems.FLARED_SKIRT_LONG,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("flared_skirt_maxi", ModItems.FLARED_SKIRT_MAXI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("tight_skirt_micro", ModItems.TIGHT_SKIRT_MICRO,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("tight_skirt_mini", ModItems.TIGHT_SKIRT_MINI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("tight_skirt_knee", ModItems.TIGHT_SKIRT_KNEE,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("tight_skirt_midi", ModItems.TIGHT_SKIRT_MIDI,
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
+        sewing("tight_skirt_long", ModItems.TIGHT_SKIRT_LONG,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
                         ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 3);
         sewing("slacks", ModItems.SLACKS,

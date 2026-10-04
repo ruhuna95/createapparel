@@ -64,7 +64,26 @@ public final class ModItems {
     public static final RegistryObject<Item> DENIM_PANTS = registerGarment("denim_pants");
     public static final RegistryObject<Item> SLACKS = registerGarment("slacks");
     public static final RegistryObject<Item> SHORTS = registerGarment("shorts");
-    public static final RegistryObject<Item> A_LINE_SKIRT = registerGarment("a_line_skirt");
+    public static final RegistryObject<Item> A_LINE_SKIRT_MINI = registerGarment("a_line_skirt_mini");
+    public static final RegistryObject<Item> A_LINE_SKIRT_KNEE = registerGarment("a_line_skirt_knee");
+    public static final RegistryObject<Item> A_LINE_SKIRT_MIDI = registerGarment("a_line_skirt_midi");
+    public static final RegistryObject<Item> A_LINE_SKIRT_LONG = registerGarment("a_line_skirt_long");
+    public static final RegistryObject<Item> A_LINE_SKIRT_MAXI = registerGarment("a_line_skirt_maxi");
+    public static final RegistryObject<Item> PLEATED_SKIRT_MICRO = registerGarment("pleated_skirt_micro");
+    public static final RegistryObject<Item> PLEATED_SKIRT_MINI = registerGarment("pleated_skirt_mini");
+    public static final RegistryObject<Item> PLEATED_SKIRT_KNEE = registerGarment("pleated_skirt_knee");
+    public static final RegistryObject<Item> PLEATED_SKIRT_MIDI = registerGarment("pleated_skirt_midi");
+    public static final RegistryObject<Item> PLEATED_SKIRT_LONG = registerGarment("pleated_skirt_long");
+    public static final RegistryObject<Item> FLARED_SKIRT_MINI = registerGarment("flared_skirt_mini");
+    public static final RegistryObject<Item> FLARED_SKIRT_KNEE = registerGarment("flared_skirt_knee");
+    public static final RegistryObject<Item> FLARED_SKIRT_MIDI = registerGarment("flared_skirt_midi");
+    public static final RegistryObject<Item> FLARED_SKIRT_LONG = registerGarment("flared_skirt_long");
+    public static final RegistryObject<Item> FLARED_SKIRT_MAXI = registerGarment("flared_skirt_maxi");
+    public static final RegistryObject<Item> TIGHT_SKIRT_MICRO = registerGarment("tight_skirt_micro");
+    public static final RegistryObject<Item> TIGHT_SKIRT_MINI = registerGarment("tight_skirt_mini");
+    public static final RegistryObject<Item> TIGHT_SKIRT_KNEE = registerGarment("tight_skirt_knee");
+    public static final RegistryObject<Item> TIGHT_SKIRT_MIDI = registerGarment("tight_skirt_midi");
+    public static final RegistryObject<Item> TIGHT_SKIRT_LONG = registerGarment("tight_skirt_long");
     public static final RegistryObject<Item> TIGHTS = registerGarment("tights");
     public static final RegistryObject<Item> ANKLE_SOCKS = registerGarment("ankle_socks");
     public static final RegistryObject<Item> CREW_SOCKS = registerGarment("crew_socks");
@@ -191,7 +210,26 @@ public final class ModItems {
                     DENIM_PANTS,
                     SLACKS,
                     SHORTS,
-                    A_LINE_SKIRT,
+                    A_LINE_SKIRT_MINI,
+                    A_LINE_SKIRT_KNEE,
+                    A_LINE_SKIRT_MIDI,
+                    A_LINE_SKIRT_LONG,
+                    A_LINE_SKIRT_MAXI,
+                    PLEATED_SKIRT_MICRO,
+                    PLEATED_SKIRT_MINI,
+                    PLEATED_SKIRT_KNEE,
+                    PLEATED_SKIRT_MIDI,
+                    PLEATED_SKIRT_LONG,
+                    FLARED_SKIRT_MINI,
+                    FLARED_SKIRT_KNEE,
+                    FLARED_SKIRT_MIDI,
+                    FLARED_SKIRT_LONG,
+                    FLARED_SKIRT_MAXI,
+                    TIGHT_SKIRT_MICRO,
+                    TIGHT_SKIRT_MINI,
+                    TIGHT_SKIRT_KNEE,
+                    TIGHT_SKIRT_MIDI,
+                    TIGHT_SKIRT_LONG,
                     TIGHTS,
                     ANKLE_SOCKS,
                     CREW_SOCKS,

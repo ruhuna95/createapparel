@@ -18,16 +18,31 @@ public final class DualEnvelopeDeformer {
 
     public static final class Prepared {
         private final Element reference;
+        private final List<Element> sections;
+        private final List<Float> sectionHeights;
         private final int bands;
         private final float top;
         private final float bottom;
         private final List<Quad> quads;
+        private List<Quad> bodyEdgeQuads;
+        private float bodyEdgeHeight = Float.NaN;
 
         public Prepared(List<Element> elements, Element reference,
                         boolean frontBridge, boolean backBridge) {
-            this.reference = reference;
-            this.top = reference.to().y();
-            this.bottom = reference.from().y();
+            this(elements, List.of(reference), frontBridge, backBridge);
+        }
+
+        public Prepared(List<Element> elements, List<Element> sections,
+                        boolean frontBridge, boolean backBridge) {
+            this.sections = List.copyOf(sections);
+            this.sectionHeights = sections.stream().skip(1).map(section -> section.to().y()).toList();
+            Element first = sections.get(0), last = sections.get(sections.size() - 1);
+            List<Vec3> corners = new ArrayList<>(last.corners().subList(0, 4));
+            corners.addAll(first.corners().subList(4, 8));
+            this.reference = sections.size() == 1 ? first : new Element(first.name(), last.from(),
+                    new Vec3(last.to().x(), first.to().y(), last.to().z()), null, first.faces(), List.copyOf(corners));
+            this.top = first.to().y();
+            this.bottom = last.from().y();
             this.bands = Math.max(2, (int) Math.ceil((top - bottom) * 2));
             List<Quad> result = new ArrayList<>();
             for (Element element : elements) {
@@ -41,7 +56,8 @@ public final class DualEnvelopeDeformer {
                     }
                     boolean front = face == Face.FRONT;
                     boolean back = face == Face.BACK;
-                    float[] cuts = front || back ? new float[]{0, 0.375F, 0.4F, 0.6F, 0.625F, 1} : new float[]{0, 1};
+                    float[] cuts = front || back ? new float[]{0, 0.375F, 0.4F, 0.6F, 0.625F, 1}
+                            : new float[]{0, .125F, .25F, .375F, .5F, .625F, .75F, .875F, 1};
                     for (int column = 0; column < cuts.length - 1; column++) {
                         boolean bridge = column > 0 && column < cuts.length - 2;
                         if (bridge && (front && !frontBridge || back && !backBridge)) continue;
@@ -65,6 +81,29 @@ public final class DualEnvelopeDeformer {
         }
 
         public List<Quad> quads() { return quads; }
+        List<Quad> quadsAtBodyEdge(float height) {
+            if (height == bodyEdgeHeight) return bodyEdgeQuads;
+            List<Quad> result = new ArrayList<>();
+            for (Quad quad : quads) {
+                List<Vec3> p = quad.points();
+                float lower = p.get(0).y(), upper = p.get(1).y();
+                if (!(lower < height && height < upper)
+                        || p.get(3).y() != lower || p.get(2).y() != upper) {
+                    result.add(quad);
+                    continue;
+                }
+                float cut = (height - lower) / (upper - lower);
+                Vec3 left = point(p, 0, cut), right = point(p, 1, cut);
+                TexturePoint leftUv = texture(quad.uv(), 0, cut), rightUv = texture(quad.uv(), 1, cut);
+                result.add(new Quad(quad.panel(), List.of(p.get(0), left, right, p.get(3)),
+                        List.of(quad.uv().get(0), leftUv, rightUv, quad.uv().get(3))));
+                result.add(new Quad(quad.panel(), List.of(left, p.get(1), p.get(2), right),
+                        List.of(leftUv, quad.uv().get(1), quad.uv().get(2), rightUv)));
+            }
+            bodyEdgeHeight = height;
+            bodyEdgeQuads = List.copyOf(result);
+            return bodyEdgeQuads;
+        }
         public Element reference() { return reference; }
         public float top() { return top; }
         public float bottom() { return bottom; }
@@ -75,23 +114,58 @@ public final class DualEnvelopeDeformer {
             return (float) row / bands;
         }
 
-        private float boundary(int index, float t, boolean x) {
-            Vec3 upper = reference.corners().get(index + 4), lower = reference.corners().get(index);
-            return x ? lerp(upper.x(), lower.x(), t) : lerp(upper.z(), lower.z(), t);
+        boolean segmented() { return sections.size() > 1; }
+        List<Float> sectionHeights() { return sectionHeights; }
+
+        float boundary(int index, float t, boolean x) {
+            Element section = reference;
+            float local = t;
+            if (segmented()) {
+                float y = lerp(top, bottom, t);
+                section = sections.get(sections.size() - 1);
+                for (Element candidate : sections) {
+                    if (y >= candidate.from().y()) { section = candidate; break; }
+                }
+                local = (section.to().y() - y) / (section.to().y() - section.from().y());
+            }
+            Vec3 upper = section.corners().get(index + 4), lower = section.corners().get(index);
+            return x ? lerp(upper.x(), lower.x(), local) : lerp(upper.z(), lower.z(), local);
         }
     }
 
     public static final class Pose {
         private final Prepared geometry;
         private final float[] offsets;
+        private final float[] lateralLimits = new float[2];
+        private SkirtBodyEdgeGeometry bodyEdges;
+        private List<Quad> quads;
+        private final float clearance;
+        private boolean limitLateral = true;
         private boolean changed;
 
         public Pose(Prepared geometry, LegEnvelopeGeometry legs, float clearance) {
+            this(geometry, legs, clearance, false);
+        }
+
+        public Pose(Prepared geometry, LegEnvelopeGeometry legs, float clearance, boolean followCrouchingBodyEdges) {
             this.geometry = geometry;
+            this.clearance = clearance;
+            bodyEdges = followCrouchingBodyEdges && legs.hasBodyEdges()
+                    && legs.torsoBottom() > geometry.bottom && legs.torsoBottom() < geometry.top
+                    ? new SkirtBodyEdgeGeometry(geometry, legs, clearance) : null;
+            quads = bodyEdges == null ? geometry.quads : geometry.quadsAtBodyEdge(legs.torsoBottom());
             offsets = new float[(geometry.bands + 1) * 6];
             float[] bounds = new float[4];
             boolean moved = false;
             for (int side = 0; side < 2; side++) {
+                float lateralSlope = legs.lateralSlope(side, geometry.boundary(side, 0, true), geometry.top,
+                        geometry.boundary(0, 0, false), geometry.boundary(2, 0, false), clearance);
+                if (legs.extents(side, -Float.MAX_VALUE, Float.MAX_VALUE, bounds)) {
+                    float waist = geometry.boundary(side, 0, true);
+                    float hem = geometry.boundary(side, 1, true);
+                    lateralLimits[side] = side == 0 ? waist - Math.min(hem, bounds[0] - clearance)
+                            : Math.max(hem, bounds[1] + clearance) - waist;
+                }
                 for (int row = 1; row <= geometry.bands; row++) {
                     float previous = geometry.ring(row - 1);
                     float next = geometry.ring(Math.min(geometry.bands, row + 1));
@@ -103,19 +177,32 @@ public final class DualEnvelopeDeformer {
                     float maxX = geometry.boundary(1, previous, true);
                     float minZ = geometry.boundary(0, previous, false);
                     float maxZ = geometry.boundary(2, previous, false);
-                    offsets[index] = Math.max(0, side == 0 ? minX - bounds[0] + clearance : bounds[1] + clearance - maxX);
+                    float depth = geometry.top - geometry.height(row);
+                    float forwardReach = Math.max(0, Math.max(minZ - bounds[2], bounds[3] - maxZ));
+                    float lateralWeight = depth / (float) Math.hypot(depth, forwardReach);
+                    offsets[index] = Math.max(lateralSlope * depth,
+                            Math.max(0, side == 0 ? minX - bounds[0] + clearance : bounds[1] + clearance - maxX)
+                                    * lateralWeight);
                     offsets[index + 1] = Math.max(0, minZ - bounds[2] + clearance);
                     offsets[index + 2] = Math.max(0, bounds[3] + clearance - maxZ);
                     moved |= offsets[index] > 0 || offsets[index + 1] > 0 || offsets[index + 2] > 0;
                 }
+                float rearSlope = followCrouchingBodyEdges ? legs.crouchingRearSlope(side) : Float.NaN;
+                if (Float.isFinite(rearSlope)) {
+                    for (int row = 1; row <= geometry.bands; row++) {
+                        offsets[row * 6 + side * 3 + 2] = rearSlope * (geometry.top - geometry.height(row));
+                    }
+                    moved = true;
+                }
             }
             straighten();
             changed = moved;
+            if (bodyEdges != null) changed = true;
         }
 
         private void straighten() {
             for (int direction = 0; direction < 6; direction++) {
-                float extent = 0;
+                float extent = direction % 3 == 2 ? Float.NEGATIVE_INFINITY : 0;
                 for (int row = 1; row <= geometry.bands; row++) {
                     extent = Math.max(extent, offsets[row * 6 + direction] / geometry.ring(row));
                 }
@@ -126,9 +213,21 @@ public final class DualEnvelopeDeformer {
         }
 
         public Prepared geometry() { return geometry; }
+        public List<Quad> quads() { return quads; }
+        public boolean usesBodyEdges() { return bodyEdges != null; }
+        float bodyEdgeHeight() { return bodyEdges == null ? Float.NaN : bodyEdges.legs().torsoBottom(); }
         public boolean changed() { return changed; }
 
         public void enclose(Pose inner, float clearance) {
+            limitLateral = false;
+            if (inner.bodyEdges != null && inner.bodyEdges.legs().torsoBottom() > geometry.bottom
+                    && inner.bodyEdges.legs().torsoBottom() < geometry.top) {
+                bodyEdges = new SkirtBodyEdgeGeometry(geometry, inner.bodyEdges.legs(), Math.max(this.clearance, clearance),
+                        inner.bodyEdges, clearance);
+                quads = geometry.quadsAtBodyEdge(inner.bodyEdges.legs().torsoBottom());
+                changed = true;
+                return;
+            }
             Vector3f point = new Vector3f();
             for (int row = 1; row <= geometry.bands; row++) {
                 float t = geometry.ring(row);
@@ -166,6 +265,10 @@ public final class DualEnvelopeDeformer {
         }
 
         public void shift(float px, float py, float pz, Vector3f result) {
+            if (bodyEdges != null) {
+                bodyEdges.shift(px, py, pz, result);
+                return;
+            }
             expand(px, py, pz, result);
             if (py >= geometry.top || !changed) return;
             float t = Math.min(1, (geometry.top - py) / (geometry.top - geometry.bottom));
@@ -181,6 +284,10 @@ public final class DualEnvelopeDeformer {
         }
 
         private void expand(float px, float py, float pz, Vector3f result) {
+            if (bodyEdges != null) {
+                bodyEdges.shift(px, py, pz, result);
+                return;
+            }
             float t = Math.max(0, Math.min(1, (geometry.top - py) / (geometry.top - geometry.bottom)));
             if (t == 0 || !changed) { result.set(px, py, pz); return; }
             float minX = geometry.boundary(0, t, true), maxX = geometry.boundary(1, t, true);
@@ -189,13 +296,45 @@ public final class DualEnvelopeDeformer {
             float sideWeight = Math.max(0, Math.min(1, (x - 0.375F) / 0.25F));
             float z = (pz - minZ) / (maxZ - minZ);
             float right = offset(t, 0), left = offset(t, 3);
-            float dx = x < 0.5F ? -right * (1 - 2 * x) : left * (2 * x - 1);
             float bridgeWeight = Math.max(0, Math.min(1, (0.125F - Math.abs(x - 0.5F)) / 0.025F));
             float front = Math.max(lerp(offset(t, 1), offset(t, 4), sideWeight),
                     Math.max(offset(t, 1), offset(t, 4)) * bridgeWeight);
-            float back = Math.max(lerp(offset(t, 2), offset(t, 5), sideWeight),
-                    Math.max(offset(t, 2), offset(t, 5)) * bridgeWeight);
-            result.set(px + dx, py, pz + lerp(-front, back, z));
+            float back = lerp(offset(t, 2), offset(t, 5), sideWeight);
+            float maximumBack = Math.max(offset(t, 2), offset(t, 5));
+            back = back < 0 ? lerp(back, maximumBack, bridgeWeight)
+                    : Math.max(back, maximumBack * bridgeWeight);
+            float expandedZ = pz + lerp(-front, back, z);
+            float anchorZ = lerp(geometry.boundary(0, 0, false), geometry.boundary(2, 0, false), z);
+            float depth = geometry.top - py;
+            float rightZ = pz + lerp(-offset(t, 1), offset(t, 2), z);
+            float leftZ = pz + lerp(-offset(t, 4), offset(t, 5), z);
+            right *= (float) Math.hypot(depth, rightZ - anchorZ) / depth;
+            left *= (float) Math.hypot(depth, leftZ - anchorZ) / depth;
+            float dx = x < 0.5F ? -right * (1 - 2 * x) : left * (2 * x - 1);
+            result.set(px + dx, py, expandedZ);
+            float anchorX = lerp(geometry.boundary(0, 0, true), geometry.boundary(1, 0, true), x);
+            float restX = px - anchorX, restZ = pz - anchorZ;
+            float movedX = result.x - anchorX, movedZ = result.z - anchorZ;
+            float minimumX = restX * restX + restZ * restZ - movedZ * movedZ;
+            if (minimumX > movedX * movedX) {
+                result.x = anchorX + Math.copySign((float) Math.sqrt(minimumX), restX);
+            }
+            if (limitLateral) {
+                float lengthSquared = restX * restX + depth * depth + restZ * restZ;
+                movedX = result.x - anchorX;
+                float yzSquared = depth * depth + movedZ * movedZ;
+                float maximumX = lateralLimits[x < .5F ? 0 : 1] * Math.abs(2 * x - 1);
+                if (maximumX * maximumX < lengthSquared
+                        && movedX * movedX * lengthSquared > maximumX * maximumX * (movedX * movedX + yzSquared)) {
+                    result.x = anchorX + Math.copySign(maximumX
+                            * (float) Math.sqrt(yzSquared / (lengthSquared - maximumX * maximumX)), movedX);
+                }
+            }
+            movedX = result.x - anchorX;
+            float minimumZ = restX * restX + restZ * restZ - movedX * movedX;
+            if (minimumZ > movedZ * movedZ) {
+                result.z = anchorZ + Math.copySign((float) Math.sqrt(minimumZ), movedZ);
+            }
         }
 
         private float offset(float t, int direction) {
@@ -220,5 +359,7 @@ public final class DualEnvelopeDeformer {
         return lerp(lerp(a, b, v), lerp(d, c, v), u);
     }
 
-    private static float lerp(float a, float b, float t) { return a + (b - a) * t; }
+    private static float lerp(float a, float b, float t) {
+        return t == 0 ? a : t == 1 ? b : a + (b - a) * t;
+    }
 }

@@ -3,7 +3,7 @@
   "allowed_slots": [
     "bottom"
   ],
-  "model_template": "createapparel:a_line_skirt",
+  "model_template": "createapparel:a_line_skirt_midi",
   "model_variant": "default",
   "texture_variant": "default",
   "designs": [

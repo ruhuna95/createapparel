@@ -1,0 +1,13 @@
+{
+  "default_slot": "bottom",
+  "allowed_slots": [
+    "bottom"
+  ],
+  "model_template": "createapparel:a_line_skirt_mini",
+  "model_variant": "default",
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

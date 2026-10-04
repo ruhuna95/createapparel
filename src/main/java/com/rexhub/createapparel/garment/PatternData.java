@@ -16,6 +16,7 @@ public record PatternData(
     public static final String TAG_NAME = "PatternData";
 
     public PatternData {
+        recipe = SkirtIdMigration.recipeId(recipe);
         if (design.isBlank()) {
             throw new IllegalArgumentException("Pattern design must not be blank");
         }

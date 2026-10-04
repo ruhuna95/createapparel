@@ -1,0 +1,13 @@
+{
+  "default_slot": "bottom",
+  "allowed_slots": [
+    "bottom"
+  ],
+  "model_template": "createapparel:flared_skirt_maxi",
+  "model_variant": "default",
+  "texture_variant": "default",
+  "designs": [
+    "plain"
+  ],
+  "styles": {}
+}

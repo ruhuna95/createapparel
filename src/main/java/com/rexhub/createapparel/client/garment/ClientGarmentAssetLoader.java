@@ -238,20 +238,44 @@ final class ClientGarmentAssetLoader {
         if (!Float.isFinite(clearance) || clearance < 0 || clearance > 1) {
             throw new IllegalStateException("Skirt clearance must be in [0, 1]");
         }
-        Element reference = null;
-        for (String name : List.of("front_panel", "back_panel", "left_panel", "right_panel")) {
-            Element panel = elements.stream().filter(element -> element.name().equals(name)).findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Missing skirt panel: " + name));
-            if (panel.rotation() != null || reference != null && !reference.corners().equals(panel.corners())) {
-                throw new IllegalStateException("Skirt panels must share unrotated corners");
+        List<String> sections = new ArrayList<>();
+        if (motion.has("panel_sections")) {
+            for (JsonElement section : GsonHelper.getAsJsonArray(motion, "panel_sections")) {
+                String name = GsonHelper.convertToString(section, "panel section");
+                if (!name.matches("[a-z][a-z0-9_]*")) {
+                    throw new IllegalStateException("Invalid leg envelope panel section: " + name);
+                }
+                sections.add(name);
             }
-            reference = panel;
+        } else {
+            sections.add("");
         }
-        if (reference == null || reference.to().y() <= reference.from().y()) {
-            throw new IllegalStateException("Invalid leg envelope height");
+        List<Element> references = new ArrayList<>();
+        for (String section : sections) {
+            Element reference = null;
+            for (String name : List.of("front_panel", "back_panel", "left_panel", "right_panel")) {
+                String panelName = name + (section.isEmpty() ? "" : "_" + section);
+                Element panel = elements.stream().filter(element -> element.name().equals(panelName)).findFirst()
+                        .orElseThrow(() -> new IllegalStateException("Missing skirt panel: " + panelName));
+                if (panel.rotation() != null || reference != null && !reference.corners().equals(panel.corners())) {
+                    throw new IllegalStateException("Skirt panels must share unrotated corners");
+                }
+                reference = panel;
+            }
+            if (reference == null || reference.to().y() <= reference.from().y()) {
+                throw new IllegalStateException("Invalid leg envelope height");
+            }
+            if (!references.isEmpty() && !references.get(references.size() - 1).corners().subList(0, 4)
+                    .equals(reference.corners().subList(4, 8))) {
+                throw new IllegalStateException("Leg envelope sections must connect from top to bottom");
+            }
+            references.add(reference);
+        }
+        if (references.isEmpty() || sections.stream().distinct().count() != sections.size()) {
+            throw new IllegalStateException("Leg envelope panel sections must be nonempty and unique");
         }
         return Optional.of(new ClientGarmentAssets.LegEnvelope(clearance,
-                new DualEnvelopeDeformer.Prepared(elements, reference,
+                new DualEnvelopeDeformer.Prepared(elements, references,
                         GsonHelper.getAsBoolean(motion, "front_bridge", true),
                         GsonHelper.getAsBoolean(motion, "back_bridge", true))));
     }
