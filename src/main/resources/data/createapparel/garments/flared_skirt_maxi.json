@@ -3,8 +3,8 @@
   "allowed_slots": [
     "bottom"
   ],
-  "model_template": "createapparel:flared_skirt_maxi",
-  "model_variant": "default",
+  "model_template": "createapparel:flared_skirt",
+  "model_variant": "maxi",
   "texture_variant": "default",
   "designs": [
     "plain"

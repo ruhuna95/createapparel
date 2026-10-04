@@ -1,0 +1,27 @@
+{
+  "micro": {
+    "torso": {
+      "model": "createapparel:tight_skirt_micro/torso"
+    }
+  },
+  "mini": {
+    "torso": {
+      "model": "createapparel:tight_skirt_mini/torso"
+    }
+  },
+  "knee": {
+    "torso": {
+      "model": "createapparel:tight_skirt_knee/torso"
+    }
+  },
+  "midi": {
+    "torso": {
+      "model": "createapparel:tight_skirt_midi/torso"
+    }
+  },
+  "long": {
+    "torso": {
+      "model": "createapparel:tight_skirt_long/torso"
+    }
+  }
+}

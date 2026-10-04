@@ -3,8 +3,8 @@
   "allowed_slots": [
     "bottom"
   ],
-  "model_template": "createapparel:tight_skirt_midi",
-  "model_variant": "default",
+  "model_template": "createapparel:tight_skirt",
+  "model_variant": "midi",
   "texture_variant": "default",
   "designs": [
     "plain"

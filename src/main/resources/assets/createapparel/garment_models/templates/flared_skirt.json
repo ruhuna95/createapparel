@@ -1,0 +1,27 @@
+{
+  "mini": {
+    "torso": {
+      "model": "createapparel:flared_skirt_mini/torso"
+    }
+  },
+  "knee": {
+    "torso": {
+      "model": "createapparel:flared_skirt_knee/torso"
+    }
+  },
+  "midi": {
+    "torso": {
+      "model": "createapparel:flared_skirt_midi/torso"
+    }
+  },
+  "long": {
+    "torso": {
+      "model": "createapparel:flared_skirt_long/torso"
+    }
+  },
+  "maxi": {
+    "torso": {
+      "model": "createapparel:flared_skirt_maxi/torso"
+    }
+  }
+}

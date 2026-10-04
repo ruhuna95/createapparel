@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Face;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.GarmentPartModel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
+import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Vector3f;
@@ -14,6 +15,7 @@ import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,9 +47,36 @@ class SkirtCollectionAssetTest {
     }
 
     private static GarmentPartModel part(String id) throws Exception {
-        String model = json(ASSETS.resolve("garment_models/templates/" + id + ".json"))
-                .getAsJsonObject("default").getAsJsonObject("torso").get("model").getAsString();
-        return DualEnvelopeDeformerTest.part(model.substring("createapparel:".length()));
+        var definition = GarmentDefinition.fromJson(ResourceLocation.parse("createapparel:" + id),
+                json(Path.of("src/main/resources/data/createapparel/garments/" + id + ".json")));
+        var template = ClientGarmentAssetLoader.parseTemplate(definition.modelTemplate(),
+                json(ASSETS.resolve("garment_models/templates/" + definition.modelTemplate().getPath() + ".json")));
+        var model = template.variants().get(definition.modelVariantFor(GarmentSlot.BOTTOM)).get("torso");
+        return DualEnvelopeDeformerTest.part(model.getPath());
+    }
+
+    @Test
+    void fourShapeTemplatesResolveEveryLengthToItsExistingTorso() throws Exception {
+        for (String shape : SHAPES) {
+            String templateName = shape + "_skirt";
+            var templateId = ResourceLocation.parse("createapparel:" + templateName);
+            var template = ClientGarmentAssetLoader.parseTemplate(templateId,
+                    json(ASSETS.resolve("garment_models/templates/" + templateName + ".json")));
+            assertEquals(lengths(shape), List.copyOf(template.variants().keySet()));
+            for (String length : lengths(shape)) {
+                String id = templateName + "_" + length;
+                var definition = GarmentDefinition.fromJson(ResourceLocation.parse("createapparel:" + id),
+                        json(Path.of("src/main/resources/data/createapparel/garments/" + id + ".json")));
+                assertEquals(templateId, definition.modelTemplate(), id);
+                assertEquals(length, definition.modelVariantFor(GarmentSlot.BOTTOM), id);
+                assertEquals("default", definition.textureVariant(), id);
+                String model = shape.equals("a_line") && length.equals("knee") ? "a_line_skirt" : id;
+                assertEquals(Map.of("torso", ResourceLocation.parse("createapparel:" + model + "/torso")),
+                        template.variants().get(length), id);
+                assertFalse(Files.exists(ASSETS.resolve("garment_models/templates/" + id + ".json")), id);
+                assertEquals(ResourceLocation.parse("createapparel:" + model + "/torso"), part(id).id());
+            }
+        }
     }
 
     @Test
