@@ -113,7 +113,20 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/hoodie/bust/base/default",
-        "brightness_mask": "createapparel:garment/hoodie/bust/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/hoodie/bust/masks/brightness/default",
+        "designs": {
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/hoodie/bust_pullover/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/hoodie/bust_pullover/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/hoodie/bust_pullover/masks/logo_round/accent",
+            "overlay": "createapparel:garment/hoodie/bust_pullover/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/hoodie/bust_pullover/masks/logo_word/secondary"
+          }
+        }
       }
     },
     "designs": {}

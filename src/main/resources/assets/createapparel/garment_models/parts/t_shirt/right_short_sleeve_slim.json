@@ -71,14 +71,43 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/t_shirt/short_sleeve_slim/base/default"
+        "base": "createapparel:garment/t_shirt/short_sleeve_slim/base/default",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/color_block/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/gingham_check/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/hem_line/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/horizontal_stripe/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/polka_dot/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/ringer/secondary"
+          },
+          "side_panel": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/side_panel/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_slim/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/tartan_check/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/t_shirt/right_short_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {
       "stripe": {
-        "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_slim/masks/stripe/secondary"
-      },
-      "stripe_logo": {
         "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_slim/masks/stripe/secondary"
       }
     }

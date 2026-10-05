@@ -7,7 +7,10 @@
   "model_variant": "chesterfield",
   "texture_variant": "chesterfield",
   "designs": [
-    "plain"
+    "plain",
+    "tartan_check",
+    "gingham_check",
+    "contrast_lapel"
   ],
   "styles": {
     "open": [

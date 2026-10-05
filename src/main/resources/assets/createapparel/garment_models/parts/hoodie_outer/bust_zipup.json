@@ -114,7 +114,20 @@
       "default": {
         "base": "createapparel:garment/hoodie/bust_zipup/base/default",
         "brightness_mask": "createapparel:garment/hoodie/bust_zipup/masks/brightness/default",
-        "overlay": "createapparel:garment/hoodie/bust_zipup/overlay/default"
+        "overlay": "createapparel:garment/hoodie/bust_zipup/overlay/default",
+        "designs": {
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/hoodie_outer/bust_zipup/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/hoodie_outer/bust_zipup/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/hoodie_outer/bust_zipup/masks/logo_round/accent",
+            "overlay": "createapparel:garment/hoodie_outer/bust_zipup/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/hoodie_outer/bust_zipup/masks/logo_word/secondary"
+          }
+        }
       }
     },
     "designs": {}

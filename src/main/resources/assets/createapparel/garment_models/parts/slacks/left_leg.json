@@ -71,7 +71,18 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/slacks/left_leg/base/default"
+        "base": "createapparel:garment/slacks/left_leg/base/default",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/slacks/left_leg/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/slacks/left_leg/masks/pinstripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/slacks/left_leg/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

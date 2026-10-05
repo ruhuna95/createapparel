@@ -112,10 +112,32 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/chesterfield/bust/base/chesterfield"
+        "base": "createapparel:garment/coat/chesterfield/bust/base/chesterfield",
+        "designs": {
+          "contrast_lapel": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/bust/masks/contrast_lapel/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/bust/masks/gingham_check/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/bust/masks/tartan_check/secondary"
+          }
+        }
       },
       "chesterfield": {
-        "base": "createapparel:garment/coat/chesterfield/bust/base/chesterfield"
+        "base": "createapparel:garment/coat/chesterfield/bust/base/chesterfield",
+        "designs": {
+          "contrast_lapel": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/bust/masks/contrast_lapel/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/bust/masks/gingham_check/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/bust/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

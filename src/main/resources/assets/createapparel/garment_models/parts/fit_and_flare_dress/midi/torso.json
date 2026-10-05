@@ -447,7 +447,28 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/fit_and_flare_dress/midi/torso/base/default"
+        "base": "createapparel:garment/fit_and_flare_dress/midi/torso/base/default",
+        "designs": {
+          "contrast_skirt": {
+            "secondary_mask": "createapparel:garment/fit_and_flare_dress/midi/torso/masks/contrast_skirt/secondary",
+            "accent_mask": "createapparel:garment/fit_and_flare_dress/midi/torso/masks/contrast_skirt/accent"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/fit_and_flare_dress/midi/torso/masks/gingham_check/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/fit_and_flare_dress/midi/torso/masks/polka_dot/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/fit_and_flare_dress/midi/torso/masks/tartan_check/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/fit_and_flare_dress/midi/torso/masks/two_tone/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/fit_and_flare_dress/midi/torso/masks/waist_band/secondary"
+          }
+        }
       }
     },
     "designs": {}

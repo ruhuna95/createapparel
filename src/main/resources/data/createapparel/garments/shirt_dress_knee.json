@@ -7,7 +7,12 @@
   "model_variant": "knee",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "stripe",
+    "tartan_check",
+    "gingham_check",
+    "contrast_collar",
+    "two_tone_lr"
   ],
   "styles": {}
 }

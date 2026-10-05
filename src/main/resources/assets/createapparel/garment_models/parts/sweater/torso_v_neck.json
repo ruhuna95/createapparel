@@ -118,10 +118,34 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/sweater/torso/base/v_neck"
+        "base": "createapparel:garment/sweater/torso/base/v_neck",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/sweater/torso/masks/plain/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/sweater/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/sweater/torso_v_neck/masks/horizontal_stripe/accent"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/sweater/torso/masks/plain/secondary"
+          }
+        }
       },
       "v_neck": {
-        "base": "createapparel:garment/sweater/torso/base/v_neck"
+        "base": "createapparel:garment/sweater/torso/base/v_neck",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/sweater/torso/masks/plain/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/sweater/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/sweater/torso_v_neck/masks/horizontal_stripe/accent"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/sweater/torso/masks/plain/secondary"
+          }
+        }
       }
     },
     "designs": {

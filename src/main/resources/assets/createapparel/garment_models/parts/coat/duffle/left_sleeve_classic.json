@@ -202,10 +202,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/duffle/left_sleeve_classic/base/duffle"
+        "base": "createapparel:garment/coat/duffle/left_sleeve_classic/base/duffle",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/duffle/left_sleeve_classic/masks/two_tone/secondary"
+          }
+        }
       },
       "duffle": {
-        "base": "createapparel:garment/coat/duffle/left_sleeve_classic/base/duffle"
+        "base": "createapparel:garment/coat/duffle/left_sleeve_classic/base/duffle",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/duffle/left_sleeve_classic/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

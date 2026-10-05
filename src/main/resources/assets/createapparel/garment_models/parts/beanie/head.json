@@ -118,10 +118,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/beanie/head/base/beanie"
+        "base": "createapparel:garment/beanie/head/base/beanie",
+        "designs": {
+          "stripe": {
+            "secondary_mask": "createapparel:garment/beanie/head/masks/stripe/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/beanie/head/masks/two_tone/secondary"
+          }
+        }
       },
       "beanie": {
-        "base": "createapparel:garment/beanie/head/base/beanie"
+        "base": "createapparel:garment/beanie/head/base/beanie",
+        "designs": {
+          "stripe": {
+            "secondary_mask": "createapparel:garment/beanie/head/masks/stripe/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/beanie/head/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -7,7 +7,9 @@
   "model_variant": "trench",
   "texture_variant": "trench",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "contrast_belt"
   ],
   "styles": {
     "open": [

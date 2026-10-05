@@ -241,7 +241,24 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/shirt/bust/base/default",
-        "brightness_mask": "createapparel:garment/shirt/bust/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/shirt/bust/masks/brightness/default",
+        "designs": {
+          "contrast_collar": {
+            "secondary_mask": "createapparel:garment/shirt_outer/bust/masks/contrast_collar/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/shirt_outer/bust/masks/gingham_check/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/shirt/bust/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/shirt_outer/bust/masks/tartan_check/secondary"
+          },
+          "two_tone_lr": {
+            "secondary_mask": "createapparel:garment/shirt_outer/bust/masks/two_tone_lr/secondary"
+          }
+        }
       }
     },
     "designs": {

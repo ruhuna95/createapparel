@@ -254,6 +254,14 @@
         "designs": {
           "plain": {
             "accent_mask": "createapparel:garment/tall_boots/left_leg/masks/plain/accent"
+          },
+          "contrast_sole": {
+            "accent_mask": "createapparel:garment/tall_boots/left_leg/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/tall_boots/left_leg/masks/contrast_sole/secondary"
+          },
+          "two_tone": {
+            "accent_mask": "createapparel:garment/tall_boots/left_leg/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/tall_boots/left_leg/masks/two_tone/secondary"
           }
         }
       },
@@ -262,6 +270,14 @@
         "designs": {
           "plain": {
             "accent_mask": "createapparel:garment/tall_boots/left_leg/masks/plain/accent"
+          },
+          "contrast_sole": {
+            "accent_mask": "createapparel:garment/tall_boots/left_leg/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/tall_boots/left_leg/masks/contrast_sole/secondary"
+          },
+          "two_tone": {
+            "accent_mask": "createapparel:garment/tall_boots/left_leg/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/tall_boots/left_leg/masks/two_tone/secondary"
           }
         }
       }

@@ -447,7 +447,24 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/flared_skirt/torso/base/mini"
+        "base": "createapparel:garment/flared_skirt/torso/base/mini",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/flared_skirt_mini/torso/masks/gingham_check/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/flared_skirt_mini/torso/masks/hem_line/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/flared_skirt_mini/torso/masks/horizontal_stripe/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/flared_skirt_mini/torso/masks/polka_dot/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/flared_skirt_mini/torso/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

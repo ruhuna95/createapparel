@@ -94,10 +94,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/inner_bottom/torso/base/panties"
+        "base": "createapparel:garment/inner_bottom/torso/base/panties",
+        "designs": {
+          "contrast_bow": {
+            "secondary_mask": "createapparel:garment/inner_bottom/torso/masks/contrast_bow/secondary"
+          }
+        }
       },
       "panties": {
-        "base": "createapparel:garment/inner_bottom/torso/base/panties"
+        "base": "createapparel:garment/inner_bottom/torso/base/panties",
+        "designs": {
+          "contrast_bow": {
+            "secondary_mask": "createapparel:garment/inner_bottom/torso/masks/contrast_bow/secondary"
+          }
+        }
       }
     }
   }

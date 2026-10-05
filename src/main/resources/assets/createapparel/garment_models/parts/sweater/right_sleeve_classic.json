@@ -118,13 +118,53 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/sweater/sleeve_classic/base/default"
+        "base": "createapparel:garment/sweater/sleeve_classic/base/default",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/argyle/accent"
+          },
+          "fair_isle": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/fair_isle/secondary",
+            "accent_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/fair_isle/accent"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/horizontal_stripe/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/two_tone/secondary"
+          }
+        }
       },
       "crew_neck": {
-        "base": "createapparel:garment/sweater/sleeve_classic/base/default"
+        "base": "createapparel:garment/sweater/sleeve_classic/base/default",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/argyle/accent"
+          },
+          "fair_isle": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/fair_isle/secondary",
+            "accent_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/fair_isle/accent"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/horizontal_stripe/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/sweater/right_sleeve_classic_crew_neck/masks/two_tone/secondary"
+          }
+        }
       },
       "v_neck": {
-        "base": "createapparel:garment/sweater/sleeve_classic/base/default"
+        "base": "createapparel:garment/sweater/sleeve_classic/base/default",
+        "designs": {
+          "horizontal_stripe": {
+            "accent_mask": "createapparel:garment/sweater/right_sleeve_classic_v_neck/masks/horizontal_stripe/accent"
+          },
+          "two_tone": {
+            "accent_mask": "createapparel:garment/sweater/right_sleeve_classic_v_neck/masks/two_tone/accent"
+          }
+        }
       }
     },
     "designs": {}

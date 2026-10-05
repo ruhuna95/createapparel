@@ -40,7 +40,7 @@ class BlouseAssetTest {
                 assertEquals("createapparel:blouse", definition.get("model_template").getAsString());
                 assertEquals(texture, definition.get("texture_variant").getAsString());
                 assertEquals("top", definition.get("slot").getAsString());
-                assertEquals("[\"plain\"]", definition.get("designs").toString());
+                DesignVariationAssetTest.assertDefinitionDesigns(definition, "blouse_" + texture + suffix);
                 assertEquals("[\"untucked\",\"tucked\"]", definition.getAsJsonObject("styles").get("tuck").toString());
                 assertEquals(Set.of("tuck"), definition.getAsJsonObject("styles").keySet());
                 assertEquals(threeQuarter ? "three_quarter_sleeve_classic" : "classic", definition.get("model_variant").getAsString());
@@ -202,6 +202,7 @@ class BlouseAssetTest {
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/daypack"))
                     && !p.startsWith(ASSETS.resolve("garment_models/parts/crossbody_bag"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/cap/head_back.json"))
+                    && !p.equals(ASSETS.resolve("garment_models/parts/shorts/torso.json"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/left_leg.json"))
                     && !p.equals(ASSETS.resolve("garment_models/parts/shorts/right_leg.json"))).toList()) {
                 var part = ClientGarmentAssetLoader.parsePart(id("legacy"), json(path));

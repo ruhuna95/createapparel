@@ -94,10 +94,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/duffle/right_sleeve_slim/base/duffle"
+        "base": "createapparel:garment/coat/duffle/right_sleeve_slim/base/duffle",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/duffle/right_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       },
       "duffle": {
-        "base": "createapparel:garment/coat/duffle/right_sleeve_slim/base/duffle"
+        "base": "createapparel:garment/coat/duffle/right_sleeve_slim/base/duffle",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/duffle/right_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

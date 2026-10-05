@@ -118,7 +118,21 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/shirt/long_sleeve_slim/base/default"
+        "base": "createapparel:garment/shirt/long_sleeve_slim/base/default",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/shirt_dress/left_long_sleeve_slim/masks/gingham_check/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/shirt_dress/left_long_sleeve_slim/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/shirt_dress/left_long_sleeve_slim/masks/tartan_check/secondary"
+          },
+          "two_tone_lr": {
+            "secondary_mask": "createapparel:garment/shirt_dress/left_long_sleeve_slim/masks/two_tone_lr/secondary"
+          }
+        }
       }
     },
     "designs": {}

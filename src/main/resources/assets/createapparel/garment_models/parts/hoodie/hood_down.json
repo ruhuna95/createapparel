@@ -71,7 +71,12 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/hoodie/hood_down/base/default"
+        "base": "createapparel:garment/hoodie/hood_down/base/default",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/hoodie/hood_down/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

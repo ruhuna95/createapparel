@@ -7,7 +7,11 @@
   "model_variant": "default",
   "texture_variant": "knee_high",
   "designs": [
-    "plain"
+    "plain",
+    "stripe",
+    "double_stripe",
+    "toe_heel",
+    "argyle"
   ],
   "styles": {}
 }

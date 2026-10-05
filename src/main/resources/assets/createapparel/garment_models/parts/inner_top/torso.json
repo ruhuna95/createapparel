@@ -71,13 +71,28 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/inner_top/torso/base/undershirt"
+        "base": "createapparel:garment/inner_top/torso/base/undershirt",
+        "designs": {
+          "trim": {
+            "secondary_mask": "createapparel:garment/inner_top/torso_undershirt/masks/trim/secondary"
+          }
+        }
       },
       "undershirt": {
-        "base": "createapparel:garment/inner_top/torso/base/undershirt"
+        "base": "createapparel:garment/inner_top/torso/base/undershirt",
+        "designs": {
+          "trim": {
+            "secondary_mask": "createapparel:garment/inner_top/torso_undershirt/masks/trim/secondary"
+          }
+        }
       },
       "bra": {
-        "base": "createapparel:garment/inner_top/torso/base/bra"
+        "base": "createapparel:garment/inner_top/torso/base/bra",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/inner_top/torso_bra/masks/two_tone/secondary"
+          }
+        }
       }
     }
   }

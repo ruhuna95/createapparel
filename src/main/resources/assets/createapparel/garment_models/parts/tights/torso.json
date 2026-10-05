@@ -17,7 +17,22 @@
     }]
   },
   "textures": {
-    "variants": {"default": {"base": "createapparel:garment/tights/torso/base/default"}},
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/tights/torso/base/default",
+        "designs": {
+          "diamond": {
+            "secondary_mask": "createapparel:garment/tights/torso/masks/diamond/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/tights/torso/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/tights/torso/masks/stripe/secondary"
+          }
+        }
+      }
+    },
     "designs": {}
   }
 }

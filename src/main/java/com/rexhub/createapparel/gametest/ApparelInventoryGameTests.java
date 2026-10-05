@@ -119,8 +119,10 @@ public final class ApparelInventoryGameTests {
             var parsed = dispatcher.parse("createapparel garment @a createapparel:" + name + " cotton white ", source);
             var suggestions = dispatcher.getCompletionSuggestions(parsed).join().getList().stream()
                     .map(com.mojang.brigadier.suggestion.Suggestion::getText).collect(java.util.stream.Collectors.toSet());
-            var expected = name.equals("shirt_longsleeves") ? java.util.Set.of("plain", "stripe")
-                    : name.equals("blouse_round") ? java.util.Set.of("plain") : java.util.Set.of();
+            var expected = name.equals("shirt_longsleeves")
+                    ? java.util.Set.of("plain", "stripe", "tartan_check", "gingham_check", "contrast_collar", "two_tone_lr", "contrast_cuff")
+                    : name.equals("blouse_round")
+                    ? java.util.Set.of("plain", "stripe", "polka_dot") : java.util.Set.of();
             helper.assertTrue(expected.equals(suggestions), "Scoped design suggestions: " + name + " " + suggestions);
         }
         helper.succeed();

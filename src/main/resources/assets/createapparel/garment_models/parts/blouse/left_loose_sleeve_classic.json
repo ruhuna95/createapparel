@@ -133,19 +133,51 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/blouse/loose_sleeve_classic/base/default",
-        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_bow_tie/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_bow_tie/masks/stripe/secondary"
+          }
+        }
       },
       "round": {
         "base": "createapparel:garment/blouse/loose_sleeve_classic/base/default",
-        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_round/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_round/masks/stripe/secondary"
+          }
+        }
       },
       "frill": {
         "base": "createapparel:garment/blouse/loose_sleeve_classic/base/default",
-        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_frill/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_frill/masks/stripe/secondary"
+          }
+        }
       },
       "bow_tie": {
         "base": "createapparel:garment/blouse/loose_sleeve_classic/base/default",
-        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/loose_sleeve_classic/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_bow_tie/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_loose_sleeve_classic_bow_tie/masks/stripe/secondary"
+          }
+        }
       }
     }
   }

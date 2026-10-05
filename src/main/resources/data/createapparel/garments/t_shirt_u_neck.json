@@ -6,8 +6,13 @@
   "designs": [
     "plain",
     "stripe",
-    "logo",
-    "stripe_logo"
+    "horizontal_stripe",
+    "ringer",
+    "two_tone",
+    "color_block",
+    "logo_creeper",
+    "logo_word",
+    "logo_round"
   ],
   "styles": {
     "tuck": [

@@ -634,10 +634,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/crossbody_bag/torso/base/crossbody_bag"
+        "base": "createapparel:garment/crossbody_bag/torso/base/crossbody_bag",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/two_tone/secondary"
+          }
+        }
       },
       "crossbody_bag": {
-        "base": "createapparel:garment/crossbody_bag/torso/base/crossbody_bag"
+        "base": "createapparel:garment/crossbody_bag/torso/base/crossbody_bag",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

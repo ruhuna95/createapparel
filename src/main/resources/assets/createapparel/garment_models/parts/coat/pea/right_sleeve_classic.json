@@ -94,10 +94,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/pea/right_sleeve_classic/base/pea"
+        "base": "createapparel:garment/coat/pea/right_sleeve_classic/base/pea",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/pea/right_sleeve_classic/masks/two_tone/secondary"
+          }
+        }
       },
       "pea": {
-        "base": "createapparel:garment/coat/pea/right_sleeve_classic/base/pea"
+        "base": "createapparel:garment/coat/pea/right_sleeve_classic/base/pea",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/pea/right_sleeve_classic/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

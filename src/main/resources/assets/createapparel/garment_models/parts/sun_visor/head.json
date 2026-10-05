@@ -91,10 +91,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/sun_visor/head/base/sun_visor"
+        "base": "createapparel:garment/sun_visor/head/base/sun_visor",
+        "designs": {
+          "contrast_brim": {
+            "secondary_mask": "createapparel:garment/sun_visor/head/masks/contrast_brim/secondary"
+          }
+        }
       },
       "sun_visor": {
-        "base": "createapparel:garment/sun_visor/head/base/sun_visor"
+        "base": "createapparel:garment/sun_visor/head/base/sun_visor",
+        "designs": {
+          "contrast_brim": {
+            "secondary_mask": "createapparel:garment/sun_visor/head/masks/contrast_brim/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -94,13 +94,46 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/jacket/left_sleeve_slim/base/suit"
+        "base": "createapparel:garment/jacket/left_sleeve_slim/base/suit",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_suit/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_suit/masks/pinstripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_suit/masks/tartan_check/secondary"
+          }
+        }
       },
       "suit": {
-        "base": "createapparel:garment/jacket/left_sleeve_slim/base/suit"
+        "base": "createapparel:garment/jacket/left_sleeve_slim/base/suit",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_suit/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_suit/masks/pinstripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_suit/masks/tartan_check/secondary"
+          }
+        }
       },
       "blazer": {
-        "base": "createapparel:garment/jacket/left_sleeve_slim/base/blazer"
+        "base": "createapparel:garment/jacket/left_sleeve_slim/base/blazer",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_blazer/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_blazer/masks/pinstripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jacket/left_sleeve_slim_blazer/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

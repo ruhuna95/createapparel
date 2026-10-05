@@ -112,10 +112,36 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/sweater/bust/base/crew_neck"
+        "base": "createapparel:garment/sweater/bust/base/crew_neck",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/sweater/bust/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/sweater/bust/masks/argyle/accent"
+          },
+          "fair_isle": {
+            "secondary_mask": "createapparel:garment/sweater/bust/masks/fair_isle/secondary",
+            "accent_mask": "createapparel:garment/sweater/bust/masks/fair_isle/accent"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/sweater/bust/masks/horizontal_stripe/secondary"
+          }
+        }
       },
       "crew_neck": {
-        "base": "createapparel:garment/sweater/bust/base/crew_neck"
+        "base": "createapparel:garment/sweater/bust/base/crew_neck",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/sweater/bust/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/sweater/bust/masks/argyle/accent"
+          },
+          "fair_isle": {
+            "secondary_mask": "createapparel:garment/sweater/bust/masks/fair_isle/secondary",
+            "accent_mask": "createapparel:garment/sweater/bust/masks/fair_isle/accent"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/sweater/bust/masks/horizontal_stripe/secondary"
+          }
+        }
       }
     },
     "designs": {}

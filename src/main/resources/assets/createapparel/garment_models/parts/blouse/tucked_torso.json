@@ -205,19 +205,59 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/blouse/tucked_torso/base/round",
-        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/round"
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/round",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_round/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_round/masks/stripe/secondary"
+          }
+        }
       },
       "round": {
         "base": "createapparel:garment/blouse/tucked_torso/base/round",
-        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/round"
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/round",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_round/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_round/masks/stripe/secondary"
+          }
+        }
       },
       "frill": {
         "base": "createapparel:garment/blouse/tucked_torso/base/frill",
-        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/frill"
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/frill",
+        "designs": {
+          "contrast_frill": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_frill/masks/contrast_frill/secondary",
+            "brightness_mask": "createapparel:garment/blouse/tucked_torso_frill/brightness/contrast_frill"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_frill/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_frill/masks/stripe/secondary"
+          }
+        }
       },
       "bow_tie": {
         "base": "createapparel:garment/blouse/tucked_torso/base/bow_tie",
-        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/bow_tie"
+        "brightness_mask": "createapparel:garment/blouse/tucked_torso/masks/brightness/bow_tie",
+        "designs": {
+          "contrast_bow": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_bow_tie/masks/contrast_bow/secondary",
+            "brightness_mask": "createapparel:garment/blouse/tucked_torso_bow_tie/brightness/contrast_bow"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_bow_tie/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/tucked_torso_bow_tie/masks/stripe/secondary"
+          }
+        }
       }
     }
   }

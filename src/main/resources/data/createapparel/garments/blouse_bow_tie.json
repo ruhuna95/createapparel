@@ -4,7 +4,10 @@
   "model_variant": "classic",
   "texture_variant": "bow_tie",
   "designs": [
-    "plain"
+    "plain",
+    "stripe",
+    "polka_dot",
+    "contrast_bow"
   ],
   "styles": {
     "tuck": [

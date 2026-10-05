@@ -39,10 +39,32 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/necktie/torso/base/necktie"
+        "base": "createapparel:garment/necktie/torso/base/necktie",
+        "designs": {
+          "check": {
+            "secondary_mask": "createapparel:garment/necktie/torso/masks/check/secondary"
+          },
+          "dot": {
+            "secondary_mask": "createapparel:garment/necktie/torso/masks/dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/necktie/torso/masks/stripe/secondary"
+          }
+        }
       },
       "necktie": {
-        "base": "createapparel:garment/necktie/torso/base/necktie"
+        "base": "createapparel:garment/necktie/torso/base/necktie",
+        "designs": {
+          "check": {
+            "secondary_mask": "createapparel:garment/necktie/torso/masks/check/secondary"
+          },
+          "dot": {
+            "secondary_mask": "createapparel:garment/necktie/torso/masks/dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/necktie/torso/masks/stripe/secondary"
+          }
+        }
       }
     },
     "designs": {}

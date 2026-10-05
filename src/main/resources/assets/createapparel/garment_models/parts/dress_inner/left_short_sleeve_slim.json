@@ -71,7 +71,24 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/dress_inner/left_short_sleeve_slim/base/default"
+        "base": "createapparel:garment/dress_inner/left_short_sleeve_slim/base/default",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/dress_inner/left_short_sleeve_slim/masks/plain/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/dress_inner/left_short_sleeve_slim/masks/plain/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/dress_inner/left_short_sleeve_slim/masks/plain/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/dress_inner/left_short_sleeve_slim/masks/plain/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/dress_inner/left_short_sleeve_slim/masks/plain/secondary"
+          }
+        }
       }
     },
     "designs": {

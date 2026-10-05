@@ -118,7 +118,12 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/hoodie/left_sleeve_classic/base/default"
+        "base": "createapparel:garment/hoodie/left_sleeve_classic/base/default",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/hoodie/left_sleeve_classic/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

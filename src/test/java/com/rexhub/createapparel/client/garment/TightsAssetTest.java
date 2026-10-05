@@ -26,7 +26,7 @@ class TightsAssetTest {
         var definition = json(Path.of("src/main/resources/data/createapparel/garments/tights.json"));
         assertEquals("legwear", definition.get("default_slot").getAsString());
         assertEquals(JsonParser.parseString("[\"legwear\"]"), definition.get("allowed_slots"));
-        assertEquals(JsonParser.parseString("[\"plain\"]"), definition.get("designs"));
+        DesignVariationAssetTest.assertDefinitionDesigns(definition, "tights");
         assertEquals(0, definition.getAsJsonObject("styles").size());
         assertEquals("createapparel:tights", definition.get("model_template").getAsString());
         assertEquals("default", definition.get("model_variant").getAsString());

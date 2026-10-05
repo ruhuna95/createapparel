@@ -314,7 +314,28 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/camisole_dress/maxi/torso/base/default"
+        "base": "createapparel:garment/camisole_dress/maxi/torso/base/default",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/plain/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/gingham_check/accent"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/hem_line/accent"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/polka_dot/accent"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/camisole_dress/maxi/torso/masks/tartan_check/accent"
+          }
+        }
       }
     },
     "designs": {

@@ -26,7 +26,7 @@ class DenimPantsAssetTest {
         var definition = json(Path.of("src/main/resources/data/createapparel/garments/denim_pants.json"));
         assertEquals("bottom", definition.get("default_slot").getAsString());
         assertEquals("[\"bottom\"]", definition.get("allowed_slots").toString());
-        assertEquals("[\"plain\"]", definition.get("designs").toString());
+        DesignVariationAssetTest.assertDefinitionDesigns(definition, "denim_pants");
         assertEquals(0, definition.getAsJsonObject("styles").size());
         var template = json(ASSETS.resolve("garment_models/templates/denim_pants.json"))
                 .getAsJsonObject(definition.get("model_variant").getAsString());

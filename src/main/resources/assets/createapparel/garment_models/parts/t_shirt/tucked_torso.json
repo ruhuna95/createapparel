@@ -79,28 +79,121 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/t_shirt/torso/base/crew_neck"
+        "base": "createapparel:garment/t_shirt/torso/base/crew_neck",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/color_block/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/horizontal_stripe/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_round/accent",
+            "overlay": "createapparel:garment/t_shirt/tucked_torso/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_word/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary"
+          }
+        }
       },
       "crew_neck": {
-        "base": "createapparel:garment/t_shirt/torso/base/crew_neck"
+        "base": "createapparel:garment/t_shirt/torso/base/crew_neck",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/color_block/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/horizontal_stripe/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_round/accent",
+            "overlay": "createapparel:garment/t_shirt/tucked_torso/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/logo_word/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_crew_neck/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary"
+          }
+        }
       },
       "u_neck": {
-        "base": "createapparel:garment/t_shirt/torso/base/u_neck"
+        "base": "createapparel:garment/t_shirt/torso/base/u_neck",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_u_neck/masks/color_block/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_u_neck/masks/horizontal_stripe/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_u_neck/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_u_neck/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/t_shirt/tucked_torso_u_neck/masks/logo_round/accent",
+            "overlay": "createapparel:garment/t_shirt/tucked_torso_u_neck/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_u_neck/masks/logo_word/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_u_neck/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary"
+          }
+        }
       },
       "v_neck": {
-        "base": "createapparel:garment/t_shirt/torso/base/v_neck"
+        "base": "createapparel:garment/t_shirt/torso/base/v_neck",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_v_neck/masks/color_block/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_v_neck/masks/horizontal_stripe/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_v_neck/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_v_neck/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/t_shirt/tucked_torso_v_neck/masks/logo_round/accent",
+            "overlay": "createapparel:garment/t_shirt/tucked_torso_v_neck/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_v_neck/masks/logo_word/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/tucked_torso_v_neck/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary"
+          }
+        }
       }
     },
     "designs": {
       "stripe": {
         "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary"
-      },
-      "logo": {
-        "accent_mask": "createapparel:garment/t_shirt/torso/masks/logo/accent"
-      },
-      "stripe_logo": {
-        "secondary_mask": "createapparel:garment/t_shirt/torso/masks/stripe/secondary",
-        "accent_mask": "createapparel:garment/t_shirt/torso/masks/logo/accent"
       }
     }
   }

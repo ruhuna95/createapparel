@@ -7,7 +7,9 @@
   "model_variant": "duffle",
   "texture_variant": "duffle",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "contrast_toggle"
   ],
   "styles": {
     "open": [

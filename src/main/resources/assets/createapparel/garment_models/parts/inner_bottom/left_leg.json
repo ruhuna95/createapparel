@@ -71,10 +71,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/inner_bottom/left_leg/base/boxer_briefs"
+        "base": "createapparel:garment/inner_bottom/left_leg/base/boxer_briefs",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/inner_bottom/left_leg/masks/two_tone/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/inner_bottom/left_leg/masks/waist_band/secondary"
+          }
+        }
       },
       "boxer_briefs": {
-        "base": "createapparel:garment/inner_bottom/left_leg/base/boxer_briefs"
+        "base": "createapparel:garment/inner_bottom/left_leg/base/boxer_briefs",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/inner_bottom/left_leg/masks/two_tone/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/inner_bottom/left_leg/masks/waist_band/secondary"
+          }
+        }
       }
     }
   }

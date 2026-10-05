@@ -119,7 +119,23 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/hoodie/torso_pullover/base/default",
-        "brightness_mask": "createapparel:garment/hoodie/torso_pullover/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/hoodie/torso_pullover/masks/brightness/default",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_pullover/masks/color_block/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_pullover/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_pullover/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/hoodie/torso_pullover/masks/logo_round/accent",
+            "overlay": "createapparel:garment/hoodie/torso_pullover/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_pullover/masks/logo_word/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -314,7 +314,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/jumper_dress/midi/torso/base/default"
+        "base": "createapparel:garment/jumper_dress/midi/torso/base/default",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/jumper_dress/midi/torso/masks/plain/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jumper_dress/midi/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/jumper_dress/midi/torso/masks/gingham_check/accent"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jumper_dress/midi/torso/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/jumper_dress/midi/torso/masks/tartan_check/accent"
+          }
+        }
       }
     },
     "designs": {

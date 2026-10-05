@@ -7,7 +7,11 @@
   "model_variant": "knee_longsleeves",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "hem_line",
+    "polka_dot",
+    "tartan_check",
+    "gingham_check"
   ],
   "styles": {}
 }

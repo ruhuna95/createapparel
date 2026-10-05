@@ -7,7 +7,9 @@
   "model_variant": "default",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "contrast_stitch",
+    "patched"
   ],
   "styles": {}
 }

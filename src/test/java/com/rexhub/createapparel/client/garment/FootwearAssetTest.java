@@ -38,7 +38,7 @@ class FootwearAssetTest {
             assertEquals(JsonParser.parseString("[\"feet\"]"), definition.get("allowed_slots"));
             assertEquals("default", definition.get("model_variant").getAsString());
             assertEquals(garment, definition.get("texture_variant").getAsString());
-            assertEquals(JsonParser.parseString("[\"plain\"]"), definition.get("designs"));
+            DesignVariationAssetTest.assertDefinitionDesigns(definition, garment);
             assertEquals(0, definition.getAsJsonObject("styles").size());
             String group = group(garment);
             var template = json(ASSETS.resolve("garment_models/templates/" + group + ".json"));
@@ -247,7 +247,7 @@ class FootwearAssetTest {
         assertTrue(part.designsFor("unknown").get("plain").accent().isPresent());
         assertTrue(part.designsFor("sneakers").get("plain").accent().isPresent());
         assertTrue(part.designsFor("sneakers").get("plain").secondary().isPresent());
-        assertTrue(part.designsFor("loafers").isEmpty());
+        assertFalse(part.designsFor("loafers").containsKey("plain"));
         for (String variant : List.of("default", "sneakers", "loafers")) {
             var channels = ClientGarmentAssets.colorChannels(Map.of("left_leg", part.id()), variant,
                     "plain", Map.of(part.id(), part));

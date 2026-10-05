@@ -7,7 +7,9 @@
   "model_variant": "classic",
   "texture_variant": "v_neck",
   "designs": [
-    "plain"
+    "plain",
+    "horizontal_stripe",
+    "two_tone"
   ],
   "styles": {}
 }

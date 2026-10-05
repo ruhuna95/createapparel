@@ -119,7 +119,24 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/shirt/short_sleeve_classic/base/default",
-        "brightness_mask": "createapparel:garment/shirt/short_sleeve_classic/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/shirt/short_sleeve_classic/masks/brightness/default",
+        "designs": {
+          "contrast_collar": {
+            "secondary_mask": "createapparel:garment/shirt/left_short_sleeve_classic/masks/contrast_collar/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/shirt/left_short_sleeve_classic/masks/gingham_check/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/shirt/short_sleeve_classic/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/shirt/left_short_sleeve_classic/masks/tartan_check/secondary"
+          },
+          "two_tone_lr": {
+            "secondary_mask": "createapparel:garment/shirt/left_short_sleeve_classic/masks/two_tone_lr/secondary"
+          }
+        }
       }
     },
     "designs": {

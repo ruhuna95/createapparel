@@ -56,10 +56,32 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/necktie/bust/base/necktie"
+        "base": "createapparel:garment/necktie/bust/base/necktie",
+        "designs": {
+          "check": {
+            "secondary_mask": "createapparel:garment/necktie/bust/masks/check/secondary"
+          },
+          "dot": {
+            "secondary_mask": "createapparel:garment/necktie/bust/masks/dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/necktie/bust/masks/stripe/secondary"
+          }
+        }
       },
       "necktie": {
-        "base": "createapparel:garment/necktie/bust/base/necktie"
+        "base": "createapparel:garment/necktie/bust/base/necktie",
+        "designs": {
+          "check": {
+            "secondary_mask": "createapparel:garment/necktie/bust/masks/check/secondary"
+          },
+          "dot": {
+            "secondary_mask": "createapparel:garment/necktie/bust/masks/dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/necktie/bust/masks/stripe/secondary"
+          }
+        }
       }
     },
     "designs": {}

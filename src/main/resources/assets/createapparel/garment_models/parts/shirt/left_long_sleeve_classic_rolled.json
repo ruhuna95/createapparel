@@ -135,7 +135,27 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/shirt/long_sleeve_classic_rolled/base/default",
-        "brightness_mask": "createapparel:garment/shirt/long_sleeve_classic_rolled/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/shirt/long_sleeve_classic_rolled/masks/brightness/default",
+        "designs": {
+          "contrast_collar": {
+            "secondary_mask": "createapparel:garment/shirt/left_long_sleeve_classic_rolled/masks/contrast_collar/secondary"
+          },
+          "contrast_cuff": {
+            "secondary_mask": "createapparel:garment/shirt/left_long_sleeve_classic_rolled/masks/contrast_cuff/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/shirt/left_long_sleeve_classic_rolled/masks/gingham_check/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/shirt/long_sleeve_classic_rolled/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/shirt/left_long_sleeve_classic_rolled/masks/tartan_check/secondary"
+          },
+          "two_tone_lr": {
+            "secondary_mask": "createapparel:garment/shirt/left_long_sleeve_classic_rolled/masks/two_tone_lr/secondary"
+          }
+        }
       }
     },
     "designs": {

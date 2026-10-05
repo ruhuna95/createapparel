@@ -71,22 +71,112 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/socks/left_leg/base/ankle"
+        "base": "createapparel:garment/socks/left_leg/base/ankle",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/socks/left_leg_ankle/masks/argyle/accent"
+          },
+          "double_stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/double_stripe/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/stripe/secondary"
+          },
+          "toe_heel": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/toe_heel/secondary"
+          }
+        }
       },
       "ankle": {
-        "base": "createapparel:garment/socks/left_leg/base/ankle"
+        "base": "createapparel:garment/socks/left_leg/base/ankle",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/socks/left_leg_ankle/masks/argyle/accent"
+          },
+          "double_stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/double_stripe/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/stripe/secondary"
+          },
+          "toe_heel": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_ankle/masks/toe_heel/secondary"
+          }
+        }
       },
       "crew": {
-        "base": "createapparel:garment/socks/left_leg/base/crew"
+        "base": "createapparel:garment/socks/left_leg/base/crew",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_crew/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/socks/left_leg_crew/masks/argyle/accent"
+          },
+          "double_stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_crew/masks/double_stripe/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_crew/masks/stripe/secondary"
+          },
+          "toe_heel": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_crew/masks/toe_heel/secondary"
+          }
+        }
       },
       "knee_high": {
-        "base": "createapparel:garment/socks/left_leg/base/knee_high"
+        "base": "createapparel:garment/socks/left_leg/base/knee_high",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_knee_high/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/socks/left_leg_knee_high/masks/argyle/accent"
+          },
+          "double_stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_knee_high/masks/double_stripe/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_knee_high/masks/stripe/secondary"
+          },
+          "toe_heel": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_knee_high/masks/toe_heel/secondary"
+          }
+        }
       },
       "over_knee": {
-        "base": "createapparel:garment/socks/left_leg/base/over_knee"
+        "base": "createapparel:garment/socks/left_leg/base/over_knee",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_over_knee/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/socks/left_leg_over_knee/masks/argyle/accent"
+          },
+          "double_stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_over_knee/masks/double_stripe/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_over_knee/masks/stripe/secondary"
+          },
+          "toe_heel": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_over_knee/masks/toe_heel/secondary"
+          }
+        }
       },
       "thigh_high": {
-        "base": "createapparel:garment/socks/left_leg/base/thigh_high"
+        "base": "createapparel:garment/socks/left_leg/base/thigh_high",
+        "designs": {
+          "argyle": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_thigh_high/masks/argyle/secondary",
+            "accent_mask": "createapparel:garment/socks/left_leg_thigh_high/masks/argyle/accent"
+          },
+          "double_stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_thigh_high/masks/double_stripe/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_thigh_high/masks/stripe/secondary"
+          },
+          "toe_heel": {
+            "secondary_mask": "createapparel:garment/socks/left_leg_thigh_high/masks/toe_heel/secondary"
+          }
+        }
       }
     },
     "designs": {}

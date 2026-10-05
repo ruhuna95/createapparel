@@ -45,7 +45,16 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/denim_jacket/torso/base/default",
-        "overlay": "createapparel:garment/denim_jacket/torso/overlay/default"
+        "overlay": "createapparel:garment/denim_jacket/torso/overlay/default",
+        "designs": {
+          "contrast_stitch": {
+            "secondary_mask": "createapparel:garment/denim_jacket/torso/masks/contrast_stitch/secondary",
+            "common_overlay": "createapparel:garment/denim_jacket/torso/overlay/contrast_stitch_common"
+          },
+          "patched": {
+            "overlay": "createapparel:garment/denim_jacket/torso/overlay/patched"
+          }
+        }
       }
     },
     "designs": {}

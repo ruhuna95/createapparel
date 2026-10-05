@@ -112,10 +112,12 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/trench/bust_opened/base/trench"
+        "base": "createapparel:garment/coat/trench/bust_opened/base/trench",
+        "designs": {}
       },
       "trench": {
-        "base": "createapparel:garment/coat/trench/bust_opened/base/trench"
+        "base": "createapparel:garment/coat/trench/bust_opened/base/trench",
+        "designs": {}
       }
     },
     "designs": {}

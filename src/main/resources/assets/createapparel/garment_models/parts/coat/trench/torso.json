@@ -448,17 +448,25 @@
                                       }
                                   ]
                  },
-    "textures":  {
-                     "variants":  {
-                                      "default":  {
-                                                      "base":  "createapparel:garment/coat/trench/torso/base/trench"
-                                                  },
-                                      "trench":  {
-                                                     "base":  "createapparel:garment/coat/trench/torso/base/trench"
-                                                 }
-                                  },
-                     "designs":  {
-
-                                 }
-                 }
+    "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/coat/trench/torso/base/trench",
+        "designs": {
+          "contrast_belt": {
+            "secondary_mask": "createapparel:garment/coat/trench/torso/masks/contrast_belt/secondary"
+          }
+        }
+      },
+      "trench": {
+        "base": "createapparel:garment/coat/trench/torso/base/trench",
+        "designs": {
+          "contrast_belt": {
+            "secondary_mask": "createapparel:garment/coat/trench/torso/masks/contrast_belt/secondary"
+          }
+        }
+      }
+    },
+    "designs": {}
+  }
 }

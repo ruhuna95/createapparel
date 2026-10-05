@@ -286,10 +286,13 @@ final class ClientGarmentAssetLoader {
             JsonObject masks = GsonHelper.convertToJsonObject(entry.getValue(), entry.getKey());
             Optional<ResourceLocation> secondary = optionalResourceLocation(masks, "secondary_mask", id);
             Optional<ResourceLocation> accent = optionalResourceLocation(masks, "accent_mask", id);
-            if (secondary.isEmpty() && accent.isEmpty()) {
-                throw new IllegalStateException("Garment design has no masks: " + id + " / " + entry.getKey());
+            Optional<ResourceLocation> overlay = optionalResourceLocation(masks, "overlay", id);
+            Optional<ResourceLocation> commonOverlay = optionalResourceLocation(masks, "common_overlay", id);
+            Optional<ResourceLocation> brightnessMask = optionalResourceLocation(masks, "brightness_mask", id);
+            if (secondary.isEmpty() && accent.isEmpty() && overlay.isEmpty()) {
+                throw new IllegalStateException("Garment design has no texture: " + id + " / " + entry.getKey());
             }
-            designs.put(entry.getKey(), new DesignMasks(secondary, accent));
+            designs.put(entry.getKey(), new DesignMasks(secondary, accent, overlay, commonOverlay, brightnessMask));
         }
         return Collections.unmodifiableMap(designs);
     }
@@ -353,11 +356,17 @@ final class ClientGarmentAssetLoader {
                 variant.designs().ifPresent(designs -> designs.values().forEach(masks -> {
                     masks.secondary().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
                     masks.accent().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
+                    masks.overlay().ifPresent(id -> validateTexture(manager, part, id, TextureKind.OVERLAY));
+                    masks.commonOverlay().ifPresent(id -> validateTexture(manager, part, id, TextureKind.OVERLAY));
+                    masks.brightnessMask().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
                 }));
             }
             for (DesignMasks masks : part.designs().values()) {
                 masks.secondary().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
                 masks.accent().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
+                masks.overlay().ifPresent(id -> validateTexture(manager, part, id, TextureKind.OVERLAY));
+                masks.commonOverlay().ifPresent(id -> validateTexture(manager, part, id, TextureKind.OVERLAY));
+                masks.brightnessMask().ifPresent(id -> validateTexture(manager, part, id, TextureKind.MASK));
             }
             for (ResourceLocation override : part.materialOverrides().values()) {
                 validateTexture(manager, part, override, baseKind);

@@ -11,7 +11,12 @@
   },
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "color_block",
+    "logo_creeper",
+    "logo_word",
+    "logo_round"
   ],
   "styles": {
     "hood": [

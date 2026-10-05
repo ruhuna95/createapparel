@@ -112,10 +112,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/pea/bust_opened/base/pea"
+        "base": "createapparel:garment/coat/pea/bust_opened/base/pea",
+        "designs": {
+          "contrast_lapel": {
+            "secondary_mask": "createapparel:garment/coat/pea/bust_opened/masks/contrast_lapel/secondary"
+          }
+        }
       },
       "pea": {
-        "base": "createapparel:garment/coat/pea/bust_opened/base/pea"
+        "base": "createapparel:garment/coat/pea/bust_opened/base/pea",
+        "designs": {
+          "contrast_lapel": {
+            "secondary_mask": "createapparel:garment/coat/pea/bust_opened/masks/contrast_lapel/secondary"
+          }
+        }
       }
     },
     "designs": {}

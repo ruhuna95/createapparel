@@ -60,6 +60,55 @@ class GarmentAssetOptionsTest {
         }
     }
 
+    @Test
+    void overlayOnlyDesignResolvesWithoutColorSelectorsAndKeepsCommonOverlay() {
+        JsonObject json = model();
+        variant(json).addProperty("overlay", "test:buttons");
+        json.getAsJsonObject("textures").add("designs", JsonParser.parseString(
+                "{\"logo_creeper\":{\"overlay\":\"test:print\"}}"));
+        var part = ClientGarmentAssetLoader.parsePart(ID, json);
+        var definition = com.rexhub.createapparel.garment.GarmentDefinition.fromJson(ID, JsonParser.parseString("""
+                {"slot":"top", "model_template":"test:garment", "model_variant":"default",
+                 "texture_variant":"default", "designs":["plain","logo_creeper"], "styles":{}}
+                """).getAsJsonObject());
+        var appearance = new com.rexhub.createapparel.garment.GarmentData(
+                com.rexhub.createapparel.material.FabricMaterial.SYNTHETIC, "logo_creeper",
+                com.rexhub.createapparel.material.FabricColor.WHITE, java.util.Optional.empty(), java.util.Optional.empty());
+        var textures = part.resolveTextures(definition, appearance);
+        assertEquals("test:print", textures.designOverlay().orElseThrow().toString());
+        assertEquals("test:buttons", textures.overlay().orElseThrow().toString());
+        assertEquals(new ClientGarmentAssets.ColorChannels(false, false), ClientGarmentAssets.colorChannels(
+                java.util.Map.of("torso", ID), "default", "logo_creeper", java.util.Map.of(ID, part)));
+        variant(json).add("designs", JsonParser.parseString("{\"logo_creeper\":{\"overlay\":\"test:variant_print\"}}"));
+        var variantPart = ClientGarmentAssetLoader.parsePart(ID, json);
+        assertEquals("test:variant_print", variantPart.resolveTextures(definition, appearance).designOverlay().orElseThrow().toString());
+    }
+
+    @Test
+    void designWithoutAnyTextureFailsBeforeRendering() {
+        JsonObject json = model();
+        json.getAsJsonObject("textures").add("designs", JsonParser.parseString("{\"broken\":{}}"));
+        var error = assertThrows(IllegalStateException.class, () -> ClientGarmentAssetLoader.parsePart(ID, json));
+        assertTrue(error.getMessage().contains("no texture"));
+    }
+
+    @Test
+    void designCanOverrideCommonOverlayAndBrightnessWithoutChangingPlainDefaults() {
+        JsonObject json = model();
+        variant(json).addProperty("overlay", "test:original_stitches");
+        variant(json).addProperty("brightness_mask", "test:original_brightness");
+        json.getAsJsonObject("textures").add("designs", JsonParser.parseString("""
+                {"contrast_stitch":{"secondary_mask":"test:colored_stitches", "common_overlay":"test:transparent",
+                                     "brightness_mask":"test:neutral_brightness"}}
+                """));
+        var part = ClientGarmentAssetLoader.parsePart(ID, json);
+        var parsed = part.designs().get("contrast_stitch");
+        assertEquals("test:transparent", parsed.commonOverlay().orElseThrow().toString());
+        assertEquals("test:neutral_brightness", parsed.brightnessMask().orElseThrow().toString());
+        assertEquals("test:original_stitches", part.variants().get("default").overlay().orElseThrow().toString());
+        assertEquals("test:original_brightness", part.variants().get("default").brightnessMask().orElseThrow().toString());
+    }
+
     private static JsonObject variant(JsonObject json) {
         return json.getAsJsonObject("textures").getAsJsonObject("variants").getAsJsonObject("default");
     }

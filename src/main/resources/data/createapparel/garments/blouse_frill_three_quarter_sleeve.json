@@ -4,7 +4,10 @@
   "model_variant": "three_quarter_sleeve_classic",
   "texture_variant": "frill",
   "designs": [
-    "plain"
+    "plain",
+    "stripe",
+    "polka_dot",
+    "contrast_frill"
   ],
   "styles": {
     "tuck": [

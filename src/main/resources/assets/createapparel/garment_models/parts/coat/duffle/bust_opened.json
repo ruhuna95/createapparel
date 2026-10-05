@@ -112,10 +112,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/duffle/bust_opened/base/duffle"
+        "base": "createapparel:garment/coat/duffle/bust_opened/base/duffle",
+        "designs": {
+          "contrast_toggle": {
+            "secondary_mask": "createapparel:garment/coat/duffle/bust_opened/masks/contrast_toggle/secondary"
+          }
+        }
       },
       "duffle": {
-        "base": "createapparel:garment/coat/duffle/bust_opened/base/duffle"
+        "base": "createapparel:garment/coat/duffle/bust_opened/base/duffle",
+        "designs": {
+          "contrast_toggle": {
+            "secondary_mask": "createapparel:garment/coat/duffle/bust_opened/masks/contrast_toggle/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -7,7 +7,9 @@
   "model_variant": "default",
   "texture_variant": "beanie",
   "designs": [
-    "plain"
+    "plain",
+    "stripe",
+    "two_tone"
   ],
   "styles": {}
 }

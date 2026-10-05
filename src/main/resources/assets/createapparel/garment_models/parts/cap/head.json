@@ -150,10 +150,48 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/cap/head/base/cap"
+        "base": "createapparel:garment/cap/head/base/cap",
+        "designs": {
+          "contrast_brim": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/contrast_brim/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/cap/head/masks/logo_round/accent",
+            "overlay": "createapparel:garment/cap/head/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/logo_word/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/two_tone/secondary"
+          }
+        }
       },
       "cap": {
-        "base": "createapparel:garment/cap/head/base/cap"
+        "base": "createapparel:garment/cap/head/base/cap",
+        "designs": {
+          "contrast_brim": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/contrast_brim/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/cap/head/masks/logo_round/accent",
+            "overlay": "createapparel:garment/cap/head/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/logo_word/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/cap/head/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -229,10 +229,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/daypack/torso/base/daypack"
+        "base": "createapparel:garment/daypack/torso/base/daypack",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/daypack/torso/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/daypack/torso/masks/two_tone/secondary"
+          }
+        }
       },
       "daypack": {
-        "base": "createapparel:garment/daypack/torso/base/daypack"
+        "base": "createapparel:garment/daypack/torso/base/daypack",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/daypack/torso/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/daypack/torso/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

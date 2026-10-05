@@ -7,9 +7,13 @@
   "model_variant": "default",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone"
   ],
   "styles": {
-    "wear": ["down", "up"]
+    "wear": [
+      "down",
+      "up"
+    ]
   }
 }

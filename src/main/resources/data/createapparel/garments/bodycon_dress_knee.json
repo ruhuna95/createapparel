@@ -7,7 +7,13 @@
   "model_variant": "knee",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "side_panel",
+    "center_line",
+    "color_block",
+    "tartan_check",
+    "gingham_check"
   ],
   "styles": {}
 }

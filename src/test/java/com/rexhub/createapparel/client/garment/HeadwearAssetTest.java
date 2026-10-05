@@ -40,7 +40,7 @@ class HeadwearAssetTest {
             assertEquals("createapparel:" + id, definition.get("model_template").getAsString());
             assertEquals("default", definition.get("model_variant").getAsString());
             assertEquals(id, definition.get("texture_variant").getAsString());
-            assertEquals(JsonParser.parseString("[\"plain\"]"), definition.get("designs"));
+            DesignVariationAssetTest.assertDefinitionDesigns(definition, id);
             assertEquals(id.equals("cap") ? JsonParser.parseString("{\"wear\":[\"front\",\"back\"]}")
                     : new JsonObject(), definition.getAsJsonObject("styles"));
             var template = json(ASSETS.resolve("garment_models/templates/" + id + ".json"));
@@ -54,7 +54,7 @@ class HeadwearAssetTest {
                 }
             }
             var model = part(id);
-            assertTrue(model.designsFor(id).isEmpty());
+            assertFalse(model.designsFor(id).containsKey("plain"));
             assertEquals(Set.of("default", id), model.variants().keySet());
         }
     }

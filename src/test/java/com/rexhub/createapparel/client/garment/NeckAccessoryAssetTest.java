@@ -105,7 +105,7 @@ class NeckAccessoryAssetTest {
             var definition = GarmentDefinition.fromJson(resource(id), json(Path.of(
                     "src/main/resources/data/createapparel/garments/" + id + ".json")));
             assertEquals(Set.of(GarmentSlot.NECK), definition.allowedSlots());
-            assertEquals(Set.of("plain"), definition.designs());
+            assertEquals(DesignVariationAssetTest.expectedDesigns(id), definition.designs());
             assertTrue(definition.styles().isEmpty());
             var mapping = json(ASSETS.resolve("garment_models/templates/" + id + ".json")).getAsJsonObject("default");
             for (var arm : ArmProfile.values()) {

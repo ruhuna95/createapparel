@@ -331,7 +331,24 @@
       "default": {
         "base": "createapparel:garment/shirt_dress/midi/torso/base/default",
         "overlay": "createapparel:garment/shirt_dress/midi/torso/overlay/default",
-        "brightness_mask": "createapparel:garment/shirt_dress/midi/torso/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/shirt_dress/midi/torso/masks/brightness/default",
+        "designs": {
+          "contrast_collar": {
+            "secondary_mask": "createapparel:garment/shirt_dress/midi/torso/masks/contrast_collar/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/shirt_dress/midi/torso/masks/gingham_check/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/shirt_dress/midi/torso/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/shirt_dress/midi/torso/masks/tartan_check/secondary"
+          },
+          "two_tone_lr": {
+            "secondary_mask": "createapparel:garment/shirt_dress/midi/torso/masks/two_tone_lr/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -34,7 +34,7 @@ class SocksAssetTest {
             assertEquals("createapparel:socks", definition.get("model_template").getAsString());
             assertEquals("default", definition.get("model_variant").getAsString());
             assertEquals(variant, definition.get("texture_variant").getAsString());
-            assertEquals(JsonParser.parseString("[\"plain\"]"), definition.get("designs"));
+            DesignVariationAssetTest.assertDefinitionDesigns(definition, variant + "_socks");
             assertEquals(0, definition.getAsJsonObject("styles").size());
             for (var arms : ArmProfile.values()) {
                 for (var chest : ChestProfile.values()) {

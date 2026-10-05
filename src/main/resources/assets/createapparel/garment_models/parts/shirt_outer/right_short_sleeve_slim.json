@@ -119,7 +119,21 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/shirt/short_sleeve_slim/base/default",
-        "brightness_mask": "createapparel:garment/shirt/short_sleeve_slim/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/shirt/short_sleeve_slim/masks/brightness/default",
+        "designs": {
+          "contrast_collar": {
+            "secondary_mask": "createapparel:garment/shirt_outer/right_short_sleeve_slim/masks/contrast_collar/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/shirt_outer/right_short_sleeve_slim/masks/gingham_check/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/shirt/short_sleeve_slim/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/shirt_outer/right_short_sleeve_slim/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {

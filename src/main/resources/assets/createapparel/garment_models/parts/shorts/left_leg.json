@@ -13,7 +13,7 @@
     "elements": [
       {
         "name": "left_leg",
-        "top_inset": [0, 0, 0.245, 0],
+        "top_inset": [0, 0.000667332, 0.164163754, 0.000667332],
         "from": [
           -0.005,
           7.995,
@@ -69,7 +69,7 @@
       },
       {
         "name": "left_leg_decoration",
-        "top_inset": [0, 0, 0.245, 0],
+        "top_inset": [0, 0.000667332, 0.164163754, 0.000667332],
         "from": [
           -0.005,
           7.995,
@@ -107,7 +107,18 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/shorts/left_leg/base/default"
+        "base": "createapparel:garment/shorts/left_leg/base/default",
+        "designs": {
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/shorts/left_leg/masks/hem_line/secondary"
+          },
+          "side_line": {
+            "secondary_mask": "createapparel:garment/shorts/left_leg/masks/side_line/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/shorts/left_leg/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

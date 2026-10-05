@@ -72,7 +72,13 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/denim_pants/torso/base/default",
-        "overlay": "createapparel:garment/denim_pants/torso/overlay/default"
+        "overlay": "createapparel:garment/denim_pants/torso/overlay/default",
+        "designs": {
+          "contrast_stitch": {
+            "secondary_mask": "createapparel:garment/denim_pants/torso/masks/contrast_stitch/secondary",
+            "common_overlay": "createapparel:garment/denim_pants/torso/overlay/contrast_stitch_common"
+          }
+        }
       }
     },
     "designs": {}

@@ -94,10 +94,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/pea/right_sleeve_slim/base/pea"
+        "base": "createapparel:garment/coat/pea/right_sleeve_slim/base/pea",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/pea/right_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       },
       "pea": {
-        "base": "createapparel:garment/coat/pea/right_sleeve_slim/base/pea"
+        "base": "createapparel:garment/coat/pea/right_sleeve_slim/base/pea",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/pea/right_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

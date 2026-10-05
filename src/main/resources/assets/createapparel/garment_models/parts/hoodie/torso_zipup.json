@@ -120,7 +120,23 @@
       "default": {
         "base": "createapparel:garment/hoodie/torso_zipup/base/default",
         "brightness_mask": "createapparel:garment/hoodie/torso_zipup/masks/brightness/default",
-        "overlay": "createapparel:garment/hoodie/torso_zipup/overlay/default"
+        "overlay": "createapparel:garment/hoodie/torso_zipup/overlay/default",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_zipup/masks/color_block/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_zipup/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_zipup/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/hoodie/torso_zipup/masks/logo_round/accent",
+            "overlay": "createapparel:garment/hoodie/torso_zipup/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/hoodie/torso_zipup/masks/logo_word/secondary"
+          }
+        }
       }
     },
     "designs": {}

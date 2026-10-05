@@ -52,7 +52,13 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/denim_jacket/bust/base/default",
-        "overlay": "createapparel:garment/denim_jacket/bust/overlay/default"
+        "overlay": "createapparel:garment/denim_jacket/bust/overlay/default",
+        "designs": {
+          "contrast_stitch": {
+            "secondary_mask": "createapparel:garment/denim_jacket/bust/masks/contrast_stitch/secondary",
+            "common_overlay": "createapparel:garment/denim_jacket/bust/overlay/contrast_stitch_common"
+          }
+        }
       }
     },
     "designs": {}

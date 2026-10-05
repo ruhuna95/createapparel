@@ -7,7 +7,9 @@
   "model_variant": "knee_shortsleeves",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "tartan_check",
+    "gingham_check"
   ],
   "styles": {}
 }

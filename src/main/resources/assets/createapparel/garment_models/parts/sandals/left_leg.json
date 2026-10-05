@@ -118,10 +118,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/sandals/left_leg/base/sandals"
+        "base": "createapparel:garment/sandals/left_leg/base/sandals",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/sandals/left_leg/masks/two_tone/secondary"
+          }
+        }
       },
       "sandals": {
-        "base": "createapparel:garment/sandals/left_leg/base/sandals"
+        "base": "createapparel:garment/sandals/left_leg/base/sandals",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/sandals/left_leg/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

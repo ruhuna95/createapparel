@@ -31,7 +31,7 @@ class InnerGarmentAssetTest {
             assertEquals(slot, definition.get("default_slot").getAsString());
             assertEquals(JsonParser.parseString("[\"" + slot + "\"]"), definition.get("allowed_slots"));
             assertEquals("createapparel:" + slot, definition.get("model_template").getAsString());
-            assertEquals(JsonParser.parseString("[\"plain\"]"), definition.get("designs"));
+            DesignVariationAssetTest.assertDefinitionDesigns(definition, garment);
             assertEquals(0, definition.getAsJsonObject("styles").size());
             assertEquals(garment, definition.get("texture_variant").getAsString());
             String variant = top ? "default" : garment.equals("boxer_briefs") ? "withlegs"

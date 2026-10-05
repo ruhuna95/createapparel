@@ -381,10 +381,42 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/daypack/back/base/daypack"
+        "base": "createapparel:garment/daypack/back/base/daypack",
+        "designs": {
+          "plain": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent"
+          },
+          "contrast_pocket": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/daypack/back/masks/contrast_pocket/secondary"
+          },
+          "contrast_strap": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent"
+          },
+          "two_tone": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/daypack/back/masks/two_tone/secondary"
+          }
+        }
       },
       "daypack": {
-        "base": "createapparel:garment/daypack/back/base/daypack"
+        "base": "createapparel:garment/daypack/back/base/daypack",
+        "designs": {
+          "plain": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent"
+          },
+          "contrast_pocket": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/daypack/back/masks/contrast_pocket/secondary"
+          },
+          "contrast_strap": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent"
+          },
+          "two_tone": {
+            "accent_mask": "createapparel:garment/daypack/back/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/daypack/back/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {

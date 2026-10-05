@@ -4,7 +4,9 @@
   "model_variant": "classic",
   "texture_variant": "round",
   "designs": [
-    "plain"
+    "plain",
+    "stripe",
+    "polka_dot"
   ],
   "styles": {
     "tuck": [

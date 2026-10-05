@@ -259,7 +259,27 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/a_line_dress/midi/torso/base/default"
+        "base": "createapparel:garment/a_line_dress/midi/torso/base/default",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/a_line_dress/midi/torso/masks/gingham_check/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/a_line_dress/midi/torso/masks/hem_line/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/a_line_dress/midi/torso/masks/polka_dot/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/a_line_dress/midi/torso/masks/tartan_check/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/a_line_dress/midi/torso/masks/two_tone/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/a_line_dress/midi/torso/masks/waist_band/secondary"
+          }
+        }
       }
     },
     "designs": {}

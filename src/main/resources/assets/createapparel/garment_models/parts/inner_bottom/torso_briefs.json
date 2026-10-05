@@ -20,8 +20,28 @@
   },
   "textures": {
     "variants": {
-      "default": {"base": "createapparel:garment/inner_bottom/torso/base/briefs"},
-      "briefs": {"base": "createapparel:garment/inner_bottom/torso/base/briefs"}
+      "default": {
+        "base": "createapparel:garment/inner_bottom/torso/base/briefs",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/inner_bottom/torso_briefs/masks/two_tone/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/inner_bottom/torso_briefs/masks/waist_band/secondary"
+          }
+        }
+      },
+      "briefs": {
+        "base": "createapparel:garment/inner_bottom/torso/base/briefs",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/inner_bottom/torso_briefs/masks/two_tone/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/inner_bottom/torso_briefs/masks/waist_band/secondary"
+          }
+        }
+      }
     }
   }
 }

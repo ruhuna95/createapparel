@@ -7,7 +7,13 @@
   "model_variant": "default",
   "texture_variant": "backpack",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "contrast_pocket",
+    "contrast_strap",
+    "logo_creeper",
+    "logo_word",
+    "logo_round"
   ],
   "styles": {}
 }

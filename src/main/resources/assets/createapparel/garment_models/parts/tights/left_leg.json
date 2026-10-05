@@ -18,7 +18,22 @@
     }]
   },
   "textures": {
-    "variants": {"default": {"base": "createapparel:garment/tights/left_leg/base/default"}},
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/tights/left_leg/base/default",
+        "designs": {
+          "diamond": {
+            "secondary_mask": "createapparel:garment/tights/left_leg/masks/diamond/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/tights/left_leg/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/tights/left_leg/masks/stripe/secondary"
+          }
+        }
+      }
+    },
     "designs": {}
   }
 }

@@ -1,9 +1,16 @@
 {
   "default_slot": "neck",
-  "allowed_slots": ["neck"],
+  "allowed_slots": [
+    "neck"
+  ],
   "model_template": "createapparel:necktie",
   "model_variant": "default",
   "texture_variant": "necktie",
-  "designs": ["plain"],
+  "designs": [
+    "plain",
+    "stripe",
+    "dot",
+    "check"
+  ],
   "styles": {}
 }

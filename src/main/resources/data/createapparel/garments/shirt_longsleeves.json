@@ -4,7 +4,12 @@
   "texture_variant": "default",
   "designs": [
     "plain",
-    "stripe"
+    "stripe",
+    "tartan_check",
+    "gingham_check",
+    "contrast_collar",
+    "two_tone_lr",
+    "contrast_cuff"
   ],
   "styles": {
     "tuck": [
@@ -27,7 +32,10 @@
   ],
   "slot_styles": {
     "outer": {
-      "sleeves": ["normal", "rolled"]
+      "sleeves": [
+        "normal",
+        "rolled"
+      ]
     }
   },
   "slot_model_variants": {

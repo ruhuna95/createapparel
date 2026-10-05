@@ -7,7 +7,11 @@
   "model_variant": "default",
   "texture_variant": "blazer",
   "designs": [
-    "plain"
+    "plain",
+    "pinstripe",
+    "tartan_check",
+    "gingham_check",
+    "piping"
   ],
   "styles": {
     "open": [

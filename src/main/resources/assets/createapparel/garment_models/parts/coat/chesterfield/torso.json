@@ -422,17 +422,37 @@
                                       }
                                   ]
                  },
-    "textures":  {
-                     "variants":  {
-                                      "default":  {
-                                                      "base":  "createapparel:garment/coat/chesterfield/torso/base/chesterfield"
-                                                  },
-                                      "chesterfield":  {
-                                                           "base":  "createapparel:garment/coat/chesterfield/torso/base/chesterfield"
-                                                       }
-                                  },
-                     "designs":  {
-
-                                 }
-                 }
+    "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/coat/chesterfield/torso/base/chesterfield",
+        "designs": {
+          "contrast_lapel": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/torso/masks/contrast_lapel/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/torso/masks/gingham_check/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/torso/masks/tartan_check/secondary"
+          }
+        }
+      },
+      "chesterfield": {
+        "base": "createapparel:garment/coat/chesterfield/torso/base/chesterfield",
+        "designs": {
+          "contrast_lapel": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/torso/masks/contrast_lapel/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/torso/masks/gingham_check/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/torso/masks/tartan_check/secondary"
+          }
+        }
+      }
+    },
+    "designs": {}
+  }
 }

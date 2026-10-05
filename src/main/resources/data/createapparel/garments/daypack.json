@@ -7,7 +7,10 @@
   "model_variant": "default",
   "texture_variant": "daypack",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "contrast_pocket",
+    "contrast_strap"
   ],
   "styles": {}
 }

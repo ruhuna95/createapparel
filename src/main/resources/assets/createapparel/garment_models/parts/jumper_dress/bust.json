@@ -128,7 +128,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/jumper_dress/bust/base/default"
+        "base": "createapparel:garment/jumper_dress/bust/base/default",
+        "designs": {
+          "plain": {
+            "secondary_mask": "createapparel:garment/jumper_dress/bust/masks/plain/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jumper_dress/bust/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/jumper_dress/bust/masks/gingham_check/accent"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jumper_dress/bust/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/jumper_dress/bust/masks/tartan_check/accent"
+          }
+        }
       }
     },
     "designs": {

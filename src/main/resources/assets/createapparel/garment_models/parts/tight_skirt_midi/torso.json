@@ -235,7 +235,24 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/tight_skirt/torso/base/midi"
+        "base": "createapparel:garment/tight_skirt/torso/base/midi",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/tight_skirt_midi/torso/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/tight_skirt_midi/torso/masks/pinstripe/secondary"
+          },
+          "side_line": {
+            "secondary_mask": "createapparel:garment/tight_skirt_midi/torso/masks/side_line/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/tight_skirt_midi/torso/masks/tartan_check/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/tight_skirt_midi/torso/masks/waist_band/secondary"
+          }
+        }
       }
     },
     "designs": {}

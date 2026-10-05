@@ -17,6 +17,7 @@ public record PatternData(
 
     public PatternData {
         recipe = SkirtIdMigration.recipeId(recipe);
+        design = DesignIdMigration.designId(design);
         if (design.isBlank()) {
             throw new IllegalArgumentException("Pattern design must not be blank");
         }

@@ -94,10 +94,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/chesterfield/right_sleeve_classic/base/chesterfield"
+        "base": "createapparel:garment/coat/chesterfield/right_sleeve_classic/base/chesterfield",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/right_sleeve_classic/masks/gingham_check/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/right_sleeve_classic/masks/tartan_check/secondary"
+          }
+        }
       },
       "chesterfield": {
-        "base": "createapparel:garment/coat/chesterfield/right_sleeve_classic/base/chesterfield"
+        "base": "createapparel:garment/coat/chesterfield/right_sleeve_classic/base/chesterfield",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/right_sleeve_classic/masks/gingham_check/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/coat/chesterfield/right_sleeve_classic/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

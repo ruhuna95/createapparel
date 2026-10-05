@@ -261,10 +261,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/casquette/head/base/casquette"
+        "base": "createapparel:garment/casquette/head/base/casquette",
+        "designs": {
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/casquette/head/masks/tartan_check/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/casquette/head/masks/two_tone/secondary"
+          }
+        }
       },
       "casquette": {
-        "base": "createapparel:garment/casquette/head/base/casquette"
+        "base": "createapparel:garment/casquette/head/base/casquette",
+        "designs": {
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/casquette/head/masks/tartan_check/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/casquette/head/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

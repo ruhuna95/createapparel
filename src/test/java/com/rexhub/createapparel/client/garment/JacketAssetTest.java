@@ -236,7 +236,7 @@ class JacketAssetTest {
 
     @Test
     void lowerJacketKeepsClearanceFromPantsSides() throws IOException {
-        for (String pants : List.of("denim_pants", "slacks", "shorts")) {
+        for (String pants : List.of("denim_pants", "slacks")) {
             var leg = ClientGarmentAssetLoader.parsePart(ResourceLocation.parse("createapparel:" + pants + "/left_leg"),
                     json(ASSETS.resolve("garment_models/parts/" + pants + "/left_leg.json"))).elements().get(0);
             for (float y : new float[]{10.99F, 11.5F, 12.005F}) {
@@ -245,6 +245,18 @@ class JacketAssetTest {
                 assertTrue(4.1F - outer > 0.025F, pants + " y=" + y);
             }
         }
+    }
+
+    @Test
+    void widenedShortsKeepFrontClearanceButExtendPastLowerJacketSides() throws IOException {
+        var shorts = ClientGarmentAssetLoader.parsePart(ResourceLocation.parse("createapparel:shorts/left_leg"),
+                json(ASSETS.resolve("garment_models/parts/shorts/left_leg.json"))).elements().get(0);
+        float y = 10.99F;
+        float t = (y - shorts.from().y()) / (shorts.to().y() - shorts.from().y());
+        float outer = shorts.corners().get(1).x() + t * (shorts.corners().get(5).x() - shorts.corners().get(1).x());
+        assertEquals(4.1274F, outer, .0001F);
+        assertTrue(outer > 4.1F);
+        assertTrue(2.5F - Math.abs(shorts.from().z()) >= .25F);
     }
 
     private static BufferedImage image(String name, String variant) throws IOException {

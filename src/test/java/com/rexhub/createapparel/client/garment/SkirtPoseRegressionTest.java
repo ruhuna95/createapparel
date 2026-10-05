@@ -184,7 +184,7 @@ class SkirtPoseRegressionTest {
         for (String name : models()) {
             var model = DualEnvelopeDeformerTest.part(name);
             var definition = new GarmentDefinition(model.id(), GarmentSlot.BOTTOM, model.id(), "default", "default", Set.of("plain"), Map.of());
-            var textures = new ResolvedTextures(model.id(), Optional.empty(), Optional.empty(), Optional.empty(), 1, Optional.empty());
+            var textures = new ResolvedTextures(model.id(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), 1, Optional.empty());
             var garment = new ResolvedGarment(definition, null, List.of(new ResolvedPart("torso", model, textures)));
             var player = DualEnvelopeDeformerTest.player();
             player.crouching = true;

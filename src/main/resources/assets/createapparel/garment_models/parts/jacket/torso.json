@@ -231,13 +231,49 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/jacket/torso/base/suit"
+        "base": "createapparel:garment/jacket/torso/base/suit",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jacket/torso_suit/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/jacket/torso_suit/masks/pinstripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jacket/torso_suit/masks/tartan_check/secondary"
+          }
+        }
       },
       "suit": {
-        "base": "createapparel:garment/jacket/torso/base/suit"
+        "base": "createapparel:garment/jacket/torso/base/suit",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jacket/torso_suit/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/jacket/torso_suit/masks/pinstripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jacket/torso_suit/masks/tartan_check/secondary"
+          }
+        }
       },
       "blazer": {
-        "base": "createapparel:garment/jacket/torso/base/blazer"
+        "base": "createapparel:garment/jacket/torso/base/blazer",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/jacket/torso_blazer/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/jacket/torso_blazer/masks/pinstripe/secondary"
+          },
+          "piping": {
+            "secondary_mask": "createapparel:garment/jacket/torso_blazer/masks/piping/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/jacket/torso_blazer/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

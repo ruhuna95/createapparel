@@ -7,7 +7,8 @@
   "model_variant": "nolegs",
   "texture_variant": "panties",
   "designs": [
-    "plain"
+    "plain",
+    "contrast_bow"
   ],
   "styles": {}
 }

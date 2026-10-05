@@ -196,10 +196,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/hat/head/base/hat"
+        "base": "createapparel:garment/hat/head/base/hat",
+        "designs": {
+          "contrast_band": {
+            "secondary_mask": "createapparel:garment/hat/head/masks/contrast_band/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/hat/head/masks/two_tone/secondary"
+          }
+        }
       },
       "hat": {
-        "base": "createapparel:garment/hat/head/base/hat"
+        "base": "createapparel:garment/hat/head/base/hat",
+        "designs": {
+          "contrast_band": {
+            "secondary_mask": "createapparel:garment/hat/head/masks/contrast_band/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/hat/head/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

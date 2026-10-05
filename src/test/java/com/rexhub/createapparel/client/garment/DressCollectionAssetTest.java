@@ -98,7 +98,7 @@ class DressCollectionAssetTest {
                 var definition = definition(id);
                 assertEquals(GarmentSlot.TOP, definition.defaultSlot());
                 assertEquals(Set.of(GarmentSlot.TOP), definition.allowedSlots());
-                assertEquals(Set.of("plain"), definition.designs());
+                assertEquals(DesignVariationAssetTest.expectedDesigns(id), definition.designs());
                 assertTrue(definition.styles().isEmpty());
                 for (var arm : ArmProfile.values()) for (var chest : ChestProfile.values()) {
                     var garment = resolve(id, arm, chest);

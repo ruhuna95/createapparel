@@ -72,28 +72,107 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/t_shirt/bust/base/crew_neck"
+        "base": "createapparel:garment/t_shirt/bust/base/crew_neck",
+        "designs": {
+          "center_line": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_default/masks/center_line/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_default/masks/gingham_check/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_default/masks/hem_line/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_default/masks/polka_dot/secondary"
+          },
+          "side_panel": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_default/masks/side_panel/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_default/masks/tartan_check/secondary"
+          }
+        }
       },
       "crew_neck": {
-        "base": "createapparel:garment/t_shirt/bust/base/crew_neck"
+        "base": "createapparel:garment/t_shirt/bust/base/crew_neck",
+        "designs": {
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_crew_neck/masks/horizontal_stripe/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_crew_neck/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_crew_neck/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/t_shirt/bust_crew_neck/masks/logo_round/accent",
+            "overlay": "createapparel:garment/t_shirt/bust/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_crew_neck/masks/logo_word/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_crew_neck/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust/masks/stripe/secondary"
+          }
+        }
       },
       "u_neck": {
-        "base": "createapparel:garment/t_shirt/bust/base/u_neck"
+        "base": "createapparel:garment/t_shirt/bust/base/u_neck",
+        "designs": {
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_u_neck/masks/horizontal_stripe/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_u_neck/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_u_neck/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/t_shirt/bust_u_neck/masks/logo_round/accent",
+            "overlay": "createapparel:garment/t_shirt/bust_u_neck/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_u_neck/masks/logo_word/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_u_neck/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust/masks/stripe/secondary"
+          }
+        }
       },
       "v_neck": {
-        "base": "createapparel:garment/t_shirt/bust/base/v_neck"
+        "base": "createapparel:garment/t_shirt/bust/base/v_neck",
+        "designs": {
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_v_neck/masks/horizontal_stripe/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_v_neck/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_v_neck/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/t_shirt/bust_v_neck/masks/logo_round/accent",
+            "overlay": "createapparel:garment/t_shirt/bust_v_neck/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_v_neck/masks/logo_word/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust_v_neck/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/bust/masks/stripe/secondary"
+          }
+        }
       }
     },
     "designs": {
       "stripe": {
         "secondary_mask": "createapparel:garment/t_shirt/bust/masks/stripe/secondary"
-      },
-      "logo": {
-        "accent_mask": "createapparel:garment/t_shirt/bust/masks/logo/accent"
-      },
-      "stripe_logo": {
-        "secondary_mask": "createapparel:garment/t_shirt/bust/masks/stripe/secondary",
-        "accent_mask": "createapparel:garment/t_shirt/bust/masks/logo/accent"
       }
     }
   }

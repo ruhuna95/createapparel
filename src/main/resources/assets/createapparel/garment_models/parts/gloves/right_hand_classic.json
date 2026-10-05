@@ -71,10 +71,12 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/gloves/hand_classic/base/gloves"
+        "base": "createapparel:garment/gloves/hand_classic/base/gloves",
+        "designs": {}
       },
       "gloves": {
-        "base": "createapparel:garment/gloves/hand_classic/base/gloves"
+        "base": "createapparel:garment/gloves/hand_classic/base/gloves",
+        "designs": {}
       }
     },
     "designs": {}

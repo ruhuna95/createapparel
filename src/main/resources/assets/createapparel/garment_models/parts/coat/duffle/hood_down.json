@@ -71,10 +71,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/duffle/hood_down/base/duffle"
+        "base": "createapparel:garment/coat/duffle/hood_down/base/duffle",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/duffle/hood_down/masks/two_tone/secondary"
+          }
+        }
       },
       "duffle": {
-        "base": "createapparel:garment/coat/duffle/hood_down/base/duffle"
+        "base": "createapparel:garment/coat/duffle/hood_down/base/duffle",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/duffle/hood_down/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

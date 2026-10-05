@@ -71,14 +71,43 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/t_shirt/short_sleeve_classic/base/default"
+        "base": "createapparel:garment/t_shirt/short_sleeve_classic/base/default",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/color_block/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/gingham_check/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/hem_line/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/horizontal_stripe/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/polka_dot/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/ringer/secondary"
+          },
+          "side_panel": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/side_panel/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_classic/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/tartan_check/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_short_sleeve_classic/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {
       "stripe": {
-        "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_classic/masks/stripe/secondary"
-      },
-      "stripe_logo": {
         "secondary_mask": "createapparel:garment/t_shirt/short_sleeve_classic/masks/stripe/secondary"
       }
     }

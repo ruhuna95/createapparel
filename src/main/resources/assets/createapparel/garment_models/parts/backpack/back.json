@@ -407,11 +407,49 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/backpack/back/base/backpack",
-        "overlay": "createapparel:garment/backpack/back/overlay/backpack"
+        "overlay": "createapparel:garment/backpack/back/overlay/backpack",
+        "designs": {
+          "contrast_pocket": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/contrast_pocket/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/backpack/back/masks/logo_round/accent",
+            "overlay": "createapparel:garment/backpack/back/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_word/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/two_tone/secondary"
+          }
+        }
       },
       "backpack": {
         "base": "createapparel:garment/backpack/back/base/backpack",
-        "overlay": "createapparel:garment/backpack/back/overlay/backpack"
+        "overlay": "createapparel:garment/backpack/back/overlay/backpack",
+        "designs": {
+          "contrast_pocket": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/contrast_pocket/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/backpack/back/masks/logo_round/accent",
+            "overlay": "createapparel:garment/backpack/back/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_word/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -26,7 +26,7 @@ class ShortsAssetTest {
         var definition = json(Path.of("src/main/resources/data/createapparel/garments/shorts.json"));
         assertEquals("bottom", definition.get("default_slot").getAsString());
         assertEquals("[\"bottom\"]", definition.get("allowed_slots").toString());
-        assertEquals("[\"plain\"]", definition.get("designs").toString());
+        DesignVariationAssetTest.assertDefinitionDesigns(definition, "shorts");
         assertEquals(0, definition.getAsJsonObject("styles").size());
         var templateId = ResourceLocation.parse(definition.get("model_template").getAsString());
         var template = json(ASSETS.resolve("garment_models/templates/" + templateId.getPath() + ".json"))
@@ -83,7 +83,7 @@ class ShortsAssetTest {
             float direction = leftLeg ? 1 : -1;
             for (int i = 0; i < 4; i++) {
                 boolean upper = i == 1 || i == 2;
-                assertEquals(direction * (upper ? 4.005 : 4.25), bodyVertices.get(i).x(), 0.00001);
+                assertEquals(direction * (upper ? 4.085836246 : 4.25), bodyVertices.get(i).x(), 0.00001);
                 assertEquals(direction * 0.25, hemVertices.get(i).x() - bodyVertices.get(i).x(), 0.00001);
                 assertEquals(bodyVertices.get(i).y(), hemVertices.get(i).y());
             }
@@ -111,6 +111,34 @@ class ShortsAssetTest {
                         assertEquals(pixel & 255, pixel >> 16 & 255);
                         assertEquals(255, base.getRGB(x, y - 4) >>> 24);
                     }
+                }
+            }
+        }
+    }
+
+    @Test
+    void torsoAndLegsFollowOneSlopeFromWaistToExistingHem() throws IOException {
+        for (String name : List.of("torso", "left_leg", "right_leg")) {
+            var id = ResourceLocation.parse("createapparel:shorts/" + name);
+            var part = ClientGarmentAssetLoader.parsePart(id,
+                    json(ASSETS.resolve("garment_models/parts/" + id.getPath() + ".json")));
+            var body = part.elements().get(0);
+            for (var face : List.of(FRONT, BACK)) {
+                for (var vertex : GarmentElementGeometry.faceVertices(body, face)) {
+                    double fraction = (14.004 - vertex.y()) / (14.004 - 7.995);
+                    if (Math.abs(vertex.x()) > 4) {
+                        assertEquals(4.004 + 0.246 * fraction, Math.abs(vertex.x()), 0.00001);
+                    }
+                    assertEquals(2.249 + 0.001 * fraction, Math.abs(vertex.z()), 0.00001);
+                }
+            }
+            var junction = name.equals("torso") ? BOTTOM : TOP;
+            assertTrue(body.faces().containsKey(junction));
+            for (var vertex : GarmentElementGeometry.faceVertices(body, junction)) {
+                double fraction = (14.004 - vertex.y()) / (14.004 - 7.995);
+                assertEquals(2.249 + 0.001 * fraction, Math.abs(vertex.z()), 0.00001);
+                if (Math.abs(vertex.x()) > 4) {
+                    assertEquals(4.004 + 0.246 * fraction, Math.abs(vertex.x()), 0.00001);
                 }
             }
         }

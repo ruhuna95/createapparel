@@ -7,7 +7,8 @@
   "model_variant": "default",
   "texture_variant": "slippers",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone"
   ],
   "styles": {}
 }

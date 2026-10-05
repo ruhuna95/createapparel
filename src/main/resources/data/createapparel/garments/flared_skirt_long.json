@@ -7,7 +7,12 @@
   "model_variant": "long",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "polka_dot",
+    "tartan_check",
+    "gingham_check",
+    "horizontal_stripe",
+    "hem_line"
   ],
   "styles": {}
 }

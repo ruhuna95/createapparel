@@ -126,13 +126,28 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/low_shoes/left_leg/base/pumps"
+        "base": "createapparel:garment/low_shoes/left_leg/base/pumps",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/low_shoes/left_leg_pumps/masks/two_tone/secondary"
+          }
+        }
       },
       "pumps": {
-        "base": "createapparel:garment/low_shoes/left_leg/base/pumps"
+        "base": "createapparel:garment/low_shoes/left_leg/base/pumps",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/low_shoes/left_leg_pumps/masks/two_tone/secondary"
+          }
+        }
       },
       "slippers": {
-        "base": "createapparel:garment/low_shoes/left_leg/base/slippers"
+        "base": "createapparel:garment/low_shoes/left_leg/base/slippers",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/low_shoes/left_leg_slippers/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -118,7 +118,12 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/hoodie/right_sleeve_slim/base/default"
+        "base": "createapparel:garment/hoodie/right_sleeve_slim/base/default",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/hoodie/right_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

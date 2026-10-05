@@ -7,7 +7,9 @@
   "model_variant": "withlegs",
   "texture_variant": "boxer_briefs",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "waist_band"
   ],
   "styles": {}
 }

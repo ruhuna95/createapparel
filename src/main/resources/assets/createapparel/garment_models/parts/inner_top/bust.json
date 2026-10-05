@@ -88,13 +88,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/inner_top/bust/base/undershirt"
+        "base": "createapparel:garment/inner_top/bust/base/undershirt",
+        "designs": {}
       },
       "undershirt": {
-        "base": "createapparel:garment/inner_top/bust/base/undershirt"
+        "base": "createapparel:garment/inner_top/bust/base/undershirt",
+        "designs": {}
       },
       "bra": {
-        "base": "createapparel:garment/inner_top/bust/base/bra"
+        "base": "createapparel:garment/inner_top/bust/base/bra",
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/inner_top/bust_bra/masks/two_tone/secondary"
+          }
+        }
       }
     }
   }

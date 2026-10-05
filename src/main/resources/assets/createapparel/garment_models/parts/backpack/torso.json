@@ -321,10 +321,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/backpack/torso/base/backpack"
+        "base": "createapparel:garment/backpack/torso/base/backpack",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/backpack/torso/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/backpack/torso/masks/two_tone/secondary"
+          }
+        }
       },
       "backpack": {
-        "base": "createapparel:garment/backpack/torso/base/backpack"
+        "base": "createapparel:garment/backpack/torso/base/backpack",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/backpack/torso/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/backpack/torso/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -13,15 +13,16 @@
     "elements": [
       {
         "name": "torso",
+        "top_inset": [0.082204693, 0.000334165, 0.082204693, 0.000334165],
         "from": [
-          -4.004,
+          -4.086204693,
           11.996,
-          -2.249
+          -2.249334165
         ],
         "to": [
-          4.004,
+          4.086204693,
           14.004,
-          2.249
+          2.249334165
         ],
         "faces": {
           "bottom": {
@@ -71,7 +72,15 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/shorts/torso/base/default"
+        "base": "createapparel:garment/shorts/torso/base/default",
+        "designs": {
+          "side_line": {
+            "secondary_mask": "createapparel:garment/shorts/torso/masks/side_line/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/shorts/torso/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

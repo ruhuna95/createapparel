@@ -7,7 +7,9 @@
   "model_variant": "default",
   "texture_variant": "knee_high_boots",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "contrast_sole"
   ],
   "styles": {}
 }

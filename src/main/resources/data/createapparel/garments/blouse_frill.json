@@ -4,7 +4,10 @@
   "model_variant": "classic",
   "texture_variant": "frill",
   "designs": [
-    "plain"
+    "plain",
+    "stripe",
+    "polka_dot",
+    "contrast_frill"
   ],
   "styles": {
     "tuck": [

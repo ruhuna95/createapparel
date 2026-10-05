@@ -400,7 +400,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                             .filter(java.util.Objects::nonNull)
                             .noneMatch(part -> part.designsFor(definition.textureVariant()).containsKey(design))) {
                         throw new IllegalStateException(
-                                "Garment design has no reachable mask: " + definition.id() + " / " + design
+                                "Garment design has no reachable texture: " + definition.id() + " / " + design
                         );
                     }
                 }
@@ -568,8 +568,8 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
                     ? materialOverrides.getOrDefault(fabric.material(), variant.base()) : variant.base();
             DesignMasks masks = designsFor(definition.textureVariant()).getOrDefault(data.design(), DesignMasks.NONE);
             return new ResolvedTextures(
-                    base, masks.secondary(), masks.accent(), variant.overlay(),
-                    variant.brightness(), variant.brightnessMask()
+                    base, masks.secondary(), masks.accent(), masks.commonOverlay().or(() -> variant.overlay()), masks.overlay(),
+                    variant.brightness(), masks.brightnessMask().or(() -> variant.brightnessMask())
             );
         }
 
@@ -627,8 +627,12 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     ) {
     }
 
-    public record DesignMasks(Optional<ResourceLocation> secondary, Optional<ResourceLocation> accent) {
-        private static final DesignMasks NONE = new DesignMasks(Optional.empty(), Optional.empty());
+    public record DesignMasks(
+            Optional<ResourceLocation> secondary, Optional<ResourceLocation> accent, Optional<ResourceLocation> overlay,
+            Optional<ResourceLocation> commonOverlay, Optional<ResourceLocation> brightnessMask
+    ) {
+        private static final DesignMasks NONE = new DesignMasks(
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public record ColorChannels(boolean secondary, boolean accent) {
@@ -639,6 +643,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             Optional<ResourceLocation> secondary,
             Optional<ResourceLocation> accent,
             Optional<ResourceLocation> overlay,
+            Optional<ResourceLocation> designOverlay,
             float brightness,
             Optional<ResourceLocation> brightnessMask
     ) {

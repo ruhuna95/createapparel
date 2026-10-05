@@ -255,6 +255,14 @@
           "plain": {
             "secondary_mask": "createapparel:garment/shoes/left_leg/masks/plain/secondary",
             "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
+          },
+          "side_line": {
+            "secondary_mask": "createapparel:garment/shoes/left_leg_sneakers/masks/side_line/secondary",
+            "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/shoes/left_leg_sneakers/masks/two_tone/secondary",
+            "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
           }
         }
       },
@@ -263,6 +271,14 @@
         "designs": {
           "plain": {
             "secondary_mask": "createapparel:garment/shoes/left_leg/masks/plain/secondary",
+            "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
+          },
+          "side_line": {
+            "secondary_mask": "createapparel:garment/shoes/left_leg_sneakers/masks/side_line/secondary",
+            "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/shoes/left_leg_sneakers/masks/two_tone/secondary",
             "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
           }
         }
@@ -273,6 +289,14 @@
           "plain": {
             "secondary_mask": "createapparel:garment/shoes/left_leg/masks/plain/secondary",
             "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
+          },
+          "side_line": {
+            "secondary_mask": "createapparel:garment/shoes/left_leg_canvas_sneakers/masks/side_line/secondary",
+            "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/shoes/left_leg_canvas_sneakers/masks/two_tone/secondary",
+            "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
           }
         }
       },
@@ -281,12 +305,20 @@
         "designs": {
           "plain": {
             "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent"
+          },
+          "two_tone": {
+            "accent_mask": "createapparel:garment/shoes/left_leg/masks/plain/accent",
+            "secondary_mask": "createapparel:garment/shoes/left_leg_dress_shoes/masks/two_tone/secondary"
           }
         }
       },
       "loafers": {
         "base": "createapparel:garment/shoes/left_leg/base/loafers",
-        "designs": {}
+        "designs": {
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/shoes/left_leg_loafers/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

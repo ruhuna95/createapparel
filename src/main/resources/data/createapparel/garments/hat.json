@@ -7,7 +7,9 @@
   "model_variant": "default",
   "texture_variant": "hat",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "contrast_band"
   ],
   "styles": {}
 }

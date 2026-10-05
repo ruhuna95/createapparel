@@ -7,7 +7,9 @@
   "model_variant": "midi_longsleeves",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "tartan_check",
+    "gingham_check"
   ],
   "styles": {}
 }

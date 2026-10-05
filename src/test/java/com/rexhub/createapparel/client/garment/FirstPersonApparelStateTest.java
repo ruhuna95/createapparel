@@ -31,7 +31,7 @@ class FirstPersonApparelStateTest {
     private static ResolvedPart sleeve(String side, String profile) throws Exception {
         var part = model("garment_models/parts/t_shirt/" + side + "_short_sleeve_" + profile);
         return new ResolvedPart(side + "_sleeve", part, new ResolvedTextures(part.id(), Optional.empty(),
-                Optional.empty(), Optional.empty(), 1, Optional.empty()));
+                Optional.empty(), Optional.empty(), Optional.empty(), 1, Optional.empty()));
     }
 
     private static ResolvedSupportPart body(String side, String profile) throws Exception {

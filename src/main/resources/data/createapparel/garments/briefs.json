@@ -7,7 +7,9 @@
   "model_variant": "briefs",
   "texture_variant": "briefs",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "waist_band"
   ],
   "styles": {}
 }

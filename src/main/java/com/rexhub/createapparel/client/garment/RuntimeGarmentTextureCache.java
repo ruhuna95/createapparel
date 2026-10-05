@@ -49,6 +49,7 @@ public final class RuntimeGarmentTextureCache {
                 textures.secondary(),
                 textures.accent(),
                 textures.overlay(),
+                textures.designOverlay(),
                 textures.brightness(),
                 textures.brightnessMask(),
                 data.primaryTintRgb(),
@@ -87,6 +88,7 @@ public final class RuntimeGarmentTextureCache {
              NativeImage secondary = readOptional(manager, textures.secondary());
              NativeImage accent = readOptional(manager, textures.accent());
              NativeImage overlay = readOptional(manager, textures.overlay());
+             NativeImage designOverlay = readOptional(manager, textures.designOverlay());
              NativeImage brightnessMask = readOptional(manager, textures.brightnessMask())) {
             NativeImage output = new NativeImage(part.textureWidth(), part.textureHeight(), false);
             int primaryTint = data.primaryTintRgb();
@@ -117,10 +119,8 @@ public final class RuntimeGarmentTextureCache {
                                         : maskRed(brightnessMask, x, y)
                         );
                     }
-                    output.setPixelRGBA(x, y, GarmentTexturePixelOps.applyOverlay(
-                            composedPixel,
-                            overlayPixel(overlay, x, y)
-                    ));
+                    output.setPixelRGBA(x, y, GarmentTexturePixelOps.applyOverlays(
+                            composedPixel, overlayPixel(designOverlay, x, y), overlayPixel(overlay, x, y)));
                 }
             }
 
@@ -167,6 +167,7 @@ public final class RuntimeGarmentTextureCache {
             Optional<ResourceLocation> secondary,
             Optional<ResourceLocation> accent,
             Optional<ResourceLocation> overlay,
+            Optional<ResourceLocation> designOverlay,
             float brightness,
             Optional<ResourceLocation> brightnessMask,
             int primaryTint,

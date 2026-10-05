@@ -254,10 +254,26 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/coat/trench/left_sleeve_slim/base/trench"
+        "base": "createapparel:garment/coat/trench/left_sleeve_slim/base/trench",
+        "designs": {
+          "contrast_belt": {
+            "secondary_mask": "createapparel:garment/coat/trench/left_sleeve_slim/masks/contrast_belt/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/trench/left_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       },
       "trench": {
-        "base": "createapparel:garment/coat/trench/left_sleeve_slim/base/trench"
+        "base": "createapparel:garment/coat/trench/left_sleeve_slim/base/trench",
+        "designs": {
+          "contrast_belt": {
+            "secondary_mask": "createapparel:garment/coat/trench/left_sleeve_slim/masks/contrast_belt/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/coat/trench/left_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

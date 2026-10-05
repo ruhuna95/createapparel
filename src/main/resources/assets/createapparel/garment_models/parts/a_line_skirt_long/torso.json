@@ -255,7 +255,24 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/a_line_skirt/torso/base/long"
+        "base": "createapparel:garment/a_line_skirt/torso/base/long",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/a_line_skirt_long/torso/masks/gingham_check/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/a_line_skirt_long/torso/masks/hem_line/secondary"
+          },
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/a_line_skirt_long/torso/masks/polka_dot/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/a_line_skirt_long/torso/masks/tartan_check/secondary"
+          },
+          "waist_band": {
+            "secondary_mask": "createapparel:garment/a_line_skirt_long/torso/masks/waist_band/secondary"
+          }
+        }
       }
     },
     "designs": {}

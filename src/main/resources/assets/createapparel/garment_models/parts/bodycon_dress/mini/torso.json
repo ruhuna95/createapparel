@@ -259,7 +259,27 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/bodycon_dress/mini/torso/base/default"
+        "base": "createapparel:garment/bodycon_dress/mini/torso/base/default",
+        "designs": {
+          "center_line": {
+            "secondary_mask": "createapparel:garment/bodycon_dress/mini/torso/masks/center_line/secondary"
+          },
+          "color_block": {
+            "secondary_mask": "createapparel:garment/bodycon_dress/mini/torso/masks/color_block/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/bodycon_dress/mini/torso/masks/gingham_check/secondary"
+          },
+          "side_panel": {
+            "secondary_mask": "createapparel:garment/bodycon_dress/mini/torso/masks/side_panel/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/bodycon_dress/mini/torso/masks/tartan_check/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/bodycon_dress/mini/torso/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -104,7 +104,24 @@
       "default": {
         "base": "createapparel:garment/shirt/tucked_torso_opened/base/default",
         "overlay": "createapparel:garment/shirt/tucked_torso_opened/overlay/default",
-        "brightness_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/brightness/default",
+        "designs": {
+          "contrast_collar": {
+            "secondary_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/contrast_collar/secondary"
+          },
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/gingham_check/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/tartan_check/secondary"
+          },
+          "two_tone_lr": {
+            "secondary_mask": "createapparel:garment/shirt/tucked_torso_opened/masks/two_tone_lr/secondary"
+          }
+        }
       }
     },
     "designs": {

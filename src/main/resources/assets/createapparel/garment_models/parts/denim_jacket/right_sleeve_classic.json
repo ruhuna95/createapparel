@@ -42,7 +42,16 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/denim_jacket/right_sleeve_classic/base/default",
-        "overlay": "createapparel:garment/denim_jacket/right_sleeve_classic/overlay/default"
+        "overlay": "createapparel:garment/denim_jacket/right_sleeve_classic/overlay/default",
+        "designs": {
+          "contrast_stitch": {
+            "secondary_mask": "createapparel:garment/denim_jacket/right_sleeve_classic/masks/contrast_stitch/secondary",
+            "common_overlay": "createapparel:garment/denim_jacket/right_sleeve_classic/overlay/contrast_stitch_common"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/denim_jacket/right_sleeve_classic/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {}

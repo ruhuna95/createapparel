@@ -7,7 +7,12 @@
   "model_variant": "mini",
   "texture_variant": "default",
   "designs": [
-    "plain"
+    "plain",
+    "tartan_check",
+    "gingham_check",
+    "polka_dot",
+    "waist_band",
+    "hem_line"
   ],
   "styles": {}
 }

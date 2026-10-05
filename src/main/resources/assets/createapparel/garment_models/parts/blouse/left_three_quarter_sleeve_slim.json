@@ -119,19 +119,51 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
-        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_bow_tie/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_bow_tie/masks/stripe/secondary"
+          }
+        }
       },
       "round": {
         "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
-        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_round/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_round/masks/stripe/secondary"
+          }
+        }
       },
       "frill": {
         "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
-        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_frill/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_frill/masks/stripe/secondary"
+          }
+        }
       },
       "bow_tie": {
         "base": "createapparel:garment/blouse/three_quarter_sleeve_slim/base/default",
-        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default"
+        "brightness_mask": "createapparel:garment/blouse/three_quarter_sleeve_slim/masks/brightness/default",
+        "designs": {
+          "polka_dot": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_bow_tie/masks/polka_dot/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/blouse/left_three_quarter_sleeve_slim_bow_tie/masks/stripe/secondary"
+          }
+        }
       }
     }
   }

@@ -443,7 +443,21 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/pleated_skirt/torso/base/long"
+        "base": "createapparel:garment/pleated_skirt/torso/base/long",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/pleated_skirt_long/torso/masks/gingham_check/secondary"
+          },
+          "hem_line": {
+            "secondary_mask": "createapparel:garment/pleated_skirt_long/torso/masks/hem_line/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/pleated_skirt_long/torso/masks/stripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/pleated_skirt_long/torso/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

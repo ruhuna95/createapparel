@@ -18,6 +18,7 @@ public record GarmentData(
     public static final String TAG_NAME = "GarmentData";
 
     public GarmentData {
+        design = DesignIdMigration.designId(design);
         secondaryColor = secondaryColor == null ? Optional.empty() : secondaryColor;
         accentColor = accentColor == null ? Optional.empty() : accentColor;
     }
@@ -42,7 +43,7 @@ public record GarmentData(
         }
         CompoundTag tag = root.getCompound(TAG_NAME);
         FabricMaterial material = parseMaterial(tag.getString("material"));
-        String design = tag.getString("design");
+        String design = DesignIdMigration.designId(tag.getString("design"));
         if (!definition.designs().contains(design)) {
             throw new IllegalArgumentException("Garment design is not allowed: " + definition.id() + " / " + design);
         }

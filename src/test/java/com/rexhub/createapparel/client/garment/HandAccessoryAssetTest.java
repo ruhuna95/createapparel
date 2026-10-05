@@ -60,7 +60,7 @@ class HandAccessoryAssetTest {
                 String semantic = side + "_hand_" + profile;
                 var model = part("watch", semantic);
                 var resolved = new ResolvedPart(semantic, model, new ResolvedTextures(model.id(),
-                        Optional.empty(), Optional.empty(), Optional.empty(), 1, Optional.empty()));
+                        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), 1, Optional.empty()));
                 var state = new FirstPersonApparelState(slot -> slot == GarmentSlot.HANDS
                         ? Optional.of(new ResolvedGarment(null, null, List.of(resolved))) : Optional.empty(), Optional::empty);
                 var arm = side.equals("left") ? HumanoidArm.LEFT : HumanoidArm.RIGHT;

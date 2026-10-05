@@ -182,7 +182,7 @@ class DualEnvelopeDeformerTest {
     void frameSharesPoseAndPreparedGeometryAndReloadReplacesOnlyStaticCache() throws Exception {
         var skirt=part("a_line_skirt/torso");
         var definition=new GarmentDefinition(skirt.id(),GarmentSlot.BOTTOM,skirt.id(),"default","default",Set.of("plain"),Map.of());
-        var texture=new ResolvedTextures(skirt.id(),Optional.empty(),Optional.empty(),Optional.empty(),1,Optional.empty());
+        var texture=new ResolvedTextures(skirt.id(),Optional.empty(),Optional.empty(),Optional.empty(),Optional.empty(),1,Optional.empty());
         var garment=new ResolvedGarment(definition,null,List.of(new ResolvedPart("torso",skirt,texture)));
         Map<GarmentSlot,Integer> calls=new EnumMap<>(GarmentSlot.class);
         var player=player(); player.leftLeg.xRot=-1.3F;

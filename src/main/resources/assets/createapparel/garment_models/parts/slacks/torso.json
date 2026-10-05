@@ -71,7 +71,18 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/slacks/torso/base/default"
+        "base": "createapparel:garment/slacks/torso/base/default",
+        "designs": {
+          "gingham_check": {
+            "secondary_mask": "createapparel:garment/slacks/torso/masks/gingham_check/secondary"
+          },
+          "pinstripe": {
+            "secondary_mask": "createapparel:garment/slacks/torso/masks/pinstripe/secondary"
+          },
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/slacks/torso/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

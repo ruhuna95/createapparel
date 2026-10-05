@@ -42,6 +42,10 @@ final class GarmentTexturePixelOps {
         return result;
     }
 
+    static int applyOverlays(int composedPixel, OptionalInt designOverlay, OptionalInt commonOverlay) {
+        return applyOverlay(applyOverlay(composedPixel, designOverlay), commonOverlay);
+    }
+
     static int applyOverlay(int composedPixel, OptionalInt overlayPixel) {
         if (overlayPixel.isEmpty()) {
             return composedPixel;

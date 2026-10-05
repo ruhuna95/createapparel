@@ -7,7 +7,9 @@
   "model_variant": "default",
   "texture_variant": "canvas_sneakers",
   "designs": [
-    "plain"
+    "plain",
+    "two_tone",
+    "side_line"
   ],
   "styles": {}
 }

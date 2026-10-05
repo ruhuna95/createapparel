@@ -71,14 +71,28 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/t_shirt/long_sleeve_slim/base/default"
+        "base": "createapparel:garment/t_shirt/long_sleeve_slim/base/default",
+        "designs": {
+          "color_block": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_long_sleeve_slim/masks/color_block/secondary"
+          },
+          "horizontal_stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_long_sleeve_slim/masks/horizontal_stripe/secondary"
+          },
+          "ringer": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_long_sleeve_slim/masks/ringer/secondary"
+          },
+          "stripe": {
+            "secondary_mask": "createapparel:garment/t_shirt/long_sleeve_slim/masks/stripe/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/t_shirt/left_long_sleeve_slim/masks/two_tone/secondary"
+          }
+        }
       }
     },
     "designs": {
       "stripe": {
-        "secondary_mask": "createapparel:garment/t_shirt/long_sleeve_slim/masks/stripe/secondary"
-      },
-      "stripe_logo": {
         "secondary_mask": "createapparel:garment/t_shirt/long_sleeve_slim/masks/stripe/secondary"
       }
     }

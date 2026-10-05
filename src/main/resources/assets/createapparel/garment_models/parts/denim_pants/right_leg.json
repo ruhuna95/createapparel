@@ -72,7 +72,16 @@
     "variants": {
       "default": {
         "base": "createapparel:garment/denim_pants/right_leg/base/default",
-        "overlay": "createapparel:garment/denim_pants/right_leg/overlay/default"
+        "overlay": "createapparel:garment/denim_pants/right_leg/overlay/default",
+        "designs": {
+          "contrast_stitch": {
+            "secondary_mask": "createapparel:garment/denim_pants/right_leg/masks/contrast_stitch/secondary",
+            "common_overlay": "createapparel:garment/denim_pants/right_leg/overlay/contrast_stitch_common"
+          },
+          "patched": {
+            "secondary_mask": "createapparel:garment/denim_pants/right_leg/masks/patched/secondary"
+          }
+        }
       }
     },
     "designs": {}

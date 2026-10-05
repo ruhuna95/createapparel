@@ -118,10 +118,20 @@
   "textures": {
     "variants": {
       "default": {
-        "base": "createapparel:garment/beret/head/base/beret"
+        "base": "createapparel:garment/beret/head/base/beret",
+        "designs": {
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/beret/head/masks/tartan_check/secondary"
+          }
+        }
       },
       "beret": {
-        "base": "createapparel:garment/beret/head/base/beret"
+        "base": "createapparel:garment/beret/head/base/beret",
+        "designs": {
+          "tartan_check": {
+            "secondary_mask": "createapparel:garment/beret/head/masks/tartan_check/secondary"
+          }
+        }
       }
     },
     "designs": {}

@@ -422,17 +422,25 @@
                                       }
                                   ]
                  },
-    "textures":  {
-                     "variants":  {
-                                      "default":  {
-                                                      "base":  "createapparel:garment/coat/duffle/torso/base/duffle"
-                                                  },
-                                      "duffle":  {
-                                                     "base":  "createapparel:garment/coat/duffle/torso/base/duffle"
-                                                 }
-                                  },
-                     "designs":  {
-
-                                 }
-                 }
+    "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/coat/duffle/torso/base/duffle",
+        "designs": {
+          "contrast_toggle": {
+            "secondary_mask": "createapparel:garment/coat/duffle/torso/masks/contrast_toggle/secondary"
+          }
+        }
+      },
+      "duffle": {
+        "base": "createapparel:garment/coat/duffle/torso/base/duffle",
+        "designs": {
+          "contrast_toggle": {
+            "secondary_mask": "createapparel:garment/coat/duffle/torso/masks/contrast_toggle/secondary"
+          }
+        }
+      }
+    },
+    "designs": {}
+  }
 }

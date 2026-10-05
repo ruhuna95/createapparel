@@ -15,6 +15,22 @@ class GarmentTexturePixelOpsTest {
     private static final int ACCENT = 0xFF0000;
 
     @Test
+    void designOverlayBlendsAfterBrightnessAndCommonDetailsAreLast() {
+        int tint = GarmentTexturePixelOps.composeTint(0x102030, OptionalInt.of(0x304050), OptionalInt.empty(), 255, 0);
+        int base = 0xFF000000 | tint;
+        int brightened = GarmentTexturePixelOps.applyBrightness(base, 2, 100);
+        assertEquals(0xFF6080A0, brightened);
+        int print = GarmentTexturePixelOps.applyOverlays(brightened, OptionalInt.of(0x80E0C080), OptionalInt.empty());
+        assertEquals(0xFFA0A090, print);
+        assertEquals(0xFF132435, GarmentTexturePixelOps.applyOverlays(brightened,
+                OptionalInt.of(0xFFE0C080), OptionalInt.of(0xFF132435)));
+        for (int alpha = 0; alpha <= 255; alpha++) {
+            assertEquals(255, GarmentTexturePixelOps.applyOverlays(brightened,
+                    OptionalInt.of(alpha << 24 | 0x10E070), OptionalInt.empty()) >>> 24);
+        }
+    }
+
+    @Test
     void zeroMasksUsePrimary() {
         assertEquals(PRIMARY, compose(0, 0));
     }
