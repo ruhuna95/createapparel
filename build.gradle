@@ -76,6 +76,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            args '--mixin', 'createapparel.mixins.json'
 
             mods {
                 "${mod_id}" {
@@ -153,6 +154,7 @@ dependencies {
     runtimeOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
     compileOnly annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}")
     implementation "io.github.llamalad7:mixinextras-forge:${mixin_extras_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 
@@ -202,7 +204,8 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'MixinConfigs'           : 'createapparel.mixins.json'
         ])
     }
 
@@ -231,6 +234,24 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+def mannequinRefmapDirectory = layout.buildDirectory.dir('generated/mixin')
+sourceSets.main.resources.srcDir(mannequinRefmapDirectory)
+
+tasks.named('compileJava', JavaCompile).configure {
+    dependsOn 'createMcpToSrg'
+    def refmap = mannequinRefmapDirectory.get().file('createapparel.refmap.json').asFile
+    outputs.file(refmap)
+    options.compilerArgs += [
+            '-AmappingTypes=tsrg',
+            "-AreobfTsrgFile=${layout.buildDirectory.file('createMcpToSrg/output.tsrg').get().asFile}",
+            "-AoutRefMapFile=${refmap}"
+    ]
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    dependsOn 'compileJava'
 }
 
 tasks.named('test', Test).configure {

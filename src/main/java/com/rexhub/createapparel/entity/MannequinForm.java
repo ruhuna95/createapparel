@@ -64,7 +64,7 @@ public enum MannequinForm {
                 -horizontal.z * 16 / BODY_SCALE);
     }
 
-    private static Vec3 rotate(Vec3 point, float rotation) {
+    static Vec3 rotate(Vec3 point, float rotation) {
         double radians = Math.toRadians(rotation);
         double cosine = Math.cos(radians);
         double sine = Math.sin(radians);

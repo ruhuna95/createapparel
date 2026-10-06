@@ -13,20 +13,34 @@ import java.util.Optional;
 
 public final class MannequinInteraction {
     public enum BodyPart { HEAD, LEFT_ARM, RIGHT_ARM, BODY, LEFT_LEG, RIGHT_LEG }
+    public record HitPart(Optional<BodyPart> bodyPart, Vec3 localPoint, Vec3 entityPoint) { }
 
     private MannequinInteraction() { }
 
     public static Optional<GarmentSlot> clickedSlot(MannequinVariant variant, PosePreset pose, Vec3 rayStart, Vec3 rayEnd,
                                                   float yaw, float bodyRotation, ApparelLoadout loadout) {
+        return hitPart(variant, pose, rayStart, rayEnd, yaw, bodyRotation)
+                .flatMap(hit -> clickedSlot(variant, hit, loadout));
+    }
+
+    public static Optional<GarmentSlot> clickedSlot(MannequinVariant variant, HitPart hit, ApparelLoadout loadout) {
+        return hit.bodyPart().flatMap(part -> candidates(part,
+                new Vector3f((float) hit.localPoint().x, (float) hit.localPoint().y, (float) hit.localPoint().z),
+                variant.form()).stream().filter(variant.form().slots()::contains)
+                .filter(slot -> !loadout.getStack(slot).isEmpty()).findFirst());
+    }
+
+    public static Optional<HitPart> hitPart(MannequinVariant variant, PosePreset pose, Vec3 rayStart, Vec3 rayEnd,
+                                           float yaw, float bodyRotation) {
         if (rayStart.distanceToSqr(rayEnd) < 1.0E-12) return Optional.empty();
         Vector3f start = modelPoint(variant, rayStart, yaw + bodyRotation);
         Vector3f end = modelPoint(variant, rayEnd, yaw + bodyRotation);
-        BodyPart nearest = null;
-        Vector3f nearestLocal = new Vector3f();
+        HitPart nearest = null;
         double distance = Double.POSITIVE_INFINITY;
         for (BodyPart part : BodyPart.values()) {
             if (!exists(part, variant.form())) continue;
-            Matrix4f inverse = partTransform(variant, pose, part).invert();
+            Matrix4f transform = partTransform(variant, pose, part);
+            Matrix4f inverse = new Matrix4f(transform).invert();
             Vector3f localStart = inverse.transformPosition(new Vector3f(start));
             Vector3f localEnd = inverse.transformPosition(new Vector3f(end));
             Vec3 from = new Vec3(localStart.x, localStart.y, localStart.z);
@@ -41,16 +55,41 @@ public final class MannequinInteraction {
             }
             if (intersection.isEmpty()) continue;
             Vec3 local = intersection.get();
-            double candidateDistance = from.distanceToSqr(local);
+            Vector3f modelHit = transform.transformPosition(new Vector3f((float) local.x, (float) local.y, (float) local.z));
+            Vec3 entityHit = variant.form().modelToEntity(new Vec3(modelHit.x, modelHit.y, modelHit.z), yaw + bodyRotation);
+            double candidateDistance = rayStart.distanceToSqr(entityHit);
             if (candidateDistance < distance) {
-                nearest = part;
-                nearestLocal.set((float) local.x, (float) local.y, (float) local.z);
+                nearest = new HitPart(Optional.of(part), local, entityHit);
                 distance = candidateDistance;
             }
         }
-        if (nearest == null) return Optional.empty();
-        return candidates(nearest, nearestLocal, variant.form()).stream().filter(variant.form().slots()::contains)
-                .filter(slot -> !loadout.getStack(slot).isEmpty()).findFirst();
+        if (variant.form() == MannequinForm.HEAD) {
+            var headBody = intersect(new AABB(-4, 0, -2, 4, 2, 2),
+                    new Vec3(start.x, start.y, start.z), new Vec3(end.x, end.y, end.z));
+            if (headBody.isPresent()) {
+                Vec3 hit = variant.form().modelToEntity(headBody.get(), yaw + bodyRotation);
+                if (rayStart.distanceToSqr(hit) < distance) {
+                    nearest = new HitPart(Optional.empty(), headBody.get(), hit);
+                    distance = rayStart.distanceToSqr(hit);
+                }
+            }
+        }
+        Vec3 supportStart = MannequinForm.rotate(rayStart, yaw);
+        Vec3 supportEnd = MannequinForm.rotate(rayEnd, yaw);
+        var pedestal = intersect(new AABB(-6.0 / 16, 0, -6.0 / 16,
+                6.0 / 16, MannequinForm.PEDESTAL_HEIGHT, 6.0 / 16), supportStart, supportEnd);
+        var support = intersect(new AABB(-0.75 / 16, MannequinForm.PEDESTAL_HEIGHT, -0.75 / 16,
+                0.75 / 16, MannequinForm.PEDESTAL_HEIGHT + variant.form().supportHeightPixels() / 16, 0.75 / 16),
+                supportStart, supportEnd).filter(hit -> variant.form() == MannequinForm.UPPER || variant.form() == MannequinForm.HEAD);
+        for (var fixedHit : List.of(pedestal, support)) {
+            if (fixedHit.isEmpty()) continue;
+            Vec3 hit = MannequinForm.rotate(fixedHit.get(), -yaw);
+            if (rayStart.distanceToSqr(hit) < distance) {
+                nearest = new HitPart(Optional.empty(), fixedHit.get(), hit);
+                distance = rayStart.distanceToSqr(hit);
+            }
+        }
+        return Optional.ofNullable(nearest);
     }
 
     private static Vector3f modelPoint(MannequinVariant variant, Vec3 point, float rotation) {

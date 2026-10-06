@@ -210,16 +210,17 @@ public final class MannequinGameTests {
             loadout.setStackInSlot(GarmentSlot.TOP.ordinal(), new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()));
             var poses = variant.chestProfile() == com.rexhub.createapparel.apparel.ChestProfile.BUST
                     ? variant.form().poses() : java.util.List.of(variant.form().defaultPose());
-            for (var pose : poses) for (int step : new int[]{0, 1, 7, 15}) {
+            for (var pose : poses) for (int step = 0; step < MannequinState.ROTATION_STEPS; step++)
+                    for (float yaw : new float[]{0, 45, 135, -170}) {
                 var transform = MannequinInteraction.partTransform(variant, pose, MannequinInteraction.BodyPart.BODY)
                         .translate(0, -1, -0.9F).rotateX(-(float) Math.PI / 6);
-                float rotation = 45 + step * 22.5F;
+                float rotation = yaw + step * 22.5F;
                 var start = modelToEntity(variant, transform.transformPosition(new org.joml.Vector3f(5, 5, 0)), rotation);
                 var end = modelToEntity(variant, transform.transformPosition(new org.joml.Vector3f(0, 5, 0)), rotation);
-                var slot = MannequinInteraction.clickedSlot(variant, pose, start, end, 45, step * 22.5F, loadout);
+                var slot = MannequinInteraction.clickedSlot(variant, pose, start, end, yaw, step * 22.5F, loadout);
                 helper.assertTrue(variant.chestProfile() == com.rexhub.createapparel.apparel.ChestProfile.BUST
                                 ? slot.orElse(null) == GarmentSlot.TOP : slot.isEmpty(),
-                        "Only BUST includes its projecting body geometry: " + variant + "/" + pose + "/" + step + "/" + slot);
+                        "Only BUST includes its projecting body geometry: " + variant + "/" + pose + "/" + step + "/" + yaw + "/" + slot);
             }
         }
         helper.succeed();
@@ -333,7 +334,7 @@ public final class MannequinGameTests {
     @GameTest(template = "apparel_state", batch = "mannequin")
     public static void rotationPacketsAndLegacyStateRoundTrip(GameTestHelper helper) {
         for (int step = 0; step < MannequinState.ROTATION_STEPS; step++) {
-            var packet = MannequinActionPacket.rotation(43, step);
+            var packet = MannequinActionPacket.rotationStep(43, step % 2 == 0 ? 1 : -1);
             var buffer = new FriendlyByteBuf(Unpooled.buffer());
             try {
                 packet.encode(buffer);
@@ -451,26 +452,171 @@ public final class MannequinGameTests {
         helper.assertTrue("rolled".equals(menu.loadout().styleState(GarmentSlot.TOP).styles().get("sleeves")), "Valid style applied");
         MannequinActionPacket.style(17, GarmentSlot.TOP, "sleeves", "invalid").handle(player);
         helper.assertTrue("rolled".equals(menu.loadout().styleState(GarmentSlot.TOP).styles().get("sleeves")), "Unknown style rejected");
-        MannequinActionPacket.pose(18, PosePreset.CASUAL).handle(player);
+        MannequinActionPacket.poseStep(18, 1).handle(player);
         helper.assertTrue(entity.mannequinState().pose() == PosePreset.STRAIGHT, "Stale menu packet rejected");
-        MannequinActionPacket.pose(17, PosePreset.WALKING).handle(player);
-        helper.assertTrue(entity.mannequinState().pose() == PosePreset.STRAIGHT, "Wrong form pose rejected");
-        MannequinActionPacket.pose(17, PosePreset.ARMS_CROSSED).handle(player);
+        MannequinActionPacket.poseStep(17, 2).handle(player);
+        helper.assertTrue(entity.mannequinState().pose() == PosePreset.STRAIGHT, "Invalid pose delta rejected");
+        MannequinActionPacket.poseStep(17, 1).handle(player);
+        MannequinActionPacket.poseStep(17, 1).handle(player);
         helper.assertTrue(entity.mannequinState().pose() == PosePreset.ARMS_CROSSED, "Valid pose applied");
-        MannequinActionPacket.rotation(18, 3).handle(player);
+        MannequinActionPacket.rotationStep(18, 1).handle(player);
         helper.assertTrue(entity.mannequinState().bodyRotationStep() == 0, "Stale rotation packet rejected");
-        MannequinActionPacket.rotation(17, -1).handle(player);
-        MannequinActionPacket.rotation(17, 16).handle(player);
+        MannequinActionPacket.rotationStep(17, -2).handle(player);
+        MannequinActionPacket.rotationStep(17, 16).handle(player);
         helper.assertTrue(entity.mannequinState().bodyRotationStep() == 0, "Out-of-range rotation rejected");
-        MannequinActionPacket.rotation(17, 3).handle(player);
+        for (int click = 0; click < 3; click++) MannequinActionPacket.rotationStep(17, 1).handle(player);
         helper.assertTrue(entity.mannequinState().bodyRotationDegrees() == 67.5F && entity.getYRot() == 135,
                 "Valid rotation edits body only in 22.5 degree steps");
         player.setPos(entity.getX() + 20, entity.getY(), entity.getZ());
-        MannequinActionPacket.pose(17, PosePreset.CASUAL).handle(player);
-        MannequinActionPacket.rotation(17, 5).handle(player);
+        MannequinActionPacket.poseStep(17, 1).handle(player);
+        MannequinActionPacket.rotationStep(17, 1).handle(player);
+        MannequinActionPacket.style(17, GarmentSlot.TOP, "sleeves", "normal").handle(player);
         helper.assertTrue(entity.mannequinState().bodyRotationStep() == 3, "Remote rotation rejected");
         helper.assertTrue(entity.mannequinState().pose() == PosePreset.ARMS_CROSSED, "Remote action rejected");
+        helper.assertTrue("rolled".equals(menu.loadout().styleState(GarmentSlot.TOP).styles().get("sleeves")), "Remote style rejected");
+        player.setPos(entity.getX(), entity.getY(), entity.getZ());
         player.containerMenu = player.inventoryMenu;
+        MannequinActionPacket.style(17, GarmentSlot.TOP, "sleeves", "normal").handle(player);
+        helper.assertTrue("rolled".equals(menu.loadout().styleState(GarmentSlot.TOP).styles().get("sleeves")), "Closed menu style rejected");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void precisePickingLeavesBlocksAndOtherEntitiesBehindEmptyRadiusSelectable(GameTestHelper helper) {
+        var entity = create(helper, MannequinVariant.FULL_WHITE_CLASSIC);
+        entity.setYRot(0);
+        entity.yBodyRot = entity.yBodyRotO = 0;
+        helper.getLevel().addFreshEntity(entity);
+        var source = helper.makeMockPlayer();
+        Vec3 gap = entity.position().add(0.9, 1.2, 0);
+        Vec3 start = gap.add(0, 0, 2);
+        Vec3 end = gap.add(0, 0, -2);
+        var bounds = new net.minecraft.world.phys.AABB(start, end).inflate(1);
+        java.util.function.Predicate<net.minecraft.world.entity.Entity> filter = target -> target == entity;
+        var blockPos = net.minecraft.core.BlockPos.containing(gap.add(0, 0, -1));
+        var previous = helper.getLevel().getBlockState(blockPos);
+        try {
+            helper.getLevel().setBlockAndUpdate(blockPos, net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState());
+            var blockHit = helper.getLevel().clip(new net.minecraft.world.level.ClipContext(start, end,
+                    net.minecraft.world.level.ClipContext.Block.OUTLINE, net.minecraft.world.level.ClipContext.Fluid.NONE, source));
+            helper.assertTrue(blockHit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK, "Block ray picks the chest behind empty radius");
+            double limit = start.distanceToSqr(blockHit.getLocation());
+            var broad = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(source, start, end, bounds, filter, limit);
+            helper.assertTrue(broad != null && broad.getEntity() == entity, "Vanilla broad phase would steal the block target");
+            var precise = com.rexhub.createapparel.entity.MannequinPicking.pick(source, start, end, bounds, filter, limit, null, 1);
+            helper.assertTrue(precise == null, "Precise client pick leaves the original chest hit untouched");
+
+            var target = new net.minecraft.world.entity.decoration.ArmorStand(helper.getLevel(), gap.x, gap.y - 0.5, gap.z - 0.6);
+            helper.getLevel().addFreshEntity(target);
+            try {
+                java.util.function.Predicate<net.minecraft.world.entity.Entity> all = candidate -> candidate == entity || candidate == target;
+                var other = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(source, start, end, bounds,
+                        candidate -> all.test(candidate) && !(candidate instanceof Mannequin), 16);
+                var result = com.rexhub.createapparel.entity.MannequinPicking.pick(source, start, end, bounds, all, 16, other, 1);
+                helper.assertTrue(result != null && result.getEntity() == target, "Other entity remains selectable behind the gap");
+                Vec3 bodyStart = entity.position().add(0, 1.2, 2);
+                Vec3 bodyEnd = entity.position().add(0, 1.2, -2);
+                var bodyBounds = new net.minecraft.world.phys.AABB(bodyStart, bodyEnd).inflate(1);
+                target.setPos(entity.getX(), entity.getY() + 0.7, entity.getZ() + 0.7);
+                other = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(source, bodyStart, bodyEnd, bodyBounds,
+                        candidate -> all.test(candidate) && !(candidate instanceof Mannequin), 16);
+                result = com.rexhub.createapparel.entity.MannequinPicking.pick(source, bodyStart, bodyEnd, bodyBounds, all, 16, other, 1);
+                helper.assertTrue(result != null && result.getEntity() == target, "Actual distance beats mannequin expanded AABB distance");
+                result = com.rexhub.createapparel.entity.MannequinPicking.pick(source, bodyStart, bodyEnd, bodyBounds, filter, 0.1, null, 1);
+                helper.assertTrue(result == null, "Precise shape behind the block or reach limit is not selected");
+                result = com.rexhub.createapparel.entity.MannequinPicking.pick(source, bodyStart, bodyEnd, bodyBounds, filter, 16, null, 1);
+                helper.assertTrue(result != null && result.getEntity() == entity, "Real torso remains selectable");
+            } finally { target.discard(); }
+        } finally {
+            helper.getLevel().setBlockAndUpdate(blockPos, previous);
+            entity.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void normalInteractionRequiresAnActualShapeAndPedestalStillAcceptsApparel(GameTestHelper helper) {
+        var entity = create(helper, MannequinVariant.UPPER_BLACK_SLIM);
+        entity.setYRot(0);
+        var player = helper.makeMockPlayer();
+        player.getAbilities().instabuild = false;
+        Vec3 gap = entity.position().add(0.9, 1.2, 0);
+        aim(player, gap.add(0, 0, 2), gap);
+        helper.assertTrue(!entity.interactAt(player, Vec3.ZERO, InteractionHand.MAIN_HAND).consumesAction(), "Empty-hand gap does not open GUI");
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SHIRT_LONGSLEEVES.get(), 2));
+        helper.assertTrue(!entity.interactAt(player, new Vec3(0, 1.2, 0), InteractionHand.MAIN_HAND).consumesAction(),
+                "Forged hit cannot equip through empty radius");
+        helper.assertTrue(player.getMainHandItem().getCount() == 2 && entity.mannequinState().loadout().getStack(GarmentSlot.TOP).isEmpty(),
+                "Rejected normal click preserves inventory");
+        Vec3 pedestal = entity.position().add(0.3, MannequinForm.PEDESTAL_HEIGHT / 2, 0);
+        aim(player, pedestal.add(0, 0, 2), pedestal);
+        helper.assertTrue(entity.interactAt(player, Vec3.ZERO, InteractionHand.MAIN_HAND).consumesAction(), "Pedestal accepts normal interaction");
+        helper.assertTrue(player.getMainHandItem().getCount() == 1 && !entity.mannequinState().loadout().getStack(GarmentSlot.TOP).isEmpty(),
+                "Pedestal equips exactly one garment");
+        player.setShiftKeyDown(true);
+        helper.assertTrue(!entity.interactAt(player, Vec3.ZERO, InteractionHand.MAIN_HAND).consumesAction(), "Pedestal never removes apparel");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void consecutiveGuiStepsUseServerStateAndRejectInvalidOrStalePackets(GameTestHelper helper) {
+        var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "mannequin-steps"));
+        for (var variant : MannequinVariant.values()) {
+            var entity = create(helper, variant);
+            var state = entity.mannequinState();
+            player.setPos(entity.getX(), entity.getY(), entity.getZ());
+            player.containerMenu = new MannequinMenu(71, player.getInventory(), entity);
+            for (int click = 0; click < 3; click++) MannequinActionPacket.rotationStep(71, 1).handle(player);
+            helper.assertTrue(state.bodyRotationStep() == 3, "Three unsynchronized clicks advance three steps");
+            for (int click = 0; click < 5; click++) MannequinActionPacket.rotationStep(71, -1).handle(player);
+            helper.assertTrue(state.bodyRotationStep() == 14, "Negative steps wrap and accumulate");
+            state.setBodyRotationStep(15);
+            MannequinActionPacket.rotationStep(71, 1).handle(player);
+            helper.assertTrue(state.bodyRotationStep() == 0, "15 + 1 wraps to 0");
+            MannequinActionPacket.rotationStep(71, -1).handle(player);
+            helper.assertTrue(state.bodyRotationStep() == 15 && entity.getYRot() == 135, "0 - 1 wraps to 15 without editing yaw");
+            var poses = variant.form().poses();
+            int index = 0;
+            for (int direction : new int[]{1, -1}) for (int click = 0; click < poses.size() * 3 + 3; click++) {
+                MannequinActionPacket.poseStep(71, direction).handle(player);
+                index = Math.floorMod(index + direction, poses.size());
+                helper.assertTrue(state.pose() == poses.get(index), "Pose delta cycles within " + variant.form());
+            }
+            for (int delta : new int[]{0, 2, -2, Integer.MIN_VALUE, Integer.MAX_VALUE}) {
+                var before = state.serializeNBT();
+                MannequinActionPacket.poseStep(71, delta).handle(player);
+                MannequinActionPacket.rotationStep(71, delta).handle(player);
+                helper.assertTrue(state.serializeNBT().equals(before), "Invalid delta preserves state: " + delta);
+                for (var packet : java.util.List.of(MannequinActionPacket.poseStep(71, delta),
+                        MannequinActionPacket.rotationStep(71, delta))) {
+                    var buffer = new FriendlyByteBuf(Unpooled.buffer());
+                    try {
+                        packet.encode(buffer);
+                        helper.assertTrue(packet.equals(MannequinActionPacket.decode(buffer)), "Signed delta round trip");
+                    } finally { buffer.release(); }
+                }
+            }
+            var before = state.serializeNBT();
+            MannequinActionPacket.poseStep(72, 1).handle(player);
+            MannequinActionPacket.rotationStep(72, -1).handle(player);
+            helper.assertTrue(state.serializeNBT().equals(before), "Wrong container cannot step");
+            player.setPos(entity.getX() + 20, entity.getY(), entity.getZ());
+            MannequinActionPacket.poseStep(71, 1).handle(player);
+            MannequinActionPacket.rotationStep(71, -1).handle(player);
+            helper.assertTrue(state.serializeNBT().equals(before), "Out-of-reach menu cannot step");
+            player.setPos(entity.getX(), entity.getY(), entity.getZ());
+            player.containerMenu = player.inventoryMenu;
+            MannequinActionPacket.poseStep(71, 1).handle(player);
+            MannequinActionPacket.rotationStep(71, -1).handle(player);
+            helper.assertTrue(state.serializeNBT().equals(before), "Closed menu cannot step");
+        }
+        var style = MannequinActionPacket.style(71, GarmentSlot.TOP, "sleeves", "rolled");
+        var buffer = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            style.encode(buffer);
+            helper.assertTrue(style.equals(MannequinActionPacket.decode(buffer)), "Style wire format round trip");
+        } finally { buffer.release(); }
         helper.succeed();
     }
 
@@ -480,6 +626,8 @@ public final class MannequinGameTests {
         var player = helper.makeMockPlayer();
         player.getAbilities().instabuild = false;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SHIRT_LONGSLEEVES.get(), 2));
+        Vec3 equipTarget = entity.position().add(modelToEntity(entity.variant(), new org.joml.Vector3f(0, 6, -2), entity.getYRot()));
+        aim(player, equipTarget.add(new Vec3(0, 0, 2).yRot((float) Math.toRadians(-entity.getYRot()))), equipTarget);
         entity.interactAt(player, new Vec3(0, 1.2, 0.2), InteractionHand.MAIN_HAND);
         entity.interactAt(player, new Vec3(0, 1.2, 0.2), InteractionHand.MAIN_HAND);
         helper.assertTrue(player.getMainHandItem().isEmpty(), "One item consumed for each allowed slot");
@@ -509,19 +657,23 @@ public final class MannequinGameTests {
             var player = helper.makeMockPlayer();
             player.getAbilities().instabuild = creative;
             var source = helper.getLevel().damageSources().playerAttack(player);
+            var previousDrops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2))
+                    .stream().map(ItemEntity::getUUID).collect(java.util.stream.Collectors.toSet());
             entity.hurt(source, 1);
             if (!creative) {
                 helper.assertTrue(!entity.isRemoved(), "First survival hit shakes stand");
                 entity.hurt(source, 1);
             }
             helper.assertTrue(entity.isRemoved(), "Stand breaks");
-            var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2));
+            var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2))
+                    .stream().filter(drop -> !previousDrops.contains(drop.getUUID())).toList();
             helper.assertTrue(drops.stream().filter(drop -> drop.getItem().is(ModItems.SHIRT_LONGSLEEVES.get()))
                     .mapToInt(drop -> drop.getItem().getCount()).sum() == 1, "Garment drops exactly once even in creative");
             helper.assertTrue(drops.stream().filter(drop -> drop.getItem().is(ModItems.FULL_MANNEQUIN_WHITE_CLASSIC.get()))
                     .mapToInt(drop -> drop.getItem().getCount()).sum() == (creative ? 0 : 1), "Armor stand creative body drop behavior");
             entity.kill();
-            helper.assertTrue(drops.size() == helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2)).size(), "Repeated removal does not duplicate drops");
+            helper.assertTrue(drops.size() == helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2))
+                    .stream().filter(drop -> !previousDrops.contains(drop.getUUID())).count(), "Repeated removal does not duplicate drops");
         }
         helper.succeed();
     }

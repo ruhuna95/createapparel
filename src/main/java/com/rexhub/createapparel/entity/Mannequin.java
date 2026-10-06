@@ -101,16 +101,19 @@ public final class Mannequin extends LivingEntity {
         if (player.isSpectator() || !player.getAbilities().mayBuild || !level().mayInteract(player, blockPosition())) {
             return InteractionResult.PASS;
         }
+        Vec3 start = player.getEyePosition();
+        Vec3 end = start.add(player.getLookAngle().scale(player.getEntityReach()));
+        end = level().clip(new ClipContext(start, end, ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE, player)).getLocation();
+        Vec3 localStart = start.subtract(position());
+        Vec3 localEnd = end.subtract(position());
+        var shapeHit = MannequinInteraction.hitPart(variant, mannequinState.pose(), localStart, localEnd,
+                getYRot(), mannequinState.bodyRotationDegrees());
+        if (shapeHit.isEmpty()) return InteractionResult.PASS;
         var loadout = mannequinState.loadout();
         ItemStack held = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
-            Vec3 start = player.getEyePosition();
-            Vec3 end = start.add(player.getLookAngle().scale(player.getEntityReach()));
-            end = level().clip(new ClipContext(start, end, ClipContext.Block.COLLIDER,
-                    ClipContext.Fluid.NONE, player)).getLocation();
-            var slot = MannequinInteraction.clickedSlot(variant, mannequinState.pose(),
-                    start.subtract(position()), end.subtract(position()),
-                    getYRot(), mannequinState.bodyRotationDegrees(), loadout);
+            var slot = MannequinInteraction.clickedSlot(variant, shapeHit.get(), loadout);
             if (slot.isEmpty()) return InteractionResult.PASS;
             if (!level().isClientSide) {
                 ItemStack removed = loadout.extractItem(slot.get().ordinal(), 1, false);

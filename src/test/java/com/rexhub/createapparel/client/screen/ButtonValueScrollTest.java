@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +23,16 @@ class ButtonValueScrollTest {
         assertEquals(0, changes.get());
         assertFalse(scroll.mouseScrolled(20, 25, 0));
         assertFalse(scroll.mouseScrolled(200, 25, 1));
+    }
+
+    @Test
+    void rapidWheelInputEmitsUnitDeltasWithoutWaitingForSynchronizedValues() {
+        List<Integer> deltas = new ArrayList<>();
+        var scroll = new ButtonValueScroll();
+        scroll.bind(button(), deltas::add);
+        for (int event = 0; event < 3; event++) assertTrue(scroll.mouseScrolled(20, 25, -12));
+        for (int event = 0; event < 2; event++) assertTrue(scroll.mouseScrolled(20, 25, 7));
+        assertEquals(List.of(1, 1, 1, -1, -1), deltas);
     }
 
     @Test

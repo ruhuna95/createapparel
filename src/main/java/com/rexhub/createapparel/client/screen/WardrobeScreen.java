@@ -286,11 +286,8 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     }
 
     private void cyclePose(int direction) {
-        if (!(menu instanceof MannequinMenu mannequinMenu)) return;
-        var state = mannequinMenu.mannequin().mannequinState();
-        var poses = mannequinMenu.mannequin().variant().form().poses();
-        var pose = poses.get(Math.floorMod(poses.indexOf(state.pose()) + direction, poses.size()));
-        ModNetwork.updateMannequin(MannequinActionPacket.pose(menu.containerId, pose));
+        if (!(menu instanceof MannequinMenu)) return;
+        ModNetwork.updateMannequin(MannequinActionPacket.poseStep(menu.containerId, direction));
     }
 
     private void updatePoseButton() {
@@ -303,10 +300,8 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     }
 
     private void cycleRotation(int direction) {
-        if (!(menu instanceof MannequinMenu mannequinMenu)) return;
-        int step = Math.floorMod(mannequinMenu.mannequin().mannequinState().bodyRotationStep() + direction,
-                com.rexhub.createapparel.entity.MannequinState.ROTATION_STEPS);
-        ModNetwork.updateMannequin(MannequinActionPacket.rotation(menu.containerId, step));
+        if (!(menu instanceof MannequinMenu)) return;
+        ModNetwork.updateMannequin(MannequinActionPacket.rotationStep(menu.containerId, direction));
     }
 
     private void cycleChestProfile(int direction) {
