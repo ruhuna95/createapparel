@@ -1,5 +1,7 @@
 package com.rexhub.createapparel.init;
 
+import com.rexhub.createapparel.entity.MannequinVariant;
+import com.rexhub.createapparel.item.MannequinItem;
 import com.rexhub.createapparel.garment.GarmentItem;
 import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.item.SewingPatternItem;
@@ -235,6 +237,48 @@ public final class ModItems {
 
     private static final Map<FabricMaterial, Map<FabricColor, RegistryObject<Item>>> DYED_FABRICS =
             registerDyedFabrics();
+    public static final RegistryObject<Item> FULL_MANNEQUIN_WHITE_CLASSIC = ModRegistries.ITEMS.register(
+            "full_mannequin_white_classic", () -> new MannequinItem(MannequinVariant.FULL_WHITE_CLASSIC));
+    public static final RegistryObject<Item> FULL_MANNEQUIN_BLACK_CLASSIC = ModRegistries.ITEMS.register(
+            "full_mannequin_black_classic", () -> new MannequinItem(MannequinVariant.FULL_BLACK_CLASSIC));
+    public static final RegistryObject<Item> FULL_MANNEQUIN_WHITE_SLIM = ModRegistries.ITEMS.register(
+            "full_mannequin_white_slim", () -> new MannequinItem(MannequinVariant.FULL_WHITE_SLIM));
+    public static final RegistryObject<Item> FULL_MANNEQUIN_BLACK_SLIM = ModRegistries.ITEMS.register(
+            "full_mannequin_black_slim", () -> new MannequinItem(MannequinVariant.FULL_BLACK_SLIM));
+    public static final RegistryObject<Item> UPPER_MANNEQUIN_WHITE_CLASSIC = ModRegistries.ITEMS.register(
+            "upper_mannequin_white_classic", () -> new MannequinItem(MannequinVariant.UPPER_WHITE_CLASSIC));
+    public static final RegistryObject<Item> UPPER_MANNEQUIN_BLACK_CLASSIC = ModRegistries.ITEMS.register(
+            "upper_mannequin_black_classic", () -> new MannequinItem(MannequinVariant.UPPER_BLACK_CLASSIC));
+    public static final RegistryObject<Item> UPPER_MANNEQUIN_WHITE_SLIM = ModRegistries.ITEMS.register(
+            "upper_mannequin_white_slim", () -> new MannequinItem(MannequinVariant.UPPER_WHITE_SLIM));
+    public static final RegistryObject<Item> UPPER_MANNEQUIN_BLACK_SLIM = ModRegistries.ITEMS.register(
+            "upper_mannequin_black_slim", () -> new MannequinItem(MannequinVariant.UPPER_BLACK_SLIM));
+    public static final RegistryObject<Item> LOWER_MANNEQUIN_WHITE = ModRegistries.ITEMS.register(
+            "lower_mannequin_white", () -> new MannequinItem(MannequinVariant.LOWER_WHITE));
+    public static final RegistryObject<Item> LOWER_MANNEQUIN_BLACK = ModRegistries.ITEMS.register(
+            "lower_mannequin_black", () -> new MannequinItem(MannequinVariant.LOWER_BLACK));
+    public static final RegistryObject<Item> HEAD_MANNEQUIN_WHITE = ModRegistries.ITEMS.register(
+            "head_mannequin_white", () -> new MannequinItem(MannequinVariant.HEAD_WHITE));
+    public static final RegistryObject<Item> HEAD_MANNEQUIN_BLACK = ModRegistries.ITEMS.register(
+            "head_mannequin_black", () -> new MannequinItem(MannequinVariant.HEAD_BLACK));
+    private static final Map<MannequinVariant, RegistryObject<Item>> MANNEQUINS = Map.ofEntries(
+            Map.entry(MannequinVariant.FULL_WHITE_CLASSIC, FULL_MANNEQUIN_WHITE_CLASSIC),
+            Map.entry(MannequinVariant.FULL_BLACK_CLASSIC, FULL_MANNEQUIN_BLACK_CLASSIC),
+            Map.entry(MannequinVariant.FULL_WHITE_SLIM, FULL_MANNEQUIN_WHITE_SLIM),
+            Map.entry(MannequinVariant.FULL_BLACK_SLIM, FULL_MANNEQUIN_BLACK_SLIM),
+            Map.entry(MannequinVariant.UPPER_WHITE_CLASSIC, UPPER_MANNEQUIN_WHITE_CLASSIC),
+            Map.entry(MannequinVariant.UPPER_BLACK_CLASSIC, UPPER_MANNEQUIN_BLACK_CLASSIC),
+            Map.entry(MannequinVariant.UPPER_WHITE_SLIM, UPPER_MANNEQUIN_WHITE_SLIM),
+            Map.entry(MannequinVariant.UPPER_BLACK_SLIM, UPPER_MANNEQUIN_BLACK_SLIM),
+            Map.entry(MannequinVariant.LOWER_WHITE, LOWER_MANNEQUIN_WHITE),
+            Map.entry(MannequinVariant.LOWER_BLACK, LOWER_MANNEQUIN_BLACK),
+            Map.entry(MannequinVariant.HEAD_WHITE, HEAD_MANNEQUIN_WHITE),
+            Map.entry(MannequinVariant.HEAD_BLACK, HEAD_MANNEQUIN_BLACK));
+
+    public static Map<MannequinVariant, RegistryObject<Item>> mannequins() {
+        return MANNEQUINS;
+    }
+
     private static final List<RegistryObject<Item>> CREATIVE_TAB_ITEMS = createCreativeTabOrder();
     private static final List<RegistryObject<Item>> GARMENT_CREATIVE_TAB_ITEMS =
             List.of(
@@ -454,6 +498,7 @@ public final class ModItems {
         items.add(LOOM);
         items.add(SEWING_MACHINE);
         items.add(WARDROBE);
+        for (var variant : MannequinVariant.values()) items.add(MANNEQUINS.get(variant));
         items.add(SEWING_PATTERN);
         addMaterialGroup(
                 items,

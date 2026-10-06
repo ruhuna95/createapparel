@@ -1,5 +1,8 @@
 package com.rexhub.createapparel.client.renderer;
 
+import com.rexhub.createapparel.client.garment.GarmentRenderContext;
+import com.rexhub.createapparel.client.garment.GarmentRenderSource;
+import com.rexhub.createapparel.client.garment.ResolvedApparelState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -25,9 +28,8 @@ import com.rexhub.createapparel.client.garment.ClientGarmentAssets.BakedFace;
 import net.minecraft.world.entity.HumanoidArm;
 import org.joml.Vector3f;
 import com.rexhub.createapparel.garment.GarmentSlot;
-import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -43,6 +45,17 @@ public final class CommonGarmentRenderer {
     private static final int WHITE = 0xFFFFFF;
 
     private CommonGarmentRenderer() {
+    }
+
+    public static void renderHumanoid(GarmentRenderContext context,
+                                      PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
+        var source = context.apparel();
+        var frame = new ApparelRenderFrame(source::garment, context.bodyPose());
+        for (GarmentSlot slot : ResolvedApparelState.RENDER_ORDER) {
+            frame.garment(slot).ifPresent(garment -> renderHumanoidGarment(
+                    garment, slot, frame, source, context.bodyPose(), source.armProfile(),
+                    poseStack, buffer, light, overlay));
+        }
     }
 
     public static void renderFirstPersonArm(FirstPersonApparelState.ArmParts parts,
@@ -202,8 +215,8 @@ public final class CommonGarmentRenderer {
             ResolvedGarment garment,
             GarmentSlot slot,
             ApparelRenderFrame frame,
-            ApparelRenderSnapshot snapshot,
-            PlayerModel<AbstractClientPlayer> playerModel,
+            GarmentRenderSource snapshot,
+            HumanoidModel<?> playerModel,
             ArmProfile armProfile,
             PoseStack poseStack,
             MultiBufferSource buffer,
@@ -300,7 +313,7 @@ public final class CommonGarmentRenderer {
 
     public static void renderHumanoidSupport(
             List<ResolvedSupportPart> parts,
-            PlayerModel<AbstractClientPlayer> playerModel,
+            HumanoidModel<?> playerModel,
             ArmProfile armProfile,
             int tintRgb,
             PoseStack poseStack,
@@ -377,7 +390,7 @@ public final class CommonGarmentRenderer {
     }
 
     private static HumanoidPartPose humanoidGarmentPose(
-            PlayerModel<AbstractClientPlayer> model,
+            HumanoidModel<?> model,
             ArmProfile armProfile,
             ResolvedPart part
     ) {
@@ -401,7 +414,7 @@ public final class CommonGarmentRenderer {
     }
 
     private static HumanoidPartPose humanoidSupportPose(
-            PlayerModel<AbstractClientPlayer> model,
+            HumanoidModel<?> model,
             ArmProfile armProfile,
             GarmentPartModel part
     ) {

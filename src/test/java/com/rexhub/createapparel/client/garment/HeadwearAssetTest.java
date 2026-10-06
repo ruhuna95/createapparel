@@ -316,7 +316,7 @@ class HeadwearAssetTest {
     void headAndRaisedHoodFollowHeadWhileTorsoKeepsBodyPose() throws Exception {
         var player = new PlayerModel<>(PlayerModel.createMesh(CubeDeformation.NONE, false).getRoot().bake(64, 64), false);
         var method = CommonGarmentRenderer.class.getDeclaredMethod("humanoidGarmentPose",
-                PlayerModel.class, ArmProfile.class, ResolvedPart.class);
+                net.minecraft.client.model.HumanoidModel.class, ArmProfile.class, ResolvedPart.class);
         method.setAccessible(true);
         for (String semantic : List.of("head", "head_back", "head_up", "hood_up", "torso")) {
             var result = method.invoke(null, player, ArmProfile.CLASSIC, new ResolvedPart(semantic, part("cap"), null));

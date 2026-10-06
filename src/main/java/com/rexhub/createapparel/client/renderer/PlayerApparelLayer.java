@@ -1,11 +1,11 @@
 package com.rexhub.createapparel.client.renderer;
 
+import com.rexhub.createapparel.client.garment.GarmentRenderContext;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
-import com.rexhub.createapparel.client.garment.ApparelRenderFrame;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -14,7 +14,6 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 
-import static com.rexhub.createapparel.client.garment.ResolvedApparelState.RENDER_ORDER;
 
 final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     PlayerApparelLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer) {
@@ -76,22 +75,9 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
             );
         }
 
-        var frame = new ApparelRenderFrame(snapshot::garment, getParentModel());
-        for (GarmentSlot slot : RENDER_ORDER) {
-            frame.garment(slot).ifPresent(garment ->
-                    CommonGarmentRenderer.renderHumanoidGarment(
-                            garment,
-                            slot,
-                            frame,
-                            snapshot,
-                            getParentModel(),
-                            armProfile,
-                            poseStack,
-                            buffer,
-                            packedLight,
-                            packedOverlay
-                    )
-            );
-        }
+        CommonGarmentRenderer.renderHumanoid(
+                new GarmentRenderContext(getParentModel(), snapshot,
+                        GarmentRenderContext.TargetType.PLAYER),
+                poseStack, buffer, packedLight, packedOverlay);
     }
 }

@@ -1,5 +1,8 @@
 package com.rexhub.createapparel.data.server;
 
+import com.rexhub.createapparel.apparel.ArmProfile;
+import com.rexhub.createapparel.entity.MannequinColor;
+import com.rexhub.createapparel.entity.MannequinVariant;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.rexhub.createapparel.CreateApparel;
@@ -24,6 +27,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
@@ -43,6 +47,44 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public final class ModRecipeProvider extends BaseRecipeProvider {
+    private void mannequinRecipes() {
+        for (var variant : MannequinVariant.values()) {
+            var result = ModItems.mannequins().get(variant);
+            if (variant.armProfile() == ArmProfile.SLIM) continue;
+            String[] pattern = switch (variant.form()) {
+                case FULL -> new String[]{"PDP", "PAP", "P P"};
+                case UPPER -> new String[]{"PDP", "PAP"};
+                case LOWER -> new String[]{" D ", "PAP", "P P"};
+                case HEAD -> new String[]{"PD", "AP"};
+            };
+            register(consumer -> {
+                var builder = ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, result.get())
+                        .define('A', Items.ARMOR_STAND).define('P', ItemTags.PLANKS)
+                        .define('D', variant.color() == MannequinColor.WHITE
+                                ? Items.WHITE_DYE : Items.BLACK_DYE)
+                        .unlockedBy("has_armor_stand", InventoryChangeTrigger.TriggerInstance.hasItems(Items.ARMOR_STAND));
+                for (String row : pattern) builder.pattern(row);
+                builder.save(consumer, asResource(variant.id()));
+            });
+        }
+        for (var classic : MannequinVariant.values()) {
+            if (!classic.form().hasTorso() || classic.armProfile() != ArmProfile.CLASSIC) continue;
+            var slim = java.util.Arrays.stream(MannequinVariant.values())
+                    .filter(v -> v.form() == classic.form() && v.color() == classic.color()
+                            && v.armProfile() == ArmProfile.SLIM).findFirst().orElseThrow();
+            mannequinConversion(classic, slim);
+            mannequinConversion(slim, classic);
+        }
+    }
+
+    private void mannequinConversion(MannequinVariant source,
+                                     MannequinVariant target) {
+        register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.DECORATIONS, ModItems.mannequins().get(target).get())
+                .requires(ModItems.mannequins().get(source).get())
+                .unlockedBy("has_mannequin", InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.mannequins().get(source).get()))
+                .save(consumer, asResource(target.id() + "_from_" + source.id())));
+    }
+
     private static final int MILLING_DURATION = 100;
     private static final int FABRIC_TREATMENT_WATER_AMOUNT = 250;
     private static final List<TagKey<Item>> T_SHIRT_FABRICS = List.of(
@@ -80,6 +122,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
+        mannequinRecipes();
 
         apparelDye(FabricColor.CREAM, Items.WHITE_DYE, Items.WHITE_DYE, Items.YELLOW_DYE);
         apparelDye(FabricColor.BEIGE, Items.WHITE_DYE, Items.BROWN_DYE);

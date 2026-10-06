@@ -1,5 +1,6 @@
 package com.rexhub.createapparel.data;
 
+import com.rexhub.createapparel.data.client.MannequinTextureProvider;
 import com.rexhub.createapparel.data.client.ModItemModelProvider;
 import com.rexhub.createapparel.data.client.ModJapaneseLanguageProvider;
 import com.rexhub.createapparel.data.client.ModLanguageProvider;
@@ -19,6 +20,8 @@ public final class CreateApparelDataGenerators {
     public static void gatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
+        generator.addProvider(event.includeClient(),
+                new MannequinTextureProvider(output));
 
         ModBlockTagProvider blockTags = generator.addProvider(
                 event.includeServer(),

@@ -1,5 +1,6 @@
 package com.rexhub.createapparel.client.apparel;
 
+import com.rexhub.createapparel.client.garment.GarmentRenderSource;
 import com.rexhub.createapparel.apparel.ApparelBodyMode;
 import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class ApparelRenderSnapshot {
+public final class ApparelRenderSnapshot implements GarmentRenderSource {
     private final int playerId;
     private final long revision;
     private final List<ItemStack> contents;

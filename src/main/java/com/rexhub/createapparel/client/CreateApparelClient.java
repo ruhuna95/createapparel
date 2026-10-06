@@ -1,5 +1,9 @@
 package com.rexhub.createapparel.client;
 
+import com.rexhub.createapparel.client.model.MannequinModel;
+import com.rexhub.createapparel.client.renderer.MannequinRenderer;
+import com.rexhub.createapparel.menu.MannequinMenu;
+import com.rexhub.createapparel.menu.WardrobeMenu;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.model.ModPartialModels;
@@ -40,6 +44,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 @Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CreateApparelClient {
+    public static final ModelLayerLocation MANNEQUIN_CLASSIC_LAYER = new ModelLayerLocation(
+            ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mannequin_classic"), "main");
+    public static final ModelLayerLocation MANNEQUIN_SLIM_LAYER = new ModelLayerLocation(
+            ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mannequin_slim"), "main");
     public static final ModelLayerLocation SILKWORM_LAYER = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "silkworm"),
             "main"
@@ -58,7 +66,12 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void clientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> MenuScreens.register(ModMenuTypes.WARDROBE.get(), WardrobeScreen::new));
+        event.enqueueWork(() -> {
+            MenuScreens.<WardrobeMenu, WardrobeScreen<WardrobeMenu>>
+                    register(ModMenuTypes.WARDROBE.get(), WardrobeScreen::new);
+            MenuScreens.<MannequinMenu, WardrobeScreen<MannequinMenu>>
+                    register(ModMenuTypes.MANNEQUIN.get(), WardrobeScreen::new);
+        });
     }
 
     @SubscribeEvent
@@ -78,12 +91,18 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(MANNEQUIN_CLASSIC_LAYER,
+                () -> MannequinModel.createBodyLayer(false));
+        event.registerLayerDefinition(MANNEQUIN_SLIM_LAYER,
+                () -> MannequinModel.createBodyLayer(true));
         event.registerLayerDefinition(SILKWORM_LAYER, SilkwormModel::createBodyLayer);
         event.registerLayerDefinition(SILKWORM_COCOON_LAYER, SilkwormCocoonModel::createBodyLayer);
     }
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        ModEntities.mannequins().values().forEach(type ->
+                event.registerEntityRenderer(type.get(), MannequinRenderer::new));
         event.registerEntityRenderer(ModEntities.SILKWORM.get(), SilkwormRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SPINNING_MACHINE.get(), SpinningMachineRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.LOOM.get(), LoomRenderer::new);

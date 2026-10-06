@@ -14,6 +14,9 @@ import java.util.EnumMap;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.menu.WardrobeMenu;
+import com.rexhub.createapparel.menu.ApparelMenu;
+import com.rexhub.createapparel.menu.MannequinMenu;
+import com.rexhub.createapparel.network.MannequinActionPacket;
 import com.rexhub.createapparel.network.ModNetwork;
 import com.rexhub.createapparel.network.WardrobeActionPacket;
 import net.minecraft.Util;
@@ -35,7 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> {
+public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScreen<T> {
     private static final ResourceLocation VANILLA_CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(
             "minecraft",
             "textures/gui/container/generic_54.png"
@@ -83,12 +86,14 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     private long previewAssetGeneration = -1;
     private Button chestProfileButton;
     private Button skinToneButton;
+    private Button poseButton;
 
-    public WardrobeScreen(WardrobeMenu menu, Inventory inventory, Component title) {
+    public WardrobeScreen(T menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         imageWidth = SCREEN_WIDTH;
         imageHeight = 228;
         slotSelectionOrder = List.of(GarmentSlot.values()).stream()
+                .filter(slot -> menu.slots.get(slot.ordinal()).isActive())
                 .sorted(Comparator.comparingInt((GarmentSlot slot) -> menu.slots.get(slot.ordinal()).y)
                         .thenComparingInt(slot -> menu.slots.get(slot.ordinal()).x))
                 .toList();
@@ -106,7 +111,17 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         }
         previewChestProfile = ClientApparelInventories.chestProfile(minecraft.player);
         previewSkinTone = ClientApparelInventories.skinTone(minecraft.player);
-        selectedSlot = firstEquippedSlot().orElse(GarmentSlot.TOP);
+        selectedSlot = firstEquippedSlot().orElse(slotSelectionOrder.contains(GarmentSlot.TOP)
+                ? GarmentSlot.TOP : slotSelectionOrder.get(0));
+
+        if (menu instanceof MannequinMenu mannequinMenu) {
+            poseButton = addRenderableWidget(Button.builder(Component.empty(), button -> cyclePose(1))
+                    .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 113, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT).build());
+            buttonScroll.bind(poseButton, this::cyclePose);
+            updatePoseButton();
+            refreshSelectedGarment(true);
+            return;
+        }
 
         chestProfileButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleChestProfile(1))
                 .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 91, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT)
@@ -126,6 +141,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     protected void containerTick() {
         super.containerTick();
         refreshSelectedGarment(false);
+        updatePoseButton();
     }
 
     @Override
@@ -139,7 +155,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
     private Optional<GarmentSlot> firstEquippedSlot() {
         for (GarmentSlot slot : GarmentSlot.values()) {
-            if (!menu.apparelStack(slot).isEmpty()) {
+            if (menu.slots.get(slot.ordinal()).isActive() && !menu.apparelStack(slot).isEmpty()) {
                 return Optional.of(slot);
             }
         }
@@ -163,9 +179,8 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
     private void refreshSelectedGarment(boolean force) {
         ItemStack actual = menu.slots.get(selectedSlot.ordinal()).getItem();
-        EquippedStyleState actualStyles = minecraft == null || minecraft.player == null
-                ? EquippedStyleState.EMPTY : ClientApparelInventories.styleState(minecraft.player, selectedSlot);
-        long revision = minecraft == null || minecraft.player == null ? 0 : ClientApparelInventories.revision(minecraft.player);
+        EquippedStyleState actualStyles = targetStyles().getOrDefault(selectedSlot, EquippedStyleState.EMPTY);
+        long revision = targetRevision();
         if (!force && revision == observedRevision && ItemStack.matches(actual, observedStack) && actualStyles.equals(observedStyles)) {
             return;
         }
@@ -231,7 +246,11 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
         previewStyles = previewStyles.with(category, next);
         cachedPreview = null;
         updateStyleButtonMessages();
-        ModNetwork.updateWardrobe(WardrobeActionPacket.style(selectedSlot, category, next));
+        if (menu instanceof MannequinMenu) {
+            ModNetwork.updateMannequin(MannequinActionPacket.style(menu.containerId, selectedSlot, category, next));
+        } else {
+            ModNetwork.updateWardrobe(WardrobeActionPacket.style(selectedSlot, category, next));
+        }
     }
 
     private Map<GarmentSlot, EquippedStyleState> previewStyleSnapshot() {
@@ -240,14 +259,40 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
     private Map<GarmentSlot, EquippedStyleState> previewStyleSnapshot(List<ItemStack> contents) {
         Map<GarmentSlot, EquippedStyleState> styles = new EnumMap<>(GarmentSlot.class);
-        if (minecraft != null && minecraft.player != null) {
-            styles.putAll(ClientApparelInventories.styles(minecraft.player));
-        }
+        styles.putAll(targetStyles());
         styles.put(selectedSlot, previewStyles);
         var context = ClientApparelInventories.context(contents, styles);
         context.equipped().forEach((slot, view) -> styles.put(slot,
                 GarmentStyleResolver.normalize(view.definition(), slot, view.styleState(), context)));
         return styles;
+    }
+
+    private Map<GarmentSlot, EquippedStyleState> targetStyles() {
+        if (menu instanceof MannequinMenu mannequinMenu) {
+            return mannequinMenu.mannequin().mannequinState().loadout().copyStyles();
+        }
+        return minecraft == null || minecraft.player == null ? Map.of()
+                : ClientApparelInventories.styles(minecraft.player);
+    }
+
+    private long targetRevision() {
+        if (menu instanceof MannequinMenu mannequinMenu) return mannequinMenu.mannequin().mannequinState().revision();
+        return minecraft == null || minecraft.player == null ? 0 : ClientApparelInventories.revision(minecraft.player);
+    }
+
+    private void cyclePose(int direction) {
+        if (!(menu instanceof MannequinMenu mannequinMenu)) return;
+        var state = mannequinMenu.mannequin().mannequinState();
+        var poses = mannequinMenu.mannequin().variant().form().poses();
+        var pose = poses.get(Math.floorMod(poses.indexOf(state.pose()) + direction, poses.size()));
+        ModNetwork.updateMannequin(MannequinActionPacket.pose(menu.containerId, pose));
+    }
+
+    private void updatePoseButton() {
+        if (poseButton != null && menu instanceof MannequinMenu mannequinMenu) {
+            poseButton.setMessage(Component.translatable("screen.createapparel.mannequin.pose",
+                    Component.translatable("pose.createapparel." + mannequinMenu.mannequin().mannequinState().pose().id())));
+        }
     }
 
     private void cycleChestProfile(int direction) {
@@ -360,7 +405,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
 
         for (int index = 0; index < menu.slots.size(); index++) {
             Slot slot = menu.slots.get(index);
-            renderSlotBackground(graphics, slot, index);
+            if (slot.isActive()) renderSlotBackground(graphics, slot, index);
         }
         renderPlayerPreview(graphics, mouseX, mouseY);
     }
@@ -418,6 +463,12 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
     }
 
     private void renderPlayerPreview(GuiGraphics graphics, int mouseX, int mouseY) {
+        if (menu instanceof MannequinMenu mannequinMenu) {
+            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics,
+                    leftPos + PREVIEW_CENTER_X, topPos + 104, 42,
+                    leftPos + PREVIEW_CENTER_X - mouseX, topPos + 49 - mouseY, mannequinMenu.mannequin());
+            return;
+        }
         if (minecraft == null || minecraft.player == null) {
             return;
         }
@@ -517,7 +568,7 @@ public final class WardrobeScreen extends AbstractContainerScreen<WardrobeMenu> 
             Slot menuSlot = menu.slots.get(slot.ordinal());
             int x = leftPos + menuSlot.x;
             int y = topPos + menuSlot.y;
-            if (!menuSlot.hasItem()
+            if (menuSlot.isActive() && !menuSlot.hasItem()
                     && mouseX >= x && mouseX < x + 16
                     && mouseY >= y && mouseY < y + 16) {
                 graphics.renderTooltip(

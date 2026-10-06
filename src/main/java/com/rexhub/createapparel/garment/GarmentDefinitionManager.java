@@ -1,5 +1,6 @@
 package com.rexhub.createapparel.garment;
 
+import com.rexhub.createapparel.entity.Mannequin;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -84,5 +85,13 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
         }
         event.getPlayerList().getPlayers()
                 .forEach(GarmentDefinitionManager::synchronizePlayer);
+        for (var level : event.getPlayerList().getServer().getAllLevels()) {
+            for (var entity : level.getAllEntities()) {
+                if (entity instanceof Mannequin mannequin) {
+                    mannequin.mannequinState().loadout().reconcileStyles();
+                    mannequin.syncState();
+                }
+            }
+        }
     }
 }

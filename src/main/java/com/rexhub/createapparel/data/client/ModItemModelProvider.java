@@ -1,5 +1,10 @@
 package com.rexhub.createapparel.data.client;
 
+import com.rexhub.createapparel.apparel.ArmProfile;
+import com.rexhub.createapparel.entity.MannequinColor;
+import com.rexhub.createapparel.entity.MannequinForm;
+import com.rexhub.createapparel.entity.MannequinVariant;
+import com.rexhub.createapparel.item.MannequinItem;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rexhub.createapparel.CreateApparel;
@@ -31,6 +36,10 @@ public final class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
+        for (var color : MannequinColor.values()) {
+            existingFileHelper.trackGenerated(modLoc("item/mannequin/" + color.id()),
+                    PackType.CLIENT_RESOURCES, ".png", "textures");
+        }
         var dyeModel = withExistingParent("apparel_dye", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/apparel_dye_base"));
         for (RegistryObject<Item> item : ModRegistries.ITEMS.getEntries()) {
@@ -48,6 +57,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
                         .texture("layer0", modLoc("item/sewing_pattern"));
             } else if (item == ModItems.WARDROBE) {
                 wardrobeModel();
+            } else if (item.get() instanceof MannequinItem mannequin) {
+                mannequinModel(item, mannequin.variant());
             } else if (item.get() instanceof GarmentItem) {
                 garmentModel(item);
             } else if (item == ModItems.SPINNING_MACHINE
@@ -79,6 +90,53 @@ public final class ModItemModelProvider extends ItemModelProvider {
                     .rotation(75, 225, 0).translation(0, 1, 0).scale(0.25F).end()
                 .transform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND).rotation(0, 45, 0).scale(0.3F).end()
                 .transform(ItemDisplayContext.FIRST_PERSON_LEFT_HAND).rotation(0, 225, 0).scale(0.3F).end();
+    }
+
+    private void mannequinModel(RegistryObject<Item> item, MannequinVariant variant) {
+        ItemModelBuilder model = getBuilder(item.getId().getPath()).texture("body", modLoc("item/mannequin/" + variant.color().id()))
+                .texture("particle", "#body");
+        mannequinBox(model, -6, -1, -6, 6, 0, 6);
+        if (variant.form().hasHead()) {
+            float headBottom = variant.form() == MannequinForm.HEAD ? 7 : 24;
+            mannequinBox(model, -4, headBottom, -4, 4, headBottom + 8, 4);
+        }
+        if (variant.form().hasTorso()) {
+            mannequinBox(model, -4, 12, -2, 4, 24, 2);
+            boolean slim = variant.armProfile() == ArmProfile.SLIM;
+            mannequinBox(model, slim ? -7 : -8, slim ? 11.5F : 12, -2, -4, slim ? 23.5F : 24, 2);
+            mannequinBox(model, 4, slim ? 11.5F : 12, -2, slim ? 7 : 8, slim ? 23.5F : 24, 2);
+            if (slim) {
+                var bust = model.element().from(4.5F, 19.52F, 6.61F).to(11.5F, 23.52F, 9.61F);
+                bust.rotation().origin(8, 25, 7.1F).axis(Direction.Axis.X).angle(22.5F).end();
+                bust.allFaces((direction, face) -> face.texture("#body").uvs(0, 0, 16, 16)).end();
+            }
+        }
+        if (variant.form().hasLegs()) {
+            mannequinBox(model, -4, 0, -2, 0, 12, 2);
+            mannequinBox(model, 0, 0, -2, 4, 12, 2);
+        }
+        if (variant.form() == MannequinForm.LOWER) {
+            mannequinBox(model, -4, 12, -2, 4, 17, 2);
+        }
+        if (variant.form() == MannequinForm.UPPER) {
+            mannequinBox(model, -0.75F, 0, -0.75F, 0.75F, 12, 0.75F);
+        } else if (variant.form() == MannequinForm.HEAD) {
+            mannequinBox(model, -4, 5, -2, 4, 7, 2);
+            mannequinBox(model, -0.75F, 0, -0.75F, 0.75F, 5, 0.75F);
+        }
+        model.transforms()
+                .transform(ItemDisplayContext.GUI).rotation(15, 210, 0).translation(0, -4, 0).scale(0.45F).end()
+                .transform(ItemDisplayContext.GROUND).translation(0, 2, 0).scale(0.25F).end()
+                .transform(ItemDisplayContext.FIXED).translation(0, -4, 0).scale(0.5F).end()
+                .transform(ItemDisplayContext.THIRD_PERSON_RIGHT_HAND).rotation(0, 45, 0).scale(0.3F).end()
+                .transform(ItemDisplayContext.THIRD_PERSON_LEFT_HAND).rotation(0, 225, 0).scale(0.3F).end()
+                .transform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND).rotation(0, 45, 0).scale(0.35F).end()
+                .transform(ItemDisplayContext.FIRST_PERSON_LEFT_HAND).rotation(0, 225, 0).scale(0.35F).end();
+    }
+
+    private static void mannequinBox(ItemModelBuilder model, float x0, float y0, float z0, float x1, float y1, float z1) {
+        model.element().from(x0 + 8, y0, z0 + 8).to(x1 + 8, y1, z1 + 8)
+                .allFaces((direction, face) -> face.texture("#body").uvs(0, 0, 16, 16)).end();
     }
 
     private void wardrobeHalf(ItemModelBuilder model, String name, int yOffset) {

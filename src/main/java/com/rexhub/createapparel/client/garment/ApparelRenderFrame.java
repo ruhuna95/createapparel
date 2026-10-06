@@ -3,7 +3,7 @@ package com.rexhub.createapparel.client.garment;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.GarmentPartModel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedGarment;
 import com.rexhub.createapparel.garment.GarmentSlot;
-import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.HumanoidModel;
 
 import java.util.EnumMap;
 import java.util.IdentityHashMap;
@@ -16,7 +16,7 @@ public final class ApparelRenderFrame {
     private final Map<GarmentPartModel, DualEnvelopeDeformer.Pose> envelopes = new IdentityHashMap<>();
     private final Optional<GarmentHemGeometry.Slope> skirtSlope;
 
-    public ApparelRenderFrame(Function<GarmentSlot, Optional<ResolvedGarment>> resolver, PlayerModel<?> player) {
+    public ApparelRenderFrame(Function<GarmentSlot, Optional<ResolvedGarment>> resolver, HumanoidModel<?> player) {
         LegEnvelopeGeometry legs = new LegEnvelopeGeometry(player);
         for (GarmentSlot slot : GarmentSlot.values()) {
             resolver.apply(slot).ifPresent(garment -> {

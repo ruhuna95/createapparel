@@ -2,7 +2,7 @@ package com.rexhub.createapparel.client.garment;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.rexhub.createapparel.garment.GarmentSlot;
-import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -15,7 +15,7 @@ public final class LegEnvelopeGeometry {
     private float torsoBottom = Float.NaN;
     private float torsoFront;
 
-    public LegEnvelopeGeometry(PlayerModel<?> player) {
+    public LegEnvelopeGeometry(HumanoidModel<?> player) {
         Matrix4f inverse = pose(player.body).invert();
         Matrix4f right = new Matrix4f(inverse).mul(pose(player.rightLeg));
         Matrix4f left = new Matrix4f(inverse).mul(pose(player.leftLeg));
