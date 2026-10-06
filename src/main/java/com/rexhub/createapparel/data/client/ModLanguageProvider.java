@@ -22,6 +22,7 @@ public final class ModLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("screen.createapparel.mannequin.pose", "Pose: %s");
+        add("screen.createapparel.mannequin.rotation", "Rotation: %s°");
         add("item.createapparel.full_mannequin_white_classic", "White Full Mannequin Classic");
         add("entity.createapparel.full_mannequin_white_classic", "White Full Mannequin Classic");
         add("item.createapparel.full_mannequin_black_classic", "Black Full Mannequin Classic");

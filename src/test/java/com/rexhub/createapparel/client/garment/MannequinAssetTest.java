@@ -36,6 +36,74 @@ class MannequinAssetTest {
     }
 
     @Test
+    void serverHitTransformsMatchRenderedPartsForEveryProfileFormAndPreset() {
+        for (var variant : MannequinVariant.values()) {
+            var model = new MannequinModel(MannequinModel.createBodyLayer(variant.armProfile() == ArmProfile.SLIM).bakeRoot());
+            for (var pose : variant.form().poses()) {
+                model.apply(variant.form(), pose);
+                for (var part : MannequinInteraction.BodyPart.values()) {
+                    ModelPart rendered = switch (part) {
+                        case HEAD -> model.head;
+                        case BODY -> model.body;
+                        case LEFT_ARM -> model.leftArm;
+                        case RIGHT_ARM -> model.rightArm;
+                        case LEFT_LEG -> model.leftLeg;
+                        case RIGHT_LEG -> model.rightLeg;
+                    };
+                    if (!rendered.visible) continue;
+                    var stack = new PoseStack();
+                    rendered.translateAndRotate(stack);
+                    var renderedPoint = stack.last().pose().transformPosition(new Vector3f(1.2F, 3.4F, -2.1F).div(16)).mul(16);
+                    var hitPoint = MannequinInteraction.partTransform(variant, pose, part)
+                            .transformPosition(new Vector3f(1.2F, 3.4F, -2.1F));
+                    assertEquals(renderedPoint.x, hitPoint.x, 0.00001, variant + "/" + pose + "/" + part);
+                    assertEquals(renderedPoint.y, hitPoint.y, 0.00001);
+                    assertEquals(renderedPoint.z, hitPoint.z, 0.00001);
+                }
+            }
+        }
+    }
+
+    @Test
+    void pedestalAndSupportGeometryAreRenderedSeparatelyFromBodyRotation() {
+        for (var form : MannequinForm.values()) {
+            var model = new MannequinModel(MannequinModel.createBodyLayer(false).bakeRoot());
+            model.apply(form, form.defaultPose());
+            List<Vector3f> base = new ArrayList<>();
+            List<Vector3f> body = new ArrayList<>();
+            var baseConsumer = recordingConsumer(base);
+            var bodyConsumer = recordingConsumer(body);
+            var basePose = new PoseStack();
+            model.renderSupport(basePose, baseConsumer, 0, 0);
+            for (int step = 0; step < 16; step++) {
+                List<Vector3f> repeatedBase = new ArrayList<>();
+                model.renderSupport(basePose, recordingConsumer(repeatedBase), 0, 0);
+                assertEquals(base, repeatedBase);
+                var bodyPose = new PoseStack();
+                bodyPose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(step * 22.5F));
+                body.clear();
+                model.renderToBuffer(bodyPose, bodyConsumer, 0, 0, 1, 1, 1, 1);
+                assertFalse(body.isEmpty());
+                assertTrue(body.stream().noneMatch(vertex -> vertex.y >= (form.modelOriginPixels() - 1) / 16F + 0.0001F),
+                        "Rotating body excludes the pedestal bottom");
+            }
+            assertFalse(base.isEmpty());
+        }
+    }
+
+    private static com.mojang.blaze3d.vertex.VertexConsumer recordingConsumer(List<Vector3f> positions) {
+        return (com.mojang.blaze3d.vertex.VertexConsumer) java.lang.reflect.Proxy.newProxyInstance(
+                MannequinAssetTest.class.getClassLoader(), new Class<?>[]{com.mojang.blaze3d.vertex.VertexConsumer.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("vertex")) {
+                        positions.add(new Vector3f(((Number) args[0]).floatValue(),
+                                ((Number) args[1]).floatValue(), ((Number) args[2]).floatValue()));
+                    }
+                    return method.getReturnType() == void.class ? null : proxy;
+                });
+    }
+
+    @Test
     void twelveIdentitiesHaveFixedProfilesAndPreciseFormSlots() {
         assertEquals(12, MannequinVariant.values().length);
         assertEquals(12, Arrays.stream(MannequinVariant.values()).map(MannequinVariant::id).distinct().count());

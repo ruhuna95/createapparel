@@ -20,6 +20,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("screen.createapparel.mannequin.pose", "ポーズ: %s");
+        add("screen.createapparel.mannequin.rotation", "回転: %s°");
         add("item.createapparel.full_mannequin_white_classic", "全身マネキン（白・クラシック）");
         add("entity.createapparel.full_mannequin_white_classic", "全身マネキン（白・クラシック）");
         add("item.createapparel.full_mannequin_black_classic", "全身マネキン（黒・クラシック）");

@@ -35,6 +35,122 @@ public final class MannequinGameTests {
     }
 
     @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void clientMenuViewsValidateSyncedDefinitionsWithoutServerLookup(GameTestHelper helper) {
+        var entity = create(helper, MannequinVariant.UPPER_WHITE_CLASSIC);
+        helper.getLevel().addFreshEntity(entity);
+        var player = helper.makeMockPlayer();
+        var definitions = new java.util.HashMap<net.minecraft.resources.ResourceLocation,
+                com.rexhub.createapparel.garment.GarmentDefinition>();
+        com.rexhub.createapparel.garment.GarmentDefinitionManager.all().forEach(definition -> definitions.put(definition.id(), definition));
+        var mannequinBuffer = new FriendlyByteBuf(Unpooled.buffer());
+        var wardrobeBuffer = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            mannequinBuffer.writeVarInt(entity.getId());
+            wardrobeBuffer.writeBlockPos(entity.blockPosition());
+            var mannequinMenu = new MannequinMenu(31, player.getInventory(), mannequinBuffer);
+            var wardrobeMenu = new com.rexhub.createapparel.menu.WardrobeMenu(32, player.getInventory(), wardrobeBuffer);
+            for (com.rexhub.createapparel.menu.ApparelMenu menu : java.util.List.of(mannequinMenu, wardrobeMenu)) {
+                menu.loadout().setDefinitionLookup(id -> java.util.Optional.ofNullable(definitions.get(id)));
+                var shirt = new ItemStack(ModItems.SHIRT_LONGSLEEVES.get());
+                helper.assertTrue(menu.slots.get(GarmentSlot.TOP.ordinal()).mayPlace(shirt), "Client accepts an allowed slot");
+                helper.assertTrue(menu.slots.get(GarmentSlot.OUTER.ordinal()).mayPlace(shirt), "Client accepts alternate allowed slot");
+                helper.assertTrue(!menu.slots.get(GarmentSlot.HEAD.ordinal()).mayPlace(shirt), "Client rejects unrelated allowedSlots");
+                helper.assertTrue(!menu.slots.get(GarmentSlot.TOP.ordinal()).mayPlace(new ItemStack(Items.STONE)), "Client rejects non-garments");
+                menu.slots.get(com.rexhub.createapparel.menu.ApparelMenu.PLAYER_INVENTORY_START).set(shirt.copy());
+                helper.assertTrue(!menu.quickMoveStack(player, com.rexhub.createapparel.menu.ApparelMenu.PLAYER_INVENTORY_START).isEmpty()
+                        && !menu.loadout().getStack(GarmentSlot.TOP).isEmpty(), "Client shift-click uses synced defaultSlot");
+                menu.loadout().setDefinitionLookup(id -> java.util.Optional.empty());
+                helper.assertTrue(!menu.slots.get(GarmentSlot.TOP.ordinal()).mayPlace(shirt), "Missing client definition is rejected without server fallback");
+                menu.loadout().setStackInSlot(GarmentSlot.TOP.ordinal(), shirt.copy());
+                helper.assertTrue(!menu.loadout().getStack(GarmentSlot.TOP).isEmpty(), "Authoritative existing stack survives missing definitions");
+                helper.assertTrue(!menu.loadout().extractItem(GarmentSlot.TOP.ordinal(), 1, false).isEmpty(), "Unknown definition stack is recoverable");
+            }
+            helper.assertTrue(!mannequinMenu.slots.get(GarmentSlot.BOTTOM.ordinal()).mayPlace(new ItemStack(ModItems.DENIM_PANTS.get())),
+                    "Client enforces form restrictions too");
+            mannequinMenu.loadout().setDefinitionLookup(id -> java.util.Optional.ofNullable(definitions.get(id)));
+            mannequinMenu.loadout().setStackInSlot(GarmentSlot.TOP.ordinal(), new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()));
+            mannequinMenu.slots.get(com.rexhub.createapparel.menu.ApparelMenu.PLAYER_INVENTORY_START).set(new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()));
+            helper.assertTrue(!mannequinMenu.quickMoveStack(player, com.rexhub.createapparel.menu.ApparelMenu.PLAYER_INVENTORY_START).isEmpty()
+                    && !mannequinMenu.loadout().getStack(GarmentSlot.OUTER).isEmpty(), "Mannequin client resolves empty alternate slot");
+        } finally {
+            mannequinBuffer.release();
+            wardrobeBuffer.release();
+            entity.discard();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void posedHitSelectionTracksPartsAndRelativeRotation(GameTestHelper helper) {
+        for (var variant : MannequinVariant.values()) {
+            var entity = create(helper, variant);
+            var loadout = entity.mannequinState().loadout();
+            for (var slot : variant.form().slots()) {
+                var definition = com.rexhub.createapparel.garment.GarmentDefinitionManager.all().stream()
+                        .filter(d -> d.allowedSlots().contains(slot)).findFirst().orElseThrow();
+                var item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(definition.id());
+                loadout.setStackInSlot(slot.ordinal(), new ItemStack(java.util.Objects.requireNonNull(item)));
+            }
+            for (var pose : variant.form().poses()) for (float yaw : new float[]{0, 45, 135, -170}) for (int step : new int[]{0, 1, 7, 15}) {
+                if (variant.form().hasHead()) {
+                    assertPosedSlot(helper, variant, pose, yaw, step, MannequinInteraction.BodyPart.HEAD,
+                            new org.joml.Vector3f(0, -4, -4), GarmentSlot.FACE, loadout);
+                    assertPosedSlot(helper, variant, pose, yaw, step, MannequinInteraction.BodyPart.HEAD,
+                            new org.joml.Vector3f(0, -4, 4), GarmentSlot.HEAD, loadout);
+                }
+                if (variant.form().hasTorso()) {
+                    assertPosedSlot(helper, variant, pose, yaw, step, MannequinInteraction.BodyPart.BODY,
+                            new org.joml.Vector3f(0, 6, 2.4F), GarmentSlot.BACK, loadout);
+                    assertPosedSlot(helper, variant, pose, yaw, step, MannequinInteraction.BodyPart.LEFT_ARM,
+                            new org.joml.Vector3f(0, 9, -2.4F), GarmentSlot.HANDS, loadout);
+                }
+                if (variant.form().hasLegs()) {
+                    assertPosedSlot(helper, variant, pose, yaw, step, MannequinInteraction.BodyPart.LEFT_LEG,
+                            new org.joml.Vector3f(0, 11, -2.4F), GarmentSlot.FEET, loadout);
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    private static void assertPosedSlot(GameTestHelper helper, MannequinVariant variant, PosePreset pose, float yaw, int step,
+                                        MannequinInteraction.BodyPart part, org.joml.Vector3f local, GarmentSlot expected,
+                                        com.rexhub.createapparel.apparel.ApparelLoadout loadout) {
+        var point = MannequinInteraction.partTransform(variant, pose, part).transformPosition(local);
+        float rotation = step * 22.5F;
+        var hit = new Vec3(point.x / 16, (variant.form().modelOriginPixels() - point.y) / 16, -point.z / 16)
+                .yRot((float) Math.toRadians(-yaw - rotation));
+        var selected = MannequinInteraction.clickedSlot(variant, pose, hit, yaw, rotation, loadout);
+        helper.assertTrue(selected.orElse(null) == expected,
+                "Posed hit: " + variant + "/" + pose + "/" + yaw + "/" + step + "/" + part + " selected=" + selected);
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void rotationPacketsAndLegacyStateRoundTrip(GameTestHelper helper) {
+        for (int step = 0; step < MannequinState.ROTATION_STEPS; step++) {
+            var packet = MannequinActionPacket.rotation(43, step);
+            var buffer = new FriendlyByteBuf(Unpooled.buffer());
+            try {
+                packet.encode(buffer);
+                helper.assertTrue(packet.equals(MannequinActionPacket.decode(buffer)), "Rotation packet round trip");
+            } finally { buffer.release(); }
+            var state = new MannequinState(MannequinForm.FULL);
+            state.setBodyRotationStep(step);
+            var saved = state.serializeNBT();
+            var restored = new MannequinState(MannequinForm.FULL);
+            restored.deserializeNBT(saved, MannequinForm.FULL);
+            helper.assertTrue(restored.bodyRotationDegrees() == step * 22.5F, "All 16 rotation steps persist");
+            saved.remove("BodyRotationStep");
+            restored.deserializeNBT(saved, MannequinForm.FULL);
+            helper.assertTrue(restored.bodyRotationStep() == 0, "Legacy saves default to no body offset");
+            saved.putInt("BodyRotationStep", 16);
+            restored.deserializeNBT(saved, MannequinForm.FULL);
+            helper.assertTrue(restored.bodyRotationStep() == 0, "Malformed rotation save uses safe default");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
     public static void allVariantsSlotsAndFixedIdentity(GameTestHelper helper) {
         helper.assertTrue(ModEntities.mannequins().size() == 12 && ModItems.mannequins().size() == 12, "All 12 types and items");
         for (var variant : MannequinVariant.values()) {
@@ -60,7 +176,7 @@ public final class MannequinGameTests {
             }
             helper.assertTrue(!loadout.isItemValid(GarmentSlot.HEAD.ordinal(), new ItemStack(Items.STONE)), "Reject non-garments");
             var saved = entity.mannequinState().serializeNBT();
-            helper.assertTrue(saved.getAllKeys().equals(java.util.Set.of("ApparelLoadout", "PosePreset")), "Only mutable state is saved");
+            helper.assertTrue(saved.getAllKeys().equals(java.util.Set.of("ApparelLoadout", "PosePreset", "BodyRotationStep")), "Only mutable state is saved");
             var apparel = saved.getCompound("ApparelLoadout");
             helper.assertTrue(!apparel.contains("ChestProfile") && !apparel.contains("SkinTone") && !apparel.contains("ArmProfile"), "No player profile NBT");
         }
@@ -90,10 +206,13 @@ public final class MannequinGameTests {
                 loadout.insertItem(GarmentSlot.TOP.ordinal(), shirt, false);
             }
             for (var pose : variant.form().poses()) {
+                entity.mannequinState().setBodyRotationStep(pose.ordinal() % MannequinState.ROTATION_STEPS);
                 helper.assertTrue(entity.mannequinState().setPose(pose, variant.form()), "Supported pose accepted");
                 var restored = create(helper, variant);
                 restored.load(entity.saveWithoutId(new net.minecraft.nbt.CompoundTag()));
                 helper.assertTrue(restored.mannequinState().pose() == pose && restored.getYRot() == 135, "Pose and vanilla yaw persist");
+                helper.assertTrue(restored.mannequinState().bodyRotationStep() == entity.mannequinState().bodyRotationStep(),
+                        "Relative body rotation persists separately from vanilla yaw");
                 helper.assertTrue(restored.mannequinState().loadout().serializeNBT().equals(loadout.serializeNBT()), "Items, appearance and style persist");
                 var state = entity.getEntityData().getNonDefaultValues().stream().map(value -> value.value())
                         .filter(value -> value instanceof net.minecraft.nbt.CompoundTag tag && tag.contains("ApparelLoadout"))
@@ -133,8 +252,18 @@ public final class MannequinGameTests {
         helper.assertTrue(entity.mannequinState().pose() == PosePreset.STRAIGHT, "Wrong form pose rejected");
         MannequinActionPacket.pose(17, PosePreset.ARMS_CROSSED).handle(player);
         helper.assertTrue(entity.mannequinState().pose() == PosePreset.ARMS_CROSSED, "Valid pose applied");
+        MannequinActionPacket.rotation(18, 3).handle(player);
+        helper.assertTrue(entity.mannequinState().bodyRotationStep() == 0, "Stale rotation packet rejected");
+        MannequinActionPacket.rotation(17, -1).handle(player);
+        MannequinActionPacket.rotation(17, 16).handle(player);
+        helper.assertTrue(entity.mannequinState().bodyRotationStep() == 0, "Out-of-range rotation rejected");
+        MannequinActionPacket.rotation(17, 3).handle(player);
+        helper.assertTrue(entity.mannequinState().bodyRotationDegrees() == 67.5F && entity.getYRot() == 135,
+                "Valid rotation edits body only in 22.5 degree steps");
         player.setPos(entity.getX() + 20, entity.getY(), entity.getZ());
         MannequinActionPacket.pose(17, PosePreset.CASUAL).handle(player);
+        MannequinActionPacket.rotation(17, 5).handle(player);
+        helper.assertTrue(entity.mannequinState().bodyRotationStep() == 3, "Remote rotation rejected");
         helper.assertTrue(entity.mannequinState().pose() == PosePreset.ARMS_CROSSED, "Remote action rejected");
         player.containerMenu = player.inventoryMenu;
         helper.succeed();
@@ -270,16 +399,16 @@ public final class MannequinGameTests {
         headLoadout.insertItem(GarmentSlot.FACE.ordinal(), new ItemStack(ModItems.GLASSES.get()), false);
         headLoadout.insertItem(GarmentSlot.HEAD.ordinal(), new ItemStack(ModItems.CAP.get()), false);
         helper.assertTrue(com.rexhub.createapparel.entity.MannequinInteraction.clickedSlot(
-                head.variant().form(), new Vec3(0, 0.75, 0.2), 0, headLoadout).orElseThrow() == GarmentSlot.FACE,
+                head.variant(), PosePreset.FRONT, new Vec3(0, 0.75, 0.2), 0, 0, headLoadout).orElseThrow() == GarmentSlot.FACE,
                 "Short head front removes face garment");
         helper.assertTrue(com.rexhub.createapparel.entity.MannequinInteraction.clickedSlot(
-                head.variant().form(), new Vec3(0, 0.75, -0.2), 0, headLoadout).orElseThrow() == GarmentSlot.HEAD,
+                head.variant(), PosePreset.FRONT, new Vec3(0, 0.75, -0.2), 0, 0, headLoadout).orElseThrow() == GarmentSlot.HEAD,
                 "Short head back removes head garment");
         var lower = create(helper, MannequinVariant.LOWER_WHITE);
         var lowerLoadout = lower.mannequinState().loadout();
         lowerLoadout.insertItem(GarmentSlot.BOTTOM.ordinal(), new ItemStack(ModItems.DENIM_PANTS.get()), false);
         helper.assertTrue(com.rexhub.createapparel.entity.MannequinInteraction.clickedSlot(
-                lower.variant().form(), new Vec3(0, 1.05, 0.15), 0, lowerLoadout).orElseThrow() == GarmentSlot.BOTTOM,
+                lower.variant(), PosePreset.STRAIGHT, new Vec3(0, 1.05, 0.15), 0, 0, lowerLoadout).orElseThrow() == GarmentSlot.BOTTOM,
                 "Lower partial torso removes bottom garment");
         helper.succeed();
     }

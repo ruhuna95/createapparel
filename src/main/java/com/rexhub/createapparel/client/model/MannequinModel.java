@@ -91,10 +91,13 @@ public final class MannequinModel extends HumanoidModel<Mannequin> {
     public void renderToBuffer(PoseStack poseStack, VertexConsumer vertices, int light, int overlay,
                                float red, float green, float blue, float alpha) {
         super.renderToBuffer(poseStack, vertices, light, overlay, red, green, blue, alpha);
-        pedestal.render(poseStack, vertices, light, overlay, red, green, blue, alpha);
-        upperSupport.render(poseStack, vertices, light, overlay, red, green, blue, alpha);
-        headSupport.render(poseStack, vertices, light, overlay, red, green, blue, alpha);
         lowerBody.render(poseStack, vertices, light, overlay, red, green, blue, alpha);
         headBody.render(poseStack, vertices, light, overlay, red, green, blue, alpha);
+    }
+
+    public void renderSupport(PoseStack poseStack, VertexConsumer vertices, int light, int overlay) {
+        pedestal.render(poseStack, vertices, light, overlay);
+        upperSupport.render(poseStack, vertices, light, overlay);
+        headSupport.render(poseStack, vertices, light, overlay);
     }
 }

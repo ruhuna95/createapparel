@@ -87,9 +87,11 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     private Button chestProfileButton;
     private Button skinToneButton;
     private Button poseButton;
+    private Button rotationButton;
 
     public WardrobeScreen(T menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
+        menu.loadout().setDefinitionLookup(ClientGarmentAssets::getDefinition);
         imageWidth = SCREEN_WIDTH;
         imageHeight = 228;
         slotSelectionOrder = List.of(GarmentSlot.values()).stream()
@@ -115,6 +117,9 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
                 ? GarmentSlot.TOP : slotSelectionOrder.get(0));
 
         if (menu instanceof MannequinMenu mannequinMenu) {
+            rotationButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleRotation(1))
+                    .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 91, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT).build());
+            buttonScroll.bind(rotationButton, this::cycleRotation);
             poseButton = addRenderableWidget(Button.builder(Component.empty(), button -> cyclePose(1))
                     .bounds(leftPos + PREVIEW_PANEL_X + 2, topPos + 113, PREVIEW_PANEL_WIDTH - 4, BUTTON_HEIGHT).build());
             buttonScroll.bind(poseButton, this::cyclePose);
@@ -292,7 +297,16 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
         if (poseButton != null && menu instanceof MannequinMenu mannequinMenu) {
             poseButton.setMessage(Component.translatable("screen.createapparel.mannequin.pose",
                     Component.translatable("pose.createapparel." + mannequinMenu.mannequin().mannequinState().pose().id())));
+            rotationButton.setMessage(Component.translatable("screen.createapparel.mannequin.rotation",
+                    mannequinMenu.mannequin().mannequinState().bodyRotationDegrees()));
         }
+    }
+
+    private void cycleRotation(int direction) {
+        if (!(menu instanceof MannequinMenu mannequinMenu)) return;
+        int step = Math.floorMod(mannequinMenu.mannequin().mannequinState().bodyRotationStep() + direction,
+                com.rexhub.createapparel.entity.MannequinState.ROTATION_STEPS);
+        ModNetwork.updateMannequin(MannequinActionPacket.rotation(menu.containerId, step));
     }
 
     private void cycleChestProfile(int direction) {
@@ -465,7 +479,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     private void renderPlayerPreview(GuiGraphics graphics, int mouseX, int mouseY) {
         if (menu instanceof MannequinMenu mannequinMenu) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(graphics,
-                    leftPos + PREVIEW_CENTER_X, topPos + 104, 42,
+                    leftPos + PREVIEW_CENTER_X, topPos + 88, 35,
                     leftPos + PREVIEW_CENTER_X - mouseX, topPos + 49 - mouseY, mannequinMenu.mannequin());
             return;
         }

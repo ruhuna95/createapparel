@@ -38,7 +38,7 @@ public final class WardrobeMenu extends ApparelMenu {
 
     @Override
     protected Optional<GarmentSlot> quickMoveSlot(ItemStack stack) {
-        return ApparelLoadout.defaultSlot(stack);
+        return loadout.definition(stack).map(com.rexhub.createapparel.garment.GarmentDefinition::defaultSlot);
     }
 
     @Override

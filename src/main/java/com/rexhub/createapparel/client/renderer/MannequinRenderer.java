@@ -43,15 +43,18 @@ public final class MannequinRenderer extends EntityRenderer<Mannequin> {
         poseStack.pushPose();
         float bodyYaw = Mth.rotLerp(partialTick, entity.yBodyRotO, entity.yBodyRot);
         poseStack.mulPose(Axis.YP.rotationDegrees(180 - bodyYaw));
+        poseStack.translate(0, entity.variant().form().modelOriginPixels() / 16.0F, 0);
+        poseStack.scale(-1, -1, 1);
+        var vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(getTextureLocation(entity)));
+        model.renderSupport(poseStack, vertices, light, OverlayTexture.NO_OVERLAY);
+        poseStack.mulPose(Axis.YP.rotationDegrees(entity.mannequinState().bodyRotationDegrees()));
         if (entity.lastHitTime() != Long.MIN_VALUE) {
             float sinceHit = entity.level().getGameTime() - entity.lastHitTime() + partialTick;
             if (sinceHit >= 0 && sinceHit < 5) {
                 poseStack.mulPose(Axis.YP.rotationDegrees((float) Math.sin(sinceHit / 1.5F * Math.PI) * 3));
             }
         }
-        poseStack.translate(0, entity.variant().form().modelOriginPixels() / 16.0F, 0);
-        poseStack.scale(-1, -1, 1);
-        model.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(getTextureLocation(entity))),
+        model.renderToBuffer(poseStack, vertices,
                 light, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
         CommonGarmentRenderer.renderHumanoid(new GarmentRenderContext(model, cached.snapshot(),
                 GarmentRenderContext.TargetType.MANNEQUIN), poseStack, buffer, light, OverlayTexture.NO_OVERLAY);

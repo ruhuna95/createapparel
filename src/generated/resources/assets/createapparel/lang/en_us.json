@@ -539,6 +539,7 @@
   "pose.createapparel.tilt_right": "Tilt Right",
   "pose.createapparel.walking": "Walking",
   "screen.createapparel.mannequin.pose": "Pose: %s",
+  "screen.createapparel.mannequin.rotation": "Rotation: %s°",
   "screen.createapparel.sewing_pattern": "Sewing Pattern",
   "screen.createapparel.sewing_pattern.accent_color": "Accent: %s",
   "screen.createapparel.sewing_pattern.category": "Category: %s",

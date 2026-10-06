@@ -30,6 +30,7 @@ public class ApparelLoadout extends ItemStackHandler {
     private boolean suppressChangeNotification;
     private final Map<GarmentSlot, EquippedStyleState> styleStates = new EnumMap<>(GarmentSlot.class);
     private final Set<GarmentSlot> allowedSlots;
+    private java.util.function.Function<ResourceLocation, Optional<GarmentDefinition>> definitionLookup = GarmentDefinitionManager::get;
 
     public ApparelLoadout() {
         this(EnumSet.allOf(GarmentSlot.class));
@@ -47,11 +48,22 @@ public class ApparelLoadout extends ItemStackHandler {
     public static ApparelLoadout synchronizedView(Set<GarmentSlot> slots) {
         return new ApparelLoadout(slots) {
             @Override
-            public boolean isItemValid(int slot, ItemStack stack) {
+            public void setStackInSlot(int slot, ItemStack stack) {
                 validateSlotIndex(slot);
-                return supports(GarmentSlot.values()[slot]) && stack.getItem() instanceof GarmentItem;
+                stacks.set(slot, stack);
+                onContentsChanged(slot);
             }
         };
+    }
+
+    public void setDefinitionLookup(java.util.function.Function<ResourceLocation, Optional<GarmentDefinition>> lookup) {
+        definitionLookup = Objects.requireNonNull(lookup);
+    }
+
+    public Optional<GarmentDefinition> definition(ItemStack stack) {
+        if (!(stack.getItem() instanceof GarmentItem)) return Optional.empty();
+        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        return id == null ? Optional.empty() : definitionLookup.apply(id);
     }
 
     public ItemStack getStack(GarmentSlot slot) {
@@ -63,8 +75,7 @@ public class ApparelLoadout extends ItemStackHandler {
         if (stack.isEmpty()) {
             return Optional.empty();
         }
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
-        return id == null ? Optional.empty() : GarmentDefinitionManager.get(id);
+        return definition(stack);
     }
 
     public EquippedStyleState styleState(GarmentSlot slot) {
@@ -231,9 +242,7 @@ public class ApparelLoadout extends ItemStackHandler {
         if (!supports(GarmentSlot.values()[slot]) || !(stack.getItem() instanceof GarmentItem)) {
             return false;
         }
-        ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
-        return itemId != null
-                && GarmentDefinitionManager.get(itemId)
+        return definition(stack)
                 .map(definition -> definition.allowedSlots().contains(GarmentSlot.values()[slot]))
                 .orElse(false);
     }
@@ -273,9 +282,7 @@ public class ApparelLoadout extends ItemStackHandler {
 
     public Optional<GarmentSlot> resolveEmptySlot(ItemStack stack) {
         if (!(stack.getItem() instanceof GarmentItem)) return Optional.empty();
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
-        if (id == null) return Optional.empty();
-        return GarmentDefinitionManager.get(id).flatMap(definition -> {
+        return definition(stack).flatMap(definition -> {
             GarmentSlot preferred = definition.defaultSlot();
             if (isItemValid(preferred.ordinal(), stack) && getStack(preferred).isEmpty()) {
                 return Optional.of(preferred);

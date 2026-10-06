@@ -102,7 +102,8 @@ public final class Mannequin extends LivingEntity {
         var loadout = mannequinState.loadout();
         ItemStack held = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
-            var slot = MannequinInteraction.clickedSlot(variant.form(), hit, getYRot(), loadout);
+            var slot = MannequinInteraction.clickedSlot(variant, mannequinState.pose(), hit,
+                    getYRot(), mannequinState.bodyRotationDegrees(), loadout);
             if (slot.isEmpty()) return InteractionResult.PASS;
             if (!level().isClientSide) {
                 ItemStack removed = loadout.extractItem(slot.get().ordinal(), 1, false);
