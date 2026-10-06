@@ -44,10 +44,12 @@ public final class MannequinModel extends HumanoidModel<Mannequin> {
         }
         root.addOrReplaceChild("pedestal", CubeListBuilder.create().texOffs(0, 48)
                 .addBox(-6, 24, -6, 12, 1, 12), PartPose.ZERO);
+        float upperSupportHeight = MannequinForm.UPPER.supportHeightPixels();
+        float headSupportHeight = MannequinForm.HEAD.supportHeightPixels();
         root.addOrReplaceChild("upper_support", CubeListBuilder.create().texOffs(0, 0)
-                .addBox(-0.75F, 12, -0.75F, 1.5F, 12, 1.5F), PartPose.ZERO);
+                .addBox(-0.75F, 24 - upperSupportHeight, -0.75F, 1.5F, upperSupportHeight, 1.5F), PartPose.ZERO);
         root.addOrReplaceChild("head_support", CubeListBuilder.create().texOffs(0, 0)
-                .addBox(-0.75F, 2, -0.75F, 1.5F, 5, 1.5F), PartPose.ZERO);
+                .addBox(-0.75F, 7 - headSupportHeight, -0.75F, 1.5F, headSupportHeight, 1.5F), PartPose.ZERO);
         root.addOrReplaceChild("lower_body", CubeListBuilder.create().texOffs(16, 23)
                 .addBox(-4, 7, -2, 8, 5, 4), PartPose.ZERO);
         root.addOrReplaceChild("head_body", CubeListBuilder.create().texOffs(16, 16)

@@ -98,31 +98,33 @@ public final class ModItemModelProvider extends ItemModelProvider {
         mannequinBox(model, -6, -1, -6, 6, 0, 6);
         if (variant.form().hasHead()) {
             float headBottom = variant.form() == MannequinForm.HEAD ? 7 : 24;
-            mannequinBox(model, -4, headBottom, -4, 4, headBottom + 8, 4);
+            mannequinBodyBox(model, variant.form(), -4, headBottom, -4, 4, headBottom + 8, 4);
         }
         if (variant.form().hasTorso()) {
-            mannequinBox(model, -4, 12, -2, 4, 24, 2);
+            mannequinBodyBox(model, variant.form(), -4, 12, -2, 4, 24, 2);
             boolean slim = variant.armProfile() == ArmProfile.SLIM;
-            mannequinBox(model, slim ? -7 : -8, slim ? 11.5F : 12, -2, -4, slim ? 23.5F : 24, 2);
-            mannequinBox(model, 4, slim ? 11.5F : 12, -2, slim ? 7 : 8, slim ? 23.5F : 24, 2);
+            mannequinBodyBox(model, variant.form(), slim ? -7 : -8, slim ? 11.5F : 12, -2, -4, slim ? 23.5F : 24, 2);
+            mannequinBodyBox(model, variant.form(), 4, slim ? 11.5F : 12, -2, slim ? 7 : 8, slim ? 23.5F : 24, 2);
             if (slim) {
-                var bust = model.element().from(4.5F, 19.52F, 6.61F).to(11.5F, 23.52F, 9.61F);
-                bust.rotation().origin(8, 25, 7.1F).axis(Direction.Axis.X).angle(22.5F).end();
+                float scale = MannequinForm.BODY_SCALE;
+                var bust = model.element().from(8 - 3.5F * scale, 19.52F * scale, 8 - 1.39F * scale)
+                        .to(8 + 3.5F * scale, 23.52F * scale, 8 + 1.61F * scale);
+                bust.rotation().origin(8, 25 * scale, 8 - 0.9F * scale).axis(Direction.Axis.X).angle(22.5F).end();
                 bust.allFaces((direction, face) -> face.texture("#body").uvs(0, 0, 16, 16)).end();
             }
         }
         if (variant.form().hasLegs()) {
-            mannequinBox(model, -4, 0, -2, 0, 12, 2);
-            mannequinBox(model, 0, 0, -2, 4, 12, 2);
+            mannequinBodyBox(model, variant.form(), -4, 0, -2, 0, 12, 2);
+            mannequinBodyBox(model, variant.form(), 0, 0, -2, 4, 12, 2);
         }
         if (variant.form() == MannequinForm.LOWER) {
-            mannequinBox(model, -4, 12, -2, 4, 17, 2);
+            mannequinBodyBox(model, variant.form(), -4, 12, -2, 4, 17, 2);
         }
         if (variant.form() == MannequinForm.UPPER) {
-            mannequinBox(model, -0.75F, 0, -0.75F, 0.75F, 12, 0.75F);
+            mannequinBox(model, -0.75F, 0, -0.75F, 0.75F, variant.form().supportHeightPixels(), 0.75F);
         } else if (variant.form() == MannequinForm.HEAD) {
-            mannequinBox(model, -4, 5, -2, 4, 7, 2);
-            mannequinBox(model, -0.75F, 0, -0.75F, 0.75F, 5, 0.75F);
+            mannequinBodyBox(model, variant.form(), -4, 5, -2, 4, 7, 2);
+            mannequinBox(model, -0.75F, 0, -0.75F, 0.75F, variant.form().supportHeightPixels(), 0.75F);
         }
         model.transforms()
                 .transform(ItemDisplayContext.GUI).rotation(15, 210, 0).translation(0, -4, 0).scale(0.45F).end()
@@ -132,6 +134,14 @@ public final class ModItemModelProvider extends ItemModelProvider {
                 .transform(ItemDisplayContext.THIRD_PERSON_LEFT_HAND).rotation(0, 225, 0).scale(0.3F).end()
                 .transform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND).rotation(0, 45, 0).scale(0.35F).end()
                 .transform(ItemDisplayContext.FIRST_PERSON_LEFT_HAND).rotation(0, 225, 0).scale(0.35F).end();
+    }
+
+    private static void mannequinBodyBox(ItemModelBuilder model, MannequinForm form,
+                                         float x0, float y0, float z0, float x1, float y1, float z1) {
+        float scale = MannequinForm.BODY_SCALE;
+        float yOffset = form == MannequinForm.HEAD ? scale : 0;
+        mannequinBox(model, x0 * scale, y0 * scale + yOffset, z0 * scale,
+                x1 * scale, y1 * scale + yOffset, z1 * scale);
     }
 
     private static void mannequinBox(ItemModelBuilder model, float x0, float y0, float z0, float x1, float y1, float z1) {

@@ -9,6 +9,7 @@ import com.rexhub.createapparel.client.garment.GarmentRenderContext;
 import com.rexhub.createapparel.client.garment.LoadoutRenderSnapshot;
 import com.rexhub.createapparel.client.model.MannequinModel;
 import com.rexhub.createapparel.entity.Mannequin;
+import com.rexhub.createapparel.entity.MannequinForm;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -43,10 +44,14 @@ public final class MannequinRenderer extends EntityRenderer<Mannequin> {
         poseStack.pushPose();
         float bodyYaw = Mth.rotLerp(partialTick, entity.yBodyRotO, entity.yBodyRot);
         poseStack.mulPose(Axis.YP.rotationDegrees(180 - bodyYaw));
+        poseStack.pushPose();
         poseStack.translate(0, entity.variant().form().modelOriginPixels() / 16.0F, 0);
         poseStack.scale(-1, -1, 1);
         var vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(getTextureLocation(entity)));
         model.renderSupport(poseStack, vertices, light, OverlayTexture.NO_OVERLAY);
+        poseStack.popPose();
+        poseStack.translate(0, entity.variant().form().bodyOriginHeight(), 0);
+        poseStack.scale(-MannequinForm.BODY_SCALE, -MannequinForm.BODY_SCALE, MannequinForm.BODY_SCALE);
         poseStack.mulPose(Axis.YP.rotationDegrees(entity.mannequinState().bodyRotationDegrees()));
         if (entity.lastHitTime() != Long.MIN_VALUE) {
             float sinceHit = entity.level().getGameTime() - entity.lastHitTime() + partialTick;

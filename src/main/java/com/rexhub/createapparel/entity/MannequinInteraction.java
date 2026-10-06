@@ -2,7 +2,9 @@ package com.rexhub.createapparel.entity;
 
 import com.rexhub.createapparel.apparel.ApparelLoadout;
 import com.rexhub.createapparel.apparel.ArmProfile;
+import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.garment.GarmentSlot;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -14,27 +16,63 @@ public final class MannequinInteraction {
 
     private MannequinInteraction() { }
 
-    public static Optional<GarmentSlot> clickedSlot(MannequinVariant variant, PosePreset pose, Vec3 hit,
+    public static Optional<GarmentSlot> clickedSlot(MannequinVariant variant, PosePreset pose, Vec3 rayStart, Vec3 rayEnd,
                                                   float yaw, float bodyRotation, ApparelLoadout loadout) {
-        Vec3 horizontal = hit.yRot((float) Math.toRadians(yaw + bodyRotation));
-        Vector3f point = new Vector3f((float) horizontal.x * 16,
-                variant.form().modelOriginPixels() - (float) hit.y * 16, (float) -horizontal.z * 16);
+        if (rayStart.distanceToSqr(rayEnd) < 1.0E-12) return Optional.empty();
+        Vector3f start = modelPoint(variant, rayStart, yaw + bodyRotation);
+        Vector3f end = modelPoint(variant, rayEnd, yaw + bodyRotation);
         BodyPart nearest = null;
         Vector3f nearestLocal = new Vector3f();
-        float distance = Float.POSITIVE_INFINITY;
+        double distance = Double.POSITIVE_INFINITY;
         for (BodyPart part : BodyPart.values()) {
             if (!exists(part, variant.form())) continue;
-            Vector3f local = partTransform(variant, pose, part).invert().transformPosition(new Vector3f(point));
-            float candidateDistance = bounds(part, variant).distanceSquared(local);
+            Matrix4f inverse = partTransform(variant, pose, part).invert();
+            Vector3f localStart = inverse.transformPosition(new Vector3f(start));
+            Vector3f localEnd = inverse.transformPosition(new Vector3f(end));
+            Vec3 from = new Vec3(localStart.x, localStart.y, localStart.z);
+            Vec3 to = new Vec3(localEnd.x, localEnd.y, localEnd.z);
+            var intersection = intersect(bounds(part, variant), from, to);
+            if (part == BodyPart.BODY && variant.form().hasTorso() && variant.chestProfile() == ChestProfile.BUST) {
+                var bustHit = bustIntersection(from, to);
+                if (bustHit.isPresent() && (intersection.isEmpty()
+                        || from.distanceToSqr(bustHit.get()) < from.distanceToSqr(intersection.get()))) {
+                    intersection = bustHit;
+                }
+            }
+            if (intersection.isEmpty()) continue;
+            Vec3 local = intersection.get();
+            double candidateDistance = from.distanceToSqr(local);
             if (candidateDistance < distance) {
                 nearest = part;
-                nearestLocal.set(local);
+                nearestLocal.set((float) local.x, (float) local.y, (float) local.z);
                 distance = candidateDistance;
             }
         }
         if (nearest == null) return Optional.empty();
         return candidates(nearest, nearestLocal, variant.form()).stream().filter(variant.form().slots()::contains)
                 .filter(slot -> !loadout.getStack(slot).isEmpty()).findFirst();
+    }
+
+    private static Vector3f modelPoint(MannequinVariant variant, Vec3 point, float rotation) {
+        Vec3 local = variant.form().entityToModel(point, rotation);
+        return new Vector3f((float) local.x, (float) local.y, (float) local.z);
+    }
+
+    private static Optional<Vec3> intersect(AABB bounds, Vec3 from, Vec3 to) {
+        AABB preciseBounds = bounds.inflate(1.0E-5);
+        return preciseBounds.contains(from) ? Optional.of(from) : preciseBounds.clip(from, to);
+    }
+
+    private static Optional<Vec3> bustIntersection(Vec3 from, Vec3 to) {
+        Matrix4f transform = new Matrix4f().translation(0, -1, -0.9F).rotateX(-(float) Math.PI / 6);
+        Matrix4f inverse = new Matrix4f(transform).invert();
+        Vector3f start = inverse.transformPosition(new Vector3f((float) from.x, (float) from.y, (float) from.z));
+        Vector3f end = inverse.transformPosition(new Vector3f((float) to.x, (float) to.y, (float) to.z));
+        return intersect(new AABB(-3.5, 1.48, -0.49, 3.5, 5.48, 2.51),
+                new Vec3(start.x, start.y, start.z), new Vec3(end.x, end.y, end.z)).map(hit -> {
+                    Vector3f point = transform.transformPosition(new Vector3f((float) hit.x, (float) hit.y, (float) hit.z));
+                    return new Vec3(point.x, point.y, point.z);
+                });
     }
 
     public static Matrix4f partTransform(MannequinVariant variant, PosePreset preset, BodyPart part) {
@@ -69,15 +107,15 @@ public final class MannequinInteraction {
         };
     }
 
-    private static Bounds bounds(BodyPart part, MannequinVariant variant) {
+    private static AABB bounds(BodyPart part, MannequinVariant variant) {
         boolean slim = variant.armProfile() == ArmProfile.SLIM;
         return switch (part) {
-            case HEAD -> new Bounds(-4, -8, -4, 4, 0, 4);
-            case BODY -> new Bounds(-4, variant.form() == MannequinForm.LOWER ? 7 : 0, -2, 4, 12, 2);
-            case LEFT_ARM -> new Bounds(-1, -2, -2, slim ? 2 : 3, 10, 2);
-            case RIGHT_ARM -> new Bounds(slim ? -2 : -3, -2, -2, 1, 10, 2);
-            case LEFT_LEG -> new Bounds(-1.9F, 0, -2, 2.1F, 12, 2);
-            case RIGHT_LEG -> new Bounds(-2.1F, 0, -2, 1.9F, 12, 2);
+            case HEAD -> new AABB(-4, -8, -4, 4, 0, 4);
+            case BODY -> new AABB(-4, variant.form() == MannequinForm.LOWER ? 7 : 0, -2, 4, 12, 2);
+            case LEFT_ARM -> new AABB(-1, -2, -2, slim ? 2 : 3, 10, 2);
+            case RIGHT_ARM -> new AABB(slim ? -2 : -3, -2, -2, 1, 10, 2);
+            case LEFT_LEG -> new AABB(-1.9F, 0, -2, 2.1F, 12, 2);
+            case RIGHT_LEG -> new AABB(-2.1F, 0, -2, 1.9F, 12, 2);
         };
     }
 
@@ -97,14 +135,5 @@ public final class MannequinInteraction {
                     : local.z > 1.6F ? List.of(GarmentSlot.BACK, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP)
                     : List.of(GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP, GarmentSlot.BACK);
         };
-    }
-
-    private record Bounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-        float distanceSquared(Vector3f point) {
-            float x = Math.max(minX - point.x, Math.max(0, point.x - maxX));
-            float y = Math.max(minY - point.y, Math.max(0, point.y - maxY));
-            float z = Math.max(minZ - point.z, Math.max(0, point.z - maxZ));
-            return x * x + y * y + z * z;
-        }
     }
 }

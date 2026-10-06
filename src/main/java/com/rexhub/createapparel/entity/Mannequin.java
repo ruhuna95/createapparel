@@ -25,6 +25,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
@@ -32,6 +33,7 @@ import net.minecraftforge.network.NetworkHooks;
 import java.util.List;
 
 public final class Mannequin extends LivingEntity {
+    private static final float ARM_PICK_RADIUS = 0.625F;
     private static final EntityDataAccessor<CompoundTag> DATA_STATE =
             SynchedEntityData.defineId(Mannequin.class, EntityDataSerializers.COMPOUND_TAG);
     private final MannequinVariant variant;
@@ -102,7 +104,12 @@ public final class Mannequin extends LivingEntity {
         var loadout = mannequinState.loadout();
         ItemStack held = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
-            var slot = MannequinInteraction.clickedSlot(variant, mannequinState.pose(), hit,
+            Vec3 start = player.getEyePosition();
+            Vec3 end = start.add(player.getLookAngle().scale(player.getEntityReach()));
+            end = level().clip(new ClipContext(start, end, ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE, player)).getLocation();
+            var slot = MannequinInteraction.clickedSlot(variant, mannequinState.pose(),
+                    start.subtract(position()), end.subtract(position()),
                     getYRot(), mannequinState.bodyRotationDegrees(), loadout);
             if (slot.isEmpty()) return InteractionResult.PASS;
             if (!level().isClientSide) {
@@ -234,6 +241,8 @@ public final class Mannequin extends LivingEntity {
     public PushReaction getPistonPushReaction() { return PushReaction.NORMAL; }
     @Override
     public boolean canBeCollidedWith() { return true; }
+    @Override
+    public float getPickRadius() { return variant.form().hasTorso() ? ARM_PICK_RADIUS : super.getPickRadius(); }
     @Override
     public Iterable<ItemStack> getArmorSlots() { return List.of(); }
     @Override

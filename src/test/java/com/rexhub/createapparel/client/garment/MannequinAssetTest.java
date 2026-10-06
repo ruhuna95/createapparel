@@ -36,6 +36,89 @@ class MannequinAssetTest {
     }
 
     @Test
+    void bodyScaleMatchesPlayerWhilePedestalsStayGroundedAndHeadStaysOneBlock() {
+        assertEquals(0.9375F, MannequinForm.BODY_SCALE);
+        assertEquals(1.875F, 32 * MannequinForm.BODY_SCALE / 16);
+        for (var variant : MannequinVariant.values()) {
+            var form = variant.form();
+            var root = MannequinModel.createBodyLayer(variant.armProfile() == ArmProfile.SLIM).bakeRoot();
+            var model = new MannequinModel(root);
+            model.apply(form, form.defaultPose());
+            var bodyPose = new PoseStack();
+            bodyPose.translate(0, form.bodyOriginHeight(), 0);
+            bodyPose.scale(-MannequinForm.BODY_SCALE, -MannequinForm.BODY_SCALE, MannequinForm.BODY_SCALE);
+            List<Vector3f> body = new ArrayList<>();
+            model.renderToBuffer(bodyPose, recordingConsumer(body), 0, 0, 1, 1, 1, 1);
+            assertEquals(form.displayHeight(), body.stream().mapToDouble(point -> point.y).max().orElseThrow(), 0.00001);
+            if (form.hasLegs()) {
+                assertEquals(MannequinForm.PEDESTAL_HEIGHT,
+                        body.stream().mapToDouble(point -> point.y).min().orElseThrow(), 0.00001);
+            }
+            var supportPose = new PoseStack();
+            supportPose.translate(0, form.modelOriginPixels() / 16F, 0);
+            supportPose.scale(-1, -1, 1);
+            List<Vector3f> pedestal = new ArrayList<>();
+            root.getChild("pedestal").render(supportPose, recordingConsumer(pedestal), 0, 0);
+            assertEquals(0, pedestal.stream().mapToDouble(point -> point.y).min().orElseThrow(), 0.00001);
+            assertEquals(MannequinForm.PEDESTAL_HEIGHT,
+                    pedestal.stream().mapToDouble(point -> point.y).max().orElseThrow(), 0.00001);
+            if (form == MannequinForm.HEAD || form == MannequinForm.UPPER) {
+                List<Vector3f> support = new ArrayList<>();
+                root.getChild(form == MannequinForm.HEAD ? "head_support" : "upper_support")
+                        .render(supportPose, recordingConsumer(support), 0, 0);
+                double top = support.stream().mapToDouble(point -> point.y).max().orElseThrow();
+                float bodyBottom = form.bodyOriginHeight() - (form == MannequinForm.HEAD ? 2 : 12)
+                        * MannequinForm.BODY_SCALE / 16;
+                assertEquals(bodyBottom, top, 0.00001, "Support connects to the scaled body");
+            }
+        }
+        assertEquals(1, MannequinForm.HEAD.displayHeight());
+        assertEquals(1.9375F, MannequinForm.FULL.displayHeight());
+        assertEquals(1.05859375F, MannequinForm.LOWER.displayHeight());
+    }
+
+    @Test
+    void scaledWorldTransformsMatchNativeRenderingAndInversePickingAcrossPosesAndRotations() {
+        for (var variant : MannequinVariant.values()) {
+            var form = variant.form();
+            var model = new MannequinModel(MannequinModel.createBodyLayer(variant.armProfile() == ArmProfile.SLIM).bakeRoot());
+            for (var preset : form.poses()) {
+                model.apply(form, preset);
+                for (float yaw : new float[]{0, 45, 135, -170}) for (int step : new int[]{0, 1, 7, 15}) {
+                    for (var part : MannequinInteraction.BodyPart.values()) {
+                        ModelPart rendered = switch (part) {
+                            case HEAD -> model.head;
+                            case BODY -> model.body;
+                            case LEFT_ARM -> model.leftArm;
+                            case RIGHT_ARM -> model.rightArm;
+                            case LEFT_LEG -> model.leftLeg;
+                            case RIGHT_LEG -> model.rightLeg;
+                        };
+                        if (!rendered.visible) continue;
+                        var pose = new PoseStack();
+                        pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(180 - yaw));
+                        pose.translate(0, form.bodyOriginHeight(), 0);
+                        pose.scale(-MannequinForm.BODY_SCALE, -MannequinForm.BODY_SCALE, MannequinForm.BODY_SCALE);
+                        pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(step * 22.5F));
+                        rendered.translateAndRotate(pose);
+                        var actual = pose.last().pose().transformPosition(new Vector3f(1.2F, 3.4F, -2.1F).div(16));
+                        var local = MannequinInteraction.partTransform(variant, preset, part)
+                                .transformPosition(new Vector3f(1.2F, 3.4F, -2.1F));
+                        var expected = form.modelToEntity(new net.minecraft.world.phys.Vec3(local.x, local.y, local.z), yaw + step * 22.5F);
+                        assertEquals(expected.x, actual.x, 0.00001, variant + "/" + preset + "/" + yaw + "/" + step + "/" + part);
+                        assertEquals(expected.y, actual.y, 0.00001);
+                        assertEquals(expected.z, actual.z, 0.00001);
+                        var restored = form.entityToModel(new net.minecraft.world.phys.Vec3(actual.x, actual.y, actual.z), yaw + step * 22.5F);
+                        assertEquals(local.x, restored.x, 0.00003);
+                        assertEquals(local.y, restored.y, 0.00003);
+                        assertEquals(local.z, restored.z, 0.00003);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     void serverHitTransformsMatchRenderedPartsForEveryProfileFormAndPreset() {
         for (var variant : MannequinVariant.values()) {
             var model = new MannequinModel(MannequinModel.createBodyLayer(variant.armProfile() == ArmProfile.SLIM).bakeRoot());
@@ -214,16 +297,24 @@ class MannequinAssetTest {
         assertEquals(18.0F / 16, MannequinForm.LOWER.height());
         var model = new MannequinModel(root);
         model.apply(MannequinForm.HEAD, PosePreset.FRONT);
-        assertEquals(16, MannequinForm.HEAD.modelOriginPixels() - firstCube(model.head).minY);
+        assertEquals(1, MannequinForm.HEAD.bodyOriginHeight()
+                - firstCube(model.head).minY * MannequinForm.BODY_SCALE / 16);
         assertEquals(0, MannequinForm.HEAD.modelOriginPixels()
                 - root.getChild("pedestal").y - firstCube(root.getChild("pedestal")).maxY);
         for (var variant : MannequinVariant.values()) {
-            if (variant.form() != MannequinForm.HEAD && variant.form() != MannequinForm.LOWER) continue;
             var elements = json(GENERATED.resolve("assets/createapparel/models/item/" + variant.id() + ".json"))
                     .getAsJsonArray("elements").asList();
             double bottom = elements.stream().mapToDouble(element -> element.getAsJsonObject().getAsJsonArray("from").get(1).getAsDouble()).min().orElseThrow();
             double top = elements.stream().mapToDouble(element -> element.getAsJsonObject().getAsJsonArray("to").get(1).getAsDouble()).max().orElseThrow();
-            assertEquals(variant.form().height() * 16, top - bottom);
+            assertEquals(variant.form().displayHeight() * 16, top - bottom);
+            var pedestal = elements.get(0).getAsJsonObject();
+            assertEquals(12, pedestal.getAsJsonArray("to").get(0).getAsFloat() - pedestal.getAsJsonArray("from").get(0).getAsFloat());
+            assertEquals(1, pedestal.getAsJsonArray("to").get(1).getAsFloat() - pedestal.getAsJsonArray("from").get(1).getAsFloat());
+            if (variant.form().hasHead()) {
+                var head = elements.get(1).getAsJsonObject();
+                assertEquals(8 * MannequinForm.BODY_SCALE,
+                        head.getAsJsonArray("to").get(0).getAsFloat() - head.getAsJsonArray("from").get(0).getAsFloat());
+            }
         }
     }
 
@@ -281,14 +372,14 @@ class MannequinAssetTest {
             var legs = json(GENERATED.resolve("assets/createapparel/models/item/" + variant.id() + ".json"))
                     .getAsJsonArray("elements").asList().stream().map(value -> value.getAsJsonObject())
                     .filter(element -> element.getAsJsonArray("from").get(1).getAsFloat() == 0
-                            && element.getAsJsonArray("to").get(1).getAsFloat() == 12)
+                            && element.getAsJsonArray("to").get(1).getAsFloat() == 12 * MannequinForm.BODY_SCALE)
                     .sorted(Comparator.comparingDouble(element -> element.getAsJsonArray("from").get(0).getAsDouble()))
                     .toList();
             assertEquals(2, legs.size(), variant.id());
-            assertEquals(4, legs.get(0).getAsJsonArray("from").get(0).getAsFloat());
+            assertEquals(8 - 4 * MannequinForm.BODY_SCALE, legs.get(0).getAsJsonArray("from").get(0).getAsFloat());
             assertEquals(8, legs.get(0).getAsJsonArray("to").get(0).getAsFloat());
             assertEquals(8, legs.get(1).getAsJsonArray("from").get(0).getAsFloat());
-            assertEquals(12, legs.get(1).getAsJsonArray("to").get(0).getAsFloat());
+            assertEquals(8 + 4 * MannequinForm.BODY_SCALE, legs.get(1).getAsJsonArray("to").get(0).getAsFloat());
         }
     }
 

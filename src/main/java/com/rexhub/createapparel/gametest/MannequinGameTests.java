@@ -35,6 +35,197 @@ public final class MannequinGameTests {
     }
 
     @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void armPickRadiusCoversPresetGeometryWithoutChangingPhysics(GameTestHelper helper) {
+        for (var variant : MannequinVariant.values()) {
+            var entity = create(helper, variant);
+            var physicalBounds = entity.getBoundingBox();
+            float radius = entity.getPickRadius();
+            helper.assertTrue(radius == (variant.form().hasTorso() ? 0.625F : 0), "Only forms with arms expand picking");
+            helper.assertTrue(entity.getBoundingBox().equals(physicalBounds) && entity.getBbWidth() == 0.75F,
+                    "Picking leaves the physical bounding box unchanged");
+            if (!variant.form().hasTorso()) continue;
+            var pickBounds = physicalBounds.inflate(radius);
+            for (var pose : variant.form().poses()) for (int step = 0; step < MannequinState.ROTATION_STEPS; step++) {
+                for (var part : java.util.List.of(MannequinInteraction.BodyPart.LEFT_ARM, MannequinInteraction.BodyPart.RIGHT_ARM)) {
+                    boolean left = part == MannequinInteraction.BodyPart.LEFT_ARM;
+                    boolean slim = variant.armProfile() == com.rexhub.createapparel.apparel.ArmProfile.SLIM;
+                    float minX = left ? -1 : slim ? -2 : -3;
+                    float maxX = left ? slim ? 2 : 3 : 1;
+                    for (float x : new float[]{minX, maxX}) for (float y : new float[]{-2, 10}) for (float z : new float[]{-2, 2}) {
+                        var point = MannequinInteraction.partTransform(variant, pose, part)
+                                .transformPosition(new org.joml.Vector3f(x, y, z));
+                        var offset = modelToEntity(variant, point, entity.getYRot() + step * 22.5F);
+                        helper.assertTrue(pickBounds.inflate(0.00001).contains(entity.position().add(offset)),
+                                "Arm corner is pickable: " + variant + "/" + pose + "/" + step + "/" + part);
+                    }
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void vanillaPickingReachesHandsAndSneakingReturnsGarments(GameTestHelper helper) {
+        var player = helper.makeMockPlayer();
+        player.getAbilities().instabuild = false;
+        for (var variant : MannequinVariant.values()) {
+            if (!variant.form().hasTorso()) continue;
+            var entity = create(helper, variant);
+            entity.setYRot(0);
+            var pose = variant.form().defaultPose();
+            entity.mannequinState().setPose(pose, variant.form());
+            var physicalBounds = entity.getBoundingBox();
+            helper.getLevel().addFreshEntity(entity);
+            try {
+                for (var part : java.util.List.of(MannequinInteraction.BodyPart.LEFT_ARM, MannequinInteraction.BodyPart.RIGHT_ARM)) {
+                    player.getInventory().clearContent();
+                    player.setShiftKeyDown(false);
+                    player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STONE));
+                    var loadout = entity.mannequinState().loadout();
+                    loadout.setStackInSlot(GarmentSlot.HANDS.ordinal(), new ItemStack(ModItems.GLOVES.get()));
+                    loadout.setStackInSlot(GarmentSlot.OUTER.ordinal(), new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()));
+                    float x = variant.armProfile() == com.rexhub.createapparel.apparel.ArmProfile.SLIM ? 1.5F : 2;
+                    if (part == MannequinInteraction.BodyPart.RIGHT_ARM) x = -x;
+                    var point = MannequinInteraction.partTransform(variant, pose, part)
+                            .transformPosition(new org.joml.Vector3f(x, 9, 0));
+                    var offset = modelToEntity(variant, point, 0);
+                    var start = entity.position().add(offset).add(0, 0, 3);
+                    var end = entity.position().add(offset).add(0, 0, -3);
+                    helper.assertTrue(physicalBounds.clip(start, end).isEmpty(), "Hand ray misses the physical body box");
+                    var hit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(player, start, end,
+                            new net.minecraft.world.phys.AABB(start, end).inflate(1), target -> target == entity && target.isPickable(),
+                            start.distanceToSqr(end));
+                    helper.assertTrue(hit != null && hit.getEntity() == entity, "Vanilla picking reaches the extended arm area");
+                    if (hit == null) throw new IllegalStateException("Missing mannequin hit");
+                    Vec3 localHit = hit.getLocation().subtract(entity.position());
+                    aim(player, start, end);
+                    entity.interactAt(player, localHit, InteractionHand.MAIN_HAND);
+                    helper.assertTrue(!loadout.getStack(GarmentSlot.HANDS).isEmpty(), "Non-sneaking click does not remove garments");
+                    player.setShiftKeyDown(true);
+                    helper.assertTrue(entity.interactAt(player, localHit, InteractionHand.MAIN_HAND).consumesAction(), "Sneaking hand click is handled");
+                    helper.assertTrue(loadout.getStack(GarmentSlot.HANDS).isEmpty() && !loadout.getStack(GarmentSlot.OUTER).isEmpty(),
+                            "Hand click removes HANDS instead of OUTER");
+                    helper.assertTrue(player.getInventory().countItem(ModItems.GLOVES.get()) == 1, "Removed garment is returned exactly once");
+                    helper.assertTrue(entity.getBoundingBox().equals(physicalBounds), "Interaction never expands physics");
+                }
+            } finally { entity.discard(); }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void scaledPickingRejectsTheOldSilhouetteAndReturnsOnlyTheAimedGarment(GameTestHelper helper) {
+        var player = helper.makeMockPlayer();
+        player.getAbilities().instabuild = false;
+        player.setShiftKeyDown(true);
+        for (var variant : MannequinVariant.values()) {
+            if (!variant.form().hasHead()) continue;
+            player.getInventory().clearContent();
+            var entity = create(helper, variant);
+            entity.setYRot(0);
+            var loadout = entity.mannequinState().loadout();
+            loadout.setStackInSlot(GarmentSlot.FACE.ordinal(), new ItemStack(ModItems.GLASSES.get()));
+            loadout.setStackInSlot(GarmentSlot.HEAD.ordinal(), new ItemStack(ModItems.CAP.get()));
+            Vec3 target = entity.position().add(0, variant.form().bodyOriginHeight() + 4 * MannequinForm.BODY_SCALE / 16, 0);
+            Vec3 oldEdge = target.add(0.245, 0, 0);
+            aim(player, oldEdge.add(0, 0, 2), oldEdge);
+            helper.assertTrue(!entity.interactAt(player, new Vec3(0, 0.75, 0.2), InteractionHand.MAIN_HAND).consumesAction(),
+                    "The old unscaled head edge is no longer selectable: " + variant);
+            helper.assertTrue(!loadout.getStack(GarmentSlot.FACE).isEmpty()
+                    && player.getInventory().countItem(ModItems.GLASSES.get()) == 0, "Rejected edge preserves apparel");
+            aim(player, target.add(0, 0, 2), target);
+            helper.assertTrue(entity.interactAt(player, Vec3.ZERO, InteractionHand.MAIN_HAND).consumesAction(),
+                    "The scaled head remains selectable: " + variant);
+            helper.assertTrue(loadout.getStack(GarmentSlot.FACE).isEmpty() && !loadout.getStack(GarmentSlot.HEAD).isEmpty()
+                    && player.getInventory().countItem(ModItems.GLASSES.get()) == 1, "Returns only the aimed garment exactly once");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void sneakRemovalRequiresAnUnobstructedAimWithinReach(GameTestHelper helper) {
+        var entity = create(helper, MannequinVariant.FULL_WHITE_CLASSIC);
+        entity.setYRot(0);
+        var player = helper.makeMockPlayer();
+        player.getAbilities().instabuild = false;
+        player.setShiftKeyDown(true);
+        var loadout = entity.mannequinState().loadout();
+        loadout.setStackInSlot(GarmentSlot.OUTER.ordinal(), new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()));
+        loadout.setStackInSlot(GarmentSlot.HANDS.ordinal(), new ItemStack(ModItems.GLOVES.get()));
+        Vec3 torso = entity.position().add(0, 1.2, 0);
+        Vec3 fakeHit = new Vec3(0, 1.2, 0.2);
+        Vec3 gap = torso.add(0.9, 0, 0);
+        Vec3 start = gap.add(0, 0, 2);
+        Vec3 end = gap.add(0, 0, -2);
+        helper.assertTrue(entity.getBoundingBox().inflate(entity.getPickRadius()).clip(start, end).isPresent(),
+                "Empty space is inside the expanded vanilla picking box");
+        aim(player, start, end);
+        helper.assertTrue(!entity.interactAt(player, fakeHit, InteractionHand.MAIN_HAND).consumesAction(),
+                "A forged body hit cannot remove garments when the actual aim misses");
+        aim(player, torso.add(0, 0, player.getEntityReach() + 2), torso);
+        helper.assertTrue(!entity.interactAt(player, fakeHit, InteractionHand.MAIN_HAND).consumesAction(),
+                "Actual target must be within entity reach");
+        aim(player, torso.add(0, 0, 2), torso);
+        var wall = net.minecraft.core.BlockPos.containing(torso.add(0, 0, 1));
+        var previous = helper.getLevel().getBlockState(wall);
+        try {
+            helper.getLevel().setBlockAndUpdate(wall, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            helper.assertTrue(!entity.interactAt(player, fakeHit, InteractionHand.MAIN_HAND).consumesAction(),
+                    "An intervening solid block prevents removal");
+        } finally { helper.getLevel().setBlockAndUpdate(wall, previous); }
+        helper.assertTrue(!loadout.getStack(GarmentSlot.OUTER).isEmpty() && !loadout.getStack(GarmentSlot.HANDS).isEmpty(),
+                "Rejected clicks preserve all apparel");
+        helper.assertTrue(entity.interactAt(player, new Vec3(10, 10, 10), InteractionHand.MAIN_HAND).consumesAction(),
+                "Actual aim selects the torso independently of packet hit coordinates");
+        helper.assertTrue(loadout.getStack(GarmentSlot.OUTER).isEmpty() && !loadout.getStack(GarmentSlot.HANDS).isEmpty(),
+                "Torso aim removes only the outer garment");
+        helper.assertTrue(player.getInventory().countItem(ModItems.SHIRT_LONGSLEEVES.get()) == 1,
+                "Successful removal returns exactly one garment");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void barePartsAndGapsDoNotSelectGarmentsBehindThem(GameTestHelper helper) {
+        var entity = create(helper, MannequinVariant.FULL_BLACK_SLIM);
+        var loadout = entity.mannequinState().loadout();
+        loadout.setStackInSlot(GarmentSlot.BACK.ordinal(), new ItemStack(ModItems.BACKPACK.get()));
+        helper.assertTrue(MannequinInteraction.clickedSlot(entity.variant(), PosePreset.STANDING,
+                new Vec3(0, 1.9, 2), new Vec3(0, 1.2, -2), 0, 0, loadout).isEmpty(),
+                "An unadorned head blocks selection of a backpack behind it");
+        loadout.setStackInSlot(GarmentSlot.HANDS.ordinal(), new ItemStack(ModItems.GLOVES.get()));
+        helper.assertTrue(MannequinInteraction.clickedSlot(entity.variant(), PosePreset.STANDING,
+                modelToEntity(entity.variant(), new org.joml.Vector3f(4.2F, 9, -32), 0),
+                modelToEntity(entity.variant(), new org.joml.Vector3f(4.2F, 9, 32), 0), 0, 0, loadout).isEmpty(),
+                "The gap between torso and arm does not select nearby hands");
+        helper.assertTrue(MannequinInteraction.clickedSlot(entity.variant(), PosePreset.STANDING,
+                Vec3.ZERO, Vec3.ZERO, 0, 0, loadout).isEmpty(), "A zero length ray does not select anything");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
+    public static void bustSilhouetteUsesThePosedBodySlot(GameTestHelper helper) {
+        for (var variant : MannequinVariant.values()) {
+            if (!variant.form().hasTorso()) continue;
+            var loadout = create(helper, variant).mannequinState().loadout();
+            loadout.setStackInSlot(GarmentSlot.TOP.ordinal(), new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()));
+            var poses = variant.chestProfile() == com.rexhub.createapparel.apparel.ChestProfile.BUST
+                    ? variant.form().poses() : java.util.List.of(variant.form().defaultPose());
+            for (var pose : poses) for (int step : new int[]{0, 1, 7, 15}) {
+                var transform = MannequinInteraction.partTransform(variant, pose, MannequinInteraction.BodyPart.BODY)
+                        .translate(0, -1, -0.9F).rotateX(-(float) Math.PI / 6);
+                float rotation = 45 + step * 22.5F;
+                var start = modelToEntity(variant, transform.transformPosition(new org.joml.Vector3f(5, 5, 0)), rotation);
+                var end = modelToEntity(variant, transform.transformPosition(new org.joml.Vector3f(0, 5, 0)), rotation);
+                var slot = MannequinInteraction.clickedSlot(variant, pose, start, end, 45, step * 22.5F, loadout);
+                helper.assertTrue(variant.chestProfile() == com.rexhub.createapparel.apparel.ChestProfile.BUST
+                                ? slot.orElse(null) == GarmentSlot.TOP : slot.isEmpty(),
+                        "Only BUST includes its projecting body geometry: " + variant + "/" + pose + "/" + step + "/" + slot);
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "mannequin")
     public static void clientMenuViewsValidateSyncedDefinitionsWithoutServerLookup(GameTestHelper helper) {
         var entity = create(helper, MannequinVariant.UPPER_WHITE_CLASSIC);
         helper.getLevel().addFreshEntity(entity);
@@ -116,13 +307,27 @@ public final class MannequinGameTests {
     private static void assertPosedSlot(GameTestHelper helper, MannequinVariant variant, PosePreset pose, float yaw, int step,
                                         MannequinInteraction.BodyPart part, org.joml.Vector3f local, GarmentSlot expected,
                                         com.rexhub.createapparel.apparel.ApparelLoadout loadout) {
-        var point = MannequinInteraction.partTransform(variant, pose, part).transformPosition(local);
         float rotation = step * 22.5F;
-        var hit = new Vec3(point.x / 16, (variant.form().modelOriginPixels() - point.y) / 16, -point.z / 16)
-                .yRot((float) Math.toRadians(-yaw - rotation));
-        var selected = MannequinInteraction.clickedSlot(variant, pose, hit, yaw, rotation, loadout);
+        var transform = MannequinInteraction.partTransform(variant, pose, part);
+        var start = modelToEntity(variant, transform.transformPosition(new org.joml.Vector3f(local.x, local.y,
+                local.z + Math.signum(local.z) * 0.2F)), yaw + rotation);
+        var end = modelToEntity(variant, transform.transformPosition(new org.joml.Vector3f(local.x, local.y,
+                local.z - Math.signum(local.z) * 0.6F)), yaw + rotation);
+        var selected = MannequinInteraction.clickedSlot(variant, pose, start, end, yaw, rotation, loadout);
         helper.assertTrue(selected.orElse(null) == expected,
                 "Posed hit: " + variant + "/" + pose + "/" + yaw + "/" + step + "/" + part + " selected=" + selected);
+    }
+
+    private static Vec3 modelToEntity(MannequinVariant variant, org.joml.Vector3f point, float rotation) {
+        return variant.form().modelToEntity(new Vec3(point.x, point.y, point.z), rotation);
+    }
+
+    private static void aim(net.minecraft.world.entity.player.Player player, Vec3 eye, Vec3 target) {
+        Vec3 direction = target.subtract(eye);
+        player.setPos(eye.x, eye.y - player.getEyeHeight(), eye.z);
+        player.setYRot((float) Math.toDegrees(Math.atan2(-direction.x, direction.z)));
+        player.setYHeadRot(player.getYRot());
+        player.setXRot((float) -Math.toDegrees(Math.atan2(direction.y, direction.horizontalDistance())));
     }
 
     @GameTest(template = "apparel_state", batch = "mannequin")
@@ -284,7 +489,8 @@ public final class MannequinGameTests {
         for (int slot = 0; slot < player.getInventory().items.size(); slot++) {
             player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
         }
-        player.moveTo(entity.getX(), entity.getY(), entity.getZ());
+        Vec3 target = entity.position().add(modelToEntity(entity.variant(), new org.joml.Vector3f(0, 6, -2), entity.getYRot()));
+        aim(player, target.add(new Vec3(0, 0, 2).yRot((float) Math.toRadians(-entity.getYRot()))), target);
         entity.interactAt(player, new Vec3(0, 1.2, 0.2), InteractionHand.MAIN_HAND);
         helper.assertTrue(entity.mannequinState().loadout().getStack(GarmentSlot.OUTER).isEmpty(), "Remove clicked outer garment first");
         helper.assertTrue(helper.getLevel().getEntitiesOfClass(ItemEntity.class,
@@ -399,16 +605,16 @@ public final class MannequinGameTests {
         headLoadout.insertItem(GarmentSlot.FACE.ordinal(), new ItemStack(ModItems.GLASSES.get()), false);
         headLoadout.insertItem(GarmentSlot.HEAD.ordinal(), new ItemStack(ModItems.CAP.get()), false);
         helper.assertTrue(com.rexhub.createapparel.entity.MannequinInteraction.clickedSlot(
-                head.variant(), PosePreset.FRONT, new Vec3(0, 0.75, 0.2), 0, 0, headLoadout).orElseThrow() == GarmentSlot.FACE,
+                head.variant(), PosePreset.FRONT, new Vec3(0, 0.75, 1), new Vec3(0, 0.75, 0), 0, 0, headLoadout).orElseThrow() == GarmentSlot.FACE,
                 "Short head front removes face garment");
         helper.assertTrue(com.rexhub.createapparel.entity.MannequinInteraction.clickedSlot(
-                head.variant(), PosePreset.FRONT, new Vec3(0, 0.75, -0.2), 0, 0, headLoadout).orElseThrow() == GarmentSlot.HEAD,
+                head.variant(), PosePreset.FRONT, new Vec3(0, 0.75, -1), new Vec3(0, 0.75, 0), 0, 0, headLoadout).orElseThrow() == GarmentSlot.HEAD,
                 "Short head back removes head garment");
         var lower = create(helper, MannequinVariant.LOWER_WHITE);
         var lowerLoadout = lower.mannequinState().loadout();
         lowerLoadout.insertItem(GarmentSlot.BOTTOM.ordinal(), new ItemStack(ModItems.DENIM_PANTS.get()), false);
         helper.assertTrue(com.rexhub.createapparel.entity.MannequinInteraction.clickedSlot(
-                lower.variant(), PosePreset.STRAIGHT, new Vec3(0, 1.05, 0.15), 0, 0, lowerLoadout).orElseThrow() == GarmentSlot.BOTTOM,
+                lower.variant(), PosePreset.STRAIGHT, new Vec3(0, 1.05, 1), new Vec3(0, 1.05, 0), 0, 0, lowerLoadout).orElseThrow() == GarmentSlot.BOTTOM,
                 "Lower partial torso removes bottom garment");
         helper.succeed();
     }
