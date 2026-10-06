@@ -14,6 +14,9 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Supplier;
 
 public final class ModBlocks {
+    public static final RegistryObject<Block> WALL_HANGER = ModRegistries.BLOCKS.register("wall_hanger",
+            () -> new com.rexhub.createapparel.block.WallHangerBlock(
+                    BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion()));
     public static final RegistryObject<Block> COTTON_CROP = registerCrop(
             "cotton_crop",
             () -> ModItems.COTTON_SEEDS.get()

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "createapparel:block/wall_hanger",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createapparel:block/wall_hanger"
+    },
+    "facing=south": {
+      "model": "createapparel:block/wall_hanger",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "createapparel:block/wall_hanger",
+      "y": 270
+    }
+  }
+}

@@ -123,6 +123,10 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
         mannequinRecipes();
+        register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.WALL_HANGER.get())
+                .pattern(" N ").pattern("SSS").define('N', Items.IRON_NUGGET).define('S', Items.STICK)
+                .unlockedBy("has_stick", InventoryChangeTrigger.TriggerInstance.hasItems(Items.STICK))
+                .save(consumer, asResource("wall_hanger")));
 
         apparelDye(FabricColor.CREAM, Items.WHITE_DYE, Items.WHITE_DYE, Items.YELLOW_DYE);
         apparelDye(FabricColor.BEIGE, Items.WHITE_DYE, Items.BROWN_DYE);

@@ -1,0 +1,165 @@
+package com.rexhub.createapparel.gametest;
+
+import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.block.WallHangerBlock;
+import com.rexhub.createapparel.block.entity.WallHangerBlockEntity;
+import com.rexhub.createapparel.init.ModBlocks;
+import com.rexhub.createapparel.init.ModItems;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
+
+@GameTestHolder(CreateApparel.MOD_ID)
+@PrefixGameTestTemplate(false)
+public final class WallHangerGameTests {
+    private WallHangerGameTests() { }
+
+    private static BlockPos position(GameTestHelper helper) { return helper.absolutePos(new BlockPos(1, 2, 1)); }
+
+    private static WallHangerBlockEntity place(GameTestHelper helper) {
+        BlockPos pos = position(helper);
+        helper.getLevel().setBlockAndUpdate(pos.south(), Blocks.STONE.defaultBlockState());
+        helper.getLevel().setBlockAndUpdate(pos, ModBlocks.WALL_HANGER.get().defaultBlockState());
+        return (WallHangerBlockEntity) helper.getLevel().getBlockEntity(pos);
+    }
+
+    private static int drops(GameTestHelper helper, Item item) {
+        return helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(position(helper)).inflate(2))
+                .stream().filter(entity -> entity.getItem().is(item)).mapToInt(entity -> entity.getItem().getCount()).sum();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void fourWallFacesAndSupportRemoval(GameTestHelper helper) {
+        BlockPos pos = position(helper);
+        var player = helper.makeMockPlayer();
+        var item = new ItemStack(ModItems.WALL_HANGER.get());
+        for (Direction face : Direction.Plane.HORIZONTAL) {
+            BlockPos wall = pos.relative(face.getOpposite());
+            helper.getLevel().setBlockAndUpdate(wall, Blocks.STONE.defaultBlockState());
+            var hit = new BlockHitResult(Vec3.atCenterOf(wall), face, wall, false);
+            var context = new BlockPlaceContext(player, InteractionHand.MAIN_HAND, item, hit);
+            var state = ModBlocks.WALL_HANGER.get().getStateForPlacement(context);
+            helper.assertTrue(state != null && state.getValue(WallHangerBlock.FACING) == face, "Placement follows wall face");
+            if (state == null) throw new IllegalStateException("Missing wall placement");
+            helper.getLevel().setBlockAndUpdate(pos, state);
+            helper.getLevel().removeBlock(wall, false);
+            helper.assertTrue(helper.getLevel().getBlockState(pos).isAir(), "Removing support removes hanger");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void filteringInsertionCreativeAndBareHandReturn(GameTestHelper helper) {
+        var hanger = place(helper);
+        var player = helper.makeMockPlayer();
+        player.getAbilities().instabuild = false;
+        var held = new ItemStack(ModItems.T_SHIRT.get(), 2);
+        helper.assertTrue(!hanger.insert(new ItemStack(Items.STONE), false), "Reject ordinary items");
+        helper.assertTrue(!hanger.insert(new ItemStack(ModItems.DENIM_PANTS.get()), false), "Reject bottoms");
+        helper.assertTrue(!hanger.insert(new ItemStack(ModItems.BRA.get()), false), "Reject inner garments");
+        helper.assertTrue(hanger.insert(held, false) && held.getCount() == 1, "Survival inserts one");
+        helper.assertTrue(!hanger.insert(held, false) && held.getCount() == 1, "No replacement");
+        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        var pos = position(helper);
+        helper.assertTrue(hanger.getBlockState().use(helper.getLevel(), player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false)).consumesAction(), "Bare hand returns garment");
+        helper.assertTrue(hanger.garment().isEmpty() && player.getInventory().countItem(ModItems.T_SHIRT.get()) == 1,
+                "Returned exactly one");
+        helper.assertTrue(hanger.insert(held, true) && held.getCount() == 1, "Creative preserves held garment");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void fullInventoryDropsReturnOnce(GameTestHelper helper) {
+        var hanger = place(helper);
+        var player = helper.makeMockPlayer();
+        player.getAbilities().instabuild = false;
+        player.setPos(Vec3.atCenterOf(position(helper)));
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++)
+            player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+        hanger.insert(new ItemStack(ModItems.T_SHIRT.get()), false);
+        int before = drops(helper, ModItems.T_SHIRT.get());
+        helper.assertTrue(hanger.take(player) && !hanger.take(player), "Repeated retrieval cannot duplicate");
+        helper.assertTrue(hanger.garment().isEmpty() && drops(helper, ModItems.T_SHIRT.get()) == before + 1,
+                "Full inventory drops one garment");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void savedChunkDataAndUpdatePacketKeepCompleteStack(GameTestHelper helper) {
+        var hanger = place(helper);
+        var stack = new ItemStack(ModItems.SHIRT_LONGSLEEVES.get());
+        stack.getOrCreateTag().putString("DisplayTest", "material/colors/design/styles preserved");
+        hanger.insert(stack, true);
+        var saved = hanger.saveWithFullMetadata();
+        var restored = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(position(helper), hanger.getBlockState(), saved);
+        helper.assertTrue(restored instanceof WallHangerBlockEntity
+                && ItemStack.matches(((WallHangerBlockEntity) restored).garment(), stack), "Chunk NBT preserves complete stack");
+        var client = new WallHangerBlockEntity(position(helper), hanger.getBlockState());
+        client.handleUpdateTag(hanger.getUpdateTag());
+        helper.assertTrue(ItemStack.matches(client.garment(), stack), "Chunk update tag preserves complete stack");
+        var packet = hanger.getUpdatePacket();
+        helper.assertTrue(packet.getTag() != null, "Update packet contains display state");
+        client.load(packet.getTag());
+        helper.assertTrue(ItemStack.matches(client.garment(), stack), "Immediate update packet preserves display state");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void survivalAndCreativeBreakDropContentsOnce(GameTestHelper helper) {
+        var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "hanger-test"));
+        player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
+                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+            @Override
+            public void send(net.minecraft.network.protocol.Packet<?> packet) { }
+        };
+        for (var mode : new GameType[]{GameType.SURVIVAL, GameType.CREATIVE}) {
+            player.setGameMode(mode);
+            var hanger = place(helper);
+            hanger.insert(new ItemStack(ModItems.T_SHIRT.get()), true);
+            int garments = drops(helper, ModItems.T_SHIRT.get());
+            int furniture = drops(helper, ModItems.WALL_HANGER.get());
+            helper.assertTrue(player.gameMode.destroyBlock(position(helper)), "Player breaks hanger");
+            hanger.dropContents();
+            helper.assertTrue(drops(helper, ModItems.T_SHIRT.get()) == garments + 1, "Contents drop once in both modes");
+            helper.assertTrue(drops(helper, ModItems.WALL_HANGER.get()) == furniture + (mode == GameType.SURVIVAL ? 1 : 0),
+                    "Vanilla furniture drop follows game mode");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void supportLossAndReplacementDropOnceButUnloadDoesNot(GameTestHelper helper) {
+        var hanger = place(helper);
+        hanger.insert(new ItemStack(ModItems.T_SHIRT.get()), true);
+        int before = drops(helper, ModItems.T_SHIRT.get());
+        hanger.onChunkUnloaded();
+        helper.assertTrue(drops(helper, ModItems.T_SHIRT.get()) == before && !hanger.garment().isEmpty(), "Unload never drops");
+        helper.getLevel().removeBlock(position(helper).south(), false);
+        hanger.dropContents();
+        helper.assertTrue(drops(helper, ModItems.T_SHIRT.get()) == before + 1, "Support loss drops once");
+        hanger = place(helper);
+        hanger.insert(new ItemStack(ModItems.T_SHIRT.get()), true);
+        helper.getLevel().setBlockAndUpdate(position(helper), Blocks.STONE.defaultBlockState());
+        hanger.dropContents();
+        helper.assertTrue(drops(helper, ModItems.T_SHIRT.get()) == before + 2, "Replacement drops once");
+        helper.succeed();
+    }
+
+}

@@ -29,5 +29,6 @@ public final class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.SEWING_MACHINE.get()
         );
         tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.WARDROBE.get());
+        tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.WALL_HANGER.get());
     }
 }

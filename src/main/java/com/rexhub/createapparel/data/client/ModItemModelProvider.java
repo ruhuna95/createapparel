@@ -62,6 +62,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
             } else if (item.get() instanceof GarmentItem) {
                 garmentModel(item);
             } else if (item == ModItems.SPINNING_MACHINE
+                    || item == ModItems.WALL_HANGER
                     || item == ModItems.LOOM
                     || item == ModItems.SEWING_MACHINE) {
                 continue;

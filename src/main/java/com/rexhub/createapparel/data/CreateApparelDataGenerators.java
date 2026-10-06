@@ -21,6 +21,8 @@ public final class CreateApparelDataGenerators {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
         generator.addProvider(event.includeClient(),
+                new com.rexhub.createapparel.data.client.FurnitureModelProvider(output, event.getExistingFileHelper()));
+        generator.addProvider(event.includeClient(),
                 new MannequinTextureProvider(output));
 
         ModBlockTagProvider blockTags = generator.addProvider(

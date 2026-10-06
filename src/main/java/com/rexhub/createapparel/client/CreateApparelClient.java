@@ -101,6 +101,8 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ModBlockEntities.WALL_HANGER.get(),
+                com.rexhub.createapparel.client.renderer.WallHangerRenderer::new);
         ModEntities.mannequins().values().forEach(type ->
                 event.registerEntityRenderer(type.get(), MannequinRenderer::new));
         event.registerEntityRenderer(ModEntities.SILKWORM.get(), SilkwormRenderer::new);
