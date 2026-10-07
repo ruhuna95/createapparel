@@ -17,7 +17,7 @@ public final class ModCreativeModeTabs {
                     .title(Component.translatable("itemGroup.createapparel.garment"))
                     .icon(() -> ModItems.T_SHIRT.get().getDefaultInstance())
                     .displayItems((parameters, output) -> ModItems.garmentCreativeTabItems()
-                            .forEach(item -> output.accept(item.get())))
+                            .forEach(item -> output.accept(GarmentCreativePresets.create(item))))
                     .withTabsBefore(CREATE_APPAREL.getKey())
                     .build());
 
