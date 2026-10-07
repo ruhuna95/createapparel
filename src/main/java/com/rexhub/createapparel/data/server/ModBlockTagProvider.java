@@ -30,5 +30,6 @@ public final class ModBlockTagProvider extends BlockTagsProvider {
         );
         tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.WARDROBE.get());
         tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.WALL_HANGER.get());
+        tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.CLOTHING_RACK.get());
     }
 }

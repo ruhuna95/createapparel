@@ -28,6 +28,7 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.LOOM.get());
         dropSelf(ModBlocks.SEWING_MACHINE.get());
         dropSelf(ModBlocks.WALL_HANGER.get());
+        add(ModBlocks.CLOTHING_RACK.get(), createDoorTable(ModBlocks.CLOTHING_RACK.get()));
         add(ModBlocks.WARDROBE.get(), createDoorTable(ModBlocks.WARDROBE.get()));
     }
 

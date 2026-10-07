@@ -2,6 +2,7 @@
   "values": [
     "createapparel:spinning_machine",
     "createapparel:loom",
-    "createapparel:sewing_machine"
+    "createapparel:sewing_machine",
+    "createapparel:clothing_rack"
   ]
 }

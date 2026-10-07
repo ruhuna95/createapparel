@@ -1,0 +1,74 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#metal"
+        },
+        "east": {
+          "texture": "#metal"
+        },
+        "north": {
+          "texture": "#metal"
+        },
+        "south": {
+          "texture": "#metal"
+        },
+        "up": {
+          "texture": "#metal"
+        },
+        "west": {
+          "texture": "#metal"
+        }
+      },
+      "from": [
+        7,
+        13,
+        0
+      ],
+      "to": [
+        9,
+        15,
+        15
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#metal"
+        },
+        "east": {
+          "texture": "#metal"
+        },
+        "north": {
+          "texture": "#metal"
+        },
+        "south": {
+          "texture": "#metal"
+        },
+        "up": {
+          "texture": "#metal"
+        },
+        "west": {
+          "texture": "#metal"
+        }
+      },
+      "from": [
+        6,
+        12,
+        15
+      ],
+      "to": [
+        10,
+        16,
+        16
+      ]
+    }
+  ],
+  "textures": {
+    "metal": "minecraft:block/iron_block",
+    "particle": "minecraft:block/iron_block",
+    "wood": "minecraft:block/oak_planks"
+  }
+}

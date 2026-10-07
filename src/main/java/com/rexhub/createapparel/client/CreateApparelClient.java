@@ -76,6 +76,7 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
+        event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.MODEL);
         event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
         event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
         event.register(ModPartialModels.LOOM_SLIDE.modelLocation());
@@ -101,6 +102,8 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ModBlockEntities.CLOTHING_RACK.get(),
+                com.rexhub.createapparel.client.renderer.ClothingRackRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.WALL_HANGER.get(),
                 com.rexhub.createapparel.client.renderer.WallHangerRenderer::new);
         ModEntities.mannequins().values().forEach(type ->

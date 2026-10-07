@@ -127,6 +127,10 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .pattern(" N ").pattern("SSS").define('N', Items.IRON_NUGGET).define('S', Items.STICK)
                 .unlockedBy("has_stick", InventoryChangeTrigger.TriggerInstance.hasItems(Items.STICK))
                 .save(consumer, asResource("wall_hanger")));
+        register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.CLOTHING_RACK.get())
+                .pattern("III").pattern("I I").pattern("I I").define('I', Items.IRON_INGOT)
+                .unlockedBy("has_iron_ingot", InventoryChangeTrigger.TriggerInstance.hasItems(Items.IRON_INGOT))
+                .save(consumer, asResource("clothing_rack")));
 
         apparelDye(FabricColor.CREAM, Items.WHITE_DYE, Items.WHITE_DYE, Items.YELLOW_DYE);
         apparelDye(FabricColor.BEIGE, Items.WHITE_DYE, Items.BROWN_DYE);

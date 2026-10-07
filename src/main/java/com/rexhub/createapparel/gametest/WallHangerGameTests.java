@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.gametest;
 
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.block.HangerGeometry;
 import com.rexhub.createapparel.block.WallHangerBlock;
 import com.rexhub.createapparel.block.entity.WallHangerBlockEntity;
 import com.rexhub.createapparel.init.ModBlocks;
@@ -64,13 +65,56 @@ public final class WallHangerGameTests {
     }
 
     @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void centeredWallHookAndRecessedHangerFitOneBoxInEveryFacing(GameTestHelper helper) {
+        var pos = position(helper);
+        var hook = HangerGeometry.WALL_HOOK;
+        for (Direction facing : Direction.Plane.HORIZONTAL) {
+            var state = ModBlocks.WALL_HANGER.get().defaultBlockState().setValue(WallHangerBlock.FACING, facing);
+            var shape = state.getShape(helper.getLevel(), pos);
+            var bounds = shape.bounds().inflate(1.0E-7);
+            var hookBounds = HangerGeometry.orient(Block.box(hook.x1(), hook.y1(), hook.z1(),
+                    hook.x2(), hook.y2(), hook.z2()), facing).bounds();
+            var hangerBounds = HangerGeometry.orient(HangerGeometry.wallHanger(), facing).bounds();
+            for (var part : new AABB[]{hookBounds, hangerBounds}) {
+                helper.assertTrue(bounds.contains(new Vec3(part.minX, part.minY, part.minZ))
+                        && bounds.contains(new Vec3(part.maxX, part.maxY, part.maxZ)),
+                        "Single box contains centered wall hook and recessed hanger in every facing");
+            }
+            helper.assertTrue(shape.toAabbs().size() == 1, "Selection keeps one simple box");
+            helper.assertTrue(state.getCollisionShape(helper.getLevel(), pos).bounds().equals(shape.bounds()),
+                    "Collision matches recessed display selection");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
+    public static void oneHangerBoxIncludesTriangleAndKeepsWallFixtures(GameTestHelper helper) {
+        var hanger = place(helper);
+        var pos = hanger.getBlockPos();
+        var shape = hanger.getBlockState().getShape(helper.getLevel(), pos);
+        var origin = Vec3.atLowerCornerOf(pos);
+        helper.assertTrue(shape.clip(origin.add(0.4, 0.75, 0), origin.add(0.4, 0.75, 0.9), pos) != null,
+                "Triangle interior is included in the single hanger box");
+        helper.assertTrue(shape.clip(origin.add(0.4, 0.68, 0), origin.add(0.4, 0.68, 0.9), pos) != null,
+                "Hanger bottom bar is selectable");
+        helper.assertTrue(shape.clip(origin.add(0.4, 0.8, 0), origin.add(0.4, 0.8, 0.9), pos) != null,
+                "Slanted shoulder is selectable");
+        helper.assertTrue(shape instanceof com.rexhub.createapparel.block.FurnitureShape furniture && furniture.partCount() == 1,
+                "One box encloses hanger and wall fixtures");
+        helper.assertTrue(shape.clip(origin.add(0.05, 0.75, 0), origin.add(0.05, 0.75, 0.9), pos) == null,
+                "Space outside hanger remains unselectable");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "wall_hanger")
     public static void filteringInsertionCreativeAndBareHandReturn(GameTestHelper helper) {
         var hanger = place(helper);
         var player = helper.makeMockPlayer();
         player.getAbilities().instabuild = false;
         var held = new ItemStack(ModItems.T_SHIRT.get(), 2);
         helper.assertTrue(!hanger.insert(new ItemStack(Items.STONE), false), "Reject ordinary items");
-        helper.assertTrue(!hanger.insert(new ItemStack(ModItems.DENIM_PANTS.get()), false), "Reject bottoms");
+        helper.assertTrue(hanger.insert(new ItemStack(ModItems.DENIM_PANTS.get()), false), "Accept bottoms");
+        helper.assertTrue(hanger.take(helper.makeMockPlayer()), "Return bottom garment");
         helper.assertTrue(!hanger.insert(new ItemStack(ModItems.BRA.get()), false), "Reject inner garments");
         helper.assertTrue(hanger.insert(held, false) && held.getCount() == 1, "Survival inserts one");
         helper.assertTrue(!hanger.insert(held, false) && held.getCount() == 1, "No replacement");

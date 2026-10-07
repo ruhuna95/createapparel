@@ -129,18 +129,11 @@ public final class CommonGarmentRenderer {
     public static void renderHanger(ItemStack stack, PoseStack poseStack, MultiBufferSource buffer,
                                     int packedLight, int packedOverlay) {
         ClientGarmentAssets.INSTANCE.resolve(stack).ifPresent(garment -> {
-            var flat = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
-            float height = flat.flattenedBounds().max().y() - flat.flattenedBounds().min().y();
-            renderFlat(garment, new Vec3(0, -height * MODEL_UNIT / 2, 0),
-                    poseStack, buffer, packedLight, packedOverlay);
+            var flat = FlatGarmentGeometry.cachedHanger(garment.parts());
+            var attachment = FlatGarmentGeometry.hangerAttachmentPoint(garment.parts());
+            renderCentered(garment, new Vec3(0, 0, 0), attachment, flat.scaleZ(),
+                    poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull, RenderType::entityTranslucent);
         });
-    }
-
-    private static void renderFlat(ResolvedGarment garment, Vec3 anchor, PoseStack poseStack,
-                                   MultiBufferSource buffer, int packedLight, int packedOverlay) {
-        var flat = FlatGarmentGeometry.cached(garment.parts().stream().map(ResolvedPart::model).toList());
-        renderCentered(garment, anchor, flat.originalBounds().center(), flat.scaleZ(),
-                poseStack, buffer, packedLight, packedOverlay, RenderType::entityCutoutNoCull, RenderType::entityTranslucent);
     }
 
     public static void renderPreview(ResolvedGarment garment, PoseStack poseStack,

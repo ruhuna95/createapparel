@@ -23,10 +23,20 @@ import org.jetbrains.annotations.Nullable;
 
 public final class WallHangerBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+    private final java.util.Map<Direction, VoxelShape> shapes = new java.util.EnumMap<>(Direction.class);
 
     public WallHangerBlock(Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        var bounds = HangerGeometry.wallHanger().bounds().minmax(HangerGeometry.WALL_HOOK.box().bounds())
+                .minmax(new net.minecraft.world.phys.AABB(6 / 16.0, 11 / 16.0, 15 / 16.0, 10 / 16.0, 1, 1));
+        var shape = FurnitureShape.of(java.util.List.of(OrientedBox.axisAligned(bounds)));
+        for (Direction facing : Direction.Plane.HORIZONTAL) shapes.put(facing, HangerGeometry.orient(shape, facing));
+    }
+
+    @Override
+    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientBlockExtensions> consumer) {
+        consumer.accept(new com.rexhub.createapparel.client.particle.DisplayFurnitureClientExtensions());
     }
 
     @Nullable
@@ -84,13 +94,7 @@ public final class WallHangerBlock extends BaseEntityBlock {
     @Override
     @SuppressWarnings("deprecation")
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return switch (state.getValue(FACING)) {
-            case NORTH -> box(2, 8, 9, 14, 16, 16);
-            case SOUTH -> box(2, 8, 0, 14, 16, 7);
-            case EAST -> box(0, 8, 2, 7, 16, 14);
-            case WEST -> box(9, 8, 2, 16, 16, 14);
-            default -> throw new IllegalStateException("Non-horizontal hanger");
-        };
+        return shapes.get(state.getValue(FACING));
     }
 
     @Override

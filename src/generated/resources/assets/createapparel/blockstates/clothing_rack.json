@@ -1,0 +1,964 @@
+{
+  "variants": {
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3",
+      "y": 90
+    },
+    "facing=east,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3",
+      "y": 90
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3"
+    },
+    "facing=north,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3"
+    },
+    "facing=north,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3"
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3",
+      "y": 180
+    },
+    "facing=south,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3",
+      "y": 180
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_3",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_1",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_2",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_0_0",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_lower",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=false,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_3",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_0",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=false,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_2",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=floor,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_floor_1_0",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=false,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_1",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=false": {
+      "model": "createapparel:block/clothing_rack_wall_upper_0_3",
+      "y": 270
+    },
+    "facing=west,half=upper,isolated=true,left_connected=true,mount=wall,right_connected=true,wall_anchored=true": {
+      "model": "createapparel:block/clothing_rack_wall_upper_1_3",
+      "y": 270
+    }
+  }
+}

@@ -68,6 +68,8 @@ public final class ModItems {
     );
     public static final RegistryObject<Item> WALL_HANGER = ModRegistries.ITEMS.register("wall_hanger",
             () -> new BlockItem(ModBlocks.WALL_HANGER.get(), new Item.Properties()));
+    public static final RegistryObject<Item> CLOTHING_RACK = ModRegistries.ITEMS.register("clothing_rack",
+            () -> new com.rexhub.createapparel.item.ClothingRackItem(ModBlocks.CLOTHING_RACK.get(), new Item.Properties()));
     public static final RegistryObject<Item> SEWING_PATTERN = ModRegistries.ITEMS.register(
             "sewing_pattern",
             () -> new SewingPatternItem(new Item.Properties().stacksTo(1))
@@ -501,6 +503,7 @@ public final class ModItems {
         items.add(SEWING_MACHINE);
         items.add(WARDROBE);
         items.add(WALL_HANGER);
+        items.add(CLOTHING_RACK);
         for (var variant : MannequinVariant.values()) items.add(MANNEQUINS.get(variant));
         items.add(SEWING_PATTERN);
         addMaterialGroup(

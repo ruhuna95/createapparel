@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.client.garment;
 
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.GarmentPartModel;
+import com.rexhub.createapparel.client.garment.ClientGarmentAssets.ResolvedPart;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Rotation;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets.Vec3;
 
@@ -9,13 +10,41 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public record FlatGarmentGeometry(Bounds originalBounds, Bounds flattenedBounds, float scaleZ) {
-    private static final Map<PartKey, FlatGarmentGeometry> CACHE = new LinkedHashMap<>(32, 0.75F, true);
+    private static final Map<GeometryKey, FlatGarmentGeometry> CACHE = new LinkedHashMap<>(32, 0.75F, true);
 
     public static FlatGarmentGeometry cached(List<GarmentPartModel> parts) {
-        PartKey key = new PartKey(parts);
+        return cached(parts, parts);
+    }
+
+    public static FlatGarmentGeometry cachedHanger(List<ResolvedPart> parts) {
+        var models = parts.stream().map(ResolvedPart::model).toList();
+        var depthParts = parts.stream()
+                .filter(part -> !isHood(part))
+                .map(ResolvedPart::model).toList();
+        return cached(models, depthParts.isEmpty() ? models : depthParts);
+    }
+
+    public static Vec3 hangerAttachmentPoint(List<ResolvedPart> parts) {
+        var attachmentParts = parts.stream().anyMatch(FlatGarmentGeometry::isHood)
+                ? parts.stream().filter(part -> part.semanticName().equals("torso") || part.semanticName().startsWith("torso_")
+                        || part.semanticName().equals("tucked_torso") || part.semanticName().startsWith("tucked_torso_"))
+                        .map(ResolvedPart::model).toList()
+                : List.<GarmentPartModel>of();
+        if (attachmentParts.isEmpty()) attachmentParts = parts.stream().map(ResolvedPart::model).toList();
+        var bounds = cached(attachmentParts).originalBounds();
+        var center = bounds.center();
+        return new Vec3(center.x(), bounds.max().y(), center.z());
+    }
+
+    private static boolean isHood(ResolvedPart part) {
+        return part.semanticName().equals("hood") || part.semanticName().startsWith("hood_");
+    }
+
+    private static FlatGarmentGeometry cached(List<GarmentPartModel> parts, List<GarmentPartModel> depthParts) {
+        GeometryKey key = new GeometryKey(new PartKey(parts), new PartKey(depthParts));
         FlatGarmentGeometry found = CACHE.get(key);
         if (found != null) return found;
-        FlatGarmentGeometry geometry = fromParts(parts);
+        FlatGarmentGeometry geometry = fromParts(parts, depthParts);
         if (CACHE.size() >= 256) CACHE.remove(CACHE.keySet().iterator().next());
         CACHE.put(key, geometry);
         return geometry;
@@ -24,6 +53,8 @@ public record FlatGarmentGeometry(Bounds originalBounds, Bounds flattenedBounds,
     public static void clearCache() {
         CACHE.clear();
     }
+
+    private record GeometryKey(PartKey parts, PartKey depthParts) { }
 
     private record PartKey(List<GarmentPartModel> parts) {
         private PartKey {
@@ -46,6 +77,21 @@ public record FlatGarmentGeometry(Bounds originalBounds, Bounds flattenedBounds,
     }
 
     public static FlatGarmentGeometry fromParts(List<GarmentPartModel> parts) {
+        return fromParts(parts, parts);
+    }
+
+    private static FlatGarmentGeometry fromParts(List<GarmentPartModel> parts, List<GarmentPartModel> depthParts) {
+        Bounds original = bounds(parts);
+        Bounds reference = parts == depthParts ? original : bounds(depthParts);
+        float depth = reference.max().z() - reference.min().z();
+        float scale = depth > 2 ? 2 / depth : 1;
+        float centerZ = original.center().z();
+        Bounds flat = new Bounds(new Vec3(original.min().x(), original.min().y(), centerZ + (original.min().z() - centerZ) * scale),
+                new Vec3(original.max().x(), original.max().y(), centerZ + (original.max().z() - centerZ) * scale));
+        return new FlatGarmentGeometry(original, flat, scale);
+    }
+
+    private static Bounds bounds(List<GarmentPartModel> parts) {
         float minX = Float.POSITIVE_INFINITY;
         float minY = Float.POSITIVE_INFINITY;
         float minZ = Float.POSITIVE_INFINITY;
@@ -66,16 +112,9 @@ public record FlatGarmentGeometry(Bounds originalBounds, Bounds flattenedBounds,
             }
         }
         if (!Float.isFinite(minX)) {
-            Bounds empty = new Bounds(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
-            return new FlatGarmentGeometry(empty, empty, 1);
+            return new Bounds(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
         }
-        Bounds original = new Bounds(new Vec3(minX, minY, minZ), new Vec3(maxX, maxY, maxZ));
-        float depth = maxZ - minZ;
-        float scale = depth > 2 ? 2 / depth : 1;
-        float centerZ = original.center().z();
-        Bounds flat = new Bounds(new Vec3(minX, minY, centerZ + (minZ - centerZ) * scale),
-                new Vec3(maxX, maxY, centerZ + (maxZ - centerZ) * scale));
-        return new FlatGarmentGeometry(original, flat, scale);
+        return new Bounds(new Vec3(minX, minY, minZ), new Vec3(maxX, maxY, maxZ));
     }
 
     public Vec3 transform(Vec3 point, Rotation rotation) {

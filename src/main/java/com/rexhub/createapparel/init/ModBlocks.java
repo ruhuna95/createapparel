@@ -14,6 +14,10 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Supplier;
 
 public final class ModBlocks {
+    public static final RegistryObject<Block> CLOTHING_RACK = ModRegistries.BLOCKS.register("clothing_rack",
+            () -> new com.rexhub.createapparel.block.ClothingRackBlock(
+                    BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL)
+                            .sound(net.minecraft.world.level.block.SoundType.METAL).strength(2.0F).noOcclusion()));
     public static final RegistryObject<Block> WALL_HANGER = ModRegistries.BLOCKS.register("wall_hanger",
             () -> new com.rexhub.createapparel.block.WallHangerBlock(
                     BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion()));

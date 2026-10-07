@@ -18,6 +18,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public final class ModRegistries {
+    public static final DeferredRegister<com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType> ARM_INTERACTION_POINT_TYPES =
+            DeferredRegister.create(com.simibubi.create.api.registry.CreateRegistries.ARM_INTERACTION_POINT_TYPE, CreateApparel.MOD_ID);
     public static final DeferredRegister<Block> BLOCKS =
             DeferredRegister.create(ForgeRegistries.BLOCKS, CreateApparel.MOD_ID);
     public static final DeferredRegister<Item> ITEMS =
@@ -42,6 +44,7 @@ public final class ModRegistries {
 
     public static void register(IEventBus modEventBus) {
         ModBlocks.bootstrap();
+        ModArmInteractionPoints.bootstrap();
         ModBlockEntities.bootstrap();
         ModMenuTypes.bootstrap();
         ModRecipeTypes.bootstrap();
@@ -51,6 +54,7 @@ public final class ModRegistries {
         ModCreativeModeTabs.bootstrap();
 
         BLOCKS.register(modEventBus);
+        ARM_INTERACTION_POINT_TYPES.register(modEventBus);
         ITEMS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);
         MENU_TYPES.register(modEventBus);
