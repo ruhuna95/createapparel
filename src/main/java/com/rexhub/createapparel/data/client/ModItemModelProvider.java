@@ -64,6 +64,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
             } else if (item == ModItems.SPINNING_MACHINE
                     || item == ModItems.WALL_HANGER
                     || item == ModItems.CLOTHING_RACK
+                    || item == ModItems.CLIP_WALL_HANGER
+                    || item == ModItems.CLIP_CLOTHING_RACK
                     || item == ModItems.LOOM
                     || item == ModItems.SEWING_MACHINE) {
                 continue;

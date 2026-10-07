@@ -131,6 +131,14 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .pattern("III").pattern("I I").pattern("I I").define('I', Items.IRON_INGOT)
                 .unlockedBy("has_iron_ingot", InventoryChangeTrigger.TriggerInstance.hasItems(Items.IRON_INGOT))
                 .save(consumer, asResource("clothing_rack")));
+        register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.DECORATIONS, ModItems.CLIP_WALL_HANGER.get())
+                .requires(ModItems.WALL_HANGER.get()).requires(Items.IRON_NUGGET, 2)
+                .unlockedBy("has_wall_hanger", InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.WALL_HANGER.get()))
+                .save(consumer, asResource("clip_wall_hanger")));
+        register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.DECORATIONS, ModItems.CLIP_CLOTHING_RACK.get())
+                .requires(ModItems.CLOTHING_RACK.get()).requires(Items.IRON_NUGGET, 8)
+                .unlockedBy("has_clothing_rack", InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.CLOTHING_RACK.get()))
+                .save(consumer, asResource("clip_clothing_rack")));
 
         apparelDye(FabricColor.CREAM, Items.WHITE_DYE, Items.WHITE_DYE, Items.YELLOW_DYE);
         apparelDye(FabricColor.BEIGE, Items.WHITE_DYE, Items.BROWN_DYE);

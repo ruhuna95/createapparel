@@ -3,6 +3,7 @@ package com.rexhub.createapparel.client.renderer;
 import com.mojang.math.Transformation;
 import com.rexhub.createapparel.block.HangerGeometry;
 import com.rexhub.createapparel.block.RackMountType;
+import com.rexhub.createapparel.garment.HangerType;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -20,8 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 
 final class HangerBlockModel extends BakedModelWrapper<BakedModel> {
-    private static final BakedModel[] CACHE = new BakedModel[RackMountType.values().length * 16];
-    @Nullable private static BakedModel cachedSource;
+    private static final BakedModel[][] CACHE = new BakedModel[HangerType.values().length][RackMountType.values().length * 16];
+    private static final BakedModel[] CACHED_SOURCES = new BakedModel[HangerType.values().length];
     private final List<BakedQuad> quads;
 
     private HangerBlockModel(BakedModel source, RackMountType mount, int slot, Direction facing) {
@@ -40,14 +41,15 @@ final class HangerBlockModel extends BakedModelWrapper<BakedModel> {
         quads = List.copyOf(transformed);
     }
 
-    static BakedModel rackModel(BakedModel source, RackMountType mount, int slot, Direction facing) {
-        if (cachedSource != source) {
-            Arrays.fill(CACHE, null);
-            cachedSource = source;
+    static BakedModel rackModel(BakedModel source, HangerType type, RackMountType mount, int slot, Direction facing) {
+        var cache = CACHE[type.ordinal()];
+        if (CACHED_SOURCES[type.ordinal()] != source) {
+            Arrays.fill(cache, null);
+            CACHED_SOURCES[type.ordinal()] = source;
         }
         int index = mount.ordinal() * 16 + slot * 4 + facing.get2DDataValue();
-        if (CACHE[index] == null) CACHE[index] = new HangerBlockModel(source, mount, slot, facing);
-        return CACHE[index];
+        if (cache[index] == null) cache[index] = new HangerBlockModel(source, mount, slot, facing);
+        return cache[index];
     }
 
     static Matrix4f rackTransform(RackMountType mount, int slot, Direction facing) {

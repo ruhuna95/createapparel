@@ -26,7 +26,9 @@ class DisplayFurnitureSurfaceTest {
         try (var paths = Files.list(MODELS)) {
             for (var path : paths.filter(path -> path.getFileName().toString().startsWith("clothing_rack")
                     || path.getFileName().toString().equals("wall_hanger.json")
-                    || path.getFileName().toString().equals("common_hanger.json")).toList()) {
+                    || path.getFileName().toString().equals("common_hanger.json")
+                    || path.getFileName().toString().equals("clip_wall_hanger.json")
+                    || path.getFileName().toString().equals("common_clip_hanger.json")).toList()) {
                 assertNoCoplanarOverlap(faces(read(path), 0, Vec3.ZERO), path.toString());
             }
         }
@@ -34,19 +36,21 @@ class DisplayFurnitureSurfaceTest {
 
     @Test
     void rackFramesAndRenderedHangersDoNotShareSurfacePlanes() throws IOException {
-        var hanger = read(MODELS.resolve("common_hanger.json"));
-        for (var mount : RackMountType.values()) for (int variant : new int[]{0, 3}) {
-            String name = mount == RackMountType.FLOOR ? "clothing_rack_floor_1_" + variant
-                    : variant == 0 ? "clothing_rack_wall_upper_0_0" : "clothing_rack_wall_upper";
-            var combined = new ArrayList<>(faces(read(MODELS.resolve(name + ".json")), 0, Vec3.ZERO));
-            int turns = mount == RackMountType.FLOOR ? 3 : 0;
-            var modelAnchor = turn(HangerGeometry.MODEL_ANCHOR, turns);
-            for (int slot = 0; slot < 4; slot++) {
-                if (mount == RackMountType.FLOOR && variant == 3 && (slot == 0 || slot == 3)) continue;
-                var offset = HangerGeometry.rackAnchor(mount, slot).subtract(modelAnchor);
-                combined.addAll(faces(hanger, turns, offset));
+        for (var modelName : new String[]{"common_hanger", "common_clip_hanger"}) {
+            var hanger = read(MODELS.resolve(modelName + ".json"));
+            for (var mount : RackMountType.values()) for (int variant : new int[]{0, 3}) {
+                String name = mount == RackMountType.FLOOR ? "clothing_rack_floor_1_" + variant
+                        : variant == 0 ? "clothing_rack_wall_upper_0_0" : "clothing_rack_wall_upper";
+                var combined = new ArrayList<>(faces(read(MODELS.resolve(name + ".json")), 0, Vec3.ZERO));
+                int turns = mount == RackMountType.FLOOR ? 3 : 0;
+                var modelAnchor = turn(HangerGeometry.MODEL_ANCHOR, turns);
+                for (int slot = 0; slot < 4; slot++) {
+                    if (mount == RackMountType.FLOOR && variant == 3 && (slot == 0 || slot == 3)) continue;
+                    var offset = HangerGeometry.rackAnchor(mount, slot).subtract(modelAnchor);
+                    combined.addAll(faces(hanger, turns, offset));
+                }
+                assertNoCoplanarOverlap(combined, name);
             }
-            assertNoCoplanarOverlap(combined, name);
         }
     }
 

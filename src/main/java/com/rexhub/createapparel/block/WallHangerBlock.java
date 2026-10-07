@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.block;
 
 import com.rexhub.createapparel.block.entity.WallHangerBlockEntity;
+import com.rexhub.createapparel.garment.HangerType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -24,15 +25,23 @@ import org.jetbrains.annotations.Nullable;
 public final class WallHangerBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     private final java.util.Map<Direction, VoxelShape> shapes = new java.util.EnumMap<>(Direction.class);
+    private final HangerType hangerType;
 
     public WallHangerBlock(Properties properties) {
+        this(properties, HangerType.NORMAL);
+    }
+
+    public WallHangerBlock(Properties properties, HangerType hangerType) {
         super(properties);
+        this.hangerType = hangerType;
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
         var bounds = HangerGeometry.wallHanger().bounds().minmax(HangerGeometry.WALL_HOOK.box().bounds())
                 .minmax(new net.minecraft.world.phys.AABB(6 / 16.0, 11 / 16.0, 15 / 16.0, 10 / 16.0, 1, 1));
         var shape = FurnitureShape.of(java.util.List.of(OrientedBox.axisAligned(bounds)));
         for (Direction facing : Direction.Plane.HORIZONTAL) shapes.put(facing, HangerGeometry.orient(shape, facing));
     }
+
+    public HangerType hangerType() { return hangerType; }
 
     @Override
     public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientBlockExtensions> consumer) {

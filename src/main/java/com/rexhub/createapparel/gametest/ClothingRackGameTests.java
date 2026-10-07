@@ -317,8 +317,7 @@ public final class ClothingRackGameTests {
         helper.assertTrue(!handler.insertItem(1, new ItemStack(Items.STONE), false).isEmpty(), "Ordinary item rejected");
         helper.assertTrue(!handler.insertItem(1, new ItemStack(ModItems.BRA.get()), false).isEmpty(), "Inner garment rejected");
         var bottom = new ItemStack(ModItems.DENIM_PANTS.get());
-        helper.assertTrue(handler.insertItem(2, bottom, false).isEmpty(), "Bottom accepted through logistics");
-        helper.assertTrue(handler.extractItem(2, 1, false).is(ModItems.DENIM_PANTS.get()), "Bottom extraction supported");
+        helper.assertTrue(!handler.insertItem(2, bottom, false).isEmpty() && rack.garment(2).isEmpty(), "Normal hanger rejects bottom logistics");
         helper.assertTrue(handler.insertItem(1, garment, true).isEmpty() && rack.garment(1).isEmpty(), "Simulation leaves inventory unchanged");
         helper.assertTrue(handler.insertItem(1, garment.copyWithCount(3), false).getCount() == 2, "Slot keeps only one garment");
         helper.assertTrue(!handler.insertItem(1, garment, false).isEmpty(), "Occupied slot rejects second garment");
@@ -462,7 +461,13 @@ public final class ClothingRackGameTests {
 
     @GameTest(template = "display_furniture", batch = "clothing_rack")
     public static void directHangerClickAndFullInventoryReturnPreserveItems(GameTestHelper helper) {
-        var rack = place(helper, base(helper), Direction.NORTH, RackMountType.FLOOR);
+        var pos = base(helper);
+        helper.getLevel().setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
+        var state = ModBlocks.CLIP_CLOTHING_RACK.get().defaultBlockState();
+        helper.getLevel().setBlockAndUpdate(pos, state);
+        state.getBlock().setPlacedBy(helper.getLevel(), pos, state, helper.makeMockPlayer(), new ItemStack(ModItems.CLIP_CLOTHING_RACK.get()));
+        var rack = (ClothingRackBlockEntity) helper.getLevel().getBlockEntity(pos);
+        if (rack == null) throw new IllegalStateException("Missing clip rack");
         var player = helper.makeMockPlayer();
         player.getAbilities().instabuild = false;
         player.setPos(Vec3.atCenterOf(base(helper)));

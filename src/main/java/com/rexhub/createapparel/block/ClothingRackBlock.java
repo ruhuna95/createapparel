@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.block;
 
 import com.rexhub.createapparel.block.entity.ClothingRackBlockEntity;
+import com.rexhub.createapparel.garment.HangerType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -32,14 +33,26 @@ public final class ClothingRackBlock extends BaseEntityBlock {
     public static final BooleanProperty WALL_ANCHORED = BooleanProperty.create("wall_anchored");
     public static final BooleanProperty ISOLATED = BooleanProperty.create("isolated");
     private final java.util.Map<BlockState, VoxelShape> shapes = new java.util.HashMap<>();
+    private final HangerType hangerType;
 
     public ClothingRackBlock(Properties properties) {
+        this(properties, HangerType.NORMAL);
+    }
+
+    public ClothingRackBlock(Properties properties, HangerType hangerType) {
         super(properties);
+        this.hangerType = hangerType;
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH)
                 .setValue(HALF, DoubleBlockHalf.LOWER).setValue(MOUNT, RackMountType.FLOOR)
                 .setValue(LEFT_CONNECTED, false).setValue(RIGHT_CONNECTED, false).setValue(WALL_ANCHORED, false)
                 .setValue(ISOLATED, false));
         for (var state : stateDefinition.getPossibleStates()) shapes.put(state, createShape(state));
+    }
+
+    public HangerType hangerType() { return hangerType; }
+
+    public static boolean isSlotUsable(BlockState state, int slot) {
+        return state.getValue(MOUNT).isSlotUsable(state.getValue(LEFT_CONNECTED), state.getValue(RIGHT_CONNECTED), slot);
     }
 
     @Override
@@ -66,7 +79,7 @@ public final class ClothingRackBlock extends BaseEntityBlock {
         BlockPos neighborPos = lower.relative(left ? direction : direction.getOpposite());
         if (!chunkAvailable(level, neighborPos)) return state.getValue(left ? LEFT_CONNECTED : RIGHT_CONNECTED);
         BlockState neighbor = level.getBlockState(neighborPos);
-        return neighbor.is(state.getBlock()) && neighbor.getValue(HALF) == DoubleBlockHalf.LOWER
+        return neighbor.getBlock() instanceof ClothingRackBlock && neighbor.getValue(HALF) == DoubleBlockHalf.LOWER
                 && neighbor.getValue(FACING) == state.getValue(FACING) && neighbor.getValue(MOUNT) == state.getValue(MOUNT)
                 && (state.getValue(MOUNT) != RackMountType.FLOOR || !neighbor.getValue(ISOLATED));
     }
@@ -89,7 +102,7 @@ public final class ClothingRackBlock extends BaseEntityBlock {
         BlockPos clicked = pos.relative(face.getOpposite());
         BlockState clickedState = level.getBlockState(clicked);
         boolean sneaking = context.getPlayer() != null && context.getPlayer().isShiftKeyDown();
-        if (clickedState.is(this) && extendsFrom(clickedState, face, sneaking)) {
+        if (clickedState.getBlock() instanceof ClothingRackBlock && extendsFrom(clickedState, face, sneaking)) {
             state = state.setValue(FACING, clickedState.getValue(FACING)).setValue(MOUNT, clickedState.getValue(MOUNT));
         } else if (face.getAxis().isHorizontal()) {
             state = state.setValue(FACING, face).setValue(MOUNT, RackMountType.WALL);
@@ -124,10 +137,10 @@ public final class ClothingRackBlock extends BaseEntityBlock {
             cursor = cursor.relative(backward);
             if (!chunkAvailable(level, cursor)) return cursorState.getValue(RIGHT_CONNECTED);
             BlockState neighbor = level.getBlockState(cursor);
-            if (!neighbor.is(this) || neighbor.getValue(HALF) != DoubleBlockHalf.LOWER
+            if (!(neighbor.getBlock() instanceof ClothingRackBlock) || neighbor.getValue(HALF) != DoubleBlockHalf.LOWER
                     || neighbor.getValue(FACING) != state.getValue(FACING) || neighbor.getValue(MOUNT) != RackMountType.WALL) return false;
             BlockState upper = level.getBlockState(cursor.above());
-            if (!upper.is(this) || upper.getValue(HALF) != DoubleBlockHalf.UPPER
+            if (!upper.is(neighbor.getBlock()) || upper.getValue(HALF) != DoubleBlockHalf.UPPER
                     || upper.getValue(FACING) != state.getValue(FACING) || upper.getValue(MOUNT) != RackMountType.WALL) return false;
             if (hasWallAnchorOrUnloadedSupport(level, cursor, neighbor)) return true;
             cursorState = neighbor;
@@ -175,8 +188,10 @@ public final class ClothingRackBlock extends BaseEntityBlock {
         Direction left = leftDirection(state);
         for (Direction direction : new Direction[]{left, left.getOpposite()}) {
             BlockPos neighborPos = lower.relative(direction);
-            if (chunkAvailable(level, neighborPos) && level.getBlockState(neighborPos).is(state.getBlock()))
-                level.scheduleTick(neighborPos, state.getBlock(), 1);
+            if (chunkAvailable(level, neighborPos)) {
+                BlockState neighbor = level.getBlockState(neighborPos);
+                if (neighbor.getBlock() instanceof ClothingRackBlock) level.scheduleTick(neighborPos, neighbor.getBlock(), 1);
+            }
         }
     }
 

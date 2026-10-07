@@ -94,6 +94,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.WARDROBE, "Wardrobe");
         addBlock(ModBlocks.WALL_HANGER, "Wall Hanger");
         addBlock(ModBlocks.CLOTHING_RACK, "Clothing Rack");
+        addBlock(ModBlocks.CLIP_WALL_HANGER, "Clip Wall Hanger");
+        addBlock(ModBlocks.CLIP_CLOTHING_RACK, "Clip Clothing Rack");
         addEntityType(ModEntities.SILKWORM, "Silkworm");
 
         add(ModItems.COTTON_SEEDS.get(), "Cotton Seeds");

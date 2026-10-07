@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.block;
 
 import net.minecraft.core.Direction;
+import com.rexhub.createapparel.garment.HangerType;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -28,6 +29,11 @@ public final class HangerGeometry {
             new Part(6.5F, 13.5F, 10.5F - 2 * JOINT_CLEARANCE_PIXELS, 7.5F, 16, 11.5F + 2 * JOINT_CLEARANCE_PIXELS, "metal", 0),
             new Part(6.5F, 16, 10.5F - 2 * JOINT_CLEARANCE_PIXELS, 9.5F, 16.5F, 11.5F + 2 * JOINT_CLEARANCE_PIXELS, "metal", 0),
             new Part(8.5F, 14.5F, 10.5F - 2 * JOINT_CLEARANCE_PIXELS, 9.5F, 16, 11.5F + 2 * JOINT_CLEARANCE_PIXELS, "metal", 0));
+    public static final List<Part> CLIP_PARTS = List.of(
+            new Part(3, 12.5F, 10.5F, 13, 13.5F, 11.5F, "wood", 0),
+            PARTS.get(3), PARTS.get(4), PARTS.get(5),
+            new Part(4.5F, 10.5F, 10.5F - JOINT_CLEARANCE_PIXELS, 6, 12.5F, 11.5F + JOINT_CLEARANCE_PIXELS, "metal", 0),
+            new Part(10, 10.5F, 10.5F - JOINT_CLEARANCE_PIXELS, 11.5F, 12.5F, 11.5F + JOINT_CLEARANCE_PIXELS, "metal", 0));
     public static final Part WALL_HOOK = new Part(7.5F, 14, PARTS.get(3).z2(), 8.5F, 15, 15, "metal", 0);
     private static final VoxelShape MODEL = createModelShape();
     private static final VoxelShape WALL_HANGER = MODEL.move(0, WALL_ANCHOR.y - MODEL_ANCHOR.y, WALL_ANCHOR.z - MODEL_ANCHOR.z);
@@ -35,6 +41,8 @@ public final class HangerGeometry {
     private static final VoxelShape[][][] ORIENTED_RACK_HANGERS = createOrientedRackShapes();
 
     private HangerGeometry() { }
+
+    public static List<Part> parts(HangerType type) { return type == HangerType.CLIP ? CLIP_PARTS : PARTS; }
 
     public static Vec3 rackAnchor(RackMountType mount, int slot) {
         return mount == RackMountType.WALL ? new Vec3(0.5, DISPLAY_ANCHOR_Y, (2 + 4 * slot) / 16.0)

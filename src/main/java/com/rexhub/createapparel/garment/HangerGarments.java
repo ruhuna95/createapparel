@@ -11,14 +11,16 @@ public final class HangerGarments {
     }
 
     public static boolean accepts(ItemStack stack) {
+        return accepts(stack, HangerType.NORMAL);
+    }
+
+    public static boolean accepts(ItemStack stack, HangerType type) {
         if (stack.isEmpty() || !(stack.getItem() instanceof GarmentItem)) return false;
         return GarmentDefinitionManager.get(ForgeRegistries.ITEMS.getKey(stack.getItem()))
-                .map(HangerGarments::accepts).orElse(false);
+                .map(type::accepts).orElse(false);
     }
 
     public static boolean accepts(GarmentDefinition definition) {
-        return definition.allowedSlots().contains(GarmentSlot.TOP)
-                || definition.allowedSlots().contains(GarmentSlot.OUTER)
-                || definition.allowedSlots().contains(GarmentSlot.BOTTOM);
+        return HangerType.NORMAL.accepts(definition);
     }
 }

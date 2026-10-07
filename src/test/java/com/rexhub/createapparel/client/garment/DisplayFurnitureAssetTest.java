@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import com.rexhub.createapparel.block.HangerGeometry;
+import com.rexhub.createapparel.garment.HangerType;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +20,9 @@ class DisplayFurnitureAssetTest {
         try (var paths = Files.list(MODELS)) {
             for (var path : paths.filter(path -> path.getFileName().toString().startsWith("clothing_rack")
                     || path.getFileName().toString().equals("wall_hanger.json")
-                    || path.getFileName().toString().equals("common_hanger.json")).toList()) {
+                    || path.getFileName().toString().equals("common_hanger.json")
+                    || path.getFileName().toString().equals("clip_wall_hanger.json")
+                    || path.getFileName().toString().equals("common_clip_hanger.json")).toList()) {
                 var model = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
                 if (!model.has("elements")) continue;
                 for (var entry : model.getAsJsonArray("elements")) {
@@ -56,54 +59,61 @@ class DisplayFurnitureAssetTest {
 
     @Test
     void hangerModelUsesTheSharedCenteredRenderParts() throws IOException {
-        var model = JsonParser.parseString(Files.readString(MODELS.resolve("common_hanger.json"))).getAsJsonObject();
-        var elements = model.getAsJsonArray("elements");
-        assertEquals(HangerGeometry.PARTS.size(), elements.size());
-        for (int index = 0; index < elements.size(); index++) {
-            var part = HangerGeometry.PARTS.get(index);
-            var element = elements.get(index).getAsJsonObject();
-            assertArrayEquals(new double[]{part.x1(), part.y1(), part.z1()}, coordinates(element, "from"), 1.0E-6);
-            assertArrayEquals(new double[]{part.x2(), part.y2(), part.z2()}, coordinates(element, "to"), 1.0E-6);
-            assertEquals(part.angle(), element.has("rotation") ? element.getAsJsonObject("rotation").get("angle").getAsFloat() : 0);
+        for (var type : HangerType.values()) {
+            String name = type == HangerType.CLIP ? "common_clip_hanger" : "common_hanger";
+            var model = JsonParser.parseString(Files.readString(MODELS.resolve(name + ".json"))).getAsJsonObject();
+            var elements = model.getAsJsonArray("elements");
+            assertEquals(HangerGeometry.parts(type).size(), elements.size());
+            for (int index = 0; index < elements.size(); index++) {
+                var part = HangerGeometry.parts(type).get(index);
+                var element = elements.get(index).getAsJsonObject();
+                assertArrayEquals(new double[]{part.x1(), part.y1(), part.z1()}, coordinates(element, "from"), 1.0E-6);
+                assertArrayEquals(new double[]{part.x2(), part.y2(), part.z2()}, coordinates(element, "to"), 1.0E-6);
+                assertEquals(part.angle(), element.has("rotation") ? element.getAsJsonObject("rotation").get("angle").getAsFloat() : 0);
+            }
         }
     }
 
     @Test
     void wallHangerUsesSameCompactHookBehindCenteredWallBracket() throws IOException {
-        var common = JsonParser.parseString(Files.readString(MODELS.resolve("common_hanger.json"))).getAsJsonObject().getAsJsonArray("elements");
-        var wall = JsonParser.parseString(Files.readString(MODELS.resolve("wall_hanger.json"))).getAsJsonObject().getAsJsonArray("elements");
-        var delta = HangerGeometry.WALL_ANCHOR.subtract(HangerGeometry.MODEL_ANCHOR).scale(16);
-        double[] offset = {delta.x, delta.y, delta.z};
-        for (int index = 0; index < common.size(); index++) {
-            var original = common.get(index).getAsJsonObject();
-            var shifted = wall.get(index).getAsJsonObject();
-            for (String key : new String[]{"from", "to"}) {
-                var expected = coordinates(original, key);
-                for (int axis = 0; axis < 3; axis++) expected[axis] += offset[axis];
-                assertArrayEquals(expected, coordinates(shifted, key), 1.0E-6);
+        for (var type : HangerType.values()) {
+            String commonName = type == HangerType.CLIP ? "common_clip_hanger" : "common_hanger";
+            String wallName = type == HangerType.CLIP ? "clip_wall_hanger" : "wall_hanger";
+            var common = JsonParser.parseString(Files.readString(MODELS.resolve(commonName + ".json"))).getAsJsonObject().getAsJsonArray("elements");
+            var wall = JsonParser.parseString(Files.readString(MODELS.resolve(wallName + ".json"))).getAsJsonObject().getAsJsonArray("elements");
+            var delta = HangerGeometry.WALL_ANCHOR.subtract(HangerGeometry.MODEL_ANCHOR).scale(16);
+            double[] offset = {delta.x, delta.y, delta.z};
+            for (int index = 0; index < common.size(); index++) {
+                var original = common.get(index).getAsJsonObject();
+                var shifted = wall.get(index).getAsJsonObject();
+                for (String key : new String[]{"from", "to"}) {
+                    var expected = coordinates(original, key);
+                    for (int axis = 0; axis < 3; axis++) expected[axis] += offset[axis];
+                    assertArrayEquals(expected, coordinates(shifted, key), 1.0E-6);
+                }
+                for (var face : original.getAsJsonObject("faces").keySet()) {
+                    assertEquals(original.getAsJsonObject("faces").getAsJsonObject(face).get("texture"),
+                            shifted.getAsJsonObject("faces").getAsJsonObject(face).get("texture"));
+                    assertArrayEquals(faceUvs(original, face), faceUvs(shifted, face), 1.0E-6,
+                            "Height changes must preserve texture sampling");
+                }
+                if (original.has("rotation")) {
+                    var expected = coordinates(original.getAsJsonObject("rotation"), "origin");
+                    for (int axis = 0; axis < 3; axis++) expected[axis] += offset[axis];
+                    assertArrayEquals(expected, coordinates(shifted.getAsJsonObject("rotation"), "origin"), 1.0E-6);
+                    assertEquals(original.getAsJsonObject("rotation").get("angle"), shifted.getAsJsonObject("rotation").get("angle"));
+                }
             }
-            for (var face : original.getAsJsonObject("faces").keySet()) {
-                assertEquals(original.getAsJsonObject("faces").getAsJsonObject(face).get("texture"),
-                        shifted.getAsJsonObject("faces").getAsJsonObject(face).get("texture"));
-                assertArrayEquals(faceUvs(original, face), faceUvs(shifted, face), 1.0E-6,
-                        "Height changes must preserve texture sampling");
-            }
-            if (original.has("rotation")) {
-                var expected = coordinates(original.getAsJsonObject("rotation"), "origin");
-                for (int axis = 0; axis < 3; axis++) expected[axis] += offset[axis];
-                assertArrayEquals(expected, coordinates(shifted.getAsJsonObject("rotation"), "origin"), 1.0E-6);
-                assertEquals(original.getAsJsonObject("rotation").get("angle"), shifted.getAsJsonObject("rotation").get("angle"));
-            }
+            var bracket = wall.get(common.size() + 1).getAsJsonObject();
+            var hook = HangerGeometry.WALL_HOOK;
+            var from = coordinates(bracket, "from");
+            var to = coordinates(bracket, "to");
+            assertArrayEquals(new double[]{hook.x1(), hook.y1(), hook.z1()}, from, 1.0E-6);
+            assertArrayEquals(new double[]{hook.x2(), hook.y2(), hook.z2()}, to, 1.0E-6);
+            assertEquals(8, (from[0] + to[0]) / 2);
+            assertTrue(from[2] < HangerGeometry.WALL_ANCHOR.z * 16);
+            assertTrue(to[2] > HangerGeometry.WALL_ANCHOR.z * 16);
         }
-        var bracket = wall.get(common.size() + 1).getAsJsonObject();
-        var hook = HangerGeometry.WALL_HOOK;
-        var from = coordinates(bracket, "from");
-        var to = coordinates(bracket, "to");
-        assertArrayEquals(new double[]{hook.x1(), hook.y1(), hook.z1()}, from, 1.0E-6);
-        assertArrayEquals(new double[]{hook.x2(), hook.y2(), hook.z2()}, to, 1.0E-6);
-        assertEquals(8, (from[0] + to[0]) / 2);
-        assertTrue(from[2] < HangerGeometry.WALL_ANCHOR.z * 16);
-        assertTrue(to[2] > HangerGeometry.WALL_ANCHOR.z * 16);
     }
 
     private static void assertHalfPixelOrJointOffset(double value) {

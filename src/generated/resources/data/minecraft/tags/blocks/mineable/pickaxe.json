@@ -3,6 +3,7 @@
     "createapparel:spinning_machine",
     "createapparel:loom",
     "createapparel:sewing_machine",
-    "createapparel:clothing_rack"
+    "createapparel:clothing_rack",
+    "createapparel:clip_clothing_rack"
   ]
 }

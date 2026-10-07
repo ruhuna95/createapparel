@@ -3,6 +3,7 @@ package com.rexhub.createapparel.data.client;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.block.WallHangerBlock;
 import com.rexhub.createapparel.block.HangerGeometry;
+import com.rexhub.createapparel.garment.HangerType;
 import com.rexhub.createapparel.init.ModBlocks;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
@@ -20,16 +21,22 @@ public final class FurnitureModelProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        hanger(model("common_hanger"), Vec3.ZERO);
-        BlockModelBuilder wall = model("wall_hanger");
-        hanger(wall, HangerGeometry.WALL_ANCHOR.subtract(HangerGeometry.MODEL_ANCHOR));
+        hanger(model("common_hanger"), Vec3.ZERO, HangerType.NORMAL);
+        hanger(model("common_clip_hanger"), Vec3.ZERO, HangerType.CLIP);
+        wallHanger(ModBlocks.WALL_HANGER.get(), "wall_hanger", HangerType.NORMAL);
+        wallHanger(ModBlocks.CLIP_WALL_HANGER.get(), "clip_wall_hanger", HangerType.CLIP);
+        rackModels();
+    }
+
+    private void wallHanger(net.minecraft.world.level.block.Block block, String name, HangerType type) {
+        BlockModelBuilder wall = model(name);
+        hanger(wall, HangerGeometry.WALL_ANCHOR.subtract(HangerGeometry.MODEL_ANCHOR), type);
         cube(wall, 6, 11, 15, 10, 16, 16, "metal");
         var hook = HangerGeometry.WALL_HOOK;
         cube(wall, hook.x1(), hook.y1(), hook.z1(), hook.x2(), hook.y2(), hook.z2(), hook.texture());
-        getVariantBuilder(ModBlocks.WALL_HANGER.get()).forAllStates(state -> ConfiguredModel.builder()
+        getVariantBuilder(block).forAllStates(state -> ConfiguredModel.builder()
                 .modelFile(wall).rotationY(rotation(state.getValue(WallHangerBlock.FACING))).build());
-        simpleBlockItem(ModBlocks.WALL_HANGER.get(), wall);
-        rackModels();
+        simpleBlockItem(block, wall);
     }
 
     private void rackModels() {
@@ -48,17 +55,18 @@ public final class FurnitureModelProvider extends BlockStateProvider {
             if (anchored == 1) cube(wall, 6, 12, 15, 10, 16, 16, "metal");
             wallUpper[anchored][connections] = wall;
         }
-        getVariantBuilder(ModBlocks.CLOTHING_RACK.get()).forAllStates(state -> {
-            boolean upper = state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.HALF)
-                    == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER;
-            boolean wall = state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.MOUNT)
-                    == com.rexhub.createapparel.block.RackMountType.WALL;
-            int supports = (state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.LEFT_CONNECTED) ? 0 : 1)
-                    | (state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.RIGHT_CONNECTED) ? 0 : 2);
-            int anchored = state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.WALL_ANCHORED) ? 1 : 0;
-            return ConfiguredModel.builder().modelFile(wall ? upper ? wallUpper[anchored][3 ^ supports] : wallLower : floor[upper ? 1 : 0][supports])
-                    .rotationY(rotation(state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.FACING))).build();
-        });
+        for (var block : new net.minecraft.world.level.block.Block[]{ModBlocks.CLOTHING_RACK.get(), ModBlocks.CLIP_CLOTHING_RACK.get()})
+            getVariantBuilder(block).forAllStates(state -> {
+                boolean upper = state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.HALF)
+                        == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER;
+                boolean wall = state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.MOUNT)
+                        == com.rexhub.createapparel.block.RackMountType.WALL;
+                int supports = (state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.LEFT_CONNECTED) ? 0 : 1)
+                        | (state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.RIGHT_CONNECTED) ? 0 : 2);
+                int anchored = state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.WALL_ANCHORED) ? 1 : 0;
+                return ConfiguredModel.builder().modelFile(wall ? upper ? wallUpper[anchored][3 ^ supports] : wallLower : floor[upper ? 1 : 0][supports])
+                        .rotationY(rotation(state.getValue(com.rexhub.createapparel.block.ClothingRackBlock.FACING))).build();
+            });
         var item = rackModel("clothing_rack_item");
         rackHalf(item, false, true, true, 0);
         rackHalf(item, true, true, true, 16);
@@ -67,6 +75,7 @@ public final class FurnitureModelProvider extends BlockStateProvider {
                 .transform(net.minecraft.world.item.ItemDisplayContext.GROUND).translation(0, 2, 0).scale(0.25F).end()
                 .transform(net.minecraft.world.item.ItemDisplayContext.FIXED).translation(0, -4, 0).scale(0.5F).end();
         simpleBlockItem(ModBlocks.CLOTHING_RACK.get(), item);
+        simpleBlockItem(ModBlocks.CLIP_CLOTHING_RACK.get(), item);
     }
 
     private void rackHalf(BlockModelBuilder model, boolean upper, boolean left, boolean right, int y) {
@@ -91,11 +100,11 @@ public final class FurnitureModelProvider extends BlockStateProvider {
 
     private BlockModelBuilder rackModel(String name) { return model(name).texture("particle", mcLoc("block/iron_block")); }
 
-    private void hanger(BlockModelBuilder model, Vec3 offset) {
+    private void hanger(BlockModelBuilder model, Vec3 offset, HangerType type) {
         float x = (float) (offset.x * 16);
         float y = (float) (offset.y * 16);
         float z = (float) (offset.z * 16);
-        for (var part : HangerGeometry.PARTS) {
+        for (var part : HangerGeometry.parts(type)) {
             var element = cube(model, part.x1(), part.y1(), part.z1(), part.x2(), part.y2(), part.z2(), part.texture());
             element.from(part.x1() + x, part.y1() + y, part.z1() + z).to(part.x2() + x, part.y2() + y, part.z2() + z);
             if (part.angle() != 0) element.rotation().origin(8 + x, 13 + y, 11 + z).axis(Direction.Axis.Z).angle(part.angle()).end();

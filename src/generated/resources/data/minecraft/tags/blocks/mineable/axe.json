@@ -1,6 +1,7 @@
 {
   "values": [
     "createapparel:wardrobe",
-    "createapparel:wall_hanger"
+    "createapparel:wall_hanger",
+    "createapparel:clip_wall_hanger"
   ]
 }

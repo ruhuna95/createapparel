@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.block.entity;
 
 import com.rexhub.createapparel.garment.HangerGarments;
+import com.rexhub.createapparel.block.WallHangerBlock;
 import com.rexhub.createapparel.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -22,7 +23,8 @@ public final class WallHangerBlockEntity extends BlockEntity {
     public ItemStack garment() { return garment.copy(); }
 
     public boolean insert(ItemStack held, boolean creative) {
-        if (level == null || level.isClientSide || !garment.isEmpty() || !HangerGarments.accepts(held)) return false;
+        if (level == null || level.isClientSide || !garment.isEmpty()
+                || !HangerGarments.accepts(held, ((WallHangerBlock) getBlockState().getBlock()).hangerType())) return false;
         garment = held.copyWithCount(1);
         if (!creative) held.shrink(1);
         sync();

@@ -28,7 +28,8 @@ public final class ClothingRackBlockEntity extends BlockEntity {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            return !isRemoved() && level != null && !level.isClientSide && isSlotUsable(slot) && HangerGarments.accepts(stack);
+            return !isRemoved() && level != null && !level.isClientSide && isSlotUsable(slot)
+                    && HangerGarments.accepts(stack, ((ClothingRackBlock) getBlockState().getBlock()).hangerType());
         }
 
         @Override
@@ -52,10 +53,9 @@ public final class ClothingRackBlockEntity extends BlockEntity {
 
     public boolean isSlotUsable(int slot) {
         BlockState state = getBlockState();
-        boolean left = level == null ? state.getValue(ClothingRackBlock.LEFT_CONNECTED)
-                : ClothingRackBlock.connected(level, worldPosition, state, true);
-        boolean right = level == null ? state.getValue(ClothingRackBlock.RIGHT_CONNECTED)
-                : ClothingRackBlock.connected(level, worldPosition, state, false);
+        if (level == null || level.isClientSide) return ClothingRackBlock.isSlotUsable(state, slot);
+        boolean left = ClothingRackBlock.connected(level, worldPosition, state, true);
+        boolean right = ClothingRackBlock.connected(level, worldPosition, state, false);
         return state.getValue(ClothingRackBlock.MOUNT).isSlotUsable(left, right, slot);
     }
 
@@ -66,7 +66,8 @@ public final class ClothingRackBlockEntity extends BlockEntity {
     }
 
     public boolean insert(int slot, ItemStack held, boolean creative) {
-        if (level == null || level.isClientSide || slot < 0 || slot >= 4 || !HangerGarments.accepts(held)) return false;
+        if (level == null || level.isClientSide || slot < 0 || slot >= 4
+                || !HangerGarments.accepts(held, ((ClothingRackBlock) getBlockState().getBlock()).hangerType())) return false;
         refreshConnections();
         if (!inventory.insertItem(slot, held.copyWithCount(1), false).isEmpty()) return false;
         if (!creative) held.shrink(1);

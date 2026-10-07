@@ -113,8 +113,7 @@ public final class WallHangerGameTests {
         player.getAbilities().instabuild = false;
         var held = new ItemStack(ModItems.T_SHIRT.get(), 2);
         helper.assertTrue(!hanger.insert(new ItemStack(Items.STONE), false), "Reject ordinary items");
-        helper.assertTrue(hanger.insert(new ItemStack(ModItems.DENIM_PANTS.get()), false), "Accept bottoms");
-        helper.assertTrue(hanger.take(helper.makeMockPlayer()), "Return bottom garment");
+        helper.assertTrue(!hanger.insert(new ItemStack(ModItems.DENIM_PANTS.get()), false), "Normal hanger rejects bottoms");
         helper.assertTrue(!hanger.insert(new ItemStack(ModItems.BRA.get()), false), "Reject inner garments");
         helper.assertTrue(hanger.insert(held, false) && held.getCount() == 1, "Survival inserts one");
         helper.assertTrue(!hanger.insert(held, false) && held.getCount() == 1, "No replacement");

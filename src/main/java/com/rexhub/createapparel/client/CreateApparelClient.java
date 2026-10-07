@@ -77,6 +77,7 @@ public final class CreateApparelClient {
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.MODEL);
+        event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.CLIP_MODEL);
         event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
         event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
         event.register(ModPartialModels.LOOM_SLIDE.modelLocation());

@@ -92,6 +92,8 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.WARDROBE, "ワードローブ");
         addBlock(ModBlocks.WALL_HANGER, "壁掛けハンガー");
         addBlock(ModBlocks.CLOTHING_RACK, "クロージングラック");
+        addBlock(ModBlocks.CLIP_WALL_HANGER, "クリップ式壁掛けハンガー");
+        addBlock(ModBlocks.CLIP_CLOTHING_RACK, "クリップ式クロージングラック");
         addEntityType(ModEntities.SILKWORM, "カイコ");
 
         add(ModItems.COTTON_SEEDS.get(), "綿花の種");

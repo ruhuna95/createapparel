@@ -8,6 +8,29 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class HangerGeometryTest {
     @Test
+    void clipsMoveOnePixelInwardWithSharedHooksAndUnchangedGarmentAnchors() {
+        var left = HangerGeometry.CLIP_PARTS.get(4);
+        var right = HangerGeometry.CLIP_PARTS.get(5);
+        assertEquals(4.5F, left.x1());
+        assertEquals(6, left.x2());
+        assertEquals(10, right.x1());
+        assertEquals(11.5F, right.x2());
+        assertEquals(16, left.x1() + right.x2());
+        assertEquals(16, left.x2() + right.x1());
+        for (var clip : new HangerGeometry.Part[]{left, right}) {
+            assertEquals(1.5F, clip.x2() - clip.x1());
+            assertEquals(10.5F, clip.y1());
+            assertEquals(12.5F, clip.y2());
+            assertEquals(10.5F - HangerGeometry.JOINT_CLEARANCE_PIXELS, clip.z1());
+            assertEquals(11.5F + HangerGeometry.JOINT_CLEARANCE_PIXELS, clip.z2());
+        }
+        for (int hook = 0; hook < 3; hook++)
+            assertSame(HangerGeometry.PARTS.get(hook + 3), HangerGeometry.CLIP_PARTS.get(hook + 1));
+        assertEquals(new Vec3(0.5, 0.6875, 0.6875), HangerGeometry.MODEL_ANCHOR);
+        assertEquals(new Vec3(0.5, HangerGeometry.DISPLAY_ANCHOR_Y, 13 / 16.0), HangerGeometry.WALL_ANCHOR);
+    }
+
+    @Test
     void oneSelectionBoxEnclosesEveryModelPart() {
         var shape = HangerGeometry.wallHanger();
         assertEquals(1, shape.toAabbs().size());

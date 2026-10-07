@@ -21,6 +21,15 @@ public final class ModBlocks {
     public static final RegistryObject<Block> WALL_HANGER = ModRegistries.BLOCKS.register("wall_hanger",
             () -> new com.rexhub.createapparel.block.WallHangerBlock(
                     BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion()));
+    public static final RegistryObject<Block> CLIP_CLOTHING_RACK = ModRegistries.BLOCKS.register("clip_clothing_rack",
+            () -> new com.rexhub.createapparel.block.ClothingRackBlock(
+                    BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL)
+                            .sound(net.minecraft.world.level.block.SoundType.METAL).strength(2.0F).noOcclusion(),
+                    com.rexhub.createapparel.garment.HangerType.CLIP));
+    public static final RegistryObject<Block> CLIP_WALL_HANGER = ModRegistries.BLOCKS.register("clip_wall_hanger",
+            () -> new com.rexhub.createapparel.block.WallHangerBlock(
+                    BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion(),
+                    com.rexhub.createapparel.garment.HangerType.CLIP));
     public static final RegistryObject<Block> COTTON_CROP = registerCrop(
             "cotton_crop",
             () -> ModItems.COTTON_SEEDS.get()

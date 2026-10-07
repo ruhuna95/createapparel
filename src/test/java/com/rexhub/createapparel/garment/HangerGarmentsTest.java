@@ -11,12 +11,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HangerGarmentsTest {
     @Test
-    void acceptsTopOuterAndBottomSlotsWithoutDependingOnIds() {
+    void normalAndClipHangersFilterAllowedSlotsWithoutDependingOnIds() {
         for (var slot : GarmentSlot.values()) {
             var definition = new GarmentDefinition(ResourceLocation.fromNamespaceAndPath("test", "arbitrary"), slot,
                     ResourceLocation.fromNamespaceAndPath("test", "arbitrary_model"), "default", "default",
                     Set.of("plain"), Map.of());
-            assertEquals(slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER || slot == GarmentSlot.BOTTOM, HangerGarments.accepts(definition));
+            assertEquals(slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER, HangerGarments.accepts(definition));
+            assertEquals(slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER, HangerType.NORMAL.accepts(definition));
+            assertEquals(slot == GarmentSlot.BOTTOM, HangerType.CLIP.accepts(definition));
         }
     }
 
@@ -26,6 +28,14 @@ class HangerGarmentsTest {
                 Set.of(GarmentSlot.INNER_TOP, GarmentSlot.TOP), ResourceLocation.fromNamespaceAndPath("test", "model"),
                 "default", Map.of(), "default", Set.of("plain"), Map.of(), Map.of());
         assertTrue(HangerGarments.accepts(definition));
+    }
+
+    @Test
+    void clipAcceptsAllowedBottomEvenWhenDefaultSlotDiffers() {
+        var definition = new GarmentDefinition(ResourceLocation.fromNamespaceAndPath("test", "multi_slot_bottom"), GarmentSlot.INNER_BOTTOM,
+                Set.of(GarmentSlot.INNER_BOTTOM, GarmentSlot.BOTTOM), ResourceLocation.fromNamespaceAndPath("test", "model"),
+                "default", Map.of(), "default", Set.of("plain"), Map.of(), Map.of());
+        assertTrue(HangerType.CLIP.accepts(definition));
     }
 
     @Test

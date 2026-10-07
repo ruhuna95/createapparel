@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 
 public final class ClothingRackRenderer implements BlockEntityRenderer<ClothingRackBlockEntity> {
     public ClothingRackRenderer(BlockEntityRendererProvider.Context context) { }
@@ -19,22 +20,28 @@ public final class ClothingRackRenderer implements BlockEntityRenderer<ClothingR
                        MultiBufferSource buffer, int light, int overlay) {
         var level = rack.getLevel();
         if (level == null) return;
+        var state = rack.getBlockState();
         var upperPos = rack.getBlockPos().above();
-        var upperState = level.getBlockState(upperPos);
-        var facing = rack.getBlockState().getValue(ClothingRackBlock.FACING);
-        var mount = rack.getBlockState().getValue(ClothingRackBlock.MOUNT);
+        var upperState = state.setValue(ClothingRackBlock.HALF, DoubleBlockHalf.UPPER);
+        var facing = state.getValue(ClothingRackBlock.FACING);
+        var mount = state.getValue(ClothingRackBlock.MOUNT);
+        var hangerType = ((ClothingRackBlock) state.getBlock()).hangerType();
+        boolean leftConnected = state.getValue(ClothingRackBlock.LEFT_CONNECTED);
+        boolean rightConnected = state.getValue(ClothingRackBlock.RIGHT_CONNECTED);
+        boolean[] usable = new boolean[4];
+        for (int slot = 0; slot < 4; slot++) usable[slot] = mount.isSlotUsable(leftConnected, rightConnected, slot);
         int displayLight = LevelRenderer.getLightColor(level, upperPos);
         poseStack.pushPose();
         poseStack.translate(0, 1, 0);
         for (int slot = 0; slot < 4; slot++) {
-            if (rack.isSlotUsable(slot))
-                HangerDisplay.renderHanger(level, upperPos, upperState, mount, slot, facing, poseStack, buffer, overlay);
+            if (usable[slot])
+                HangerDisplay.renderHanger(level, upperPos, upperState, hangerType, mount, slot, facing, poseStack, buffer, overlay);
         }
         poseStack.popPose();
         poseStack.pushPose();
         HangerDisplay.orient(poseStack, facing);
         for (int slot = 0; slot < 4; slot++) {
-            if (!rack.isSlotUsable(slot)) continue;
+            if (!usable[slot]) continue;
             poseStack.pushPose();
             var anchor = HangerGeometry.rackAnchor(mount, slot);
             poseStack.translate(anchor.x, anchor.y + 1, anchor.z);

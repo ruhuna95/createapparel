@@ -3,6 +3,7 @@ package com.rexhub.createapparel.client.renderer;
 import com.rexhub.createapparel.block.HangerGeometry;
 import com.rexhub.createapparel.block.OrientedBox;
 import com.rexhub.createapparel.block.RackMountType;
+import com.rexhub.createapparel.garment.HangerType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -26,7 +27,7 @@ class HangerBlockModelTest {
             for (Direction facing : Direction.Plane.HORIZONTAL) {
                 var matrix = HangerBlockModel.rackTransform(mount, slot, facing);
                 var bounds = HangerGeometry.rackHanger(mount, slot, facing).bounds().inflate(1.0E-6);
-                for (var part : HangerGeometry.PARTS) {
+                for (var type : HangerType.values()) for (var part : HangerGeometry.parts(type)) {
                     var modelPart = OrientedBox.pixels(part.x1(), part.y1(), part.z1(), part.x2(), part.y2(), part.z2())
                             .rotateZ(new net.minecraft.world.phys.Vec3(8 / 16.0, 13 / 16.0, 11 / 16.0), part.angle()).bounds();
                     for (double x : new double[]{modelPart.minX, modelPart.maxX})
@@ -72,18 +73,30 @@ class HangerBlockModelTest {
         var random = RandomSource.create(0);
         for (var mount : RackMountType.values()) for (int slot = 0; slot < 4; slot++)
             for (Direction facing : Direction.Plane.HORIZONTAL) {
-                var model = HangerBlockModel.rackModel(source, mount, slot, facing);
-                assertSame(model, HangerBlockModel.rackModel(source, mount, slot, facing));
+                var model = HangerBlockModel.rackModel(source, HangerType.NORMAL, mount, slot, facing);
+                assertSame(model, HangerBlockModel.rackModel(source, HangerType.NORMAL, mount, slot, facing));
                 assertEquals(6, model.getQuads(null, null, random, ModelData.EMPTY, null).size());
                 assertTrue(model.useAmbientOcclusion(null, null));
                 for (Direction side : Direction.values())
                     assertTrue(model.getQuads(null, side, random, ModelData.EMPTY, null).isEmpty());
             }
-        var oldModel = HangerBlockModel.rackModel(source, RackMountType.WALL, 0, Direction.NORTH);
+        var oldModel = HangerBlockModel.rackModel(source, HangerType.NORMAL, RackMountType.WALL, 0, Direction.NORTH);
         var newSource = new SourceModel();
-        var reloaded = HangerBlockModel.rackModel(newSource, RackMountType.WALL, 0, Direction.NORTH);
+        var reloaded = HangerBlockModel.rackModel(newSource, HangerType.NORMAL, RackMountType.WALL, 0, Direction.NORTH);
         assertNotSame(oldModel, reloaded);
-        assertSame(reloaded, HangerBlockModel.rackModel(newSource, RackMountType.WALL, 0, Direction.NORTH));
+        assertSame(reloaded, HangerBlockModel.rackModel(newSource, HangerType.NORMAL, RackMountType.WALL, 0, Direction.NORTH));
+    }
+
+    @Test
+    void alternatingHangerVariantsKeepIndependentCachesAcrossResourceReload() {
+        var normalSource = new SourceModel();
+        var clipSource = new SourceModel();
+        var normal = HangerBlockModel.rackModel(normalSource, HangerType.NORMAL, RackMountType.FLOOR, 1, Direction.NORTH);
+        var clip = HangerBlockModel.rackModel(clipSource, HangerType.CLIP, RackMountType.FLOOR, 1, Direction.NORTH);
+        assertSame(normal, HangerBlockModel.rackModel(normalSource, HangerType.NORMAL, RackMountType.FLOOR, 1, Direction.NORTH));
+        assertSame(clip, HangerBlockModel.rackModel(clipSource, HangerType.CLIP, RackMountType.FLOOR, 1, Direction.NORTH));
+        assertNotSame(clip, HangerBlockModel.rackModel(new SourceModel(), HangerType.CLIP, RackMountType.FLOOR, 1, Direction.NORTH));
+        assertSame(normal, HangerBlockModel.rackModel(normalSource, HangerType.NORMAL, RackMountType.FLOOR, 1, Direction.NORTH));
     }
 
     private static BakedQuad quad(Direction side) {
