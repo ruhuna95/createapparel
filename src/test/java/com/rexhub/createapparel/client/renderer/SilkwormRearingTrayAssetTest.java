@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SilkwormRearingTrayAssetTest {
@@ -53,6 +54,7 @@ class SilkwormRearingTrayAssetTest {
             var translations = JsonParser.parseString(Files.readString(Path.of(
                     "src/generated/resources/assets/createapparel/lang/" + language + ".json"))).getAsJsonObject();
             assertTrue(translations.has(prefix + "summary"), language);
+            assertFalse(translations.has("tooltip.createapparel.rearing.speed"), "Unused speed translation: " + language);
             for (int i = 1; i <= 5; i++) {
                 assertTrue(translations.has(prefix + "condition" + i), language + ": condition" + i);
                 assertTrue(translations.has(prefix + "behaviour" + i), language + ": behaviour" + i);

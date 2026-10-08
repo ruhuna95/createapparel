@@ -93,7 +93,6 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.rearing.absent", "未収容");
         add("tooltip.createapparel.rearing.food", "餌：%s");
         add("tooltip.createapparel.rearing.fed_food", "給餌済み：%s");
-        add("tooltip.createapparel.rearing.speed", "回転速度：%s");
         add("tooltip.createapparel.rearing.output", "出力：%s");
         add("tooltip.createapparel.rearing.state", "状態：%s");
         add("tooltip.createapparel.rearing.progress", "進捗：%s");

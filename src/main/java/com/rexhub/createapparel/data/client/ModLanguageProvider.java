@@ -95,7 +95,6 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.rearing.absent", "Absent");
         add("tooltip.createapparel.rearing.food", "Food: %s");
         add("tooltip.createapparel.rearing.fed_food", "Fed: %s");
-        add("tooltip.createapparel.rearing.speed", "Speed: %s");
         add("tooltip.createapparel.rearing.output", "Output: %s");
         add("tooltip.createapparel.rearing.state", "State: %s");
         add("tooltip.createapparel.rearing.progress", "Progress: %s");
