@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "createapparel:block/silkworm_rearing_tray/block",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createapparel:block/silkworm_rearing_tray/block"
+    },
+    "facing=south": {
+      "model": "createapparel:block/silkworm_rearing_tray/block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "createapparel:block/silkworm_rearing_tray/block",
+      "y": 270
+    }
+  }
+}

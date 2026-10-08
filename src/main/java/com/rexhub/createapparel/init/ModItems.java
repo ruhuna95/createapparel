@@ -54,6 +54,10 @@ public final class ModItems {
             "spinning_machine",
             () -> new BlockItem(ModBlocks.SPINNING_MACHINE.get(), new Item.Properties())
     );
+    public static final RegistryObject<Item> SILKWORM_REARING_TRAY = ModRegistries.ITEMS.register(
+            "silkworm_rearing_tray",
+            () -> new com.rexhub.createapparel.item.SilkwormRearingTrayItem(ModBlocks.SILKWORM_REARING_TRAY.get(), new Item.Properties())
+    );
     public static final RegistryObject<Item> LOOM = ModRegistries.ITEMS.register(
             "loom",
             () -> new BlockItem(ModBlocks.LOOM.get(), new Item.Properties())
@@ -503,6 +507,7 @@ public final class ModItems {
     private static List<RegistryObject<Item>> createCreativeTabOrder() {
         List<RegistryObject<Item>> items = new ArrayList<>();
         items.add(SPINNING_MACHINE);
+        items.add(SILKWORM_REARING_TRAY);
         items.add(LOOM);
         items.add(SEWING_MACHINE);
         items.add(WARDROBE);

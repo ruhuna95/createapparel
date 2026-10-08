@@ -1,0 +1,45 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#food"
+        },
+        "east": {
+          "texture": "#food"
+        },
+        "north": {
+          "texture": "#food"
+        },
+        "south": {
+          "texture": "#food"
+        },
+        "up": {
+          "texture": "#food"
+        },
+        "west": {
+          "texture": "#food"
+        }
+      },
+      "from": [
+        4,
+        13,
+        4
+      ],
+      "to": [
+        12,
+        14,
+        12
+      ]
+    }
+  ],
+  "textures": {
+    "casing": "create:block/andesite_casing",
+    "food": "minecraft:block/moss_block",
+    "metal": "create:block/andesite_block",
+    "opening": "create:block/gearbox",
+    "particle": "#wood",
+    "wood": "minecraft:block/oak_planks"
+  }
+}

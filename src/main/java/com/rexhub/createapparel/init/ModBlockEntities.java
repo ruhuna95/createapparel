@@ -8,6 +8,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModBlockEntities {
+    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.SilkwormRearingTrayBlockEntity>> SILKWORM_REARING_TRAY =
+            ModRegistries.BLOCK_ENTITY_TYPES.register("silkworm_rearing_tray", () -> BlockEntityType.Builder.of(
+                    com.rexhub.createapparel.block.entity.SilkwormRearingTrayBlockEntity::new,
+                    ModBlocks.SILKWORM_REARING_TRAY.get()).build(null));
     public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.ClothingRackBlockEntity>> CLOTHING_RACK =
             ModRegistries.BLOCK_ENTITY_TYPES.register("clothing_rack", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.ClothingRackBlockEntity::new,

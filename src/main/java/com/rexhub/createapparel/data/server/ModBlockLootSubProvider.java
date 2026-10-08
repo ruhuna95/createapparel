@@ -25,6 +25,14 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
         addCropDrops(ModBlocks.FLAX_CROP.get(), ModItems.FLAX.get(), ModItems.FLAX_SEEDS.get());
         addCropDrops(ModBlocks.HEMP_CROP.get(), ModItems.HEMP.get(), ModItems.HEMP_SEEDS.get());
         dropSelf(ModBlocks.SPINNING_MACHINE.get());
+        add(ModBlocks.SILKWORM_REARING_TRAY.get(),
+                net.minecraft.world.level.storage.loot.LootTable.lootTable().withPool(
+                        net.minecraft.world.level.storage.loot.LootPool.lootPool()
+                                .setRolls(net.minecraft.world.level.storage.loot.providers.number.ConstantValue.exactly(1))
+                                .add(net.minecraft.world.level.storage.loot.entries.LootItem.lootTableItem(ModBlocks.SILKWORM_REARING_TRAY.get())
+                                        .apply(net.minecraft.world.level.storage.loot.functions.CopyNbtFunction
+                                                .copyData(net.minecraft.world.level.storage.loot.providers.nbt.ContextNbtProvider.BLOCK_ENTITY)
+                                                .copy("TrayData", "BlockEntityTag.TrayData")))));
         dropSelf(ModBlocks.LOOM.get());
         dropSelf(ModBlocks.SEWING_MACHINE.get());
         dropSelf(ModBlocks.WALL_HANGER.get());

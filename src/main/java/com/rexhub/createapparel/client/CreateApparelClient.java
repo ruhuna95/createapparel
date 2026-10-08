@@ -25,6 +25,9 @@ import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModMenuTypes;
 import com.rexhub.createapparel.material.FabricAttributeMap;
 import com.rexhub.createapparel.material.FabricColor;
+import com.simibubi.create.foundation.item.ItemDescription;
+import com.simibubi.create.foundation.item.TooltipModifier;
+import net.createmod.catnip.lang.FontHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -67,6 +70,8 @@ public final class CreateApparelClient {
     @SubscribeEvent
     public static void clientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            TooltipModifier.REGISTRY.register(ModItems.SILKWORM_REARING_TRAY.get(),
+                    new ItemDescription.Modifier(ModItems.SILKWORM_REARING_TRAY.get(), FontHelper.Palette.STANDARD_CREATE));
             MenuScreens.<WardrobeMenu, WardrobeScreen<WardrobeMenu>>
                     register(ModMenuTypes.WARDROBE.get(), WardrobeScreen::new);
             MenuScreens.<MannequinMenu, WardrobeScreen<MannequinMenu>>
@@ -79,6 +84,8 @@ public final class CreateApparelClient {
         event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.MODEL);
         event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.CLIP_MODEL);
         event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
+        event.register(ModPartialModels.REARING_ITEM.modelLocation());
+        event.register(ModPartialModels.REARING_FEEDING.modelLocation());
         event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
         event.register(ModPartialModels.LOOM_SLIDE.modelLocation());
         event.register(ModPartialModels.LOOM_SLIDE_WITH_THREAD.modelLocation());
@@ -111,6 +118,8 @@ public final class CreateApparelClient {
                 event.registerEntityRenderer(type.get(), MannequinRenderer::new));
         event.registerEntityRenderer(ModEntities.SILKWORM.get(), SilkwormRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SPINNING_MACHINE.get(), SpinningMachineRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.SILKWORM_REARING_TRAY.get(),
+                com.rexhub.createapparel.client.renderer.SilkwormRearingTrayRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.LOOM.get(), LoomRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SEWING_MACHINE.get(), SewingMachineRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.WARDROBE.get(), WardrobeRenderer::new);
@@ -149,6 +158,8 @@ public final class CreateApparelClient {
     @SubscribeEvent
     public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(ClientGarmentAssets.INSTANCE);
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener)
+                resourceManager -> com.rexhub.createapparel.client.renderer.SilkwormRearingTrayContentsRenderer.resetModel());
     }
 
     @SubscribeEvent

@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public enum ModRecipeTypes implements IRecipeTypeInfo {
+    SILKWORM_REARING(() -> new SilkwormRearingRecipe.Serializer()),
     SPINNING(SpinningRecipe::new),
     WEAVING(WeavingRecipe::new),
     SEWING(() -> new SewingRecipe.Serializer());

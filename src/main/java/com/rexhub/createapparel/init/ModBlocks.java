@@ -14,6 +14,12 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Supplier;
 
 public final class ModBlocks {
+    public static final RegistryObject<Block> SILKWORM_REARING_TRAY = ModRegistries.BLOCKS.register(
+            "silkworm_rearing_tray",
+            () -> new com.rexhub.createapparel.block.SilkwormRearingTrayBlock(
+                    BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.STONE)
+                            .sound(net.minecraft.world.level.block.SoundType.WOOD).strength(1.5F).noOcclusion())
+    );
     public static final RegistryObject<Block> CLOTHING_RACK = ModRegistries.BLOCKS.register("clothing_rack",
             () -> new com.rexhub.createapparel.block.ClothingRackBlock(
                     BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL)

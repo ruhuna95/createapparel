@@ -89,6 +89,39 @@ public final class ModLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.FLAX_CROP, "Flax Crop");
         addBlock(ModBlocks.HEMP_CROP, "Hemp Crop");
         addBlock(ModBlocks.SPINNING_MACHINE, "Spinning Machine");
+        addBlock(ModBlocks.SILKWORM_REARING_TRAY, "Silkworm Rearing Tray");
+        add("tooltip.createapparel.rearing.silkworm", "Silkworm: %s");
+        add("tooltip.createapparel.rearing.present", "Present");
+        add("tooltip.createapparel.rearing.absent", "Absent");
+        add("tooltip.createapparel.rearing.food", "Food: %s");
+        add("tooltip.createapparel.rearing.fed_food", "Fed: %s");
+        add("tooltip.createapparel.rearing.speed", "Speed: %s");
+        add("tooltip.createapparel.rearing.output", "Output: %s");
+        add("tooltip.createapparel.rearing.state", "State: %s");
+        add("tooltip.createapparel.rearing.progress", "Progress: %s");
+        add("tooltip.createapparel.rearing.empty", "Empty tray");
+        add("tooltip.createapparel.rearing.ready", "Ready");
+        add("tooltip.createapparel.rearing.processing", "Processing");
+        add("tooltip.createapparel.rearing.output_blocked", "Output blocked");
+        add("tooltip.createapparel.rearing.paused", "Paused by redstone");
+        add("tooltip.createapparel.rearing.busy", "Finish the current cycle before releasing the silkworm.");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.summary",
+                "Uses _Rotational Force_ to _feed silkworms_ and produce _Cocoons_ automatically. A _Redstone signal_ pauses processing.");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition1", "When used on a Larva");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour1",
+                "_Right-click_ a larva with an _unoccupied tray_ to capture it.");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition2", "When R-Clicked while unoccupied");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour2",
+                "Capture a larva _leashed to you within 7 blocks_ or _directly above the tray_. Use an _empty hand or a Lead_.");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition3", "When R-Clicked with Food");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour3",
+                "_Insert food_ into the tray. _Rotational Force_ starts processing.");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition4", "When R-Clicked with an empty hand");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour4",
+                "_Collect output_. If there is no output, collect the _stored food_.");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition5", "When Sneak R-Clicked with an empty hand");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour5",
+                "_Release the larva_ once processing and output delivery have finished, with _space above the tray_.");
         addBlock(ModBlocks.LOOM, "Loom");
         addBlock(ModBlocks.SEWING_MACHINE, "Sewing Machine");
         addBlock(ModBlocks.WARDROBE, "Wardrobe");

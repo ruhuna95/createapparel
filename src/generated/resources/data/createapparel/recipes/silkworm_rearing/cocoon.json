@@ -1,0 +1,12 @@
+{
+  "type": "createapparel:silkworm_rearing",
+  "food": {
+    "tag": "createapparel:silkworm_food"
+  },
+  "food_count": 1,
+  "processing_time": 1200,
+  "result": {
+    "count": 1,
+    "item": "createapparel:cocoon"
+  }
+}

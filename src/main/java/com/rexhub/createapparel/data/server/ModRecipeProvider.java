@@ -122,6 +122,14 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
+        register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SILKWORM_REARING_TRAY.get())
+                .pattern("WAW").pattern("ISI").pattern("ACA")
+                .define('W', ItemTags.WOODEN_SLABS).define('A', AllItems.ANDESITE_ALLOY.get())
+                .define('I', AllItems.IRON_SHEET.get()).define('S', com.simibubi.create.AllBlocks.SHAFT.get())
+                .define('C', com.simibubi.create.AllBlocks.ANDESITE_CASING.get())
+                .unlockedBy("has_andesite_alloy", InventoryChangeTrigger.TriggerInstance.hasItems(AllItems.ANDESITE_ALLOY.get()))
+                .save(consumer, asResource("silkworm_rearing_tray")));
+        register(consumer -> consumer.accept(new SilkwormRearingFinishedRecipe(asResource("silkworm_rearing/cocoon"))));
         mannequinRecipes();
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.WALL_HANGER.get())
                 .pattern(" N ").pattern("SSS").define('N', Items.IRON_NUGGET).define('S', Items.STICK)
@@ -687,6 +695,33 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         public ResourceLocation getAdvancementId() {
             return null;
         }
+    }
+
+    private record SilkwormRearingFinishedRecipe(ResourceLocation id) implements FinishedRecipe {
+        @Override
+        public void serializeRecipeData(JsonObject json) {
+            json.add("food", Ingredient.of(ModTags.Items.SILKWORM_FOOD).toJson());
+            json.addProperty("food_count", 1);
+            JsonObject result = new JsonObject();
+            result.addProperty("item", ModItems.COCOON.getId().toString());
+            result.addProperty("count", 1);
+            json.add("result", result);
+            json.addProperty("processing_time", com.rexhub.createapparel.entity.Silkworm.COCOONING_DURATION_TICKS);
+        }
+
+        @Override
+        public ResourceLocation getId() { return id; }
+
+        @Override
+        public RecipeSerializer<?> getType() { return ModRecipeTypes.SILKWORM_REARING.getSerializer(); }
+
+        @Override
+        @Nullable
+        public JsonObject serializeAdvancement() { return null; }
+
+        @Override
+        @Nullable
+        public ResourceLocation getAdvancementId() { return null; }
     }
 
     private record SewingFinishedRecipe(

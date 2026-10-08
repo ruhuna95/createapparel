@@ -87,6 +87,39 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.FLAX_CROP, "亜麻の作物");
         addBlock(ModBlocks.HEMP_CROP, "ヘンプの作物");
         addBlock(ModBlocks.SPINNING_MACHINE, "紡績機");
+        addBlock(ModBlocks.SILKWORM_REARING_TRAY, "養蚕台");
+        add("tooltip.createapparel.rearing.silkworm", "カイコ：%s");
+        add("tooltip.createapparel.rearing.present", "収容済み");
+        add("tooltip.createapparel.rearing.absent", "未収容");
+        add("tooltip.createapparel.rearing.food", "餌：%s");
+        add("tooltip.createapparel.rearing.fed_food", "給餌済み：%s");
+        add("tooltip.createapparel.rearing.speed", "回転速度：%s");
+        add("tooltip.createapparel.rearing.output", "出力：%s");
+        add("tooltip.createapparel.rearing.state", "状態：%s");
+        add("tooltip.createapparel.rearing.progress", "進捗：%s");
+        add("tooltip.createapparel.rearing.empty", "空のトレイ");
+        add("tooltip.createapparel.rearing.ready", "待機中");
+        add("tooltip.createapparel.rearing.processing", "養蚕中");
+        add("tooltip.createapparel.rearing.output_blocked", "出力詰まり");
+        add("tooltip.createapparel.rearing.paused", "レッドストーンで一時停止");
+        add("tooltip.createapparel.rearing.busy", "カイコは養蚕サイクルと出力待ちの完了後に取り出せる。");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.summary",
+                "_回転動力_でカイコに_餌_を与え、_繭_を自動生産する。_レッドストーン信号_で一時停止する。");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition1", "幼虫に使ったとき");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour1",
+                "_未収容の養蚕台_で幼虫を_右クリック_すると収容する。");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition2", "未収容の台を右クリックしたとき");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour2",
+                "_リード_で連れた幼虫が_7ブロック以内_にいるか、幼虫が_台の直上_にいると、_素手またはリード_で収容する。");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition3", "餌を持って右クリックしたとき");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour3",
+                "台に_餌を投入_する。回転動力があると_養蚕_を始める。");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition4", "素手で右クリックしたとき");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour4",
+                "_出力_を取り出す。出力がなければ_投入済みの餌_を取り出す。");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.condition5", "素手でスニークしながら右クリックしたとき");
+        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour5",
+                "_養蚕サイクル_と_出力待ち_が終わり、台の上に空間があると_幼虫_を取り出す。");
         addBlock(ModBlocks.LOOM, "織機");
         addBlock(ModBlocks.SEWING_MACHINE, "ミシン");
         addBlock(ModBlocks.WARDROBE, "ワードローブ");
