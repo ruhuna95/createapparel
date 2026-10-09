@@ -659,6 +659,8 @@
   "tooltip.createapparel.garment.primary_color": "Fabric Color: %s",
   "tooltip.createapparel.garment.secondary_color": "Secondary Color: %s",
   "tooltip.createapparel.garment.slot": "Garment for %s",
+  "tooltip.createapparel.hanger.clip": "Can hold bottoms.",
+  "tooltip.createapparel.hanger.normal": "Can hold tops and outerwear.",
   "tooltip.createapparel.machine.empty": "Empty",
   "tooltip.createapparel.machine.fabric": "Fabric: %s",
   "tooltip.createapparel.machine.fiber": "Fiber: %s",
@@ -684,5 +686,6 @@
   "tooltip.createapparel.sewing_pattern.secondary_color": "Secondary: %s",
   "tooltip.createapparel.sewing_pattern.unknown_garment": "Unknown Garment",
   "tooltip.createapparel.sewing_pattern.unset": "Right-click to configure",
+  "tooltip.createapparel.wardrobe.change_clothes": "Can change clothes.",
   "tooltip.createapparel.watch.check_time": "While equipped, hold Left Shift with both hands empty to check the time."
 }

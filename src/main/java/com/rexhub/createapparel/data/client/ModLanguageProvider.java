@@ -88,6 +88,9 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.garment.secondary_color", "Secondary Color: %s");
         add("tooltip.createapparel.garment.accent_color", "Accent Color: %s");
         add("tooltip.createapparel.watch.check_time", "While equipped, hold Left Shift with both hands empty to check the time.");
+        add("tooltip.createapparel.hanger.normal", "Can hold tops and outerwear.");
+        add("tooltip.createapparel.hanger.clip", "Can hold bottoms.");
+        add("tooltip.createapparel.wardrobe.change_clothes", "Can change clothes.");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), material.displayName());
         }

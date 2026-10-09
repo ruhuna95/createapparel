@@ -2,8 +2,10 @@ package com.rexhub.createapparel.block;
 
 import com.rexhub.createapparel.block.entity.ClothingRackBlockEntity;
 import com.rexhub.createapparel.garment.HangerType;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -11,6 +13,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
@@ -50,6 +53,12 @@ public final class ClothingRackBlock extends BaseEntityBlock {
     }
 
     public HangerType hangerType() { return hangerType; }
+
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, java.util.List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, level, tooltip, flag);
+        tooltip.add(Component.translatable(hangerType.tooltipKey()).withStyle(ChatFormatting.GRAY));
+    }
 
     public static boolean isSlotUsable(BlockState state, int slot) {
         return state.getValue(MOUNT).isSlotUsable(state.getValue(LEFT_CONNECTED), state.getValue(RIGHT_CONNECTED), slot);

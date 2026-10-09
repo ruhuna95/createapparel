@@ -86,6 +86,9 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.garment.secondary_color", "サブカラー: %s");
         add("tooltip.createapparel.garment.accent_color", "アクセントカラー: %s");
         add("tooltip.createapparel.watch.check_time", "装備中、両手が空なら左Shift長押しで時間を確認できます");
+        add("tooltip.createapparel.hanger.normal", "トップスとアウターを掛けることができる。");
+        add("tooltip.createapparel.hanger.clip", "ボトムスを掛けることができる。");
+        add("tooltip.createapparel.wardrobe.change_clothes", "衣服を着替えることができる。");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), materialName(material));
         }

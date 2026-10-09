@@ -659,6 +659,8 @@
   "tooltip.createapparel.garment.primary_color": "生地色: %s",
   "tooltip.createapparel.garment.secondary_color": "サブカラー: %s",
   "tooltip.createapparel.garment.slot": "%s用衣服",
+  "tooltip.createapparel.hanger.clip": "ボトムスを掛けることができる。",
+  "tooltip.createapparel.hanger.normal": "トップスとアウターを掛けることができる。",
   "tooltip.createapparel.machine.empty": "なし",
   "tooltip.createapparel.machine.fabric": "生地：%s",
   "tooltip.createapparel.machine.fiber": "繊維：%s",
@@ -684,5 +686,6 @@
   "tooltip.createapparel.sewing_pattern.secondary_color": "サブカラー: %s",
   "tooltip.createapparel.sewing_pattern.unknown_garment": "不明な衣服",
   "tooltip.createapparel.sewing_pattern.unset": "右クリックで設定",
+  "tooltip.createapparel.wardrobe.change_clothes": "衣服を着替えることができる。",
   "tooltip.createapparel.watch.check_time": "装備中、両手が空なら左Shift長押しで時間を確認できます"
 }
