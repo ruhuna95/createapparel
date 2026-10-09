@@ -2,6 +2,7 @@ package com.rexhub.createapparel.mirror;
 
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -23,7 +24,17 @@ public record MirrorGeometry(List<Vec3> vertices, Vec3 normal) {
             var vector = matrix.transformPosition(new Vector3f((float) vertex.x, (float) vertex.y, (float) vertex.z));
             return new Vec3(vector);
         }).toList();
-        var direction = matrix.transformDirection(new Vector3f((float) normal.x, (float) normal.y, (float) normal.z)).normalize();
+        var source = new Vector3f((float) normal.x, (float) normal.y, (float) normal.z);
+        var normalMatrix = new Matrix3f(matrix);
+        float determinant = normalMatrix.determinant();
+        var direction = Float.isFinite(determinant) && determinant != 0
+                ? normalMatrix.invert().transpose().transform(new Vector3f(source))
+                : matrix.transformDirection(new Vector3f(source));
+        if (!direction.isFinite() || direction.lengthSquared() == 0 || !Float.isFinite(direction.lengthSquared()))
+            direction = matrix.transformDirection(new Vector3f(source));
+        if (!direction.isFinite() || direction.lengthSquared() == 0 || !Float.isFinite(direction.lengthSquared()))
+            direction = source;
+        direction.normalize();
         return new MirrorGeometry(transformed, new Vec3(direction));
     }
 
