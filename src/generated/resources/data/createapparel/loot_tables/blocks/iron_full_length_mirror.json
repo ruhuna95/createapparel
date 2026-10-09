@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "block": "createapparel:iron_full_length_mirror",
+              "condition": "minecraft:block_state_property",
+              "properties": {
+                "half": "lower"
+              }
+            }
+          ],
+          "name": "createapparel:iron_full_length_mirror"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "createapparel:blocks/iron_full_length_mirror"
+}

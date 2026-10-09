@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "minecraft:glass_pane"
+    },
+    {
+      "amount": 250,
+      "fluid": "createapparel:mirror_coating_fluid",
+      "nbt": {}
+    }
+  ],
+  "results": [
+    {
+      "item": "createapparel:mirror_panel"
+    }
+  ]
+}

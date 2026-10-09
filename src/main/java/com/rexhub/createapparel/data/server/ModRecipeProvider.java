@@ -86,6 +86,55 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
     }
 
     private static final int MILLING_DURATION = 100;
+    private void mirrorRecipes() {
+        register(consumer -> new ProcessingRecipeBuilder<>(com.simibubi.create.content.fluids.transfer.FillingRecipe::new,
+                asResource("mirror_panel")).require(Items.GLASS_PANE)
+                .require(com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_FLUID.get(), 250)
+                .output(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL.get()).build(consumer));
+        register(consumer -> new ProcessingRecipeBuilder<>(MixingRecipe::new, asResource("mirror_coating_fluid"))
+                .require(Fluids.WATER, 1000).require(AllItems.ZINC_NUGGET.get()).require(Items.GLOWSTONE_DUST)
+                .requiresHeat(com.simibubi.create.content.processing.recipe.HeatCondition.HEATED)
+                .output(com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_FLUID.get(), 1000)
+                .withCondition(com.rexhub.createapparel.recipe.MirrorFallbackCondition.INSTANCE).build(consumer));
+        var panel = com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL.get();
+        register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS,
+                        com.rexhub.createapparel.init.ModMirrors.IRON_FULL_LENGTH_MIRROR.get())
+                .pattern("WPW").pattern("WPW").pattern("WWW").define('W', Items.IRON_INGOT).define('P', panel)
+                .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
+                .save(consumer, asResource("iron_full_length_mirror")));
+        register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS,
+                        com.rexhub.createapparel.init.ModMirrors.IRON_TABLE_MIRROR.get())
+                .pattern(" P ").pattern(" W ").pattern("WWW").define('W', Items.IRON_INGOT).define('P', panel)
+                .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
+                .save(consumer, asResource("iron_table_mirror")));
+        register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS,
+                        com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK.get())
+                .pattern("PPP").pattern("PGP").pattern("PPP").define('P', panel).define('G', Items.GLASS)
+                .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
+                .save(consumer, asResource("mirror_block")));
+        register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.REDSTONE,
+                        com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR.get())
+                .requires(Items.IRON_DOOR).requires(panel, 2)
+                .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
+                .save(consumer, asResource("mirrored_door")));
+        for (var wood : com.rexhub.createapparel.mirror.MirrorWood.values()) {
+            register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.REDSTONE,
+                            com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOORS.get(wood).get())
+                    .requires(wood.door()).requires(panel, 2)
+                    .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
+                    .save(consumer, asResource(wood.id() + "_mirrored_door")));
+            register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS,
+                            com.rexhub.createapparel.init.ModMirrors.FULL_LENGTH_MIRRORS.get(wood).get())
+                    .pattern("WPW").pattern("WPW").pattern("WWW").define('W', wood.planks()).define('P', panel)
+                    .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
+                    .save(consumer, asResource(wood.id() + "_full_length_mirror")));
+            register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS,
+                            com.rexhub.createapparel.init.ModMirrors.TABLE_MIRRORS.get(wood).get())
+                    .pattern(" P ").pattern(" W ").pattern("WWW").define('W', wood.planks()).define('P', panel)
+                    .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
+                    .save(consumer, asResource(wood.id() + "_table_mirror")));
+        }
+    }
     private static final int FABRIC_TREATMENT_WATER_AMOUNT = 250;
     private static final List<TagKey<Item>> T_SHIRT_FABRICS = List.of(
             ModTags.Items.FABRICS_COTTON,
@@ -122,6 +171,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
+        mirrorRecipes();
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SILKWORM_REARING_TRAY.get())
                 .pattern("WAW").pattern("ISI").pattern("ACA")
                 .define('W', ItemTags.WOODEN_SLABS).define('A', AllItems.ANDESITE_ALLOY.get())

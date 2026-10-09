@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "item": "createapparel:mirror_panel"
+    },
+    "W": {
+      "item": "minecraft:mangrove_planks"
+    }
+  },
+  "pattern": [
+    "WPW",
+    "WPW",
+    "WWW"
+  ],
+  "result": {
+    "item": "createapparel:mangrove_full_length_mirror"
+  },
+  "show_notification": true
+}

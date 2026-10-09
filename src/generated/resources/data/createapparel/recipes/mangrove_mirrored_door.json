@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "minecraft:mangrove_door"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    }
+  ],
+  "result": {
+    "item": "createapparel:mangrove_mirrored_door"
+  }
+}

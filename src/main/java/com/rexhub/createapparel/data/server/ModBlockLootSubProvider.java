@@ -21,6 +21,14 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
+        for (var mirror : com.rexhub.createapparel.init.ModMirrors.BLOCKS) {
+            var block = mirror.get();
+            if (block instanceof com.rexhub.createapparel.block.MirroredDoorBlock
+                    || block instanceof com.rexhub.createapparel.block.MirrorFurnitureBlock furniture
+                    && furniture.kind() == com.rexhub.createapparel.block.MirrorFurnitureBlock.Kind.FULL_LENGTH) {
+                add(block, createDoorTable(block));
+            } else dropSelf(block);
+        }
         addCropDrops(ModBlocks.COTTON_CROP.get(), ModItems.COTTON_BOLL.get(), ModItems.COTTON_SEEDS.get());
         addCropDrops(ModBlocks.FLAX_CROP.get(), ModItems.FLAX.get(), ModItems.FLAX_SEEDS.get());
         addCropDrops(ModBlocks.HEMP_CROP.get(), ModItems.HEMP.get(), ModItems.HEMP_SEEDS.get());

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "minecraft:dark_oak_door"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    }
+  ],
+  "result": {
+    "item": "createapparel:dark_oak_mirrored_door"
+  }
+}

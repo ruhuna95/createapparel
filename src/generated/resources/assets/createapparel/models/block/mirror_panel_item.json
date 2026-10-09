@@ -1,0 +1,42 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#mirror"
+        },
+        "east": {
+          "texture": "#mirror"
+        },
+        "north": {
+          "texture": "#mirror"
+        },
+        "south": {
+          "texture": "#mirror"
+        },
+        "up": {
+          "texture": "#mirror"
+        },
+        "west": {
+          "texture": "#mirror"
+        }
+      },
+      "from": [
+        0,
+        0,
+        7.5
+      ],
+      "to": [
+        16,
+        16,
+        8.5
+      ]
+    }
+  ],
+  "textures": {
+    "mirror": "createapparel:block/mirror_surface",
+    "particle": "minecraft:block/oak_planks",
+    "wood": "minecraft:block/oak_planks"
+  }
+}

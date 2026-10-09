@@ -18,6 +18,10 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public final class ModRegistries {
+    public static final DeferredRegister<net.minecraftforge.fluids.FluidType> FLUID_TYPES =
+            DeferredRegister.create(ForgeRegistries.Keys.FLUID_TYPES, CreateApparel.MOD_ID);
+    public static final DeferredRegister<net.minecraft.world.level.material.Fluid> FLUIDS =
+            DeferredRegister.create(ForgeRegistries.FLUIDS, CreateApparel.MOD_ID);
     public static final DeferredRegister<com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType> ARM_INTERACTION_POINT_TYPES =
             DeferredRegister.create(com.simibubi.create.api.registry.CreateRegistries.ARM_INTERACTION_POINT_TYPE, CreateApparel.MOD_ID);
     public static final DeferredRegister<Block> BLOCKS =
@@ -44,6 +48,8 @@ public final class ModRegistries {
 
     public static void register(IEventBus modEventBus) {
         ModBlocks.bootstrap();
+        ModMirrors.bootstrap();
+        ModFluids.bootstrap();
         ModArmInteractionPoints.bootstrap();
         ModBlockEntities.bootstrap();
         ModMenuTypes.bootstrap();
@@ -54,6 +60,8 @@ public final class ModRegistries {
         ModCreativeModeTabs.bootstrap();
 
         BLOCKS.register(modEventBus);
+        FLUID_TYPES.register(modEventBus);
+        FLUIDS.register(modEventBus);
         ARM_INTERACTION_POINT_TYPES.register(modEventBus);
         ITEMS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);

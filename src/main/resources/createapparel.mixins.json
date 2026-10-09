@@ -5,7 +5,10 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "createapparel.refmap.json",
   "client": [
-    "GameRendererMixin"
+    "GameRendererMixin",
+    "MirrorGameRendererMixin",
+    "MirrorLevelRendererMixin",
+    "MirrorMinecraftMixin"
   ],
   "injectors": {
     "defaultRequire": 1

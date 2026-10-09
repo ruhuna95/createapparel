@@ -516,6 +516,8 @@ public final class ModItems {
         items.add(CLOTHING_RACK);
         items.add(CLIP_CLOTHING_RACK);
         for (var variant : MannequinVariant.values()) items.add(MANNEQUINS.get(variant));
+        items.addAll(ModMirrors.ITEMS.values());
+        items.add(ModFluids.MIRROR_COATING_BUCKET);
         items.add(SEWING_PATTERN);
         addMaterialGroup(
                 items,

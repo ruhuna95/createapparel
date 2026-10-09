@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "minecraft:crimson_door"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    }
+  ],
+  "result": {
+    "item": "createapparel:crimson_mirrored_door"
+  }
+}

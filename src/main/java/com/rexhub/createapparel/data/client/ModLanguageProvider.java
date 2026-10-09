@@ -21,6 +21,18 @@ public final class ModLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL, "Mirror Panel");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK, "Mirror Block");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR, "Iron Mirrored Door");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.IRON_FULL_LENGTH_MIRROR, "Iron Full-Length Mirror");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.IRON_TABLE_MIRROR, "Iron Table Mirror");
+        add("fluid.createapparel.mirror_coating_fluid", "Mirror Coating Fluid");
+        addItem(com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_BUCKET, "Mirror Coating Fluid Bucket");
+        for (var wood : com.rexhub.createapparel.mirror.MirrorWood.values()) {
+            addBlock(com.rexhub.createapparel.init.ModMirrors.FULL_LENGTH_MIRRORS.get(wood), wood.englishName() + " Full-Length Mirror");
+            addBlock(com.rexhub.createapparel.init.ModMirrors.TABLE_MIRRORS.get(wood), wood.englishName() + " Table Mirror");
+            addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOORS.get(wood), wood.englishName() + " Mirrored Door");
+        }
         add("screen.createapparel.mannequin.pose", "Pose: %s");
         add("screen.createapparel.mannequin.rotation", "Rotation: %s°");
         add("item.createapparel.full_mannequin_white_classic", "White Full Mannequin Classic");

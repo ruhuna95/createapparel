@@ -1,0 +1,211 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        },
+        "north": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        }
+      },
+      "from": [
+        3,
+        0,
+        11
+      ],
+      "mirror_rotation": {
+        "angle": -19.454065,
+        "origin": [
+          8,
+          0.0,
+          12.0
+        ]
+      },
+      "to": [
+        4,
+        5.122053,
+        13
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        },
+        "north": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        }
+      },
+      "from": [
+        12,
+        0,
+        11
+      ],
+      "mirror_rotation": {
+        "angle": -19.454065,
+        "origin": [
+          8,
+          0.0,
+          12.0
+        ]
+      },
+      "to": [
+        13,
+        5.122053,
+        13
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        },
+        "north": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        }
+      },
+      "from": [
+        4,
+        0,
+        11
+      ],
+      "mirror_rotation": {
+        "angle": -19.454065,
+        "origin": [
+          8,
+          0.0,
+          12.0
+        ]
+      },
+      "to": [
+        12,
+        1,
+        13
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        },
+        "north": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        }
+      },
+      "from": [
+        3,
+        0,
+        7
+      ],
+      "mirror_rotation": {
+        "angle": 15.0,
+        "origin": [
+          8,
+          0.0,
+          9.0
+        ]
+      },
+      "to": [
+        13,
+        10,
+        9
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#mirror"
+        },
+        "east": {
+          "texture": "#mirror"
+        },
+        "north": {
+          "texture": "#mirror"
+        },
+        "south": {
+          "texture": "#mirror"
+        },
+        "up": {
+          "texture": "#mirror"
+        },
+        "west": {
+          "texture": "#mirror"
+        }
+      },
+      "from": [
+        4,
+        1,
+        6.999
+      ],
+      "mirror_rotation": {
+        "angle": 15.0,
+        "origin": [
+          8,
+          0.0,
+          9.0
+        ]
+      },
+      "to": [
+        12,
+        9,
+        7.999
+      ]
+    }
+  ],
+  "loader": "createapparel:mirror_tilt",
+  "textures": {
+    "mirror": "createapparel:block/mirror_surface",
+    "particle": "minecraft:block/bamboo_planks",
+    "wood": "minecraft:block/bamboo_planks"
+  }
+}

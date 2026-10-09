@@ -1,0 +1,317 @@
+{
+  "parent": "minecraft:block/block",
+  "display": {
+    "fixed": {
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "translation": [
+        0,
+        -4,
+        0
+      ]
+    },
+    "ground": {
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ]
+    },
+    "gui": {
+      "rotation": [
+        15,
+        225,
+        0
+      ],
+      "scale": [
+        0.45,
+        0.45,
+        0.45
+      ],
+      "translation": [
+        0,
+        -4,
+        0
+      ]
+    }
+  },
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#frame"
+        },
+        "east": {
+          "texture": "#frame"
+        },
+        "north": {
+          "texture": "#frame"
+        },
+        "south": {
+          "texture": "#frame"
+        },
+        "up": {
+          "texture": "#frame"
+        },
+        "west": {
+          "texture": "#frame"
+        }
+      },
+      "from": [
+        0,
+        0,
+        13
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#mirror"
+        },
+        "east": {
+          "texture": "#mirror"
+        },
+        "north": {
+          "texture": "#mirror"
+        },
+        "south": {
+          "texture": "#mirror"
+        },
+        "up": {
+          "texture": "#mirror"
+        },
+        "west": {
+          "texture": "#mirror"
+        }
+      },
+      "from": [
+        2,
+        2,
+        12.999
+      ],
+      "to": [
+        14,
+        16,
+        13.5
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#mirror"
+        },
+        "east": {
+          "texture": "#mirror"
+        },
+        "north": {
+          "texture": "#mirror"
+        },
+        "south": {
+          "texture": "#mirror"
+        },
+        "up": {
+          "texture": "#mirror"
+        },
+        "west": {
+          "texture": "#mirror"
+        }
+      },
+      "from": [
+        2,
+        2,
+        15.5
+      ],
+      "to": [
+        14,
+        16,
+        16.001
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#frame"
+        },
+        "east": {
+          "texture": "#frame",
+          "uv": [
+            0.0,
+            0.0,
+            3.0,
+            16.0
+          ]
+        },
+        "north": {
+          "texture": "#frame",
+          "uv": [
+            0.0,
+            0.0,
+            16.0,
+            16.0
+          ]
+        },
+        "south": {
+          "texture": "#frame",
+          "uv": [
+            0.0,
+            0.0,
+            16.0,
+            16.0
+          ]
+        },
+        "up": {
+          "texture": "#frame"
+        },
+        "west": {
+          "texture": "#frame",
+          "uv": [
+            13.0,
+            0.0,
+            16.0,
+            16.0
+          ]
+        }
+      },
+      "from": [
+        0,
+        16,
+        13
+      ],
+      "to": [
+        16,
+        32,
+        16
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#mirror"
+        },
+        "east": {
+          "texture": "#mirror",
+          "uv": [
+            2.5,
+            2.0,
+            3.0010004,
+            16.0
+          ]
+        },
+        "north": {
+          "texture": "#mirror",
+          "uv": [
+            2.0,
+            2.0,
+            14.0,
+            16.0
+          ]
+        },
+        "south": {
+          "texture": "#mirror",
+          "uv": [
+            2.0,
+            2.0,
+            14.0,
+            16.0
+          ]
+        },
+        "up": {
+          "texture": "#mirror"
+        },
+        "west": {
+          "texture": "#mirror",
+          "uv": [
+            12.999,
+            2.0,
+            13.5,
+            16.0
+          ]
+        }
+      },
+      "from": [
+        2,
+        16,
+        12.999
+      ],
+      "to": [
+        14,
+        30,
+        13.5
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#mirror"
+        },
+        "east": {
+          "texture": "#mirror",
+          "uv": [
+            -9.994507E-4,
+            2.0,
+            0.5,
+            16.0
+          ]
+        },
+        "north": {
+          "texture": "#mirror",
+          "uv": [
+            2.0,
+            2.0,
+            14.0,
+            16.0
+          ]
+        },
+        "south": {
+          "texture": "#mirror",
+          "uv": [
+            2.0,
+            2.0,
+            14.0,
+            16.0
+          ]
+        },
+        "up": {
+          "texture": "#mirror"
+        },
+        "west": {
+          "texture": "#mirror",
+          "uv": [
+            15.5,
+            2.0,
+            16.001,
+            16.0
+          ]
+        }
+      },
+      "from": [
+        2,
+        16,
+        15.5
+      ],
+      "to": [
+        14,
+        30,
+        16.001
+      ]
+    }
+  ],
+  "textures": {
+    "frame": "minecraft:block/jungle_planks",
+    "mirror": "createapparel:block/mirror_surface",
+    "particle": "minecraft:block/jungle_planks"
+  }
+}

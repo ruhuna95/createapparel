@@ -22,6 +22,17 @@ public final class ModBlockTagProvider extends BlockTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
+        for (var wood : com.rexhub.createapparel.mirror.MirrorWood.values()) {
+            tag(BlockTags.MINEABLE_WITH_AXE).add(com.rexhub.createapparel.init.ModMirrors.FULL_LENGTH_MIRRORS.get(wood).get(),
+                    com.rexhub.createapparel.init.ModMirrors.TABLE_MIRRORS.get(wood).get());
+            var door = com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOORS.get(wood).get();
+            tag(BlockTags.MINEABLE_WITH_AXE).add(door);
+            tag(BlockTags.DOORS).add(door);
+            tag(BlockTags.WOODEN_DOORS).add(door);
+        }
+        tag(BlockTags.MINEABLE_WITH_PICKAXE).add(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR.get(),
+                com.rexhub.createapparel.init.ModMirrors.IRON_FULL_LENGTH_MIRROR.get(), com.rexhub.createapparel.init.ModMirrors.IRON_TABLE_MIRROR.get());
+        tag(BlockTags.DOORS).add(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR.get());
         tag(ModTags.Blocks.CITIZEN_WALK_SURFACES);
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 ModBlocks.SPINNING_MACHINE.get(),

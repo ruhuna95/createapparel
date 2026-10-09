@@ -19,6 +19,18 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL, "鏡パネル");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK, "鏡ブロック");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR, "鉄の鏡付きドア");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.IRON_FULL_LENGTH_MIRROR, "鉄の姿見");
+        addBlock(com.rexhub.createapparel.init.ModMirrors.IRON_TABLE_MIRROR, "鉄の卓上鏡");
+        add("fluid.createapparel.mirror_coating_fluid", "鏡面加工液");
+        addItem(com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_BUCKET, "鏡面加工液入りバケツ");
+        for (var wood : com.rexhub.createapparel.mirror.MirrorWood.values()) {
+            addBlock(com.rexhub.createapparel.init.ModMirrors.FULL_LENGTH_MIRRORS.get(wood), wood.japaneseName() + "の姿見");
+            addBlock(com.rexhub.createapparel.init.ModMirrors.TABLE_MIRRORS.get(wood), wood.japaneseName() + "の卓上鏡");
+            addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOORS.get(wood), wood.japaneseName() + "の鏡付きドア");
+        }
         add("screen.createapparel.mannequin.pose", "ポーズ: %s");
         add("screen.createapparel.mannequin.rotation", "回転: %s°");
         add("item.createapparel.full_mannequin_white_classic", "全身マネキン（白・クラシック）");

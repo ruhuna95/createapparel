@@ -63,6 +63,24 @@ public final class CreateApparelClient {
     private CreateApparelClient() {
     }
 
+    @SubscribeEvent
+    public static void registerMirrorGeometry(ModelEvent.RegisterGeometryLoaders event) {
+        event.register("mirror_tilt", new com.rexhub.createapparel.client.mirror.MirrorTiltModelLoader());
+    }
+
+    @SubscribeEvent
+    public static void registerMirrorShader(net.minecraftforge.client.event.RegisterShadersEvent event) {
+        try {
+            event.registerShader(new net.minecraft.client.renderer.ShaderInstance(event.getResourceProvider(),
+                        ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mirror"),
+                        com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION),
+                    com.rexhub.createapparel.client.mirror.MirrorRenderManager.INSTANCE::setShader);
+        } catch (java.io.IOException exception) {
+            com.rexhub.createapparel.client.mirror.MirrorRenderManager.INSTANCE.setShader(null);
+            com.mojang.logging.LogUtils.getLogger().warn("Mirror shader unavailable; using fallback mirror surfaces", exception);
+        }
+    }
+
     public static void openSewingPatternScreen(InteractionHand hand) {
         Minecraft.getInstance().setScreen(new SewingPatternScreen(hand));
     }
@@ -70,6 +88,10 @@ public final class CreateApparelClient {
     @SubscribeEvent
     public static void clientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(
+                    com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_FLUID.get(), net.minecraft.client.renderer.RenderType.translucent());
+            net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(
+                    com.rexhub.createapparel.init.ModFluids.FLOWING_MIRROR_COATING_FLUID.get(), net.minecraft.client.renderer.RenderType.translucent());
             TooltipModifier.REGISTRY.register(ModItems.SILKWORM_REARING_TRAY.get(),
                     new ItemDescription.Modifier(ModItems.SILKWORM_REARING_TRAY.get(), FontHelper.Palette.STANDARD_CREATE));
             MenuScreens.<WardrobeMenu, WardrobeScreen<WardrobeMenu>>
@@ -110,6 +132,8 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(com.rexhub.createapparel.init.ModMirrors.BLOCK_ENTITY.get(),
+                com.rexhub.createapparel.client.mirror.MirrorBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CLOTHING_RACK.get(),
                 com.rexhub.createapparel.client.renderer.ClothingRackRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.WALL_HANGER.get(),
@@ -157,6 +181,8 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager ->
+                com.rexhub.createapparel.client.mirror.MirrorRenderManager.INSTANCE.reset());
         event.registerReloadListener(ClientGarmentAssets.INSTANCE);
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener)
                 resourceManager -> com.rexhub.createapparel.client.renderer.SilkwormRearingTrayContentsRenderer.resetModel());
