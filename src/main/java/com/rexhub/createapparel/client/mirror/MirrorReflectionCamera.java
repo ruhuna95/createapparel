@@ -8,6 +8,16 @@ import org.joml.Matrix3f;
 import org.joml.Vector3f;
 
 public final class MirrorReflectionCamera extends Camera {
+    public void snapshot(BlockGetter level, Entity entity, float partialTick, Camera original) {
+        setup(level, entity, true, false, partialTick);
+        setPosition(original.getPosition());
+        setRotation(original.getYRot(), original.getXRot());
+        rotation().set(original.rotation());
+        getLookVector().set(original.getLookVector());
+        getUpVector().set(original.getUpVector());
+        getLeftVector().set(original.getLeftVector());
+    }
+
     public void configure(BlockGetter level, Entity entity, float partialTick, Camera original, Vec3 origin, Vec3 normal) {
         setup(level, entity, true, false, partialTick);
         setPosition(MirrorReflectionMath.reflectPoint(original.getPosition(), origin, normal));

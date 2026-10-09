@@ -54,6 +54,29 @@ public final class MirrorReflectionMath {
         return true;
     }
 
+    public static boolean coversScreenCenter(List<MirrorGeometry> quads, Vec3 eye, Matrix4f projectionView) {
+        for (var quad : quads) {
+            var polygon = visiblePolygon(quad, eye, projectionView);
+            if (polygon.size() < 3) continue;
+            boolean positive = false, negative = false;
+            var previous = project(polygon.get(polygon.size() - 1), projectionView);
+            for (var vertex : polygon) {
+                var current = project(vertex, projectionView);
+                double cross = (double) previous.x * current.y - (double) previous.y * current.x;
+                positive |= cross > 0;
+                negative |= cross < 0;
+                previous = current;
+                if (positive && negative) break;
+            }
+            if (positive != negative) return true;
+        }
+        return false;
+    }
+
+    private static Vector4f project(Vec3 vertex, Matrix4f matrix) {
+        return matrix.transform(new Vector4f((float) vertex.x, (float) vertex.y, (float) vertex.z, 1));
+    }
+
     public static List<Vec3> visiblePolygon(MirrorGeometry quad, Vec3 eye, Matrix4f projectionView) {
         List<Vec3> polygon = quad.vertices().stream().map(vertex -> vertex.subtract(eye)).toList();
         for (int plane = 0; plane < 6 && !polygon.isEmpty(); plane++) {

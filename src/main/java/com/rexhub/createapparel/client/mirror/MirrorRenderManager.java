@@ -32,6 +32,8 @@ import java.util.*;
 public final class MirrorRenderManager {
     public static final MirrorRenderManager INSTANCE = new MirrorRenderManager();
     private static final int MAX_CACHED_SURFACES = 32;
+    private static final long MAX_CACHED_PIXELS = 16L * 1024 * 1024;
+    private static final long MAX_BATCH_PIXELS = 8L * 1024 * 1024;
     private final MirrorFramebufferPool pool = new MirrorFramebufferPool();
     private final Map<MirrorBlockEntity, LocalCache> localCache = new WeakHashMap<>();
     private final RenderView mainView = new RenderView(0);
@@ -47,16 +49,25 @@ public final class MirrorRenderManager {
     private long frame;
     private long previousFrameNanos;
     private long frameIntervalNanos = 16_666_667;
+    @Nullable private PendingBatch pendingBatch;
+    @Nullable private MirrorRenderPolicy.CaptureBudget captureBudget;
+    private final Set<RenderTarget> retainedTargets = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Map<List<Candidate>, Cohort> cohorts = new HashMap<>();
+    private long replacementPixelReserve;
 
     private record SurfaceKey(MirrorBlockEntity blockEntity, int face) { }
     private record LocalCache(BlockState state, Object owner, List<MirrorGeometry> geometry) { }
     private record Submission(MirrorSurfaceClusters.Entry entry, MirrorTransformContext transform) { }
     private record Candidate(Set<SurfaceKey> key, List<MirrorGeometry> quads, AABB bounds,
-                             double area, double distance, double priority, boolean moving, boolean uncovered) { }
+                             double area, double distance, double priority, boolean moving, boolean uncovered, boolean centered) { }
+    private record CaptureSettings(int width, int height, ModConfigs.MirrorQuality quality,
+                                   double scale, boolean dynamicResolution, boolean merge) { }
+    private record Cohort(Set<Set<SurfaceKey>> groupKey, int part, int count) { }
     private static final class RenderView {
         private final int depth;
         private final Map<SurfaceKey, Submission> submissions = new LinkedHashMap<>();
         private final Map<Set<SurfaceKey>, ReflectionCache> textures = new HashMap<>();
+        private final Map<Set<Set<SurfaceKey>>, Integer> nextBatchPart = new HashMap<>();
         private Set<MirrorSurfaceClusters.Entry> previousTopology = Set.of();
         private List<List<MirrorSurfaceClusters.Entry>> clusters = List.of();
         private Matrix4f inverseView = new Matrix4f();
@@ -68,8 +79,7 @@ public final class MirrorRenderManager {
     }
 
     private static final class ReflectionCache {
-        private RenderTarget target;
-        @Nullable private RenderTarget spareTarget;
+        @Nullable private RenderTarget target;
         private final RenderView children;
         private Matrix4f projectionView = new Matrix4f();
         private Vec3 eye = Vec3.ZERO;
@@ -84,13 +94,13 @@ public final class MirrorRenderManager {
         private long estimatedCostNanos = 1_000_000;
         private long seen;
         private boolean ready;
-        private ReflectionCache(RenderTarget target, int depth) {
+        private ReflectionCache(@Nullable RenderTarget target, int depth) {
             this.target = target;
             children = new RenderView(depth);
         }
     }
 
-    private record CaptureState(RenderTarget target, Matrix4f projectionView, Vec3 eye, Vec3 origin,
+    private record CaptureState(@Nullable RenderTarget target, Matrix4f projectionView, Vec3 eye, Vec3 origin,
                                 Vec3 normal, double[] coverage, long updated, long updatedNanos,
                                 long updateStartedNanos, long updateDeadlineNanos, long updateIntervalNanos, boolean ready) {
         private CaptureState(ReflectionCache cache) {
@@ -112,6 +122,30 @@ public final class MirrorRenderManager {
             cache.updateDeadlineNanos = updateDeadlineNanos;
             cache.updateIntervalNanos = updateIntervalNanos;
             cache.ready = ready;
+        }
+    }
+
+    private static final class PendingBatch {
+        private final List<Candidate> candidates;
+        private final Map<ReflectionCache, CaptureState> captures = new LinkedHashMap<>();
+        private final PoseStack view = new PoseStack();
+        private final MirrorReflectionCamera camera;
+        private final Matrix4f projection;
+        private final float partialTick;
+        private final int recursionDepth;
+        @Nullable private CaptureSettings settings;
+        @Nullable private Cohort cohort;
+        private int next;
+
+        private PendingBatch(List<Candidate> candidates, PoseStack view, MirrorReflectionCamera camera,
+                             Matrix4f projection, float partialTick, int recursionDepth) {
+            this.candidates = List.copyOf(candidates);
+            this.view.mulPoseMatrix(view.last().pose());
+            this.view.last().normal().set(view.last().normal());
+            this.camera = camera;
+            this.projection = new Matrix4f(projection);
+            this.partialTick = partialTick;
+            this.recursionDepth = recursionDepth;
         }
     }
 
@@ -178,6 +212,7 @@ public final class MirrorRenderManager {
                             Matrix4f projection, Matrix4f captureProjection) {
         activeView.collecting = false;
         if (!enabled()) {
+            if (activeView.depth == 0) cancelPendingBatch();
             clearTextures();
             return true;
         }
@@ -188,101 +223,75 @@ public final class MirrorRenderManager {
             activeView.clusters = MirrorSurfaceClusters.build(List.copyOf(topology), merge);
             activeView.previousTopology = Set.copyOf(topology);
             activeView.previousMerge = merge;
+            activeView.nextBatchPart.clear();
         }
         var frustum = new Frustum(view.last().pose(), projection);
         frustum.prepare(activeView.mainEye.x, activeView.mainEye.y, activeView.mainEye.z);
         var candidates = candidates(frustum, projection, view.last().pose());
-        var focused = candidates.stream().max(Comparator.comparingDouble(candidate -> candidate.area / (1 + candidate.distance))).orElse(null);
+        var focused = focusedCandidate(candidates);
         long now = System.nanoTime();
         var oldestBackground = candidates.stream().filter(candidate -> candidate != focused)
                 .max(Comparator.comparingLong(candidate -> textureAge(candidate, now))).orElse(null);
-        var first = focused != null && oldestBackground != null && MirrorRenderPolicy.reserveBackgroundTurn(frameIntervalNanos,
-                updateInterval(focused, true), textureAge(oldestBackground, now), now - activeView.lastBackgroundUpdateNanos) ? oldestBackground : focused;
-        if (activeView.depth > 0) {
-            candidates.sort(Comparator.<Candidate>comparingInt(candidate -> activeView.textures.containsKey(candidate.key) ? 1 : 0)
-                    .thenComparingDouble(candidate -> candidate.area / (1 + candidate.distance)).reversed());
-        } else {
-            candidates.sort(Comparator.<Candidate>comparingInt(candidate -> candidate.uncovered ? 1 : 0)
-                    .thenComparingInt(candidate -> candidate == first ? 1 : 0)
-                    .thenComparingDouble(Candidate::priority).reversed());
-        }
-        int limit = activeView.depth == 0 && focused != null && MirrorRenderPolicy.prominentNearby(focused.area, focused.distance) ? 1 : updateLimit();
+        var first = focused != null && oldestBackground != null && MirrorRenderPolicy.reserveBackgroundTurn(
+                textureAge(oldestBackground, now), now - activeView.lastBackgroundUpdateNanos) ? oldestBackground : focused;
+        prioritizeCandidates(candidates, first);
+        int limit = updateLimit();
         int updated = 0;
         boolean complete = true;
         long started = System.nanoTime();
         long budget = (long) (ModConfigs.CLIENT.updateBudgetMillis.get() * 1_000_000);
+        if (activeView.depth == 0) captureBudget = new MirrorRenderPolicy.CaptureBudget(limit, budget);
         for (var candidate : candidates) {
             var cache = activeView.textures.get(candidate.key);
             if (cache != null) cache.seen = frame;
         }
-        var groups = activeView.depth == 0 ? updateGroups(candidates) : candidates.stream().map(List::of).toList();
-        for (var group : groups) {
-            if (updated >= limit) break;
-            boolean groupFocused = group.contains(focused);
-            if (activeView.depth == 0) {
-                long estimated = group.stream().mapToLong(candidate -> {
-                    var cache = activeView.textures.get(candidate.key);
-                    return cache == null ? 1_000_000 : cache.estimatedCostNanos;
-                }).sum();
-                if (!MirrorRenderPolicy.fitsBudget(System.nanoTime() - started, budget, estimated, updated)
-                        || !needsSynchronization(group) && group.stream().noneMatch(candidate -> due(candidate, activeView.textures.get(candidate.key), groupFocused))) continue;
-                if (updated == 0) remainingReflectionPasses = MirrorRenderPolicy.synchronizedPassLimit(updateLimit(), recursionDepth, group.size());
+        var groups = activeView.depth == 0 ? boundedUpdateGroups(candidates) : candidates.stream().map(List::of).toList();
+        if (activeView.depth == 0 && pendingBatch != null) {
+            if (pendingBatch.recursionDepth != recursionDepth || !Objects.equals(pendingBatch.settings, captureSettings())
+                    || pendingBatch.candidates.stream()
+                    .anyMatch(pending -> candidates.stream().noneMatch(candidate -> candidate.key.equals(pending.key)))) cancelPendingBatch();
+            else {
+                groups = new ArrayList<>(groups);
+                groups.add(0, pendingBatch.candidates);
             }
-            var staged = new LinkedHashMap<ReflectionCache, CaptureState>();
-            boolean groupComplete = true;
+        }
+        for (var group : groups) {
+            if (activeView.depth > 0 && updated >= limit) break;
+            if (activeView.depth == 0 && group.stream().allMatch(candidate -> {
+                var cache = mainView.textures.get(candidate.key);
+                return cache != null && cache.updated == frame;
+            })) continue;
+            boolean groupFocused = focused != null && group.stream().anyMatch(candidate -> candidate.key.equals(focused.key));
+            if (activeView.depth == 0) {
+                if (pendingBatch == null && !needsSynchronization(group)
+                        && group.stream().noneMatch(candidate -> due(candidate, activeView.textures.get(candidate.key), groupFocused))) continue;
+                if (pendingBatch == null) {
+                    var frozenCamera = new MirrorReflectionCamera();
+                    var minecraft = Minecraft.getInstance();
+                    frozenCamera.snapshot(Objects.requireNonNull(minecraft.level), Objects.requireNonNull(camera.getEntity()), partialTick, camera);
+                    pendingBatch = new PendingBatch(group, view, frozenCamera, captureProjection, partialTick, recursionDepth);
+                    pendingBatch.settings = captureSettings();
+                    pendingBatch.cohort = cohorts.get(group);
+                }
+            }
             try {
-                for (var candidate : group) {
-                    if (remainingReflectionPasses == 0) {
-                        groupComplete = false;
+                if (activeView.depth == 0) {
+                    if (!advancePendingBatch(renderer, finishTime, gameRenderer, light, started, groupFocused, camera, view)) break;
+                } else {
+                    if (remainingReflectionPasses == 0 || !capture(group.get(0), renderer, view, partialTick, finishTime,
+                            camera, gameRenderer, light, captureProjection, groupFocused, false)) {
+                        complete = false;
                         break;
                     }
-                    var cache = activeView.textures.get(candidate.key);
-                    if (cache == null && activeView.textures.size() >= MAX_CACHED_SURFACES && !evictOldest(group)) {
-                        groupComplete = false;
-                        break;
-                    }
-                    if (activeView.depth == 0 && cache != null) {
-                        staged.put(cache, new CaptureState(cache));
-                        if (cache.spareTarget != null && (cache.spareTarget.width != cache.target.width || cache.spareTarget.height != cache.target.height)) {
-                            pool.release(cache.spareTarget);
-                            cache.spareTarget = null;
-                        }
-                        cache.target = cache.spareTarget == null ? pool.acquire(cache.target.width, cache.target.height) : cache.spareTarget;
-                        cache.spareTarget = null;
-                        cache.ready = false;
-                    }
-                    if (!update(candidate, renderer, view, partialTick, finishTime, camera, gameRenderer, light, captureProjection, groupFocused)) {
-                        groupComplete = false;
-                        break;
-                    }
-                }
-                for (var entry : staged.entrySet()) {
-                    var cache = entry.getKey();
-                    if (groupComplete) cache.spareTarget = entry.getValue().target;
-                    else {
-                        cache.spareTarget = cache.target;
-                        entry.getValue().restore(cache);
-                    }
-                }
-                if (!groupComplete) {
-                    complete = false;
-                    for (var candidate : group) {
-                        var cache = activeView.textures.get(candidate.key);
-                        if (cache != null && cache.updated == frame && !staged.containsKey(cache)) cache.ready = false;
-                    }
-                    break;
                 }
                 if (!groupFocused) activeView.lastBackgroundUpdateNanos = System.nanoTime();
                 updated++;
+                if (activeView.depth == 0 && focused != null && MirrorRenderPolicy.prominentNearby(focused.area, focused.distance)) break;
             } catch (RuntimeException exception) {
-                for (var entry : staged.entrySet()) {
-                    var cache = entry.getKey();
-                    var target = entry.getValue().target;
-                    if (cache.target != target && cache.spareTarget != target) pool.release(target);
-                }
                 if (activeView.depth > 0) throw exception;
                 failed = true;
                 LogUtils.getLogger().warn("Mirror reflections disabled until resource reload after a renderer failure", exception);
+                cancelPendingBatch();
                 clearTextures();
                 return false;
             }
@@ -292,14 +301,31 @@ public final class MirrorRenderManager {
             if (activeView.depth > 0) throw exception;
             failed = true;
             LogUtils.getLogger().warn("Mirror surface drawing unavailable; using fallback", exception);
+            cancelPendingBatch();
             clearTextures();
         }
         activeView.textures.entrySet().removeIf(entry -> {
-            if (frame - entry.getValue().seen < 120) return false;
+            if (frame - entry.getValue().seen < 120 || protectedCache(entry.getValue())) return false;
             release(entry.getValue());
             return true;
         });
         return complete;
+    }
+
+    @Nullable private static Candidate focusedCandidate(List<Candidate> candidates) {
+        return candidates.stream().max(Comparator.<Candidate>comparingInt(candidate -> candidate.centered ? 1 : 0)
+                .thenComparingDouble(candidate -> candidate.area / (1 + candidate.distance))).orElse(null);
+    }
+
+    private void prioritizeCandidates(List<Candidate> candidates, @Nullable Candidate first) {
+        if (activeView.depth > 0) {
+            candidates.sort(Comparator.<Candidate>comparingInt(candidate -> activeView.textures.containsKey(candidate.key) ? 1 : 0)
+                    .thenComparingDouble(candidate -> candidate.area / (1 + candidate.distance)).reversed());
+        } else {
+            candidates.sort(Comparator.<Candidate>comparingInt(candidate -> candidate == first ? 1 : 0)
+                    .thenComparingInt(candidate -> candidate.uncovered ? 1 : 0)
+                    .thenComparingDouble(Candidate::priority).reversed());
+        }
     }
 
     private List<List<Candidate>> updateGroups(List<Candidate> candidates) {
@@ -316,6 +342,159 @@ public final class MirrorRenderManager {
             entries.add(new MirrorUpdateGroups.Entry<>(candidate, owner, Set.copyOf(blocks), synchronize));
         }
         return MirrorUpdateGroups.build(entries);
+    }
+
+    private List<List<Candidate>> boundedUpdateGroups(List<Candidate> candidates) {
+        var result = new ArrayList<List<Candidate>>();
+        cohorts.clear();
+        Comparator<SurfaceKey> keyOrder = Comparator.comparingLong((SurfaceKey key) -> key.blockEntity.getBlockPos().asLong())
+                .thenComparingInt(SurfaceKey::face);
+        for (var group : updateGroups(candidates)) {
+            var ordered = new ArrayList<>(group);
+            ordered.sort(Comparator.comparing(candidate -> candidate.key.stream().min(keyOrder).orElseThrow(), keyOrder));
+            var parts = MirrorUpdateGroups.bounded(ordered, MAX_CACHED_SURFACES / 2, MAX_BATCH_PIXELS, candidate -> {
+                int[] size = targetSize(candidate);
+                return MirrorFramebufferPool.pixels(size[0], size[1]);
+            });
+            var groupKey = group.stream().map(Candidate::key).collect(java.util.stream.Collectors.toUnmodifiableSet());
+            int part = mainView.nextBatchPart.getOrDefault(groupKey, 0) % parts.size();
+            var selected = parts.get(part);
+            result.add(selected);
+            if (parts.size() > 1) cohorts.put(selected, new Cohort(groupKey, part, parts.size()));
+        }
+        result.sort(Comparator.comparingInt(group -> group.stream().mapToInt(candidates::indexOf).min().orElse(Integer.MAX_VALUE)));
+        return result;
+    }
+
+    private boolean advancePendingBatch(LevelRenderer renderer, long finishTime, GameRenderer gameRenderer,
+                                        LightTexture light, long started, boolean focused, Camera currentCamera, PoseStack currentView) {
+        var batch = Objects.requireNonNull(pendingBatch);
+        var budget = Objects.requireNonNull(captureBudget);
+        while (batch.next < batch.candidates.size()) {
+            var candidate = batch.candidates.get(batch.next);
+            var cache = mainView.textures.get(candidate.key);
+            long estimated = cache == null ? 1_000_000 : cache.estimatedCostNanos;
+            if (remainingReflectionPasses == 0 || !budget.canStart(System.nanoTime() - started, estimated)) return false;
+            var originalEye = mainView.mainEye;
+            mainView.mainEye = batch.camera.getPosition();
+            try {
+                if (!capture(candidate, renderer, batch.view, batch.partialTick, finishTime, batch.camera,
+                        gameRenderer, light, batch.projection, focused, true)) return false;
+            } finally {
+                mainView.mainEye = originalEye;
+                var minecraft = Minecraft.getInstance();
+                if (minecraft.level != null) {
+                    if (minecraft.level.effects().constantAmbientLight()) Lighting.setupNetherLevel(currentView.last().pose());
+                    else Lighting.setupLevel(currentView.last().pose());
+                    minecraft.getEntityRenderDispatcher().prepare(minecraft.level, currentCamera, minecraft.crosshairPickEntity);
+                    minecraft.getBlockEntityRenderDispatcher().prepare(minecraft.level, currentCamera, minecraft.hitResult);
+                }
+            }
+            batch.next++;
+        }
+        publishPendingBatch();
+        return true;
+    }
+
+    private void publishPendingBatch() {
+        var batch = Objects.requireNonNull(pendingBatch);
+        if (batch.next != batch.candidates.size() || batch.captures.size() != batch.candidates.size())
+            throw new IllegalStateException("Incomplete reflection batch");
+        for (var entry : batch.captures.entrySet()) {
+            var cache = entry.getKey();
+            var old = cache.target;
+            entry.getValue().restore(cache);
+            cache.updated = frame;
+            retainedTargets.remove(cache.target);
+            if (old != null) pool.release(old);
+        }
+        if (batch.cohort != null) mainView.nextBatchPart.put(batch.cohort.groupKey, (batch.cohort.part + 1) % batch.cohort.count);
+        pendingBatch = null;
+    }
+
+    private void cancelPendingBatch() {
+        if (pendingBatch == null) return;
+        for (var state : pendingBatch.captures.values()) {
+            if (state.target != null) {
+                retainedTargets.remove(state.target);
+                pool.release(state.target);
+            }
+        }
+        pendingBatch = null;
+    }
+
+    private int[] targetSize(Candidate candidate) {
+        var minecraft = Minecraft.getInstance();
+        var cache = activeView.textures.get(candidate.key);
+        int previous = cache == null || cache.target == null ? 0 : cache.target.width;
+        int width = MirrorRenderPolicy.textureWidth(minecraft.getWindow().getWidth(), resolutionScale(), candidate.area,
+                candidate.distance, ModConfigs.CLIENT.dynamicResolution.get(), previous);
+        width = MirrorRenderPolicy.recursiveTextureWidth(width, activeView.depth, reflectionTarget == null ? width : reflectionTarget.width);
+        int height = Math.max(64, width * minecraft.getWindow().getHeight() / Math.max(1, minecraft.getWindow().getWidth()));
+        return new int[]{width, height};
+    }
+
+    private CaptureSettings captureSettings() {
+        var window = Minecraft.getInstance().getWindow();
+        return new CaptureSettings(window.getWidth(), window.getHeight(), ModConfigs.CLIENT.quality.get(), resolutionScale(),
+                ModConfigs.CLIENT.dynamicResolution.get(), ModConfigs.CLIENT.mergeCoplanarMirrors.get());
+    }
+
+    private boolean capture(Candidate candidate, LevelRenderer renderer, PoseStack view, float partialTick,
+                            long finishTime, Camera camera, GameRenderer gameRenderer, LightTexture light,
+                            Matrix4f projection, boolean focused, boolean staged) {
+        var cache = activeView.textures.get(candidate.key);
+        int[] size = targetSize(candidate);
+        long oldPixels = cache == null || cache.target == null ? 0 : MirrorFramebufferPool.pixels(cache.target.width, cache.target.height);
+        var protectedGroup = staged ? Objects.requireNonNull(pendingBatch).candidates : List.of(candidate);
+        long newPixels = MirrorFramebufferPool.pixels(size[0], size[1]);
+        if (newPixels > MAX_CACHED_PIXELS) return false;
+        while ((cache == null && cacheCount(mainView) >= MAX_CACHED_SURFACES)
+                || cachedPixels() + Math.max(0, newPixels - oldPixels) > MAX_CACHED_PIXELS || !pool.canAcquire(size[0], size[1])) {
+            if (!evictOldest(protectedGroup)) return false;
+        }
+        var temporary = pool.acquireForCapture(size[0], size[1]);
+        if (temporary == null) return false;
+        if (cache == null) {
+            cache = new ReflectionCache(null, activeView.depth + 1);
+            activeView.textures.put(candidate.key, cache);
+        }
+        var published = new CaptureState(cache);
+        if (published.target != null) retainedTargets.add(published.target);
+        long reserve = Math.max(0, oldPixels - newPixels);
+        replacementPixelReserve += reserve;
+        cache.target = temporary;
+        cache.ready = false;
+        boolean success = false;
+        try {
+            success = update(candidate, renderer, view, partialTick, finishTime, camera, gameRenderer, light, projection, focused);
+            if (success && staged) {
+                stageCapture(cache, published);
+            } else finishCapture(cache, published, success);
+            return success;
+        } catch (RuntimeException exception) {
+            finishCapture(cache, published, false);
+            throw exception;
+        } finally {
+            replacementPixelReserve -= reserve;
+            if (published.target != null) retainedTargets.remove(published.target);
+        }
+    }
+
+    private void stageCapture(ReflectionCache cache, CaptureState published) {
+        Objects.requireNonNull(pendingBatch).captures.put(cache, new CaptureState(cache));
+        retainedTargets.add(Objects.requireNonNull(cache.target));
+        published.restore(cache);
+    }
+
+    private void finishCapture(ReflectionCache cache, CaptureState published, boolean success) {
+        if (success) {
+            if (published.target != null) pool.release(published.target);
+        } else {
+            var temporary = cache.target;
+            published.restore(cache);
+            if (temporary != null) pool.release(temporary);
+        }
     }
 
     private boolean needsSynchronization(List<Candidate> group) {
@@ -371,7 +550,8 @@ public final class MirrorRenderManager {
             double priority = area / (1 + distance * 0.1) / (1 + center) * (1 + age) * (moving ? 2 : 1);
             boolean uncovered = cached == null || !cached.ready || !MirrorReflectionMath.coversVisibleMirror(quads, activeView.mainEye,
                     projectionView, textureMatrix(cached), cached.coverage);
-            result.add(new Candidate(frozenKeys, List.copyOf(quads), bounds, area, distance, priority, moving, uncovered));
+            boolean centered = activeView.depth == 0 && MirrorReflectionMath.coversScreenCenter(quads, activeView.mainEye, projectionView);
+            result.add(new Candidate(frozenKeys, List.copyOf(quads), bounds, area, distance, priority, moving, uncovered, centered));
         }
         return result;
     }
@@ -430,7 +610,6 @@ public final class MirrorRenderManager {
 
     private boolean update(Candidate candidate, LevelRenderer renderer, PoseStack mainView, float partialTick,
                         long finishTime, Camera camera, GameRenderer gameRenderer, LightTexture light, Matrix4f projection, boolean focused) {
-        remainingReflectionPasses--;
         long startedNanos = System.nanoTime();
         long intervalNanos = updateInterval(candidate, focused);
         var minecraft = Minecraft.getInstance();
@@ -446,18 +625,9 @@ public final class MirrorRenderManager {
         var clipped = MirrorReflectionMath.clippedProjection(captureProjection, reflectedView,
                 geometry.origin().subtract(reflectedEye), geometry.normal());
         var cache = activeView.textures.get(candidate.key);
-        int width = MirrorRenderPolicy.textureWidth(minecraft.getWindow().getWidth(), resolutionScale(), candidate.area,
-                candidate.distance, ModConfigs.CLIENT.dynamicResolution.get(), cache == null ? 0 : cache.target.width);
-        width = MirrorRenderPolicy.recursiveTextureWidth(width, activeView.depth, reflectionTarget == null ? width : reflectionTarget.width);
-        int height = Math.max(64, width * minecraft.getWindow().getHeight() / Math.max(1, minecraft.getWindow().getWidth()));
-        if (cache == null) {
-            cache = new ReflectionCache(pool.acquire(width, height), activeView.depth + 1);
-            activeView.textures.put(candidate.key, cache);
-        } else if (cache.target.width != width || cache.target.height != height) {
-            pool.release(cache.target);
-            cache.target = pool.acquire(width, height);
-            cache.ready = false;
-        }
+        var target = Objects.requireNonNull(Objects.requireNonNull(cache).target);
+        int width = target.width;
+        int height = target.height;
         var originalView = activeView;
         var originalReflectionTarget = reflectionTarget;
         var originalCamera = reflectionCamera;
@@ -502,6 +672,8 @@ public final class MirrorRenderManager {
             pose.mulPoseMatrix(reflectedView);
             pose.last().normal().set(new Matrix3f(reflectedView).invert().transpose());
             renderer.prepareCullFrustum(pose, reflectedEye, cullProjection);
+            remainingReflectionPasses--;
+            if (originalView.depth == 0) Objects.requireNonNull(captureBudget).start();
             renderer.renderLevel(pose, partialTick, finishTime, false, captureCamera, gameRenderer, light, clipped);
             if (activeView.collecting) {
                 var portalProjection = MirrorReflectionMath.croppedCullingProjection(clipped, reflectedBounds);
@@ -577,7 +749,7 @@ public final class MirrorRenderManager {
         try {
             for (var candidate : candidates) {
                 var cache = activeView.textures.get(candidate.key);
-                if (cache == null || !cache.ready || activeTargets.contains(cache.target)) continue;
+                if (cache == null || cache.target == null || !cache.ready || activeTargets.contains(cache.target)) continue;
                 if (!MirrorRenderPolicy.canDrawCachedReflection(activeView.depth, cache.updated, frame)) continue;
                 Objects.requireNonNull(shader.getUniform("ReflectionMatrix")).set(textureMatrix(cache));
                 Objects.requireNonNull(shader.getUniform("ReflectionBounds")).set((float) cache.coverage[0], (float) cache.coverage[1],
@@ -616,7 +788,9 @@ public final class MirrorRenderManager {
     }
     private int updateLimit() {
         return switch (ModConfigs.CLIENT.quality.get()) {
-            case LOW -> 2; case HIGH -> 8; default -> ModConfigs.CLIENT.maxSurfacesPerFrame.get();
+            case LOW -> Math.min(2, ModConfigs.CLIENT.maxSurfacesPerFrame.get());
+            case HIGH -> Math.min(8, ModConfigs.CLIENT.maxSurfacesPerFrame.get());
+            default -> ModConfigs.CLIENT.maxSurfacesPerFrame.get();
         };
     }
     private double resolutionScale() {
@@ -626,19 +800,55 @@ public final class MirrorRenderManager {
     }
 
     private boolean evictOldest(List<Candidate> protectedGroup) {
-        var oldest = activeView.textures.entrySet().stream()
-                .filter(entry -> entry.getValue().updated != frame && protectedGroup.stream().noneMatch(candidate -> candidate.key.equals(entry.getKey())))
-                .min(Comparator.comparingLong(entry -> entry.getValue().seen)).orElse(null);
+        var choices = new ArrayList<Map.Entry<RenderView, Map.Entry<Set<SurfaceKey>, ReflectionCache>>>();
+        evictionCandidates(mainView, protectedGroup, choices);
+        var oldest = choices.stream().min(Comparator.comparingLong(entry -> entry.getValue().getValue().seen)).orElse(null);
         if (oldest == null) return false;
-        release(oldest.getValue());
-        activeView.textures.remove(oldest.getKey());
+        release(oldest.getValue().getValue());
+        oldest.getKey().textures.remove(oldest.getValue().getKey());
         return true;
+    }
+
+    private void evictionCandidates(RenderView view, List<Candidate> protectedGroup,
+            List<Map.Entry<RenderView, Map.Entry<Set<SurfaceKey>, ReflectionCache>>> choices) {
+        for (var entry : view.textures.entrySet()) {
+            var cache = entry.getValue();
+            if (cache.updated != frame && !protectedCache(cache) && (view != activeView
+                    || protectedGroup.stream().noneMatch(candidate -> candidate.key.equals(entry.getKey()))))
+                choices.add(Map.entry(view, entry));
+            evictionCandidates(cache.children, protectedGroup, choices);
+        }
+    }
+
+    private boolean protectedCache(ReflectionCache cache) {
+        return cache.target != null && (activeTargets.contains(cache.target) || retainedTargets.contains(cache.target))
+                || pendingBatch != null && pendingBatch.candidates.stream().anyMatch(candidate -> mainView.textures.get(candidate.key) == cache)
+                || cache.children.textures.values().stream().anyMatch(this::protectedCache);
+    }
+
+    private int cacheCount(RenderView view) {
+        return view.textures.size() + view.textures.values().stream().mapToInt(cache -> cacheCount(cache.children)).sum();
+    }
+
+    private long cachedPixels(RenderView view) {
+        return view.textures.values().stream().mapToLong(cache -> (cache.target == null ? 0
+                : MirrorFramebufferPool.pixels(cache.target.width, cache.target.height)) + cachedPixels(cache.children)).sum();
+    }
+
+    private long cachedPixels() {
+        long pixels = cachedPixels(mainView) + replacementPixelReserve;
+        if (pendingBatch != null) for (var entry : pendingBatch.captures.entrySet()) {
+            var old = entry.getKey().target;
+            var next = entry.getValue().target;
+            long oldPixels = old == null ? 0 : MirrorFramebufferPool.pixels(old.width, old.height);
+            if (next != null) pixels += Math.max(0, MirrorFramebufferPool.pixels(next.width, next.height) - oldPixels);
+        }
+        return pixels;
     }
     private void release(ReflectionCache cache) {
         cache.children.textures.values().forEach(this::release);
         cache.children.textures.clear();
-        pool.release(cache.target);
-        if (cache.spareTarget != null) pool.release(cache.spareTarget);
+        if (cache.target != null) pool.release(cache.target);
     }
     private void clearTextures() {
         activeView.textures.values().forEach(this::release);
@@ -646,8 +856,11 @@ public final class MirrorRenderManager {
     }
     public void reset() {
         activeView = mainView;
+        cancelPendingBatch();
         clearTextures();
         activeTargets.clear();
+        retainedTargets.clear();
+        replacementPixelReserve = 0;
         reflectionTarget = null;
         reflectionCamera = null;
         pool.close();
@@ -655,6 +868,8 @@ public final class MirrorRenderManager {
         activeView.submissions.clear();
         activeView.previousTopology = Set.of();
         activeView.clusters = List.of();
+        activeView.nextBatchPart.clear();
+        cohorts.clear();
         failed = false;
         activeView.collecting = false;
         previousFrameNanos = 0;

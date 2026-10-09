@@ -11,8 +11,26 @@ public final class MirrorRenderPolicy {
         return surfaceLimit * (recursionDepth + 1);
     }
 
-    public static int synchronizedPassLimit(int surfaceLimit, int recursionDepth, int surfaces) {
-        return Math.min(32, surfaceLimit * Math.max(1, surfaces)) * (recursionDepth + 1);
+    public static final class CaptureBudget {
+        private final int limit;
+        private final long nanos;
+        private int started;
+
+        public CaptureBudget(int limit, long nanos) {
+            this.limit = limit;
+            this.nanos = nanos;
+        }
+
+        public boolean canStart(long elapsed, long estimatedCost) {
+            return started < limit && fitsBudget(elapsed, nanos, estimatedCost, started);
+        }
+
+        public void start() {
+            if (started >= limit) throw new IllegalStateException("Reflection capture limit exceeded");
+            started++;
+        }
+
+        public int started() { return started; }
     }
 
     public static boolean canDrawCachedReflection(int viewDepth, long captureFrame, long currentFrame) {
@@ -57,7 +75,7 @@ public final class MirrorRenderPolicy {
     }
 
     public static boolean fitsBudget(long elapsed, long budget, long estimatedCost, int updated) {
-        return updated == 0 || elapsed + estimatedCost <= budget;
+        return updated == 0 || elapsed <= budget && estimatedCost <= budget - elapsed;
     }
 
     public static int[] scissor(double[] bounds, int width, int height) {
@@ -68,7 +86,7 @@ public final class MirrorRenderPolicy {
         return new int[]{x1, y1, Math.max(0, x2 - x1), Math.max(0, y2 - y1)};
     }
 
-    public static boolean reserveBackgroundTurn(long frameInterval, long focusedInterval, long age, long sinceBackground) {
-        return frameInterval >= focusedInterval * 3 / 4 && age >= 1_000_000_000L && sinceBackground >= 100_000_000L;
+    public static boolean reserveBackgroundTurn(long age, long sinceBackground) {
+        return age >= 1_000_000_000L && sinceBackground >= 100_000_000L;
     }
 }

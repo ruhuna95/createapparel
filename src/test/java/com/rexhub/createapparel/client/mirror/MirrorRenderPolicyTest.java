@@ -4,12 +4,37 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MirrorRenderPolicyTest {
-    @Test void synchronizedBatchesReserveBranchesButKeepABoundedLinearDepthLimit() {
-        for (int depth = 0; depth <= 4; depth++) {
-            assertEquals(4 * (depth + 1), MirrorRenderPolicy.synchronizedPassLimit(4, depth, 1));
-            assertEquals(16 * (depth + 1), MirrorRenderPolicy.synchronizedPassLimit(4, depth, 4));
-            assertEquals(32 * (depth + 1), MirrorRenderPolicy.synchronizedPassLimit(8, depth, 100));
+    @Test void tenDifferentPlanesCannotStartMoreThanFourCapturesPerFrame() {
+        var budget = new MirrorRenderPolicy.CaptureBudget(4, 50_000_000);
+        for (int i = 0; i < 10; i++) if (budget.canStart(0, 1_000_000)) budget.start();
+        assertEquals(4, budget.started());
+        assertThrows(IllegalStateException.class, budget::start);
+    }
+
+    @Test void largeSynchronizedGroupMakesBoundedProgressOverMultipleFrames() {
+        int remaining = 100;
+        int frames = 0;
+        while (remaining > 0) {
+            var budget = new MirrorRenderPolicy.CaptureBudget(4, 4_000_000);
+            long elapsed = 0;
+            while (remaining > 0 && budget.canStart(elapsed, 1_000_000)) {
+                budget.start();
+                remaining--;
+                elapsed += 1_000_000;
+            }
+            assertTrue(budget.started() <= 4);
+            frames++;
         }
+        assertEquals(25, frames);
+    }
+
+    @Test void onlyOneExpensiveCaptureCanIgnoreTheTimeBudget() {
+        var budget = new MirrorRenderPolicy.CaptureBudget(4, 4_000_000);
+        assertTrue(budget.canStart(0, 8_000_000));
+        budget.start();
+        assertFalse(budget.canStart(8_000_000, 1_000_000));
+        assertFalse(budget.canStart(1_000_000, 4_000_000));
+        assertEquals(1, budget.started());
     }
 
     @Test void farRecursiveMirrorsUseViewerDistanceNotTheVirtualReflectedCameraDistance() {
@@ -121,10 +146,10 @@ class MirrorRenderPolicyTest {
         assertArrayEquals(new int[]{235, 117, 530, 266}, MirrorRenderPolicy.scissor(new double[]{-0.5, -0.5, 0.5, 0.5}, 1000, 500));
     }
 
-    @Test void overloadedMainRenderingStillGivesStaleBackgroundMirrorsARefresh() {
-        assertTrue(MirrorRenderPolicy.reserveBackgroundTurn(33_333_333, 16_666_666, 1_200_000_000, 200_000_000));
-        assertFalse(MirrorRenderPolicy.reserveBackgroundTurn(8_333_333, 16_666_666, 1_200_000_000, 200_000_000));
-        assertFalse(MirrorRenderPolicy.reserveBackgroundTurn(33_333_333, 16_666_666, 500_000_000, 200_000_000));
-        assertFalse(MirrorRenderPolicy.reserveBackgroundTurn(33_333_333, 16_666_666, 1_200_000_000, 50_000_000));
+    @Test void staleBackgroundMirrorsGetARefreshRegardlessOfMainFrameRate() {
+        assertTrue(MirrorRenderPolicy.reserveBackgroundTurn(1_200_000_000, 200_000_000));
+        assertTrue(MirrorRenderPolicy.reserveBackgroundTurn(Long.MAX_VALUE, 200_000_000));
+        assertFalse(MirrorRenderPolicy.reserveBackgroundTurn(500_000_000, 200_000_000));
+        assertFalse(MirrorRenderPolicy.reserveBackgroundTurn(1_200_000_000, 50_000_000));
     }
 }

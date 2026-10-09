@@ -57,7 +57,7 @@ public final class ModConfigs {
             enabled = builder.define("enabled", true);
             quality = builder.defineEnum("quality", MirrorQuality.MEDIUM);
             renderDistance = builder.defineInRange("renderDistance", 32, 1, 64);
-            maxSurfacesPerFrame = builder.comment("Maximum top-level update batches and admitted child surfaces per view. Touching mirror blocks update together.")
+            maxSurfacesPerFrame = builder.comment("Maximum top-level world captures per frame and child surfaces per view. Coplanar clusters count once; synchronized updates may span frames.")
                     .defineInRange("maxSurfacesPerFrame", 4, 1, 8);
             recursionDepth = builder.comment("Additional mirror reflections inside a reflection. 0 disables recursion; higher values increase rendering cost.")
                     .defineInRange("recursionDepth", 1, 0, 4);
@@ -69,7 +69,7 @@ public final class ModConfigs {
                     .defineInRange("maxReflectionFps", 30, 1, 120);
             nearbyReflectionFps = builder.comment("Refresh rate for the most prominent nearby mirror, independent of the background mirror rate.")
                     .defineInRange("nearbyReflectionFps", 60, 1, 120);
-            updateBudgetMillis = builder.comment("Stop starting extra top-level update batches after this CPU time budget. Incomplete batches keep their last complete images.")
+            updateBudgetMillis = builder.comment("CPU budget for starting top-level captures, including child rendering cost. Only the first capture may exceed it; incomplete batches retain published images.")
                     .defineInRange("updateBudgetMillis", 4.0, 0.5, 50.0);
             builder.pop();
         }

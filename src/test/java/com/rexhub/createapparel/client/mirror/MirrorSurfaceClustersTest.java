@@ -11,6 +11,18 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MirrorSurfaceClustersTest {
+    @Test void tenCoplanarPanelsCountAsOneCapture() {
+        var entries = IntStream.range(0, 10).mapToObj(i -> panel("world", i, 0)).toList();
+        var clusters = MirrorSurfaceClusters.build(entries, true);
+        assertEquals(1, clusters.size());
+        var budget = new MirrorRenderPolicy.CaptureBudget(4, 4_000_000);
+        for (var cluster : clusters) {
+            assertEquals(10, cluster.size());
+            assertTrue(budget.canStart(0, 1_000_000));
+            budget.start();
+        }
+        assertEquals(1, budget.started());
+    }
     private static MirrorSurfaceClusters.Entry panel(Object owner, int x, int y) {
         return new MirrorSurfaceClusters.Entry(owner, x + ":" + y, MirrorGeometry.north(x, y, x + 1, y + 1, 0), true);
     }

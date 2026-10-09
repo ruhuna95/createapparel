@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ToLongFunction;
 
 public final class MirrorUpdateGroups {
     public record Entry<T>(T value, Object owner, Set<BlockPos> blocks, boolean synchronize) { }
@@ -24,6 +25,24 @@ public final class MirrorUpdateGroups {
             }
             result.add(group.stream().map(Entry::value).toList());
         }
+        return List.copyOf(result);
+    }
+
+    public static <T> List<List<T>> bounded(List<T> group, int maximumSurfaces, long maximumPixels, ToLongFunction<T> pixels) {
+        var result = new ArrayList<List<T>>();
+        var part = new ArrayList<T>();
+        long total = 0;
+        for (var surface : group) {
+            long size = pixels.applyAsLong(surface);
+            if (!part.isEmpty() && (part.size() >= maximumSurfaces || size > maximumPixels - total)) {
+                result.add(List.copyOf(part));
+                part.clear();
+                total = 0;
+            }
+            part.add(surface);
+            total += size;
+        }
+        if (!part.isEmpty()) result.add(List.copyOf(part));
         return List.copyOf(result);
     }
 

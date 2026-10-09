@@ -9,6 +9,44 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MirrorReflectionMathTest {
+    @Test void centeredMirrorIsDetectedInEitherVertexWinding() {
+        var quad = com.rexhub.createapparel.mirror.MirrorGeometry.north(-0.5, -0.5, 0.5, 0.5, -4);
+        var projection = new Matrix4f().perspective(1.2F, 1.5F, 0.05F, 128);
+        assertTrue(MirrorReflectionMath.coversScreenCenter(java.util.List.of(quad), Vec3.ZERO, projection));
+        assertTrue(MirrorReflectionMath.coversScreenCenter(java.util.List.of(quad.reverse()), Vec3.ZERO, projection));
+    }
+
+    @Test void sideMirrorsAndFacesBehindTheCameraAreNotCentered() {
+        var quad = com.rexhub.createapparel.mirror.MirrorGeometry.north(1, -0.5, 2, 0.5, -4);
+        var behind = com.rexhub.createapparel.mirror.MirrorGeometry.north(-0.5, -0.5, 0.5, 0.5, 4);
+        var projection = new Matrix4f().perspective(1.2F, 1.5F, 0.05F, 128);
+        assertFalse(MirrorReflectionMath.coversScreenCenter(java.util.List.of(quad), Vec3.ZERO, projection));
+        assertFalse(MirrorReflectionMath.coversScreenCenter(java.util.List.of(behind), Vec3.ZERO, projection));
+    }
+
+    @Test void gapsBetweenClusterQuadsDoNotCountAsAMirrorAtTheCenter() {
+        var first = com.rexhub.createapparel.mirror.MirrorGeometry.north(-1, -1, -0.1, -0.1, -4);
+        var second = com.rexhub.createapparel.mirror.MirrorGeometry.north(0.1, 0.1, 1, 1, -4);
+        var projection = new Matrix4f().perspective(1.2F, 1.5F, 0.05F, 128);
+        assertFalse(MirrorReflectionMath.coversScreenCenter(java.util.List.of(first, second), Vec3.ZERO, projection));
+    }
+
+    @Test void tiltedQuadBoundingBoxDoesNotReplaceItsActualPolygon() {
+        var quad = com.rexhub.createapparel.mirror.MirrorGeometry.north(-1, -1, 1, 1, -4)
+                .transform(new Matrix4f().translation(1.1F, 1.1F, 0).rotateZ((float) Math.toRadians(45)));
+        var projection = new Matrix4f().perspective(1.2F, 1.5F, 0.05F, 128);
+        assertFalse(MirrorReflectionMath.coversScreenCenter(java.util.List.of(quad), Vec3.ZERO, projection));
+    }
+
+    @Test void centerDetectionClipsTiltedFacesCrossingTheCameraPlane() {
+        var quad = com.rexhub.createapparel.mirror.MirrorGeometry.north(-1, -1, 1, 1, 0)
+                .transform(new Matrix4f().translation(0, 0, -0.5F).rotateY((float) Math.toRadians(45)));
+        var projection = new Matrix4f().perspective(1.2F, 1.5F, 0.05F, 128);
+        assertTrue(MirrorReflectionMath.coversScreenCenter(java.util.List.of(quad), Vec3.ZERO, projection));
+        assertFalse(MirrorReflectionMath.coversScreenCenter(java.util.List.of(
+                com.rexhub.createapparel.mirror.MirrorGeometry.north(-1, -1, 1, 1, -0.01)), Vec3.ZERO, projection));
+    }
+
     @Test void recursiveVisibilityRejectsFacesEntirelyBehindTheParentMirrorPlane() {
         var projection = new Matrix4f().perspective(1.2F, 1.5F, 0.05F, 128);
         var clipped = MirrorReflectionMath.clippedProjection(projection, new Matrix4f(), new Vec3(0, 0, -3), new Vec3(0, 0, -1));
