@@ -387,6 +387,8 @@ class FootwearAssetTest {
                     ? "[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/hemp\",\"createapparel:fabrics/synthetic\"]"
                     : "[\"createapparel:fabrics/leather\",\"createapparel:fabrics/synthetic\"]";
             if (garment.equals("pumps")) materials = "[\"createapparel:fabrics/leather\",\"createapparel:fabrics/silk\",\"createapparel:fabrics/synthetic\"]";
+            if (garment.equals("sneakers")) materials = "[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/hemp\",\"createapparel:fabrics/leather\",\"createapparel:fabrics/synthetic\"]";
+            if (garment.equals("slippers")) materials = "[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/wool\",\"createapparel:fabrics/leather\",\"createapparel:fabrics/synthetic\"]";
             assertEquals(JsonParser.parseString(materials), recipe.getAsJsonObject("fabric").get("tag"));
             var model = json(Path.of("src/generated/resources/assets/createapparel/models/item/" + garment + ".json"));
             assertEquals("minecraft:builtin/entity", model.get("parent").getAsString());

@@ -219,7 +219,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         apparelDye(FabricColor.PLUM, Items.PURPLE_DYE, Items.BROWN_DYE, Items.BLACK_DYE);
 
         sewing("necktie", ModItems.NECKTIE,
-                List.of(ModTags.Items.FABRICS_SILK, ModTags.Items.FABRICS_SYNTHETIC), 1, 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL,
+                        ModTags.Items.FABRICS_SILK, ModTags.Items.FABRICS_SYNTHETIC), 1, 1);
         metalAccessory("necklace", ModItems.NECKLACE,
                 ModItems.GOLD_NECKLACE_BASE, ModItems.SILVER_NECKLACE_BASE, 3);
         metalAccessory("bracelet", ModItems.BRACELET,
@@ -316,7 +317,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 5, 2);
         sewing("denim_pants", ModItems.DENIM_PANTS,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 5, 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 5, 2);
         sewing("a_line_skirt_mini", ModItems.A_LINE_SKIRT_MINI,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
                         ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL, ModTags.Items.FABRICS_SYNTHETIC), 2, 1);
@@ -433,7 +434,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                         ModTags.Items.FABRICS_SYNTHETIC), 1, 1);
         sewing("sneakers", ModItems.SNEAKERS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
-                        ModTags.Items.FABRICS_SYNTHETIC), 2, 1);
+                        ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 2, 1);
         sewing("canvas_sneakers", ModItems.CANVAS_SNEAKERS,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_SYNTHETIC), 2, 1);
@@ -459,11 +460,12 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_LEATHER,
                         ModTags.Items.FABRICS_SYNTHETIC), 2, 1);
         sewing("slippers", ModItems.SLIPPERS,
-                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
-                        ModTags.Items.FABRICS_SYNTHETIC), 2, 1);
+                List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL,
+                        ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 2, 1);
         sewing("cap", ModItems.CAP,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_LINEN,
-                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_SYNTHETIC), 1, 1);
+                        ModTags.Items.FABRICS_HEMP, ModTags.Items.FABRICS_WOOL,
+                        ModTags.Items.FABRICS_SYNTHETIC), 1, 1);
         sewing("beanie", ModItems.BEANIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL,
                         ModTags.Items.FABRICS_SYNTHETIC), 1, 1);

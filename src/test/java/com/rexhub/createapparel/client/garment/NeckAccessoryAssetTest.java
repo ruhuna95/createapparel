@@ -237,7 +237,7 @@ class NeckAccessoryAssetTest {
         assertEquals("createapparel:sewing", tie.get("type").getAsString());
         assertEquals(1, tie.getAsJsonObject("fabric").get("count").getAsInt());
         assertEquals(1, tie.getAsJsonObject("thread").get("count").getAsInt());
-        assertEquals(JsonParser.parseString("[\"createapparel:fabrics/silk\",\"createapparel:fabrics/synthetic\"]"),
+        assertEquals(JsonParser.parseString("[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/wool\",\"createapparel:fabrics/silk\",\"createapparel:fabrics/synthetic\"]"),
                 tie.getAsJsonObject("fabric").get("tag"));
         assertFalse(Files.exists(GENERATED.resolve("recipes/necklace.json")));
     }

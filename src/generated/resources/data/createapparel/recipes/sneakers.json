@@ -5,6 +5,7 @@
     "tag": [
       "createapparel:fabrics/cotton",
       "createapparel:fabrics/hemp",
+      "createapparel:fabrics/leather",
       "createapparel:fabrics/synthetic"
     ]
   },

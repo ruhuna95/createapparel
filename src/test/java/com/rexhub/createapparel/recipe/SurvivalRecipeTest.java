@@ -60,6 +60,22 @@ class SurvivalRecipeTest {
     }
 
     @Test
+    void revisedStandardRecipesUseRequestedCountsAndMaterials() throws IOException {
+        counts("denim_pants", 5, 2);
+        counts("necktie", 1, 1);
+        counts("sneakers", 2, 1);
+        counts("slippers", 2, 1);
+        counts("cap", 1, 1);
+        counts("canvas_sneakers", 2, 1);
+        assertEquals(Set.of("cotton", "hemp", "synthetic"), materials("denim_pants"));
+        assertEquals(Set.of("cotton", "wool", "silk", "synthetic"), materials("necktie"));
+        assertEquals(Set.of("cotton", "hemp", "leather", "synthetic"), materials("sneakers"));
+        assertEquals(Set.of("cotton", "wool", "leather", "synthetic"), materials("slippers"));
+        assertEquals(Set.of("cotton", "linen", "hemp", "wool", "synthetic"), materials("cap"));
+        assertEquals(Set.of("cotton", "hemp", "synthetic"), materials("canvas_sneakers"));
+    }
+
+    @Test
     void grassSeedChanceIsEightPercent() throws IOException {
         var modifier = json(Path.of("src/generated/resources/data/createapparel/loot_modifiers/grass_seeds.json"));
         assertEquals(0.08, modifier.get("chance").getAsDouble(), 1e-7);

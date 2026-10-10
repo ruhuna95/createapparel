@@ -335,7 +335,7 @@ class HeadwearAssetTest {
             assertEquals(1, recipe.getAsJsonObject("fabric").get("count").getAsInt());
             assertEquals(1, recipe.getAsJsonObject("thread").get("count").getAsInt());
             var expected = new HashSet<>(Set.of("cotton", "synthetic"));
-            if (Set.of("beanie", "beret", "hat", "casquette").contains(id)) expected.add("wool");
+            if (Set.of("cap", "beanie", "beret", "hat", "casquette").contains(id)) expected.add("wool");
             if (!Set.of("beanie", "beret").contains(id)) expected.addAll(Set.of("linen", "hemp"));
             var actual = new HashSet<String>();
             recipe.getAsJsonObject("fabric").getAsJsonArray("tag").forEach(tag ->
