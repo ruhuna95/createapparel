@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "create:andesite_alloy"
+    },
+    "C": {
+      "item": "create:andesite_casing"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "S": {
+      "item": "create:shaft"
+    },
+    "W": {
+      "tag": "minecraft:wooden_slabs"
+    }
+  },
+  "pattern": [
+    " II",
+    "ACA",
+    "WSW"
+  ],
+  "result": {
+    "item": "createapparel:sewing_machine"
+  },
+  "show_notification": true
+}

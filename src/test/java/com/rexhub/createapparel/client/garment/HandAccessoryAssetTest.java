@@ -164,7 +164,7 @@ class HandAccessoryAssetTest {
             assertEquals(1, recipe.getAsJsonObject("fabric").get("count").getAsInt());
             assertEquals(1, recipe.getAsJsonObject("thread").get("count").getAsInt());
             assertEquals(JsonParser.parseString(id.equals("gloves")
-                            ? "[\"createapparel:fabrics/leather\",\"createapparel:fabrics/synthetic\"]"
+                            ? "[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/wool\",\"createapparel:fabrics/leather\",\"createapparel:fabrics/synthetic\"]"
                             : "[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/synthetic\"]"),
                     recipe.getAsJsonObject("fabric").get("tag"));
         }

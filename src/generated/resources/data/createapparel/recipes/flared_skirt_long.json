@@ -1,7 +1,7 @@
 {
   "type": "createapparel:sewing",
   "fabric": {
-    "count": 3,
+    "count": 5,
     "tag": [
       "createapparel:fabrics/cotton",
       "createapparel:fabrics/linen",

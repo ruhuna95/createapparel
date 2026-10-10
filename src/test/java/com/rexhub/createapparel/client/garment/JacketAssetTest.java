@@ -191,7 +191,7 @@ class JacketAssetTest {
             assertEquals(variant.equals("suit") ? 255 : 0, closed.getRGB(4, 25) >>> 24);
             var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + variant + "_jacket.json"));
             assertEquals(6, recipe.getAsJsonObject("fabric").get("count").getAsInt());
-            assertEquals(1, recipe.getAsJsonObject("thread").get("count").getAsInt());
+            assertEquals(2, recipe.getAsJsonObject("thread").get("count").getAsInt());
             String fabrics = variant.equals("suit") ? "linen,wool,silk,synthetic" : "cotton,linen,wool,synthetic";
             assertEquals(List.of(fabrics.split(",")).stream().map(s -> "createapparel:fabrics/" + s).toList(),
                     recipe.getAsJsonObject("fabric").getAsJsonArray("tag").asList().stream().map(e -> e.getAsString()).toList());

@@ -183,12 +183,15 @@ class CoatAssetTest {
     }
 
     @Test
-    void recipesHaveEightFabricOneThreadAndExplicitSynthetic() throws Exception {
+    void recipesHaveEightFabricTwoThreadsAndExplicitSynthetic() throws Exception {
         for(String variant:VARIANTS) {
             var json=JsonParser.parseString(Files.readString(Path.of("src/generated/resources/data/createapparel/recipes/"+variant+"_coat.json"))).getAsJsonObject();
             assertEquals(8,json.getAsJsonObject("fabric").get("count").getAsInt());
-            assertEquals(1,json.getAsJsonObject("thread").get("count").getAsInt());
-            assertEquals(List.of("createapparel:fabrics/"+(variant.equals("trench")?"cotton":"wool"),"createapparel:fabrics/synthetic"),
+            assertEquals(2, json.getAsJsonObject("thread").get("count").getAsInt());
+            assertEquals(variant.equals("trench")
+                    ? List.of("createapparel:fabrics/cotton", "createapparel:fabrics/linen",
+                            "createapparel:fabrics/hemp", "createapparel:fabrics/wool", "createapparel:fabrics/synthetic")
+                    : List.of("createapparel:fabrics/wool", "createapparel:fabrics/synthetic"),
                     json.getAsJsonObject("fabric").getAsJsonArray("tag").asList().stream().map(e->e.getAsString()).toList());
         }
     }

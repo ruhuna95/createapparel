@@ -4,6 +4,9 @@
     "count": 8,
     "tag": [
       "createapparel:fabrics/cotton",
+      "createapparel:fabrics/linen",
+      "createapparel:fabrics/hemp",
+      "createapparel:fabrics/wool",
       "createapparel:fabrics/synthetic"
     ]
   },
@@ -12,7 +15,7 @@
     "id": "createapparel:trench_coat"
   },
   "thread": {
-    "count": 1,
+    "count": 2,
     "tag": [
       "createapparel:threads"
     ]

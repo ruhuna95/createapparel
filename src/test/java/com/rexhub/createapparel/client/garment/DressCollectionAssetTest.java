@@ -330,14 +330,14 @@ class DressCollectionAssetTest {
     }
 
     @Test
-    void generatedRecipesModelsAndTranslationsCoverEveryVariantWithOneThreadAndExplicitSynthetic() throws Exception {
+    void generatedRecipesModelsAndTranslationsCoverEveryVariantWithTwoThreadsAndExplicitSynthetic() throws Exception {
         var english = json(Path.of("src/generated/resources/assets/createapparel/lang/en_us.json"));
         var japanese = json(Path.of("src/generated/resources/assets/createapparel/lang/ja_jp.json"));
         for (String kind : LENGTHS.keySet()) for (String variant : variants(kind)) {
             String id = kind + "_" + variant;
             var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + id + ".json"));
             assertEquals("createapparel:" + id, recipe.getAsJsonObject("result").get("id").getAsString());
-            assertEquals(1, recipe.getAsJsonObject("thread").get("count").getAsInt());
+            assertEquals(2, recipe.getAsJsonObject("thread").get("count").getAsInt());
             var fabrics = recipe.getAsJsonObject("fabric");
             assertTrue(fabrics.getAsJsonArray("tag").asList().stream()
                     .anyMatch(tag -> tag.getAsString().equals("createapparel:fabrics/synthetic")));

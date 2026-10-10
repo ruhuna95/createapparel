@@ -53,7 +53,7 @@ class BackpackAssetTest {
             }
             var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + id + ".json"));
             assertEquals(3, recipe.getAsJsonObject("fabric").get("count").getAsInt());
-            assertEquals(1, recipe.getAsJsonObject("thread").get("count").getAsInt());
+            assertEquals(2, recipe.getAsJsonObject("thread").get("count").getAsInt());
             var materials = new HashSet<String>();
             recipe.getAsJsonObject("fabric").getAsJsonArray("tag").forEach(tag -> materials.add(tag.getAsString()));
             assertEquals(Set.of("createapparel:fabrics/cotton", "createapparel:fabrics/hemp",

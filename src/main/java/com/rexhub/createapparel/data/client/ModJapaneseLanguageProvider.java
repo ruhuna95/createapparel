@@ -78,7 +78,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("pose.createapparel.tilt_left", "左へ傾ける");
         add("pose.createapparel.tilt_right", "右へ傾ける");
         add("itemGroup.createapparel", "Create: Apparel");
-        add("itemGroup.createapparel.garment", "Create Apparel - 衣服");
+        add("itemGroup.createapparel.garment", "Create: Apparel - 衣服");
         add("tooltip.createapparel.garment.slot", "%s用衣服");
         add("tooltip.createapparel.garment.material", "生地: %s");
         add("tooltip.createapparel.garment.primary_color", "生地色: %s");

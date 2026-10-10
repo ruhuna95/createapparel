@@ -33,6 +33,8 @@ class GarmentFabricRecipeTest {
                     assertTrue(fabricTags.add(tag.getAsString()), garment.toString());
                 }
                 assertFalse(fabricTags.isEmpty(), garment.toString());
+                assertTrue(fabricTags.contains("createapparel:fabrics/synthetic"), garment.toString());
+                assertTrue(fabricTags.size() >= 2, garment.toString());
             }
         }
     }

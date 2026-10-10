@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "R": {
+      "item": "createapparel:clothing_rack"
+    }
+  },
+  "pattern": [
+    "PPP",
+    "PRP",
+    "PPP"
+  ],
+  "result": {
+    "item": "createapparel:wardrobe"
+  },
+  "show_notification": true
+}

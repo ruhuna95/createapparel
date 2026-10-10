@@ -19,7 +19,7 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 
 public final class MirrorModelProvider extends BlockStateProvider {
     public MirrorModelProvider(PackOutput output, ExistingFileHelper helper) { super(output, CreateApparel.MOD_ID, helper); }
-    @Override public String getName() { return "Create Apparel mirror models"; }
+    @Override public String getName() { return "Create: Apparel mirror models"; }
 
     @Override protected void registerStatesAndModels() {
         var panel = base("mirror_panel", "oak");

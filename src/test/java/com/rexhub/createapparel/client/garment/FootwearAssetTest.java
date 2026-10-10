@@ -382,10 +382,11 @@ class FootwearAssetTest {
             assertEquals("createapparel:sewing", recipe.get("type").getAsString());
             assertEquals("createapparel:" + garment, recipe.getAsJsonObject("result").get("id").getAsString());
             assertEquals(2, recipe.getAsJsonObject("fabric").get("count").getAsInt());
-            assertEquals(1, recipe.getAsJsonObject("thread").get("count").getAsInt());
+            assertEquals(garment.endsWith("boots") ? 2 : 1, recipe.getAsJsonObject("thread").get("count").getAsInt());
             String materials = Set.of("sneakers", "canvas_sneakers", "slippers").contains(garment)
                     ? "[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/hemp\",\"createapparel:fabrics/synthetic\"]"
                     : "[\"createapparel:fabrics/leather\",\"createapparel:fabrics/synthetic\"]";
+            if (garment.equals("pumps")) materials = "[\"createapparel:fabrics/leather\",\"createapparel:fabrics/silk\",\"createapparel:fabrics/synthetic\"]";
             assertEquals(JsonParser.parseString(materials), recipe.getAsJsonObject("fabric").get("tag"));
             var model = json(Path.of("src/generated/resources/assets/createapparel/models/item/" + garment + ".json"));
             assertEquals("minecraft:builtin/entity", model.get("parent").getAsString());

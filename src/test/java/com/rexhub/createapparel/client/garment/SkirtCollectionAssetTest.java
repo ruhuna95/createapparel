@@ -258,7 +258,13 @@ class SkirtCollectionAssetTest {
             var recipe = json(GENERATED.resolve("data/createapparel/recipes/" + id + ".json"));
             assertEquals("createapparel:sewing", recipe.get("type").getAsString());
             assertEquals("createapparel:" + id, recipe.getAsJsonObject("result").get("id").getAsString());
-            assertEquals(3, recipe.getAsJsonObject("fabric").get("count").getAsInt());
+            int fabricCount = switch (length) {
+                case "micro", "mini" -> 2;
+                case "knee" -> 3;
+                case "midi" -> 4;
+                default -> 5;
+            };
+            assertEquals(fabricCount, recipe.getAsJsonObject("fabric").get("count").getAsInt());
             assertEquals(1, recipe.getAsJsonObject("thread").get("count").getAsInt());
             assertEquals(5, recipe.getAsJsonObject("fabric").getAsJsonArray("tag").size());
             assertTrue(Files.exists(GENERATED.resolve("assets/createapparel/models/item/" + id + ".json")));
