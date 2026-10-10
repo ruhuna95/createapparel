@@ -2,17 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "B": {
+      "item": "minecraft:acacia_planks"
+    },
     "P": {
       "item": "createapparel:mirror_panel"
-    },
-    "W": {
-      "item": "minecraft:acacia_planks"
     }
   },
   "pattern": [
-    " P ",
-    " W ",
-    "WWW"
+    "P",
+    "B"
   ],
   "result": {
     "item": "createapparel:acacia_table_mirror"

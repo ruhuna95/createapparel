@@ -10,9 +10,9 @@
     }
   },
   "pattern": [
-    "PPP",
+    "P P",
     "PGP",
-    "PPP"
+    "P P"
   ],
   "result": {
     "item": "createapparel:mirror_block"

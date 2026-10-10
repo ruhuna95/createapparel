@@ -9,6 +9,7 @@ import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModTags;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
+import com.rexhub.createapparel.mirror.MirrorWood;
 import com.rexhub.createapparel.recipe.RecipeCacheReloadListener;
 import com.rexhub.createapparel.recipe.SewingRecipe;
 import com.rexhub.createapparel.recipe.SewingRecipeInputIndex;
@@ -24,11 +25,13 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -53,19 +56,30 @@ public final class QualityImprovementGameTests {
                 return true;
             }
         }, 3, 3);
-        for (String name : List.of("spinning_machine", "loom", "sewing_machine", "sewing_pattern", "wardrobe")) {
+        var crafts = new LinkedHashMap<String, String>();
+        for (String name : List.of("spinning_machine", "loom", "sewing_machine", "sewing_pattern", "wardrobe",
+                "silkworm_rearing_tray", "clothing_rack", "wall_hanger", "mirror_block", "iron_table_mirror",
+                "clip_clothing_rack", "clip_wall_hanger")) crafts.put(name, name);
+        for (var wood : MirrorWood.values()) crafts.put(wood.id() + "_table_mirror", wood.id() + "_table_mirror");
+        crafts.put("clothing_rack_from_clip_clothing_rack", "clothing_rack");
+        crafts.put("wall_hanger_from_clip_wall_hanger", "wall_hanger");
+        for (var craft : crafts.entrySet()) {
+            String name = craft.getKey();
             var recipe = (CraftingRecipe) manager.byKey(id(name)).orElseThrow();
             grid.clearContent();
             for (int slot = 0; slot < recipe.getIngredients().size(); slot++) {
                 var ingredient = recipe.getIngredients().get(slot);
-                if (!ingredient.isEmpty()) grid.setItem(slot, ingredient.getItems()[0].copy());
+                int gridSlot = recipe instanceof ShapedRecipe shaped
+                        ? (slot / shaped.getWidth() + 3 - shaped.getHeight()) * 3
+                                + slot % shaped.getWidth() + (3 - shaped.getWidth()) / 2 : slot;
+                if (!ingredient.isEmpty()) grid.setItem(gridSlot, ingredient.getItems()[0].copy());
             }
             helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Survival ingredients match: " + name);
             helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, grid, helper.getLevel()).orElseThrow()
                     .getId().equals(recipe.getId()), "Craft has no conflicting recipe: " + name);
             var output = recipe.assemble(grid, helper.getLevel().registryAccess());
             helper.assertTrue(!output.isEmpty() && output.getCount() == 1
-                    && net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(output.getItem()).equals(id(name)),
+                    && net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(output.getItem()).equals(id(craft.getValue())),
                     "Equipment crafting returns expected item: " + name);
         }
         helper.succeed();

@@ -4,11 +4,14 @@
   "key": {
     "I": {
       "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "create:iron_sheet"
     }
   },
   "pattern": [
     "III",
-    "I I",
+    "S S",
     "I I"
   ],
   "result": {

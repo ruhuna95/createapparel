@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,68 @@ class SurvivalRecipeTest {
             assertTrue(advancement.getAsJsonObject("criteria").size() >= 2, item);
             assertEquals("createapparel:" + item, advancement.getAsJsonObject("rewards")
                     .getAsJsonArray("recipes").get(0).getAsString());
+        }
+    }
+
+    @Test
+    void clothingRackUsesIronIngotsAndSheetsInRequestedPositions() throws IOException {
+        shapedRecipe("clothing_rack", List.of("III", "S S", "I I"),
+                Map.of("I", "minecraft:iron_ingot", "S", "create:iron_sheet"));
+    }
+
+    @Test
+    void sewingMachineUsesPoleCasingAndWoodenSlabs() throws IOException {
+        shapedRecipe("sewing_machine", List.of(" IP", "SAN", "HHH"),
+                Map.of("I", "create:iron_sheet", "P", "create:piston_extension_pole", "S", "create:shaft",
+                        "A", "create:andesite_casing", "N", "minecraft:iron_nugget", "H", "#minecraft:wooden_slabs"));
+        assertCasingUnlock("sewing_machine");
+    }
+
+    @Test
+    void mirrorBlockUsesSixPanelsAndOneGlass() throws IOException {
+        shapedRecipe("mirror_block", List.of("P P", "PGP", "P P"),
+                Map.of("P", "createapparel:mirror_panel", "G", "minecraft:glass"));
+    }
+
+    @Test
+    void rearingTrayUsesFiveWoodenSlabsTwoShaftsAndCasing() throws IOException {
+        shapedRecipe("silkworm_rearing_tray", List.of("HHH", "SAS", "H H"),
+                Map.of("H", "#minecraft:wooden_slabs", "S", "create:shaft", "A", "create:andesite_casing"));
+        assertCasingUnlock("silkworm_rearing_tray");
+    }
+
+    @Test
+    void tableMirrorsUseOnePanelAboveOneMatchingBlock() throws IOException {
+        for (String wood : List.of("oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove",
+                "cherry", "bamboo", "crimson", "warped")) {
+            shapedRecipe(wood + "_table_mirror", List.of("P", "B"),
+                    Map.of("P", "createapparel:mirror_panel", "B", "minecraft:" + wood + "_planks"));
+        }
+        shapedRecipe("iron_table_mirror", List.of("P", "B"),
+                Map.of("P", "createapparel:mirror_panel", "B", "minecraft:iron_block"));
+    }
+
+    @Test
+    void clipFurnitureConversionsAreReciprocalSingleItemCraftsWithUnlocks() throws IOException {
+        for (String furniture : List.of("wall_hanger", "clothing_rack")) {
+            for (boolean toClip : List.of(true, false)) {
+                String source = toClip ? furniture : "clip_" + furniture;
+                String result = toClip ? "clip_" + furniture : furniture;
+                String name = toClip ? result : result + "_from_" + source;
+                var recipe = json(RECIPES.resolve(name + ".json"));
+                assertEquals("minecraft:crafting_shapeless", recipe.get("type").getAsString());
+                var ingredients = recipe.getAsJsonArray("ingredients");
+                assertEquals(1, ingredients.size());
+                assertEquals("createapparel:" + source, ingredients.get(0).getAsJsonObject().get("item").getAsString());
+                assertEquals("createapparel:" + result, recipe.getAsJsonObject("result").get("item").getAsString());
+                assertEquals(1, recipe.getAsJsonObject("result").has("count")
+                        ? recipe.getAsJsonObject("result").get("count").getAsInt() : 1);
+                var advancement = json(Path.of("src/generated/resources/data/createapparel/advancements/recipes/decorations/"
+                        + name + ".json"));
+                assertTrue(advancement.getAsJsonObject("criteria").has("has_" + source));
+                assertEquals("createapparel:" + name, advancement.getAsJsonObject("rewards")
+                        .getAsJsonArray("recipes").get(0).getAsString());
+            }
         }
     }
 
@@ -103,6 +166,30 @@ class SurvivalRecipeTest {
 
     private static String title(String value) {
         return Character.toUpperCase(value.charAt(0)) + value.substring(1);
+    }
+
+    private static void shapedRecipe(String name, List<String> pattern, Map<String, String> items) throws IOException {
+        var recipe = json(RECIPES.resolve(name + ".json"));
+        assertEquals("minecraft:crafting_shaped", recipe.get("type").getAsString());
+        assertEquals(pattern, recipe.getAsJsonArray("pattern").asList().stream()
+                .map(value -> value.getAsString()).toList());
+        var key = recipe.getAsJsonObject("key");
+        assertEquals(items.keySet(), key.keySet());
+        items.forEach((symbol, item) -> assertEquals(item.startsWith("#") ? item.substring(1) : item,
+                key.getAsJsonObject(symbol).get(item.startsWith("#") ? "tag" : "item").getAsString()));
+        var result = recipe.getAsJsonObject("result");
+        assertEquals("createapparel:" + name, result.get("item").getAsString());
+        assertEquals(1, result.has("count") ? result.get("count").getAsInt() : 1);
+    }
+
+    private static void assertCasingUnlock(String name) throws IOException {
+        var advancement = json(Path.of("src/generated/resources/data/createapparel/advancements/recipes/misc/"
+                + name + ".json"));
+        var criteria = advancement.getAsJsonObject("criteria");
+        assertFalse(criteria.has("has_andesite_alloy"));
+        assertEquals("create:andesite_casing", criteria.getAsJsonObject("has_andesite_casing")
+                .getAsJsonObject("conditions").getAsJsonArray("items").get(0).getAsJsonObject()
+                .getAsJsonArray("items").get(0).getAsString());
     }
 
     private static void counts(String name, int fabric, int thread) throws IOException {

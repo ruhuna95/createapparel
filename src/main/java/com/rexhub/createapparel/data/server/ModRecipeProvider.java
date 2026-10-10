@@ -105,12 +105,12 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .save(consumer, asResource("iron_full_length_mirror")));
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS,
                         com.rexhub.createapparel.init.ModMirrors.IRON_TABLE_MIRROR.get())
-                .pattern(" P ").pattern(" W ").pattern("WWW").define('W', Items.IRON_INGOT).define('P', panel)
+                .pattern("P").pattern("B").define('B', Items.IRON_BLOCK).define('P', panel)
                 .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
                 .save(consumer, asResource("iron_table_mirror")));
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS,
                         com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK.get())
-                .pattern("PPP").pattern("PGP").pattern("PPP").define('P', panel).define('G', Items.GLASS)
+                .pattern("P P").pattern("PGP").pattern("P P").define('P', panel).define('G', Items.GLASS)
                 .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
                 .save(consumer, asResource("mirror_block")));
         register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.REDSTONE,
@@ -131,7 +131,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                     .save(consumer, asResource(wood.id() + "_full_length_mirror")));
             register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS,
                             com.rexhub.createapparel.init.ModMirrors.TABLE_MIRRORS.get(wood).get())
-                    .pattern(" P ").pattern(" W ").pattern("WWW").define('W', wood.planks()).define('P', panel)
+                    .pattern("P").pattern("B").define('B', wood.planks()).define('P', panel)
                     .unlockedBy("has_mirror_panel", InventoryChangeTrigger.TriggerInstance.hasItems(panel))
                     .save(consumer, asResource(wood.id() + "_table_mirror")));
         }
@@ -175,11 +175,10 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         mirrorRecipes();
         productionEquipmentRecipes();
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SILKWORM_REARING_TRAY.get())
-                .pattern("WAW").pattern("ISI").pattern("ACA")
-                .define('W', ItemTags.WOODEN_SLABS).define('A', AllItems.ANDESITE_ALLOY.get())
-                .define('I', AllItems.IRON_SHEET.get()).define('S', com.simibubi.create.AllBlocks.SHAFT.get())
-                .define('C', com.simibubi.create.AllBlocks.ANDESITE_CASING.get())
-                .unlockedBy("has_andesite_alloy", InventoryChangeTrigger.TriggerInstance.hasItems(AllItems.ANDESITE_ALLOY.get()))
+                .pattern("HHH").pattern("SAS").pattern("H H")
+                .define('H', ItemTags.WOODEN_SLABS).define('S', AllBlocks.SHAFT.get())
+                .define('A', AllBlocks.ANDESITE_CASING.get())
+                .unlockedBy("has_andesite_casing", InventoryChangeTrigger.TriggerInstance.hasItems(AllBlocks.ANDESITE_CASING.get()))
                 .save(consumer, asResource("silkworm_rearing_tray")));
         register(consumer -> consumer.accept(new SilkwormRearingFinishedRecipe(asResource("silkworm_rearing/cocoon"))));
         mannequinRecipes();
@@ -188,17 +187,26 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .unlockedBy("has_stick", InventoryChangeTrigger.TriggerInstance.hasItems(Items.STICK))
                 .save(consumer, asResource("wall_hanger")));
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.CLOTHING_RACK.get())
-                .pattern("III").pattern("I I").pattern("I I").define('I', Items.IRON_INGOT)
+                .pattern("III").pattern("S S").pattern("I I")
+                .define('I', Items.IRON_INGOT).define('S', AllItems.IRON_SHEET.get())
                 .unlockedBy("has_iron_ingot", InventoryChangeTrigger.TriggerInstance.hasItems(Items.IRON_INGOT))
                 .save(consumer, asResource("clothing_rack")));
         register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.DECORATIONS, ModItems.CLIP_WALL_HANGER.get())
-                .requires(ModItems.WALL_HANGER.get()).requires(Items.IRON_NUGGET, 2)
+                .requires(ModItems.WALL_HANGER.get())
                 .unlockedBy("has_wall_hanger", InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.WALL_HANGER.get()))
                 .save(consumer, asResource("clip_wall_hanger")));
+        register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.DECORATIONS, ModItems.WALL_HANGER.get())
+                .requires(ModItems.CLIP_WALL_HANGER.get())
+                .unlockedBy("has_clip_wall_hanger", InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.CLIP_WALL_HANGER.get()))
+                .save(consumer, asResource("wall_hanger_from_clip_wall_hanger")));
         register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.DECORATIONS, ModItems.CLIP_CLOTHING_RACK.get())
-                .requires(ModItems.CLOTHING_RACK.get()).requires(Items.IRON_NUGGET, 8)
+                .requires(ModItems.CLOTHING_RACK.get())
                 .unlockedBy("has_clothing_rack", InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.CLOTHING_RACK.get()))
                 .save(consumer, asResource("clip_clothing_rack")));
+        register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.DECORATIONS, ModItems.CLOTHING_RACK.get())
+                .requires(ModItems.CLIP_CLOTHING_RACK.get())
+                .unlockedBy("has_clip_clothing_rack", InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.CLIP_CLOTHING_RACK.get()))
+                .save(consumer, asResource("clothing_rack_from_clip_clothing_rack")));
 
         apparelDye(FabricColor.CREAM, Items.WHITE_DYE, Items.WHITE_DYE, Items.YELLOW_DYE);
         apparelDye(FabricColor.BEIGE, Items.WHITE_DYE, Items.BROWN_DYE);
@@ -532,11 +540,11 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .unlockedBy("has_andesite_alloy", InventoryChangeTrigger.TriggerInstance.hasItems(AllItems.ANDESITE_ALLOY.get()))
                 .save(consumer, asResource("loom")));
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SEWING_MACHINE.get())
-                .pattern(" II").pattern("ACA").pattern("WSW")
-                .define('W', ItemTags.WOODEN_SLABS).define('A', AllItems.ANDESITE_ALLOY.get())
+                .pattern(" IP").pattern("SAN").pattern("HHH")
+                .define('P', AllBlocks.PISTON_EXTENSION_POLE.get()).define('N', Items.IRON_NUGGET)
                 .define('I', AllItems.IRON_SHEET.get()).define('S', AllBlocks.SHAFT.get())
-                .define('C', AllBlocks.ANDESITE_CASING.get())
-                .unlockedBy("has_andesite_alloy", InventoryChangeTrigger.TriggerInstance.hasItems(AllItems.ANDESITE_ALLOY.get()))
+                .define('A', AllBlocks.ANDESITE_CASING.get()).define('H', ItemTags.WOODEN_SLABS)
+                .unlockedBy("has_andesite_casing", InventoryChangeTrigger.TriggerInstance.hasItems(AllBlocks.ANDESITE_CASING.get()))
                 .save(consumer, asResource("sewing_machine")));
         register(consumer -> ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.SEWING_PATTERN.get())
                 .requires(Items.PAPER, 3).requires(Items.STRING)

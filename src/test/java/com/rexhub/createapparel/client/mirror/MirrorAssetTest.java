@@ -88,7 +88,8 @@ class MirrorAssetTest {
         for (String wood : WOODS) for (String furniture : List.of("full_length_mirror", "table_mirror")) {
             String id = wood + "_" + furniture;
             var recipe = read("data/createapparel/recipes/" + id);
-            assertEquals("minecraft:" + wood + "_planks", recipe.getAsJsonObject("key").getAsJsonObject("W").get("item").getAsString());
+            assertEquals("minecraft:" + wood + "_planks", recipe.getAsJsonObject("key")
+                    .getAsJsonObject(furniture.equals("table_mirror") ? "B" : "W").get("item").getAsString());
             assertEquals("createapparel:mirror_panel", recipe.getAsJsonObject("key").getAsJsonObject("P").get("item").getAsString());
             String parent = read("assets/createapparel/models/item/" + id).get("parent").getAsString();
             assertTrue(Files.isRegularFile(GENERATED.resolve("assets/createapparel/models/" + parent.split(":")[1] + ".json")));
@@ -159,7 +160,9 @@ class MirrorAssetTest {
         for (String kind : List.of("full_length_mirror", "table_mirror")) {
             String id = "iron_" + kind;
             var recipe = read("data/createapparel/recipes/" + id);
-            assertEquals("minecraft:iron_ingot", recipe.getAsJsonObject("key").getAsJsonObject("W").get("item").getAsString());
+            assertEquals(kind.equals("table_mirror") ? "minecraft:iron_block" : "minecraft:iron_ingot",
+                    recipe.getAsJsonObject("key").getAsJsonObject(kind.equals("table_mirror") ? "B" : "W")
+                            .get("item").getAsString());
             assertEquals("createapparel:mirror_panel", recipe.getAsJsonObject("key").getAsJsonObject("P").get("item").getAsString());
             String model = id + (kind.equals("full_length_mirror") ? "_item" : "");
             assertEquals("minecraft:block/iron_block", read("assets/createapparel/models/block/" + model)

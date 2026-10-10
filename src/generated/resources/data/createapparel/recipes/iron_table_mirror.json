@@ -2,17 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "B": {
+      "item": "minecraft:iron_block"
+    },
     "P": {
       "item": "createapparel:mirror_panel"
-    },
-    "W": {
-      "item": "minecraft:iron_ingot"
     }
   },
   "pattern": [
-    " P ",
-    " W ",
-    "WWW"
+    "P",
+    "B"
   ],
   "result": {
     "item": "createapparel:iron_table_mirror"

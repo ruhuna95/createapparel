@@ -4,12 +4,6 @@
   "ingredients": [
     {
       "item": "createapparel:wall_hanger"
-    },
-    {
-      "item": "minecraft:iron_nugget"
-    },
-    {
-      "item": "minecraft:iron_nugget"
     }
   ],
   "result": {
