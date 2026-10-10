@@ -1,6 +1,8 @@
 package com.rexhub.createapparel.block.entity;
 
 import com.rexhub.createapparel.recipe.ModRecipeTypes;
+import com.rexhub.createapparel.recipe.ProcessingRecipeCache;
+import com.rexhub.createapparel.recipe.RecipeCacheReloadListener;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
@@ -37,6 +39,7 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
     private int remainingProcessingTicks;
     private boolean processing;
     private R activeRecipe;
+    private final ProcessingRecipeCache<R> recipeCache = new ProcessingRecipeCache<>();
 
     protected SingleInputProcessingBlockEntity(
             BlockEntityType<?> type,
@@ -53,6 +56,7 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
         return new ItemStackHandler(1) {
             @Override
             protected void onContentsChanged(int slot) {
+                recipeCache.invalidate();
                 setChanged();
                 if (SingleInputProcessingBlockEntity.this.level != null
                         && !SingleInputProcessingBlockEntity.this.level.isClientSide) {
@@ -76,14 +80,14 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
             return;
         }
 
-        Optional<R> recipe = findInputRecipe(inputInventory);
+        Optional<R> recipe = cachedRecipe();
         if (!MachineProcessingSpeed.isSufficient(getSpeed()) || recipe.isEmpty()) {
             setProcessing(false);
             return;
         }
 
         R currentRecipe = recipe.get();
-        if (activeRecipe != null && !activeRecipe.getId().equals(currentRecipe.getId())) {
+        if (activeRecipe != null && activeRecipe != currentRecipe) {
             remainingProcessingTicks = 0;
         }
         activeRecipe = currentRecipe;
@@ -166,7 +170,7 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
 
         remainingProcessingTicks = 0;
         activeRecipe = null;
-        Optional<R> nextRecipe = findInputRecipe(inputInventory);
+        Optional<R> nextRecipe = cachedRecipe();
         if (nextRecipe.isPresent()) {
             activeRecipe = nextRecipe.get();
             remainingProcessingTicks = processingDuration(activeRecipe);
@@ -189,6 +193,10 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
         return recipeType().find(new RecipeWrapper(inventory), level);
     }
 
+    private Optional<R> cachedRecipe() {
+        return recipeCache.get(RecipeCacheReloadListener.generation(), () -> findInputRecipe(inputInventory));
+    }
+
     private boolean canProcess(ItemStack stack) {
         if (stack.isEmpty()) {
             return false;
@@ -203,6 +211,7 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
     private void resetProcessing() {
         remainingProcessingTicks = 0;
         activeRecipe = null;
+        recipeCache.invalidate();
         setProcessing(false);
     }
 
@@ -229,6 +238,7 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
         remainingProcessingTicks = compound.getInt("ProcessingTicks");
         processing = compound.getBoolean("Processing");
         activeRecipe = null;
+        recipeCache.invalidate();
         super.read(compound, clientPacket);
     }
 

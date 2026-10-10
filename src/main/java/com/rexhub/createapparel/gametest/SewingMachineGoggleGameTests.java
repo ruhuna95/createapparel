@@ -1,4 +1,7 @@
-package com.rexhub.createapparel.block.entity;
+package com.rexhub.createapparel.gametest;
+
+import com.rexhub.createapparel.block.entity.SewingMachineBlockEntity;
+import com.rexhub.createapparel.block.entity.SewingMachineGoggleTooltip;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.garment.PatternData;
@@ -79,7 +82,11 @@ public final class SewingMachineGoggleGameTests {
 
     private static List<Component> tooltip(SewingMachineBlockEntity machine) {
         List<Component> tooltip = new ArrayList<>();
-        machine.addContentsToGoggleTooltip(tooltip);
+        var inventory = machine.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().orElseThrow();
+        FilteringBehaviour filter = BlockEntityBehaviour.get(machine, FilteringBehaviour.TYPE);
+        SewingMachineGoggleTooltip.addContents(tooltip,
+                inventory.getStackInSlot(SewingRecipe.FABRIC_SLOT),
+                inventory.getStackInSlot(SewingRecipe.THREAD_SLOT), filter.getFilter(), machine.getLevel());
         return tooltip;
     }
 

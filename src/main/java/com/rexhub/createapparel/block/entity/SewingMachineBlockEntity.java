@@ -2,10 +2,11 @@ package com.rexhub.createapparel.block.entity;
 
 import com.rexhub.createapparel.init.ModBlockEntities;
 import com.rexhub.createapparel.init.ModItems;
-import com.rexhub.createapparel.garment.PatternData;
-import com.rexhub.createapparel.item.SewingPatternItem;
 import com.rexhub.createapparel.recipe.ModRecipeTypes;
 import com.rexhub.createapparel.recipe.SewingRecipe;
+import com.rexhub.createapparel.recipe.ProcessingRecipeCache;
+import com.rexhub.createapparel.recipe.RecipeCacheReloadListener;
+import com.rexhub.createapparel.recipe.SewingRecipeInputIndex;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
@@ -62,6 +63,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     private int remainingProcessingTicks;
     private boolean processing;
     private SewingRecipe activeRecipe;
+    private final ProcessingRecipeCache<SewingRecipe> recipeCache = new ProcessingRecipeCache<>();
     private float previousAudioAngle = Float.NaN;
 
     public SewingMachineBlockEntity(BlockPos pos, BlockState state) {
@@ -76,6 +78,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         return new ItemStackHandler(2) {
             @Override
             protected void onContentsChanged(int slot) {
+                recipeCache.invalidate();
                 setChanged();
                 if (SewingMachineBlockEntity.this.level != null
                         && !SewingMachineBlockEntity.this.level.isClientSide) {
@@ -133,14 +136,14 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
             return;
         }
 
-        Optional<SewingRecipe> recipe = findRecipe();
+        Optional<SewingRecipe> recipe = cachedRecipe();
         if (!MachineProcessingSpeed.isSufficient(getSpeed()) || recipe.isEmpty()) {
             setProcessing(false);
             return;
         }
 
         SewingRecipe currentRecipe = recipe.get();
-        if (activeRecipe != null && !activeRecipe.getId().equals(currentRecipe.getId())) {
+        if (activeRecipe != null && activeRecipe != currentRecipe) {
             remainingProcessingTicks = 0;
         }
         activeRecipe = currentRecipe;
@@ -169,36 +172,10 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         boolean added = super.addToGoggleTooltip(tooltip, isPlayerSneaking);
-        return addContentsToGoggleTooltip(tooltip) || added;
-    }
-
-    boolean addContentsToGoggleTooltip(List<Component> tooltip) {
-        ItemStack pattern = recipeInventory.getStackInSlot(SewingRecipe.PATTERN_SLOT);
-        Optional<SewingRecipe> configuredRecipe = level == null ? Optional.empty() : PatternData.fromStack(pattern)
-                .flatMap(data -> level.getRecipeManager().byKey(data.recipe()))
-                .filter(SewingRecipe.class::isInstance)
-                .map(SewingRecipe.class::cast)
-                .filter(recipe -> recipe.matchesPatternItem(pattern));
-        boolean contentsAdded = MachineGoggleTooltip.addStack(
-                tooltip,
-                "tooltip.createapparel.machine.fabric",
+        return SewingMachineGoggleTooltip.addContents(tooltip,
                 recipeInventory.getStackInSlot(SewingRecipe.FABRIC_SLOT),
-                configuredRecipe.map(SewingRecipe::getFabricCount).orElse(0)
-        );
-        contentsAdded |= MachineGoggleTooltip.addStack(
-                tooltip,
-                "tooltip.createapparel.machine.thread",
                 recipeInventory.getStackInSlot(SewingRecipe.THREAD_SLOT),
-                configuredRecipe.map(SewingRecipe::getThreadCount).orElse(0)
-        );
-        if (!pattern.isEmpty()) {
-            contentsAdded |= MachineGoggleTooltip.addValue(
-                    tooltip,
-                    "tooltip.createapparel.machine.pattern",
-                    SewingPatternItem.getConfiguredGarmentName(pattern, level)
-            );
-        }
-        return contentsAdded;
+                recipeInventory.getStackInSlot(SewingRecipe.PATTERN_SLOT), level) || added;
     }
 
     public InteractionResult interact(Player player, InteractionHand hand) {
@@ -253,7 +230,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
 
         remainingProcessingTicks = 0;
         activeRecipe = null;
-        Optional<SewingRecipe> nextRecipe = findRecipe();
+        Optional<SewingRecipe> nextRecipe = cachedRecipe();
         if (nextRecipe.isPresent()) {
             activeRecipe = nextRecipe.get();
             remainingProcessingTicks = SewingRecipe.PROCESSING_DURATION;
@@ -268,6 +245,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     private void resetProcessing() {
         remainingProcessingTicks = 0;
         activeRecipe = null;
+        recipeCache.invalidate();
         setProcessing(false);
     }
 
@@ -278,22 +256,18 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         return ModRecipeTypes.SEWING.find(new RecipeWrapper(recipeInventory), level);
     }
 
-    private List<SewingRecipe> availableRecipes() {
-        if (level == null) {
-            return List.of();
-        }
-        return level.getRecipeManager().getAllRecipesFor(SewingRecipe.recipeType());
+    private Optional<SewingRecipe> cachedRecipe() {
+        return recipeCache.get(RecipeCacheReloadListener.generation(), this::findRecipe);
     }
 
     private boolean canInsert(int slot, ItemStack stack) {
-        if (stack.isEmpty()) {
+        if (level == null || stack.isEmpty()) {
             return false;
         }
+        SewingRecipeInputIndex index = SewingRecipeInputIndex.get(level.getRecipeManager());
         return switch (slot) {
-            case SewingRecipe.FABRIC_SLOT -> availableRecipes().stream()
-                    .anyMatch(recipe -> recipe.matchesFabric(stack));
-            case SewingRecipe.THREAD_SLOT -> availableRecipes().stream()
-                    .anyMatch(recipe -> recipe.matchesThread(stack));
+            case SewingRecipe.FABRIC_SLOT -> index.acceptsFabric(stack);
+            case SewingRecipe.THREAD_SLOT -> index.acceptsThread(stack);
             default -> false;
         };
     }
@@ -301,6 +275,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     private void onPatternChanged(ItemStack stack) {
         remainingProcessingTicks = 0;
         activeRecipe = null;
+        recipeCache.invalidate();
         setProcessing(false);
         setChanged();
     }
@@ -358,6 +333,7 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         remainingProcessingTicks = compound.getInt("ProcessingTicks");
         processing = compound.getBoolean("Processing");
         activeRecipe = null;
+        recipeCache.invalidate();
         super.read(compound, clientPacket);
     }
 

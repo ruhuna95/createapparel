@@ -143,6 +143,14 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
         return fabric.count();
     }
 
+    public List<TagKey<Item>> fabricTags() {
+        return fabric.tags();
+    }
+
+    public List<TagKey<Item>> threadTags() {
+        return thread.tags();
+    }
+
     public int getThreadCount() {
         return thread.count();
     }
