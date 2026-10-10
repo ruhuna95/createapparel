@@ -43,12 +43,7 @@ public final class GarmentTooltipEvents {
         if (id != null) {
             ClientGarmentAssets.getDefinition(id).ifPresent(definition -> {
                 appendSlots(event.getToolTip(), definition);
-                GarmentAppearance appearance;
-                try {
-                    appearance = GarmentAppearance.fromStack(event.getItemStack(), definition);
-                } catch (IllegalArgumentException exception) {
-                    appearance = GarmentAppearance.defaultFor(event.getItemStack(), definition);
-                }
+                GarmentAppearance appearance = GarmentAppearance.fromStackOrDefault(event.getItemStack(), definition);
                 appendAppearance(event.getToolTip(), appearance);
             });
         }

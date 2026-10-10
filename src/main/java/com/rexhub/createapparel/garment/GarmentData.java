@@ -37,9 +37,24 @@ public record GarmentData(
     }
 
     public static GarmentData fromStack(ItemStack stack, GarmentDefinition definition) {
-        CompoundTag root = stack.getTag();
-        if (root == null || !root.contains(TAG_NAME, CompoundTag.TAG_COMPOUND)) {
+        return fromStackStrict(stack, definition);
+    }
+
+    public static GarmentData fromStackOrDefault(ItemStack stack, GarmentDefinition definition) {
+        try {
+            return fromStackStrict(stack, definition);
+        } catch (IllegalArgumentException exception) {
             return defaultFor(definition);
+        }
+    }
+
+    public static GarmentData fromStackStrict(ItemStack stack, GarmentDefinition definition) {
+        CompoundTag root = stack.getTag();
+        if (root == null || !root.contains(TAG_NAME)) {
+            return defaultFor(definition);
+        }
+        if (!root.contains(TAG_NAME, CompoundTag.TAG_COMPOUND)) {
+            throw new IllegalArgumentException("GarmentData must be a compound");
         }
         CompoundTag tag = root.getCompound(TAG_NAME);
         FabricMaterial material = parseMaterial(tag.getString("material"));
@@ -82,6 +97,9 @@ public record GarmentData(
     }
 
     private static Optional<FabricColor> optionalColor(CompoundTag tag, String key) {
+        if (tag.contains(key) && !tag.contains(key, CompoundTag.TAG_STRING)) {
+            throw new IllegalArgumentException("Garment color must be a string: " + key);
+        }
         return tag.contains(key, CompoundTag.TAG_STRING)
                 ? Optional.of(parseColor(tag.getString(key)))
                 : Optional.empty();

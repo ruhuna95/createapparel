@@ -26,4 +26,12 @@ public sealed interface GarmentAppearance permits GarmentData, MetalAccessoryDat
                 ? MetalAccessoryData.DEFAULT
                 : GarmentData.defaultFor(definition);
     }
+
+    static GarmentAppearance fromStackOrDefault(ItemStack stack, GarmentDefinition definition) {
+        try {
+            return fromStack(stack, definition);
+        } catch (IllegalArgumentException exception) {
+            return defaultFor(stack, definition);
+        }
+    }
 }

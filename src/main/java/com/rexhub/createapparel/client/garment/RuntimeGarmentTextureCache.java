@@ -26,6 +26,9 @@ public final class RuntimeGarmentTextureCache {
                 FREE_TEXTURE_IDS.addLast(texture);
             });
     private static final AtomicInteger NEXT_TEXTURE_ID = new AtomicInteger();
+    private static final GarmentSourceImageCache<ResourceLocation, NativeImage> SOURCES =
+            new GarmentSourceImageCache<>(texture -> read(ClientGarmentAssets.INSTANCE.resourceManager(), texture),
+                    NativeImage::close);
 
     private RuntimeGarmentTextureCache() {
     }
@@ -60,6 +63,7 @@ public final class RuntimeGarmentTextureCache {
 
     public static void clear() {
         CACHE.clear();
+        SOURCES.clear();
     }
 
     public static void endFrame() {
@@ -83,54 +87,62 @@ public final class RuntimeGarmentTextureCache {
             ResolvedTextures textures,
             GarmentAppearance data
     ) {
-        ResourceManager manager = ClientGarmentAssets.INSTANCE.resourceManager();
-        try (NativeImage base = read(manager, textures.base());
-             NativeImage secondary = readOptional(manager, textures.secondary());
-             NativeImage accent = readOptional(manager, textures.accent());
-             NativeImage overlay = readOptional(manager, textures.overlay());
-             NativeImage designOverlay = readOptional(manager, textures.designOverlay());
-             NativeImage brightnessMask = readOptional(manager, textures.brightnessMask())) {
+        try {
+            NativeImage base = SOURCES.get(textures.base());
+            NativeImage secondary = readOptional(textures.secondary());
+            NativeImage accent = readOptional(textures.accent());
+            NativeImage overlay = readOptional(textures.overlay());
+            NativeImage designOverlay = readOptional(textures.designOverlay());
+            NativeImage brightnessMask = readOptional(textures.brightnessMask());
             NativeImage output = new NativeImage(part.textureWidth(), part.textureHeight(), false);
-            int primaryTint = data.primaryTintRgb();
-            OptionalInt secondaryTint = data.secondaryTintRgb();
-            OptionalInt accentTint = data.accentTintRgb();
-            for (int y = 0; y < part.textureHeight(); y++) {
-                for (int x = 0; x < part.textureWidth(); x++) {
-                    int basePixel = base.getPixelRGBA(x, y);
-                    int alpha = FastColor.ABGR32.alpha(basePixel);
-                    int composedPixel = 0;
-                    if (alpha != 0) {
-                        int grayscale = FastColor.ABGR32.red(basePixel);
-                        int tint = GarmentTexturePixelOps.composeTint(
-                                primaryTint,
-                                secondaryTint,
-                                accentTint,
-                                maskRed(secondary, x, y),
-                                maskRed(accent, x, y)
-                        );
-                        int red = grayscale * FastColor.ARGB32.red(tint) / 255;
-                        int green = grayscale * FastColor.ARGB32.green(tint) / 255;
-                        int blue = grayscale * FastColor.ARGB32.blue(tint) / 255;
-                        composedPixel = FastColor.ABGR32.color(alpha, blue, green, red);
-                        composedPixel = GarmentTexturePixelOps.applyBrightness(
-                                composedPixel,
-                                textures.brightness(),
-                                brightnessMask == null ? GarmentTexturePixelOps.NEUTRAL_BRIGHTNESS_LUMINANCE
-                                        : maskRed(brightnessMask, x, y)
-                        );
+            DynamicTexture dynamicTexture = null;
+            try {
+                int primaryTint = data.primaryTintRgb();
+                OptionalInt secondaryTint = data.secondaryTintRgb();
+                OptionalInt accentTint = data.accentTintRgb();
+                for (int y = 0; y < part.textureHeight(); y++) {
+                    for (int x = 0; x < part.textureWidth(); x++) {
+                        int basePixel = base.getPixelRGBA(x, y);
+                        int alpha = FastColor.ABGR32.alpha(basePixel);
+                        int composedPixel = 0;
+                        if (alpha != 0) {
+                            int grayscale = FastColor.ABGR32.red(basePixel);
+                            int tint = GarmentTexturePixelOps.composeTint(
+                                    primaryTint,
+                                    secondaryTint,
+                                    accentTint,
+                                    maskRed(secondary, x, y),
+                                    maskRed(accent, x, y)
+                            );
+                            int red = grayscale * FastColor.ARGB32.red(tint) / 255;
+                            int green = grayscale * FastColor.ARGB32.green(tint) / 255;
+                            int blue = grayscale * FastColor.ARGB32.blue(tint) / 255;
+                            composedPixel = FastColor.ABGR32.color(alpha, blue, green, red);
+                            composedPixel = GarmentTexturePixelOps.applyBrightness(
+                                    composedPixel,
+                                    textures.brightness(),
+                                    brightnessMask == null ? GarmentTexturePixelOps.NEUTRAL_BRIGHTNESS_LUMINANCE
+                                            : maskRed(brightnessMask, x, y)
+                            );
+                        }
+                        output.setPixelRGBA(x, y, GarmentTexturePixelOps.applyOverlays(
+                                composedPixel, overlayPixel(designOverlay, x, y), overlayPixel(overlay, x, y)));
                     }
-                    output.setPixelRGBA(x, y, GarmentTexturePixelOps.applyOverlays(
-                            composedPixel, overlayPixel(designOverlay, x, y), overlayPixel(overlay, x, y)));
                 }
-            }
 
-            ResourceLocation dynamicId = FREE_TEXTURE_IDS.pollFirst();
-            if (dynamicId == null) {
-                dynamicId = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
-                        "dynamic/garment/" + NEXT_TEXTURE_ID.getAndIncrement());
+                ResourceLocation dynamicId = FREE_TEXTURE_IDS.pollFirst();
+                if (dynamicId == null) {
+                    dynamicId = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
+                            "dynamic/garment/" + NEXT_TEXTURE_ID.getAndIncrement());
+                }
+                dynamicTexture = new DynamicTexture(output);
+                Minecraft.getInstance().getTextureManager().register(dynamicId, dynamicTexture);
+                return dynamicId;
+            } catch (RuntimeException | Error exception) {
+                if (dynamicTexture == null) output.close();
+                else dynamicTexture.close();
+                throw exception;
             }
-            Minecraft.getInstance().getTextureManager().register(dynamicId, new DynamicTexture(output));
-            return dynamicId;
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to compose garment texture: " + part.id(), exception);
         }
@@ -147,14 +159,15 @@ public final class RuntimeGarmentTextureCache {
     private static NativeImage read(ResourceManager manager, ResourceLocation texture) throws IOException {
         Resource resource = manager.getResource(textureResource(texture))
                 .orElseThrow(() -> new IOException("Missing texture " + texture));
-        return NativeImage.read(resource.open());
+        try (var stream = resource.open()) {
+            return NativeImage.read(stream);
+        }
     }
 
     private static NativeImage readOptional(
-            ResourceManager manager,
             Optional<ResourceLocation> texture
     ) throws IOException {
-        return texture.isPresent() ? read(manager, texture.get()) : null;
+        return texture.isPresent() ? SOURCES.get(texture.get()) : null;
     }
 
     private static ResourceLocation textureResource(ResourceLocation id) {

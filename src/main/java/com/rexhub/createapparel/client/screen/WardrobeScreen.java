@@ -386,11 +386,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
         if (stack.isEmpty() || definition == null) {
             return Optional.empty();
         }
-        try {
-            return Optional.of(GarmentAppearance.fromStack(stack, definition));
-        } catch (IllegalArgumentException exception) {
-            return Optional.empty();
-        }
+        return Optional.of(GarmentAppearance.fromStackOrDefault(stack, definition));
     }
 
     @Override

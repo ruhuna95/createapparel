@@ -158,12 +158,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         if (variant == null) {
             return Optional.empty();
         }
-        GarmentAppearance data;
-        try {
-            data = GarmentAppearance.fromStack(stack, definition);
-        } catch (IllegalArgumentException exception) {
-            data = GarmentAppearance.defaultFor(stack, definition);
-        }
+        GarmentAppearance data = GarmentAppearance.fromStackOrDefault(stack, definition);
 
         Map<String, String> styles = itemDisplay
                 ? snapshot.garmentTemplates().get(definition.modelTemplate()).stylesForItem(definition)
