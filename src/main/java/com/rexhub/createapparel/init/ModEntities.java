@@ -14,6 +14,10 @@ import net.minecraftforge.registries.RegistryObject;
 
 @Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class ModEntities {
+    public static final RegistryObject<EntityType<com.rexhub.createapparel.entity.Citizen>> CITIZEN = ModRegistries.ENTITY_TYPES.register(
+            "citizen", () -> EntityType.Builder.of(com.rexhub.createapparel.entity.Citizen::new, MobCategory.MISC)
+                    .sized(0.6F, 1.875F).clientTrackingRange(10).updateInterval(3)
+                    .build(CreateApparel.MOD_ID + ":citizen"));
     public static final RegistryObject<EntityType<Silkworm>> SILKWORM = ModRegistries.ENTITY_TYPES.register(
             "silkworm",
             () -> EntityType.Builder.of(Silkworm::new, MobCategory.CREATURE)
@@ -75,6 +79,7 @@ public final class ModEntities {
 
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(CITIZEN.get(), com.rexhub.createapparel.entity.Citizen.createAttributes().build());
         event.put(SILKWORM.get(), Silkworm.createAttributes().build());
         MANNEQUINS.values().forEach(type -> event.put(type.get(), Mannequin.createAttributes().build()));
     }

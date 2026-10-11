@@ -21,6 +21,7 @@ public final class ModLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        addEntityType(ModEntities.CITIZEN, "Citizen");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL, "Mirror Panel");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK, "Mirror Block");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR, "Iron Mirrored Door");

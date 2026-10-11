@@ -47,6 +47,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 @Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CreateApparelClient {
+    public static final ModelLayerLocation CITIZEN_LAYER = new ModelLayerLocation(
+            ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "citizen"), "main");
     public static final ModelLayerLocation MANNEQUIN_CLASSIC_LAYER = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mannequin_classic"), "main");
     public static final ModelLayerLocation MANNEQUIN_SLIM_LAYER = new ModelLayerLocation(
@@ -122,6 +124,7 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(CITIZEN_LAYER, com.rexhub.createapparel.client.model.CitizenModel::createBodyLayer);
         event.registerLayerDefinition(MANNEQUIN_CLASSIC_LAYER,
                 () -> MannequinModel.createBodyLayer(false));
         event.registerLayerDefinition(MANNEQUIN_SLIM_LAYER,
@@ -132,6 +135,7 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntities.CITIZEN.get(), com.rexhub.createapparel.client.renderer.CitizenRenderer::new);
         event.registerBlockEntityRenderer(com.rexhub.createapparel.init.ModMirrors.BLOCK_ENTITY.get(),
                 com.rexhub.createapparel.client.mirror.MirrorBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CLOTHING_RACK.get(),
@@ -184,6 +188,7 @@ public final class CreateApparelClient {
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager ->
                 com.rexhub.createapparel.client.mirror.MirrorRenderManager.INSTANCE.reset());
         event.registerReloadListener(ClientGarmentAssets.INSTANCE);
+        event.registerReloadListener(com.rexhub.createapparel.client.citizen.ClientCitizenAssets.INSTANCE);
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener)
                 resourceManager -> com.rexhub.createapparel.client.renderer.SilkwormRearingTrayContentsRenderer.resetModel());
     }

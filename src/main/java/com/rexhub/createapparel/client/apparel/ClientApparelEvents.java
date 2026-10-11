@@ -20,12 +20,14 @@ public final class ClientApparelEvents {
     public static void trimTextures(TickEvent.RenderTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             RuntimeGarmentTextureCache.endFrame();
+            com.rexhub.createapparel.client.garment.CitizenTextureCache.endFrame();
         }
     }
 
     @SubscribeEvent
     public static void clearOnLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientApparelInventories.clear();
+        com.rexhub.createapparel.client.garment.CitizenTextureCache.clear();
     }
 
     @SubscribeEvent

@@ -509,6 +509,9 @@ public final class CommonGarmentRenderer {
             if (part.xRot != 0.0F) {
                 poseStack.mulPose(Axis.XP.rotation(part.xRot));
             }
+            if (part.xScale != 1.0F || part.yScale != 1.0F || part.zScale != 1.0F) {
+                poseStack.scale(part.xScale, part.yScale, part.zScale);
+            }
             poseStack.translate(-restX, -restY, -restZ);
         }
     }

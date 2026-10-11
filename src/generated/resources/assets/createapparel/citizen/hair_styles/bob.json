@@ -1,0 +1,5 @@
+{
+  "geometry": "createapparel:citizen/hair/extensions",
+  "hat_policy": "DEFAULT",
+  "texture": "createapparel:entity/citizen/hair/bob_tint_base"
+}

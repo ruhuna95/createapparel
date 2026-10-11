@@ -9,6 +9,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.citizen.CitizenCommand;
 import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.GarmentAppearance;
 import com.rexhub.createapparel.garment.MetalAccessoryData;
@@ -99,6 +100,7 @@ public final class ApparelCommand {
                 .requires(source -> source.hasPermission(2))
                 .then(garmentCommand())
                 .then(wardrobeCommand())
+                .then(CitizenCommand.command())
                 .then(bodyCommand()));
     }
 

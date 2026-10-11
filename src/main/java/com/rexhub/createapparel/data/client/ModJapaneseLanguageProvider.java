@@ -19,6 +19,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        addEntityType(ModEntities.CITIZEN, "市民");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL, "鏡パネル");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK, "鏡ブロック");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR, "鉄の鏡付きドア");
