@@ -144,8 +144,14 @@ class CitizenHeadTest {
             var layers = CitizenHairLayers.read(geometry);
             assertEquals(8, layers.layers().size());
             int visible = 0;
-            for (int y = 0; y < 32; y++) for (int x = 32; x < 64; x++) if (hair.getRGB(x, y) >>> 24 != 0) visible++;
-            assertEquals(visible, layers.withOpacity((u, v) -> hair.getRGB(u, v) >>> 24 != 0).visibleCellCount());
+            for (var layer : layers.layers()) {
+                boolean opaque = false;
+                for (int v = (int) layer.v0(); v < layer.v1(); v++) for (int u = (int) layer.u0(); u < layer.u1(); u++) {
+                    if (hair.getRGB(u, v) >>> 24 != 0) opaque = true;
+                }
+                if (opaque) visible++;
+            }
+            assertEquals(visible, layers.withOpacity((u, v) -> hair.getRGB(u, v) >>> 24 != 0).visibleLayerCount());
         }
     }
 

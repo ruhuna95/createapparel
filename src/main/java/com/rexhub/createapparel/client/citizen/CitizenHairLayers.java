@@ -12,23 +12,23 @@ import java.util.List;
 
 public final class CitizenHairLayers {
     private final List<Layer> layers;
-    private final List<Cell> cells;
+    private final List<Layer> visibleLayers;
 
     public CitizenHairLayers(List<Layer> layers) {
-        this(layers, cells(layers));
+        this(layers, layers);
     }
 
-    private CitizenHairLayers(List<Layer> layers, List<Cell> cells) {
+    private CitizenHairLayers(List<Layer> layers, List<Layer> visibleLayers) {
         this.layers = List.copyOf(layers);
-        this.cells = List.copyOf(cells);
+        this.visibleLayers = List.copyOf(visibleLayers);
     }
 
     public List<Layer> layers() { return layers; }
 
-    public int visibleCellCount() { return cells.size(); }
+    public int visibleLayerCount() { return visibleLayers.size(); }
 
     public CitizenHairLayers withOpacity(Opacity opacity) {
-        return new CitizenHairLayers(layers, cells.stream().filter(cell -> opacity.visible(cell.u(), cell.v())).toList());
+        return new CitizenHairLayers(layers, visibleLayers.stream().filter(layer -> hasVisiblePixel(layer, opacity)).toList());
     }
 
     public static CitizenHairLayers read(JsonObject json) {
@@ -64,23 +64,20 @@ public final class CitizenHairLayers {
     public void render(PoseStack stack, VertexConsumer vertices, int light, int overlay, Quaternionf headRotation,
                        Vector3f headOrigin, CitizenHairGravity.Torso torso, boolean showHat) {
         var pose = stack.last();
-        for (Cell cell : cells) {
-            Layer layer = cell.layer();
+        for (Layer layer : visibleLayers) {
             if (!showHat && layer.v0() >= 16) continue;
-            float a = (cell.u() - layer.u0()) / (layer.u1() - layer.u0()), b = a + 1 / (layer.u1() - layer.u0());
-            if (layer.mirrorU()) { a = 1 - a; b = 1 - b; }
-            float top = (cell.v() - layer.v0()) / (layer.v1() - layer.v0()) * (layer.y1() - layer.y0());
-            float bottom = top + (layer.y1() - layer.y0()) / (layer.v1() - layer.v0());
-            Vector3f p0 = CitizenHairGravity.point(layer, a, top, headRotation, headOrigin, torso);
-            Vector3f p1 = CitizenHairGravity.point(layer, b, top, headRotation, headOrigin, torso);
-            Vector3f p2 = CitizenHairGravity.point(layer, b, bottom, headRotation, headOrigin, torso);
-            Vector3f p3 = CitizenHairGravity.point(layer, a, bottom, headRotation, headOrigin, torso);
+            var roots = CitizenHairGravity.roots(layer, headRotation, headOrigin, torso);
+            Vector3f p0 = layer.mirrorU() ? roots.end() : roots.start();
+            Vector3f p1 = layer.mirrorU() ? roots.start() : roots.end();
+            float height = layer.y1() - layer.y0();
+            Vector3f p2 = new Vector3f(p1).add(0, height, 0);
+            Vector3f p3 = new Vector3f(p0).add(0, height, 0);
             var normal = new Vector3f(p1).sub(p0).cross(new Vector3f(p3).sub(p0)).normalize();
             if (normal.dot(CitizenHairGravity.normal(layer).rotate(headRotation)) < 0) normal.negate();
-            vertex(pose, vertices, p0, cell.u(), cell.v(), normal, light, overlay);
-            vertex(pose, vertices, p1, cell.u() + 1, cell.v(), normal, light, overlay);
-            vertex(pose, vertices, p2, cell.u() + 1, cell.v() + 1, normal, light, overlay);
-            vertex(pose, vertices, p3, cell.u(), cell.v() + 1, normal, light, overlay);
+            vertex(pose, vertices, p0, layer.u0(), layer.v0(), normal, light, overlay);
+            vertex(pose, vertices, p1, layer.u1(), layer.v0(), normal, light, overlay);
+            vertex(pose, vertices, p2, layer.u1(), layer.v1(), normal, light, overlay);
+            vertex(pose, vertices, p3, layer.u0(), layer.v1(), normal, light, overlay);
         }
     }
 
@@ -90,18 +87,15 @@ public final class CitizenHairLayers {
                 .overlayCoords(overlay).uv2(light).normal(pose.normal(), normal.x, normal.y, normal.z).endVertex();
     }
 
-    private static List<Cell> cells(List<Layer> layers) {
-        List<Cell> cells = new ArrayList<>();
-        for (Layer layer : layers) for (int v = (int) layer.v0(); v < layer.v1(); v++) {
-            for (int u = (int) layer.u0(); u < layer.u1(); u++) cells.add(new Cell(layer, u, v));
+    private static boolean hasVisiblePixel(Layer layer, Opacity opacity) {
+        for (int v = (int) layer.v0(); v < layer.v1(); v++) {
+            for (int u = (int) layer.u0(); u < layer.u1(); u++) if (opacity.visible(u, v)) return true;
         }
-        return cells;
+        return false;
     }
 
     @FunctionalInterface
     public interface Opacity { boolean visible(int u, int v); }
-
-    private record Cell(Layer layer, int u, int v) { }
 
     private static float[] vector(JsonObject json, String name, int length) {
         var values = GsonHelper.getAsJsonArray(json, name);

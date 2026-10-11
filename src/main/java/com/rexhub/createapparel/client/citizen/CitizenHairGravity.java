@@ -10,19 +10,29 @@ public final class CitizenHairGravity {
 
     public static Vector3f point(CitizenHairLayers.Layer layer, float across, float drop, Quaternionf rotation,
                                  Vector3f origin, Torso torso) {
-        var root = new Vector3f(layer.x0() + (layer.x1() - layer.x0()) * across, layer.y0(),
-                layer.z0() + (layer.z1() - layer.z0()) * across).rotate(rotation).add(origin);
+        var roots = roots(layer, rotation, origin, torso);
+        return new Vector3f(roots.start()).lerp(roots.end(), across).add(0, drop, 0);
+    }
+
+    public static Roots roots(CitizenHairLayers.Layer layer, Quaternionf rotation, Vector3f origin, Torso torso) {
+        var start = new Vector3f(layer.x0(), layer.y0(), layer.z0()).rotate(rotation).add(origin);
+        var end = new Vector3f(layer.x1(), layer.y0(), layer.z1()).rotate(rotation).add(origin);
         boolean attachedSide = layer.x0() == layer.x1();
-        if (!attachedSide && root.y <= torso.maxY() && root.y + layer.y1() - layer.y0() >= torso.minY()) {
+        if (!attachedSide && Math.min(start.y, end.y) <= torso.maxY()
+                && Math.max(start.y, end.y) + layer.y1() - layer.y0() >= torso.minY()) {
             var normal = normal(layer).rotate(rotation);
             if (Math.abs(normal.x) >= Math.abs(normal.z)) {
-                root.x = normal.x < 0 ? Math.min(root.x, torso.minX() - CLEARANCE) : Math.max(root.x, torso.maxX() + CLEARANCE);
+                start.x = normal.x < 0 ? Math.min(start.x, torso.minX() - CLEARANCE) : Math.max(start.x, torso.maxX() + CLEARANCE);
+                end.x = normal.x < 0 ? Math.min(end.x, torso.minX() - CLEARANCE) : Math.max(end.x, torso.maxX() + CLEARANCE);
             } else {
-                root.z = normal.z < 0 ? Math.min(root.z, torso.minZ() - CLEARANCE) : Math.max(root.z, torso.maxZ() + CLEARANCE);
+                start.z = normal.z < 0 ? Math.min(start.z, torso.minZ() - CLEARANCE) : Math.max(start.z, torso.maxZ() + CLEARANCE);
+                end.z = normal.z < 0 ? Math.min(end.z, torso.minZ() - CLEARANCE) : Math.max(end.z, torso.maxZ() + CLEARANCE);
             }
         }
-        return root.add(0, drop, 0);
+        return new Roots(start, end);
     }
+
+    public record Roots(Vector3f start, Vector3f end) { }
 
     public static Vector3f normal(CitizenHairLayers.Layer layer) {
         return layer.x0() == layer.x1() ? new Vector3f(layer.x0() < 0 ? -1 : 1, 0, 0)

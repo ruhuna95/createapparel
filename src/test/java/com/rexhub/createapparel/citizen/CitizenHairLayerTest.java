@@ -83,12 +83,12 @@ class CitizenHairLayerTest {
     }
 
     @Test
-    void transparentPixelsCreateNoExtensionMesh() throws Exception {
+    void onlyEntirelyTransparentSheetsAreRemovedAndPartialSheetsRemainSingleQuads() throws Exception {
         var sheets = read("extensions");
-        assertEquals(1024, sheets.visibleCellCount());
-        assertEquals(0, sheets.withOpacity((u, v) -> false).visibleCellCount());
-        assertEquals(1, sheets.withOpacity((u, v) -> u == 56 && v == 16).visibleCellCount());
-        assertEquals(512, sheets.withOpacity((u, v) -> v >= 16).visibleCellCount());
+        assertEquals(8, sheets.visibleLayerCount());
+        assertEquals(0, sheets.withOpacity((u, v) -> false).visibleLayerCount());
+        assertEquals(1, sheets.withOpacity((u, v) -> u == 56 && v == 16).visibleLayerCount());
+        assertEquals(4, sheets.withOpacity((u, v) -> v >= 16).visibleLayerCount());
     }
 
     @Test
@@ -109,7 +109,8 @@ class CitizenHairLayerTest {
                     return method.getReturnType() == void.class ? null : proxy;
                 });
         layer.render(new PoseStack(), vertices, 0, 0);
-        assertEquals(layer.visibleCellCount() * 4, points.size());
+        assertEquals(32, points.size());
+        assertEquals(layer.visibleLayerCount() * 4, points.size());
         assertEquals(points.size(), normals.size());
         assertEquals(points.size(), uv.size());
         for (float[] normal : normals) assertEquals(1, Math.abs(normal[0]) + Math.abs(normal[2]));
@@ -198,7 +199,7 @@ class CitizenHairLayerTest {
     }
 
     @Test
-    void renderedHeadAndHatSideCellsKeepEdgeAttachmentUvsAndFiniteNormals() throws Exception {
+    void renderedHeadAndHatSideSheetsKeepEdgeAttachmentUvsAndFiniteNormals() throws Exception {
         var sheets = read("extensions").withOpacity((u, v) -> (u == 32 || u == 48) && (v == 0 || v == 16));
         var points = new ArrayList<Vector3f>();
         var normals = new ArrayList<Vector3f>();
@@ -225,9 +226,9 @@ class CitizenHairLayerTest {
             int side = layerIndex % 2;
             boolean hat = layerIndex >= 2;
             float halfWidth = hat ? 4.25F : 4;
-            float across = vertex == 0 || vertex == 3 ? 0 : 0.125F;
+            float across = vertex == 0 || vertex == 3 ? 0 : 1;
             if (side == 0) across = 1 - across;
-            int drop = vertex >= 2 ? 1 : 0;
+            int drop = vertex >= 2 ? 16 : 0;
             var expected = new Vector3f(side == 0 ? -halfWidth : halfWidth, hat ? 0.25F : 0, -halfWidth + 2 * halfWidth * across)
                     .rotate(rotation).add(origin).add(0, drop, 0);
             int index = layerIndex * 4 + vertex;
@@ -236,7 +237,7 @@ class CitizenHairLayerTest {
             assertEquals(expected.z, points.get(index).z, 0.00001);
             assertEquals(1, normals.get(index).length(), 0.00001);
             assertEquals(0, normals.get(index).y, 0.00001);
-            assertEquals(((side == 0 ? 32 : 48) + (vertex == 1 || vertex == 2 ? 1 : 0)) / 64F, uvs.get(index)[0]);
+            assertEquals(((side == 0 ? 32 : 48) + (vertex == 1 || vertex == 2 ? 8 : 0)) / 64F, uvs.get(index)[0]);
             assertEquals(((hat ? 16 : 0) + drop) / 32F, uvs.get(index)[1]);
         }
         var headPoints = List.copyOf(points.subList(0, 8));
@@ -245,4 +246,25 @@ class CitizenHairLayerTest {
         assertEquals(headPoints, points, "Hidden HAT suppresses only its own side extensions");
     }
 
+    @Test
+    void frontBackSheetsStayOutsideTorsoEvenWhenOnlyTheirInteriorCrossesItsHeight() throws Exception {
+        var torso = new CitizenHairGravity.Torso(-8, -1, -8, 8, 1, 8);
+        for (var layer : read("extensions").layers()) {
+            if (layer.x0() == layer.x1()) continue;
+            for (float yaw : new float[]{-1.57F, -0.21F, 0, 0.21F, 1.57F}) {
+                var rotation = new Quaternionf().rotationZYX(0.7F, yaw, 0.9F);
+                var roots = CitizenHairGravity.roots(layer, rotation, new Vector3f(), torso);
+                for (int u = 0; u <= 32; u++) for (int drop = 0; drop <= 16; drop++) {
+                    var actual = CitizenHairGravity.point(layer, u / 32F, drop, rotation, new Vector3f(), torso);
+                    var rendered = new Vector3f(roots.start()).lerp(roots.end(), u / 32F).add(0, drop, 0);
+                    assertEquals(rendered.x, actual.x, 0.00001);
+                    assertEquals(rendered.y, actual.y, 0.00001);
+                    assertEquals(rendered.z, actual.z, 0.00001);
+                    assertFalse(actual.x > torso.minX() && actual.x < torso.maxX()
+                            && actual.y > torso.minY() && actual.y < torso.maxY()
+                            && actual.z > torso.minZ() && actual.z < torso.maxZ());
+                }
+            }
+        }
+    }
 }
