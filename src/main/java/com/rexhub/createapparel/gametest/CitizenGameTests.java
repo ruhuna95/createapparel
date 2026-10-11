@@ -152,13 +152,31 @@ public final class CitizenGameTests {
         entity.setDeltaMovement(Vec3.ZERO);
         helper.getLevel().addFreshEntity(entity);
         double x = entity.getX(), z = entity.getZ(), y = entity.getY();
-        entity.travel(new Vec3(1, 0, 1));
-        helper.assertTrue(entity.getX() == x && entity.getZ() == z, "Travel ignores voluntary input");
+        helper.assertTrue(entity.goalSelector.getAvailableGoals().isEmpty()
+                && entity.targetSelector.getAvailableGoals().isEmpty(), "STAND registers no goals");
+        helper.assertTrue(!entity.isNoAi(), "Normal physics and AI controls remain enabled");
         helper.assertTrue(entity.hurt(entity.damageSources().generic(), 2) && entity.getHealth() == 18, "Normal damage");
         helper.runAfterDelay(40, () -> {
             helper.assertTrue(entity.getX() == x && entity.getZ() == z && entity.getY() < y, "STAND falls and settles without walking");
+            helper.assertTrue(entity.onGround(), "Block collision stops the fall");
             helper.assertTrue(entity.getNavigation().isDone() && entity.yBodyRot == 75, "No path goals or body rotation");
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "apparel_state", batch = "citizen")
+    public static void standDoesNotDiscardExternalMovementInputsOrImpulses(GameTestHelper helper) {
+        var entity = create(helper);
+        double x = entity.getX(), z = entity.getZ();
+        entity.setSpeed(0.25F);
+        entity.travel(new Vec3(1, 0, 1));
+        helper.assertTrue(entity.getX() > x && entity.getZ() > z, "Explicit movement input uses normal travel");
+        entity.setDeltaMovement(Vec3.ZERO);
+        x = entity.getX();
+        z = entity.getZ();
+        entity.push(0.1, 0, 0.2);
+        entity.travel(Vec3.ZERO);
+        helper.assertTrue(entity.getX() > x && entity.getZ() > z, "External impulse survives zero movement input");
+        helper.succeed();
     }
 }
