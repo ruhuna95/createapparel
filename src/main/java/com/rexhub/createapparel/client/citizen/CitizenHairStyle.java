@@ -8,7 +8,7 @@ public record CitizenHairStyle(ResourceLocation id, Optional<ResourceLocation> t
     public enum HatPolicy {
         DEFAULT, KEEP, HIDE_HAT, HIDE_EXTRA;
 
-        public boolean showHat(boolean covered) { return !covered || this == KEEP || this == HIDE_EXTRA; }
-        public boolean showExtra(boolean covered) { return !covered || this == KEEP || this == HIDE_HAT; }
+        public boolean showHat(boolean covered) { return !covered || this != HIDE_HAT; }
+        public boolean showExtra(boolean covered) { return !covered || this != HIDE_EXTRA; }
     }
 }

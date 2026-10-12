@@ -192,13 +192,13 @@ class CitizenHeadTest {
     }
 
     @Test
-    void hatPoliciesSuppressOnlyRequestedHairLayersAndNeverDependOnGlasses() {
+    void defaultHatPolicyKeepsHairAndExplicitPoliciesHideOnlyRequestedLayers() {
         for (var policy : CitizenHairStyle.HatPolicy.values()) {
             assertTrue(policy.showHat(false));
             assertTrue(policy.showExtra(false));
         }
-        assertFalse(CitizenHairStyle.HatPolicy.DEFAULT.showHat(true));
-        assertFalse(CitizenHairStyle.HatPolicy.DEFAULT.showExtra(true));
+        assertTrue(CitizenHairStyle.HatPolicy.DEFAULT.showHat(true));
+        assertTrue(CitizenHairStyle.HatPolicy.DEFAULT.showExtra(true));
         assertTrue(CitizenHairStyle.HatPolicy.KEEP.showHat(true));
         assertTrue(CitizenHairStyle.HatPolicy.KEEP.showExtra(true));
         assertFalse(CitizenHairStyle.HatPolicy.HIDE_HAT.showHat(true));
