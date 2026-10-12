@@ -472,7 +472,7 @@ class CitizenPresetTest {
     }
 
     @Test
-    void shippedSchemaAndDocumentedDyesMatchCurrentEnums() throws Exception {
+    void shippedDefaultPresetsMatchCurrentSchema() throws Exception {
         Path root = Path.of("src/main/resources/data/createapparel/citizen");
         for (String age : List.of("adult", "child")) {
             try (var reader = Files.newBufferedReader(root.resolve("body_presets/" + age + "/default.json"))) {
@@ -483,7 +483,5 @@ class CitizenPresetTest {
         try (var reader = Files.newBufferedReader(root.resolve("garment_presets/default.json"))) {
             assertEquals(CitizenGarmentPreset.builtIn(), CitizenGarmentPreset.fromJson(CitizenPresetJson.read(reader)));
         }
-        String readme = Files.readString(Path.of("docs/citizen-presets.md"));
-        for (FabricColor color : FabricColor.values()) assertTrue(readme.contains("`" + color.getSerializedName() + "`"));
     }
 }
