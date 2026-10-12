@@ -3,6 +3,7 @@ package com.rexhub.createapparel.client.citizen;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.GsonHelper;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -59,6 +60,16 @@ public final class CitizenHairLayers {
 
     public void render(PoseStack stack, VertexConsumer vertices, int light, int overlay) {
         render(stack, vertices, light, overlay, new Quaternionf(), new Vector3f(), CitizenHairGravity.Torso.NONE, true);
+    }
+
+    public void renderHeadAttached(PoseStack stack, VertexConsumer vertices, int light, int overlay,
+                                   ModelPart head, boolean showHat) {
+        stack.pushPose();
+        stack.translate(head.x / 16, head.y / 16, head.z / 16);
+        stack.scale(head.xScale, head.yScale, head.zScale);
+        render(stack, vertices, light, overlay, new Quaternionf().rotationZYX(head.zRot, head.yRot, head.xRot),
+                new Vector3f(), CitizenHairGravity.Torso.NONE, showHat);
+        stack.popPose();
     }
 
     public void render(PoseStack stack, VertexConsumer vertices, int light, int overlay, Quaternionf headRotation,
