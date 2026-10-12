@@ -22,6 +22,9 @@ public final class ModLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         addEntityType(ModEntities.CITIZEN, "Citizen");
+        addItem(ModItems.SMART_PHONE, "Smart Phone");
+        addItem(ModItems.CITIZEN_SPAWN_EGG, "Citizen Spawn Egg");
+        add("message.createapparel.citizen_conversion_failed", "Could not convert this villager.");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL, "Mirror Panel");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK, "Mirror Block");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR, "Iron Mirrored Door");
@@ -92,6 +95,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.hanger.normal", "Can hold tops and outerwear.");
         add("tooltip.createapparel.hanger.clip", "Can hold bottoms.");
         add("tooltip.createapparel.wardrobe.change_clothes", "Can change clothes.");
+        add("tooltip.createapparel.smart_phone.convert_villager", "Can turn villagers into citizens when used on them.");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), material.displayName());
         }

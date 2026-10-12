@@ -1,0 +1,106 @@
+package com.rexhub.createapparel.gametest;
+
+import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.citizen.CitizenCoverage;
+import com.rexhub.createapparel.citizen.CitizenPresetManager;
+import com.rexhub.createapparel.citizen.CitizenSpawnInitialization;
+import com.rexhub.createapparel.entity.Citizen;
+import com.rexhub.createapparel.entity.CitizenAge;
+import com.rexhub.createapparel.entity.CitizenState;
+import com.rexhub.createapparel.init.ModEntities;
+import com.rexhub.createapparel.init.ModItems;
+import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@GameTestHolder(CreateApparel.MOD_ID)
+@PrefixGameTestTemplate(false)
+public final class CitizenSpawnEggGameTests {
+    private CitizenSpawnEggGameTests() { }
+
+    private static void checkSaved(GameTestHelper helper, Citizen citizen) {
+        helper.assertTrue(CitizenCoverage.isCovered(citizen.citizenState().loadout()), "Spawned Citizen is clothed");
+        helper.assertTrue(citizen.getScale() == citizen.citizenState().age().scale(), "Spawned age updates body scale");
+        var restored = new CitizenState();
+        restored.deserializeNBT(citizen.saveWithoutId(new CompoundTag()));
+        helper.assertTrue(restored.serializeNBT().equals(citizen.citizenState().serializeNBT()), "Age, appearance and clothes persist");
+        var appearance = citizen.citizenState().appearance();
+        helper.assertTrue(CitizenPresetManager.snapshot().bodies().get(citizen.citizenState().age()).values().stream()
+                .anyMatch(body -> body.armProfile() == appearance.armProfile() && body.chestProfile() == appearance.chestProfile()
+                        && body.hairStyle().equals(appearance.hairStyleId()) && body.skinTones().contains(appearance.skinTone())
+                        && body.hairColors().stream().anyMatch(color -> color.tintRgb() == appearance.hairColorRgb())
+                        && body.eyeColors().stream().anyMatch(color -> color.tintRgb() == appearance.eyeColorRgb())),
+                "Spawned appearance belongs to the correct age catalog");
+    }
+
+    @GameTest(template = "apparel_state", batch = "citizen")
+    public static void babyRollMatchesVanillaZombieAndBothAgeCatalogsSpawn(GameTestHelper helper) {
+        var actual = RandomSource.create(31819);
+        var vanilla = RandomSource.create(31819);
+        int childCount = 0;
+        for (int i = 0; i < 2000; i++) {
+            boolean baby = Zombie.getSpawnAsBabyOdds(vanilla);
+            CitizenAge age = CitizenSpawnInitialization.selectAge(actual);
+            helper.assertTrue((age == CitizenAge.CHILD) == baby, "Baby roll matches Forge vanilla Zombie exactly");
+            childCount += baby ? 1 : 0;
+        }
+        helper.assertTrue(childCount > 60 && childCount < 140, "Default child chance is approximately five percent");
+        for (CitizenAge age : CitizenAge.values()) {
+            var citizen = ModEntities.CITIZEN.get().create(helper.getLevel());
+            helper.assertTrue(citizen != null, "Citizen factory");
+            CitizenSpawnInitialization.initialize(citizen, age, RandomSource.create(516));
+            helper.assertTrue(citizen.citizenState().age() == age, "Requested spawn age is retained");
+            checkSaved(helper, citizen);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "citizen", timeoutTicks = 200)
+    public static void eggAndDispenserPathsSpawnAgeAppropriateCitizens(GameTestHelper helper) {
+        var egg = (SpawnEggItem) ModItems.CITIZEN_SPAWN_EGG.get();
+        helper.assertTrue(egg.getType(null) == ModEntities.CITIZEN.get(), "Forge egg supplier resolves correct entity");
+        helper.assertTrue(ModItems.creativeTabItems().contains(ModItems.CITIZEN_SPAWN_EGG), "Egg is in Apparel creative tab");
+        Set<CitizenAge> ages = new HashSet<>();
+        for (var reason : List.of(MobSpawnType.SPAWN_EGG, MobSpawnType.DISPENSER)) {
+            for (int i = 0; i < 96; i++) {
+                var citizen = ModEntities.CITIZEN.get().spawn(helper.getLevel(), new ItemStack(egg), null,
+                        helper.absolutePos(new BlockPos(1, 2, 1)), reason, false, false);
+                helper.assertTrue(citizen != null, "Actual EntityType spawn succeeds: " + reason);
+                checkSaved(helper, citizen);
+                ages.add(citizen.citizenState().age());
+                citizen.discard();
+            }
+        }
+        helper.assertTrue(!ages.isEmpty(), "Egg initialization produces valid age groups");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "citizen")
+    public static void eggOnCitizenCreatesChildWithoutChangingParent(GameTestHelper helper) {
+        var parent = ModEntities.CITIZEN.get().create(helper.getLevel());
+        helper.assertTrue(parent != null, "Parent factory");
+        var before = parent.citizenState().serializeNBT();
+        var player = helper.makeMockPlayer();
+        var stack = new ItemStack(ModItems.CITIZEN_SPAWN_EGG.get(), 2);
+        var child = ((SpawnEggItem) stack.getItem()).spawnOffspringFromSpawnEgg(player, parent, ModEntities.CITIZEN.get(),
+                helper.getLevel(), helper.absoluteVec(new net.minecraft.world.phys.Vec3(1.5, 2, 1.5)), stack).orElseThrow();
+        helper.assertTrue(child instanceof Citizen && child.isBaby(), "Vanilla offspring interaction creates a Citizen child");
+        checkSaved(helper, (Citizen) child);
+        helper.assertTrue(parent.citizenState().serializeNBT().equals(before), "Parent is not changed");
+        helper.assertTrue(stack.getCount() == 1, "Survival egg is consumed once");
+        child.discard();
+        helper.succeed();
+    }
+}

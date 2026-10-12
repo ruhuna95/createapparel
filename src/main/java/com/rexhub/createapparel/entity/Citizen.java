@@ -45,6 +45,11 @@ public final class Citizen extends PathfinderMob {
     @Override
     public boolean isBaby() { return citizenState != null && citizenState.age() == CitizenAge.CHILD; }
 
+    @Override
+    public void setBaby(boolean baby) {
+        citizenState.setAge(baby ? CitizenAge.CHILD : CitizenAge.ADULT);
+    }
+
     private void refreshAgeDimensions() {
         float scale = citizenState.age().scale();
         if (ageScale != scale) {

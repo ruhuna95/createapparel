@@ -1,0 +1,167 @@
+{
+  "display": {
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        0,
+        10
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ],
+      "translation": [
+        1,
+        1,
+        0
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        -10
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ],
+      "translation": [
+        1,
+        1,
+        0
+      ]
+    },
+    "fixed": {
+      "scale": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    },
+    "ground": {
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "translation": [
+        0,
+        1,
+        0
+      ]
+    },
+    "gui": {
+      "rotation": [
+        10,
+        -15,
+        0
+      ]
+    },
+    "thirdperson_lefthand": {
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ],
+      "translation": [
+        0,
+        2,
+        1
+      ]
+    },
+    "thirdperson_righthand": {
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ],
+      "translation": [
+        0,
+        2,
+        1
+      ]
+    }
+  },
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#phone",
+          "uv": [
+            15.0,
+            1.0,
+            16.0,
+            2.0
+          ]
+        },
+        "east": {
+          "texture": "#phone",
+          "uv": [
+            15.0,
+            1.0,
+            16.0,
+            2.0
+          ]
+        },
+        "north": {
+          "texture": "#phone",
+          "uv": [
+            8.0,
+            1.0,
+            15.0,
+            14.0
+          ]
+        },
+        "south": {
+          "texture": "#phone",
+          "uv": [
+            0.0,
+            1.0,
+            7.0,
+            14.0
+          ]
+        },
+        "up": {
+          "texture": "#phone",
+          "uv": [
+            15.0,
+            1.0,
+            16.0,
+            2.0
+          ]
+        },
+        "west": {
+          "texture": "#phone",
+          "uv": [
+            15.0,
+            1.0,
+            16.0,
+            2.0
+          ]
+        }
+      },
+      "from": [
+        4.5,
+        1.5,
+        7.5
+      ],
+      "to": [
+        11.5,
+        14.5,
+        8.5
+      ]
+    }
+  ],
+  "textures": {
+    "particle": "#phone",
+    "phone": "createapparel:item/smart_phone"
+  }
+}

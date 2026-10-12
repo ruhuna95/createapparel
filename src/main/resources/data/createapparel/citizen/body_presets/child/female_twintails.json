@@ -1,0 +1,22 @@
+{
+  "arm_profile": "slim",
+  "chest_profile": "flat",
+  "skin_tone": [
+    "fair",
+    "natural",
+    "healthy"
+  ],
+  "hair_style": "createapparel:twintails",
+  "hair_color": [
+    "black",
+    "brown"
+  ],
+  "eye_color": [
+    "black",
+    "brown"
+  ],
+  "garment_presets": [
+    "createapparel:child_female_casual_01",
+    "createapparel:child_female_casual_02"
+  ]
+}

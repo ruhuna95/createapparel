@@ -1,0 +1,53 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:shirt_dress_midi",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "cream",
+        "greige",
+        "mint",
+        "pink",
+        "lavender"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "outer": {
+      "item": "createapparel:denim_jacket",
+      "material": "cotton",
+      "primary_color": [
+        "light_blue",
+        "navy"
+      ],
+      "design": [
+        "plain"
+      ],
+      "styles": {
+        "open": "open"
+      },
+      "optional": true
+    },
+    "feet": {
+      "item": "createapparel:canvas_sneakers",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "cream",
+        "sky",
+        "mint"
+      ],
+      "design": [
+        "plain"
+      ],
+      "secondary_color": [
+        "white"
+      ],
+      "accent_color": [
+        "white"
+      ]
+    }
+  }
+}

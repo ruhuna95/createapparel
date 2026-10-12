@@ -1,0 +1,27 @@
+{
+  "arm_profile": "slim",
+  "chest_profile": "bust",
+  "skin_tone": [
+    "very_fair",
+    "fair",
+    "natural",
+    "healthy"
+  ],
+  "hair_style": "createapparel:bob",
+  "hair_color": [
+    "light_gray", "black", "brown", "yellow", "cream", "greige"
+  ],
+  "eye_color": [
+    "black", "brown", "greige", "sky", "pink"
+  ],
+  "garment_presets": [
+    "createapparel:female_casual_01",
+    "createapparel:female_casual_02",
+    "createapparel:female_casual_03",
+    "createapparel:female_casual_04",
+    "createapparel:female_formal_01",
+    "createapparel:female_school_01",
+    "createapparel:female_school_02",
+    "createapparel:female_school_03"
+  ]
+}

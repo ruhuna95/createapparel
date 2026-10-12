@@ -1,0 +1,85 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:t_shirt",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black",
+        "blue",
+        "light_blue",
+        "green",
+        "red",
+        "yellow"
+      ],
+      "design": [
+        "horizontal_stripe",
+        "ringer",
+        "color_block",
+        "logo_creeper",
+        "logo_word",
+        "logo_round"
+      ],
+      "secondary_color": [
+        "white",
+        "black",
+        "sky",
+        "red",
+        "mint",
+        "mustard"
+      ],
+      "accent_color": [
+        "white",
+        "black",
+        "sky",
+        "red",
+        "mint",
+        "mustard"
+      ]
+    },
+    "bottom": {
+      "item": "createapparel:shorts",
+      "material": "cotton",
+      "primary_color": [
+        "black",
+        "blue",
+        "navy"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "legwear": {
+      "item": "createapparel:ankle_socks",
+      "material": "cotton",
+      "primary_color": [
+        "white"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:sneakers",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black",
+        "blue",
+        "light_blue",
+        "green",
+        "red",
+        "yellow"
+      ],
+      "design": [
+        "plain"
+      ],
+      "secondary_color": [
+        "white"
+      ],
+      "accent_color": [
+        "white"
+      ]
+    }
+  }
+}

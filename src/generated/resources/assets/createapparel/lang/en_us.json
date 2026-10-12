@@ -248,6 +248,7 @@
   "item.createapparel.cerulean_synthetic_fabric": "Cerulean Synthetic Fabric",
   "item.createapparel.cerulean_wool_fabric": "Cerulean Wool Fabric",
   "item.createapparel.chesterfield_coat": "Chesterfield Coat",
+  "item.createapparel.citizen_spawn_egg": "Citizen Spawn Egg",
   "item.createapparel.cocoon": "Cocoon",
   "item.createapparel.coral_cotton_fabric": "Coral Cotton Fabric",
   "item.createapparel.coral_dye": "Coral Dye",
@@ -512,6 +513,7 @@
   "item.createapparel.sky_wool_fabric": "Sky Wool Fabric",
   "item.createapparel.slacks": "Slacks",
   "item.createapparel.slippers": "Slippers",
+  "item.createapparel.smart_phone": "Smart Phone",
   "item.createapparel.sneakers": "Sneakers",
   "item.createapparel.straight_dress_knee": "Straight Dress",
   "item.createapparel.straight_dress_midi": "Midi Straight Dress",
@@ -573,6 +575,7 @@
   "item.createapparel.zipup_hoodie": "Zip-up Hoodie",
   "itemGroup.createapparel": "Create: Apparel",
   "itemGroup.createapparel.garment": "Create: Apparel - Garment",
+  "message.createapparel.citizen_conversion_failed": "Could not convert this villager.",
   "metal_color.createapparel.gold": "Gold",
   "metal_color.createapparel.silver": "Silver",
   "pose.createapparel.arms_crossed": "Arms Crossed",
@@ -687,6 +690,7 @@
   "tooltip.createapparel.sewing_pattern.secondary_color": "Secondary: %s",
   "tooltip.createapparel.sewing_pattern.unknown_garment": "Unknown Garment",
   "tooltip.createapparel.sewing_pattern.unset": "Right-click to configure",
+  "tooltip.createapparel.smart_phone.convert_villager": "Can turn villagers into citizens when used on them.",
   "tooltip.createapparel.wardrobe.change_clothes": "Can change clothes.",
   "tooltip.createapparel.watch.check_time": "While equipped, hold Left Shift with both hands empty to check the time."
 }

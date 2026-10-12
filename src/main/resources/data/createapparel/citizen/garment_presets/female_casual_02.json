@@ -1,0 +1,77 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:t_shirt_v_neck",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black",
+        "cream",
+        "light_gray"
+      ],
+      "design": [
+        "plain"
+      ],
+      "styles": {
+        "tuck": "tucked"
+      }
+    },
+    "outer": {
+      "item": "createapparel:blazer_jacket",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "brown"
+      ],
+      "design": [
+        "plain"
+      ],
+      "styles": {
+        "open": "open"
+      },
+      "optional": true
+    },
+    "bottom": {
+      "item": "createapparel:flared_skirt_midi",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black",
+        "pink",
+        "rose",
+        "tan",
+        "mint",
+        "lavender"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "legwear": {
+      "item": "createapparel:tights",
+      "material": "cotton",
+      "primary_color": [
+        "black",
+        "beige"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:knee_high_boots",
+      "material": "leather",
+      "primary_color": [
+        "black",
+        "white",
+        "brown"
+      ],
+      "design": [
+        "plain"
+      ],
+      "accent_color": [
+        "gray"
+      ]
+    }
+  }
+}

@@ -17,6 +17,7 @@ import com.rexhub.createapparel.recipe.ModRecipeTypes;
 import com.rexhub.createapparel.recipe.SpinningRecipe;
 import com.rexhub.createapparel.recipe.WeavingRecipe;
 import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
+import com.simibubi.create.api.data.recipe.MechanicalCraftingRecipeBuilder;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.millstone.MillingRecipe;
@@ -172,6 +173,11 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
+        register(consumer -> MechanicalCraftingRecipeBuilder.shapedRecipe(ModItems.SMART_PHONE.get())
+                .patternLine("GGG").patternLine("TRT").patternLine("CPC").patternLine("TRT").patternLine("BBB")
+                .key('G', Items.GLASS_PANE).key('T', AllItems.ELECTRON_TUBE.get()).key('R', Items.REDSTONE)
+                .key('C', AllItems.COPPER_SHEET.get()).key('P', AllItems.PRECISION_MECHANISM.get())
+                .key('B', AllItems.BRASS_SHEET.get()).build(consumer, asResource("smart_phone")));
         mirrorRecipes();
         productionEquipmentRecipes();
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SILKWORM_REARING_TRAY.get())

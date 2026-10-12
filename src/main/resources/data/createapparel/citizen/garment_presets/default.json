@@ -1,0 +1,7 @@
+{
+  "garments": {
+    "top": {"item": "createapparel:t_shirt", "material": "cotton", "primary_color": "white"},
+    "bottom": {"item": "createapparel:denim_pants", "material": "cotton", "primary_color": "blue"},
+    "feet": {"item": "createapparel:sneakers", "material": "synthetic", "primary_color": "white"}
+  }
+}

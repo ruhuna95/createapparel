@@ -67,6 +67,8 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
     @SubscribeEvent
     public static void addReloadListener(AddReloadListenerEvent event) {
         event.addListener(INSTANCE);
+        event.addListener(new com.rexhub.createapparel.citizen.CitizenPresetManager(
+                event.getServerResources().getRecipeManager(), event.getConditionContext()));
     }
 
     private static void synchronizePlayer(net.minecraft.server.level.ServerPlayer player) {

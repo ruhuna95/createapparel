@@ -248,6 +248,7 @@
   "item.createapparel.cerulean_synthetic_fabric": "セルリアン色の合成生地",
   "item.createapparel.cerulean_wool_fabric": "セルリアン色のウール生地",
   "item.createapparel.chesterfield_coat": "チェスターコート",
+  "item.createapparel.citizen_spawn_egg": "市民のスポーンエッグ",
   "item.createapparel.cocoon": "繭",
   "item.createapparel.coral_cotton_fabric": "コーラル色のコットン生地",
   "item.createapparel.coral_dye": "コーラル色の染料",
@@ -512,6 +513,7 @@
   "item.createapparel.sky_wool_fabric": "スカイ色のウール生地",
   "item.createapparel.slacks": "スラックス",
   "item.createapparel.slippers": "スリッパ",
+  "item.createapparel.smart_phone": "スマートフォン",
   "item.createapparel.sneakers": "スニーカー",
   "item.createapparel.straight_dress_knee": "ストレートワンピース",
   "item.createapparel.straight_dress_midi": "ミディストレートワンピース",
@@ -573,6 +575,7 @@
   "item.createapparel.zipup_hoodie": "ジップアップパーカー",
   "itemGroup.createapparel": "Create: Apparel",
   "itemGroup.createapparel.garment": "Create: Apparel - 衣服",
+  "message.createapparel.citizen_conversion_failed": "村人を市民に変換できませんでした。",
   "metal_color.createapparel.gold": "金",
   "metal_color.createapparel.silver": "銀",
   "pose.createapparel.arms_crossed": "腕組み",
@@ -687,6 +690,7 @@
   "tooltip.createapparel.sewing_pattern.secondary_color": "サブカラー: %s",
   "tooltip.createapparel.sewing_pattern.unknown_garment": "不明な衣服",
   "tooltip.createapparel.sewing_pattern.unset": "右クリックで設定",
+  "tooltip.createapparel.smart_phone.convert_villager": "村人に使用することで市民に変えることができる。",
   "tooltip.createapparel.wardrobe.change_clothes": "衣服を着替えることができる。",
   "tooltip.createapparel.watch.check_time": "装備中、両手が空なら左Shift長押しで時間を確認できます"
 }

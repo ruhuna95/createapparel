@@ -1,0 +1,42 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:camisole_dress_knee_shortsleeves",
+      "material": "cotton",
+      "primary_color": [
+        "cream",
+        "beige",
+        "greige"
+      ],
+      "design": [
+        "plain"
+      ],
+      "secondary_color": [
+        "white"
+      ]
+    },
+    "bottom": {
+      "item": "createapparel:slacks",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black",
+        "yellow",
+        "sky"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:pumps",
+      "material": "leather",
+      "primary_color": [
+        "black"
+      ],
+      "design": [
+        "plain"
+      ]
+    }
+  }
+}

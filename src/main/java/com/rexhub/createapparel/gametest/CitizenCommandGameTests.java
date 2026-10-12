@@ -7,9 +7,7 @@ import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.entity.Citizen;
 import com.rexhub.createapparel.entity.CitizenAge;
 import com.rexhub.createapparel.init.ModEntities;
-import com.rexhub.createapparel.citizen.CitizenDyeColors;
 import com.rexhub.createapparel.citizen.CitizenHairStyles;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -55,7 +53,7 @@ public final class CitizenCommandGameTests {
         var appearance = child.citizenState().appearance();
         helper.assertTrue(appearance.armProfile() == ArmProfile.SLIM && appearance.chestProfile() == ChestProfile.FLAT,
                 "Explicit non-default body pairing remains selectable");
-        helper.assertTrue(appearance.eyeColorRgb() == CitizenDyeColors.rgb(DyeColor.CYAN) && appearance.hairColorRgb() == 0x123ABC,
+        helper.assertTrue(appearance.eyeColorRgb() == com.rexhub.createapparel.material.FabricColor.CYAN.tintRgb() && appearance.hairColorRgb() == 0x123ABC,
                 "Exact dye eye and independent RGB hair");
         CompoundTag saved = child.saveWithoutId(new CompoundTag());
         var restored = ModEntities.CITIZEN.get().create(helper.getLevel());

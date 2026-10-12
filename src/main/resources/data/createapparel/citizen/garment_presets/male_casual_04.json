@@ -1,0 +1,83 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:t_shirt_longsleeves",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black",
+        "navy",
+        "forest"
+      ],
+      "design": [
+        "plain",
+        "logo_creeper",
+        "logo_word",
+        "logo_round"
+      ],
+      "secondary_color": [
+        "white",
+        "black",
+        "sky",
+        "red",
+        "mint",
+        "mustard"
+      ],
+      "accent_color": [
+        "white",
+        "black",
+        "sky",
+        "red",
+        "mint",
+        "mustard"
+      ]
+    },
+    "outer": {
+      "item": "createapparel:blazer_jacket",
+      "material": "cotton",
+      "primary_color": [
+        "light_gray",
+        "gray",
+        "blue",
+        "navy"
+      ],
+      "design": [
+        "plain"
+      ],
+      "styles": {
+        "open": "open"
+      }
+    },
+    "bottom": {
+      "item": "createapparel:slacks",
+      "material": "cotton",
+      "primary_color": [
+        "beige"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:sneakers",
+      "material": "synthetic",
+      "primary_color": [
+        "white",
+        "cream",
+        "black",
+        "sky",
+        "red",
+        "green"
+      ],
+      "design": [
+        "plain"
+      ],
+      "secondary_color": [
+        "white"
+      ],
+      "accent_color": [
+        "white"
+      ]
+    }
+  }
+}

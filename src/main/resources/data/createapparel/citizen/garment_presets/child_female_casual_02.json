@@ -1,0 +1,91 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:t_shirt",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "cream",
+        "black"
+      ],
+      "design": [
+        "plain",
+        "logo_creeper",
+        "logo_word",
+        "logo_round"
+      ],
+      "secondary_color": [
+        "white",
+        "black",
+        "yellow",
+        "pink"
+      ],
+      "accent_color": [
+        "white",
+        "black",
+        "sky",
+        "red",
+        "mint",
+        "mustard"
+      ]
+    },
+    "outer": {
+      "item": "createapparel:zipup_hoodie",
+      "material": "cotton",
+      "primary_color": [
+        "rose",
+        "lavender"
+      ],
+      "design": [
+        "plain"
+      ],
+      "styles": {
+        "open": "opened",
+        "hood": "down"
+      }
+    },
+    "bottom": {
+      "item": "createapparel:a_line_skirt_knee",
+      "material": "cotton",
+      "primary_color": [
+        "beige",
+        "light_gray",
+        "sky",
+        "black"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "legwear": {
+      "item": "createapparel:knee_high_socks",
+      "material": "cotton",
+      "primary_color": [
+        "black"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:sneakers",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "cream",
+        "sky",
+        "mint",
+        "pink"
+      ],
+      "design": [
+        "plain"
+      ],
+      "secondary_color": [
+        "white"
+      ],
+      "accent_color": [
+        "white"
+      ]
+    }
+  }
+}

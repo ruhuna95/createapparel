@@ -1,0 +1,54 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:blouse_round_three_quarter_sleeve",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "cream",
+        "greige"
+      ],
+      "design": [
+        "plain"
+      ],
+      "styles": {
+        "tuck": "tucked"
+      }
+    },
+    "bottom": {
+      "item": "createapparel:flared_skirt_knee",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black",
+        "pink",
+        "rose",
+        "tan",
+        "mint",
+        "lavender"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:canvas_sneakers",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "cream",
+        "sky",
+        "mint"
+      ],
+      "design": [
+        "plain"
+      ],
+      "secondary_color": [
+        "white"
+      ],
+      "accent_color": [
+        "white"
+      ]
+    }
+  }
+}

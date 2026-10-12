@@ -20,6 +20,9 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         addEntityType(ModEntities.CITIZEN, "市民");
+        addItem(ModItems.SMART_PHONE, "スマートフォン");
+        addItem(ModItems.CITIZEN_SPAWN_EGG, "市民のスポーンエッグ");
+        add("message.createapparel.citizen_conversion_failed", "村人を市民に変換できませんでした。");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL, "鏡パネル");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRROR_BLOCK, "鏡ブロック");
         addBlock(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR, "鉄の鏡付きドア");
@@ -90,6 +93,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.hanger.normal", "トップスとアウターを掛けることができる。");
         add("tooltip.createapparel.hanger.clip", "ボトムスを掛けることができる。");
         add("tooltip.createapparel.wardrobe.change_clothes", "衣服を着替えることができる。");
+        add("tooltip.createapparel.smart_phone.convert_villager", "村人に使用することで市民に変えることができる。");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), materialName(material));
         }

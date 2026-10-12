@@ -1,0 +1,22 @@
+{
+  "arm_profile": "classic",
+  "chest_profile": "flat",
+  "skin_tone": [
+    "fair",
+    "natural",
+    "healthy"
+  ],
+  "hair_style": "createapparel:mash",
+  "hair_color": [
+    "black",
+    "brown"
+  ],
+  "eye_color": [
+    "black",
+    "brown"
+  ],
+  "garment_presets": [
+    "createapparel:child_male_casual_01",
+    "createapparel:child_male_casual_02"
+  ]
+}

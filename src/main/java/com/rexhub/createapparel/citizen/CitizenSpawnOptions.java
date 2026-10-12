@@ -48,7 +48,8 @@ public record CitizenSpawnOptions(CitizenAppearance appearance, CitizenAge age, 
             case 2 -> List.of("*", "adult", "child");
             case 3 -> withRandom(Arrays.stream(SkinTone.values()).map(SkinTone::getSerializedName).toList());
             case 4 -> withRandom(HAIR_STYLES);
-            case 5, 6 -> withRandom(CitizenDyeColors.PALETTE.stream().map(net.minecraft.world.item.DyeColor::getName).toList());
+            case 5, 6 -> withRandom(CitizenDyeColors.NAMED_PALETTE.stream()
+                    .map(com.rexhub.createapparel.material.FabricColor::getSerializedName).toList());
             case 7 -> withRandom(Arrays.stream(CitizenOutfitPreset.values()).map(CitizenOutfitPreset::id).toList());
             default -> List.of();
         };
@@ -65,9 +66,9 @@ public record CitizenSpawnOptions(CitizenAppearance appearance, CitizenAge age, 
     private static <T> T choose(T[] values, RandomSource random) { return values[random.nextInt(values.length)]; }
 
     private static int color(String id, RandomSource random, boolean allowRgb) {
-        if (id.isEmpty()) return CitizenDyeColors.rgb(CitizenDyeColors.PALETTE.get(random.nextInt(CitizenDyeColors.PALETTE.size())));
-        var dye = CitizenDyeColors.byName(id);
-        if (dye.isPresent()) return CitizenDyeColors.rgb(dye.get());
+        if (id.isEmpty()) return CitizenDyeColors.NAMED_PALETTE.get(random.nextInt(CitizenDyeColors.NAMED_PALETTE.size())).tintRgb();
+        var dye = CitizenDyeColors.namedRgb(id);
+        if (dye.isPresent()) return dye.get();
         if (allowRgb && id.matches("(?:#|0x)[0-9a-fA-F]{6}")) return Integer.parseInt(id.substring(id.startsWith("#") ? 1 : 2), 16);
         throw new IllegalArgumentException("Unknown " + (allowRgb ? "hair color (dye name or #RRGGBB)" : "eye dye color") + ": " + id);
     }

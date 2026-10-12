@@ -1,0 +1,49 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:blouse_round",
+      "material": "silk",
+      "primary_color": [
+        "white",
+        "cream"
+      ],
+      "design": [
+        "plain"
+      ],
+      "styles": {
+        "tuck": "tucked"
+      }
+    },
+    "bottom": {
+      "item": "createapparel:tight_skirt_midi",
+      "material": "wool",
+      "primary_color": [
+        "black"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "legwear": {
+      "item": "createapparel:tights",
+      "material": "synthetic",
+      "primary_color": [
+        "black",
+        "beige"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:pumps",
+      "material": "leather",
+      "primary_color": [
+        "black"
+      ],
+      "design": [
+        "plain"
+      ]
+    }
+  }
+}

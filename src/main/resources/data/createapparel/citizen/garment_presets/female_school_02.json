@@ -1,0 +1,68 @@
+{
+  "garments": {
+    "top": {
+      "item": "createapparel:sailor_blouse_shortsleeves",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "light_gray",
+        "gray",
+        "navy",
+        "black"
+      ],
+      "design": [
+        "plain"
+      ],
+      "secondary_color": [
+        "white",
+        "light_gray",
+        "gray",
+        "navy",
+        "black"
+      ],
+      "accent_color": [
+        "red",
+        "blue",
+        "burgundy"
+      ]
+    },
+    "bottom": {
+      "item": "createapparel:pleated_skirt_knee",
+      "material": "wool",
+      "primary_color": [
+        "red",
+        "blue",
+        "gray"
+      ],
+      "design": [
+        "plain",
+        "tartan_check"
+      ],
+      "secondary_color": [
+        "white"
+      ]
+    },
+    "legwear": {
+      "item": "createapparel:crew_socks",
+      "material": "cotton",
+      "primary_color": [
+        "white",
+        "black"
+      ],
+      "design": [
+        "plain"
+      ]
+    },
+    "feet": {
+      "item": "createapparel:loafers",
+      "material": "leather",
+      "primary_color": [
+        "black",
+        "brown"
+      ],
+      "design": [
+        "plain"
+      ]
+    }
+  }
+}

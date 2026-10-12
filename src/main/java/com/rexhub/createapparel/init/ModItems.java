@@ -82,6 +82,10 @@ public final class ModItems {
             "sewing_pattern",
             () -> new SewingPatternItem(new Item.Properties().stacksTo(1))
     );
+    public static final RegistryObject<Item> SMART_PHONE = ModRegistries.ITEMS.register("smart_phone",
+            () -> new com.rexhub.createapparel.item.SmartPhoneItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> CITIZEN_SPAWN_EGG = ModRegistries.ITEMS.register("citizen_spawn_egg",
+            () -> new com.rexhub.createapparel.item.CitizenSpawnEggItem(new Item.Properties()));
     public static final RegistryObject<Item> T_SHIRT = registerGarment("t_shirt");
     public static final RegistryObject<Item> T_SHIRT_U_NECK = registerGarment("t_shirt_u_neck");
     public static final RegistryObject<Item> T_SHIRT_V_NECK = registerGarment("t_shirt_v_neck");
@@ -519,6 +523,8 @@ public final class ModItems {
         items.addAll(ModMirrors.ITEMS.values());
         items.add(ModFluids.MIRROR_COATING_BUCKET);
         items.add(SEWING_PATTERN);
+        items.add(SMART_PHONE);
+        items.add(CITIZEN_SPAWN_EGG);
         addMaterialGroup(
                 items,
                 FabricMaterial.COTTON,

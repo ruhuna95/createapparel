@@ -33,6 +33,19 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         addThreadTags();
         addFabricTags();
         addGemTags();
+        tag(ModTags.Items.CITIZEN_LOWER_COVERING_TOPS).add(
+                ModItems.A_LINE_DRESS_KNEE.get(), ModItems.A_LINE_DRESS_MIDI.get(),
+                ModItems.FIT_AND_FLARE_DRESS_KNEE.get(), ModItems.FIT_AND_FLARE_DRESS_MIDI.get(),
+                ModItems.STRAIGHT_DRESS_MINI.get(), ModItems.STRAIGHT_DRESS_KNEE.get(), ModItems.STRAIGHT_DRESS_MIDI.get(),
+                ModItems.SHIRT_DRESS_KNEE.get(), ModItems.SHIRT_DRESS_MIDI.get(),
+                ModItems.JUMPER_DRESS_MINI_SHORTSLEEVES.get(), ModItems.JUMPER_DRESS_MINI_LONGSLEEVES.get(),
+                ModItems.JUMPER_DRESS_KNEE_SHORTSLEEVES.get(), ModItems.JUMPER_DRESS_KNEE_LONGSLEEVES.get(),
+                ModItems.JUMPER_DRESS_MIDI_SHORTSLEEVES.get(), ModItems.JUMPER_DRESS_MIDI_LONGSLEEVES.get(),
+                ModItems.CAMISOLE_DRESS_KNEE_SHORTSLEEVES.get(), ModItems.CAMISOLE_DRESS_KNEE_LONGSLEEVES.get(),
+                ModItems.CAMISOLE_DRESS_MIDI_SHORTSLEEVES.get(), ModItems.CAMISOLE_DRESS_MIDI_LONGSLEEVES.get(),
+                ModItems.CAMISOLE_DRESS_LONG_SHORTSLEEVES.get(), ModItems.CAMISOLE_DRESS_LONG_LONGSLEEVES.get(),
+                ModItems.CAMISOLE_DRESS_MAXI_SHORTSLEEVES.get(), ModItems.CAMISOLE_DRESS_MAXI_LONGSLEEVES.get(),
+                ModItems.BODYCON_DRESS_MINI.get(), ModItems.BODYCON_DRESS_KNEE.get(), ModItems.BODYCON_DRESS_MIDI.get());
         var apparelDyes = tag(ModTags.Items.APPAREL_DYES);
         ModItems.apparelDyes().values().forEach(item -> apparelDyes.add(item.get()));
         tag(ModTags.Items.SILKWORM_FOOD).addTag(ItemTags.LEAVES);

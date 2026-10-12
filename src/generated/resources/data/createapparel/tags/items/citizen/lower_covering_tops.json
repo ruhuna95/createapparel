@@ -1,0 +1,30 @@
+{
+  "values": [
+    "createapparel:a_line_dress_knee",
+    "createapparel:a_line_dress_midi",
+    "createapparel:fit_and_flare_dress_knee",
+    "createapparel:fit_and_flare_dress_midi",
+    "createapparel:straight_dress_mini",
+    "createapparel:straight_dress_knee",
+    "createapparel:straight_dress_midi",
+    "createapparel:shirt_dress_knee",
+    "createapparel:shirt_dress_midi",
+    "createapparel:jumper_dress_mini_shortsleeves",
+    "createapparel:jumper_dress_mini_longsleeves",
+    "createapparel:jumper_dress_knee_shortsleeves",
+    "createapparel:jumper_dress_knee_longsleeves",
+    "createapparel:jumper_dress_midi_shortsleeves",
+    "createapparel:jumper_dress_midi_longsleeves",
+    "createapparel:camisole_dress_knee_shortsleeves",
+    "createapparel:camisole_dress_knee_longsleeves",
+    "createapparel:camisole_dress_midi_shortsleeves",
+    "createapparel:camisole_dress_midi_longsleeves",
+    "createapparel:camisole_dress_long_shortsleeves",
+    "createapparel:camisole_dress_long_longsleeves",
+    "createapparel:camisole_dress_maxi_shortsleeves",
+    "createapparel:camisole_dress_maxi_longsleeves",
+    "createapparel:bodycon_dress_mini",
+    "createapparel:bodycon_dress_knee",
+    "createapparel:bodycon_dress_midi"
+  ]
+}

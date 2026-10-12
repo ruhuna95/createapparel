@@ -52,11 +52,13 @@ public final class ModItemModelProvider extends ItemModelProvider {
                 getBuilder(item.getId().getPath()).parent(dyeModel);
             } else if (item == ModItems.COTTON_BOLL) {
                 generatedItem(item, "cotton_ball");
-            } else if (item == ModItems.SILKWORM_SPAWN_EGG) {
+            } else if (item == ModItems.SILKWORM_SPAWN_EGG || item == ModItems.CITIZEN_SPAWN_EGG) {
                 withExistingParent(item.getId().getPath(), mcLoc("item/template_spawn_egg"));
             } else if (item == ModItems.SEWING_PATTERN) {
                 withExistingParent(item.getId().getPath(), mcLoc("item/generated"))
                         .texture("layer0", modLoc("item/sewing_pattern"));
+            } else if (item == ModItems.SMART_PHONE) {
+                smartPhoneModel();
             } else if (item == ModItems.WARDROBE) {
                 wardrobeModel();
             } else if (item.get() instanceof MannequinItem mannequin) {
@@ -80,6 +82,26 @@ public final class ModItemModelProvider extends ItemModelProvider {
 
     private void dyedFabric(RegistryObject<Item> item, FabricAttribute attribute) {
         generatedItem(item, attribute.material().getSerializedName() + "_fabric_tint");
+    }
+
+    private void smartPhoneModel() {
+        ItemModelBuilder model = getBuilder("smart_phone").texture("phone", modLoc("item/smart_phone"))
+                .texture("particle", "#phone");
+        var body = model.element().from(4.5F, 1.5F, 7.5F).to(11.5F, 14.5F, 8.5F);
+        body.face(Direction.SOUTH).texture("#phone").uvs(0, 1, 7, 14).end();
+        body.face(Direction.NORTH).texture("#phone").uvs(8, 1, 15, 14).end();
+        for (Direction side : new Direction[]{Direction.EAST, Direction.WEST, Direction.UP, Direction.DOWN}) {
+            body.face(side).texture("#phone").uvs(15, 1, 16, 2).end();
+        }
+        body.end();
+        model.transforms()
+                .transform(ItemDisplayContext.GUI).rotation(10, -15, 0).scale(1).end()
+                .transform(ItemDisplayContext.GROUND).rotation(90, 0, 0).translation(0, 1, 0).scale(0.5F).end()
+                .transform(ItemDisplayContext.FIXED).scale(0.75F).end()
+                .transform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND).rotation(0, 0, -10).translation(1, 1, 0).scale(0.7F).end()
+                .transform(ItemDisplayContext.FIRST_PERSON_LEFT_HAND).rotation(0, 0, 10).translation(1, 1, 0).scale(0.7F).end()
+                .transform(ItemDisplayContext.THIRD_PERSON_RIGHT_HAND).rotation(0, 0, 0).translation(0, 2, 1).scale(0.6F).end()
+                .transform(ItemDisplayContext.THIRD_PERSON_LEFT_HAND).rotation(0, 0, 0).translation(0, 2, 1).scale(0.6F).end();
     }
 
     private void wardrobeModel() {

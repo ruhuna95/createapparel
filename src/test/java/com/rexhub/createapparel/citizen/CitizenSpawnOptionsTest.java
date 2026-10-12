@@ -6,6 +6,7 @@ import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.apparel.SkinTone;
 import com.rexhub.createapparel.entity.CitizenAge;
 import net.minecraft.world.item.DyeColor;
+import com.rexhub.createapparel.material.FabricColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class CitizenSpawnOptionsTest {
         assertEquals(SkinTone.DARK, appearance.skinTone());
         assertEquals(ResourceLocation.parse("createapparel:twintails"), appearance.hairStyleId());
         assertEquals(0x123ABC, appearance.hairColorRgb());
-        assertEquals(CitizenDyeColors.rgb(DyeColor.BLUE), appearance.eyeColorRgb());
+        assertEquals(FabricColor.BLUE.tintRgb(), appearance.eyeColorRgb());
         assertEquals(CitizenOutfitPreset.DEFAULT, options.outfit());
         assertEquals(ChestProfile.BUST, parse("classic bust").appearance().chestProfile());
     }
@@ -85,18 +86,18 @@ class CitizenSpawnOptionsTest {
         assertEquals(Set.of(SkinTone.values()), skins);
         assertEquals(Set.copyOf(CitizenSpawnOptions.HAIR_STYLES), hair);
         Set<Integer> palette = new HashSet<>();
-        for (DyeColor color : DyeColor.values()) palette.add(CitizenDyeColors.rgb(color));
+        for (FabricColor color : FabricColor.values()) palette.add(color.tintRgb());
         assertEquals(palette, hairColors);
         assertEquals(palette, eyes);
     }
 
     @Test
     void allDyeNamesAndResourcePackHairIdsAreSupported() {
-        for (DyeColor color : DyeColor.values()) {
+        for (FabricColor color : FabricColor.values()) {
             var options = parse("classic flat adult natural example:custom_hair " + color.getSerializedName() + " "
                     + color.getSerializedName() + " createapparel:default");
-            assertEquals(CitizenDyeColors.rgb(color), options.appearance().hairColorRgb());
-            assertEquals(CitizenDyeColors.rgb(color), options.appearance().eyeColorRgb());
+            assertEquals(color.tintRgb(), options.appearance().hairColorRgb());
+            assertEquals(color.tintRgb(), options.appearance().eyeColorRgb());
             assertEquals(ResourceLocation.parse("example:custom_hair"), options.appearance().hairStyleId());
         }
         assertEquals(0xFFFFFF, parse("* * * * * 0xFFFFFF").appearance().hairColorRgb());
@@ -105,7 +106,7 @@ class CitizenSpawnOptionsTest {
     @Test
     void invalidExplicitValuesAndExcessArgumentsFail() {
         for (String input : new String[]{"wrong", "* wrong", "* * wrong", "* * * wrong", "* * * * INVALID",
-                "* * * * * mint", "* * * * * * plum",
+                "* * * * * unknown_dye", "* * * * * * unknown_dye",
                 "* * * * * #123", "* * * * * #FFFFFFF", "* * * * * * #FFFFFF", "* * * * * * missing",
                 "* * * * * * * missing", "* * * * * * * * extra"}) {
             assertThrows(IllegalArgumentException.class, () -> parse(input), input);

@@ -1,0 +1,18 @@
+{
+  "arm_profile": "classic",
+  "chest_profile": "flat",
+  "skin_tone": ["fair", "natural", "healthy", "tanned", "light_brown", "brown"],
+  "hair_style": "createapparel:centerpart",
+  "hair_color": ["light_gray", "black", "brown", "yellow", "cream", "greige"],
+  "eye_color": ["black", "brown", "greige", "sky"],
+  "garment_presets": [
+    "createapparel:male_casual_01",
+    "createapparel:male_casual_02",
+    "createapparel:male_casual_03",
+    "createapparel:male_casual_04",
+    "createapparel:male_formal_01",
+    "createapparel:male_formal_02",
+    "createapparel:male_formal_03",
+    "createapparel:male_school_01"
+  ]
+}
