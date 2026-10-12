@@ -2,10 +2,13 @@ package com.rexhub.createapparel.gametest;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.citizen.CitizenCoverage;
+import com.rexhub.createapparel.citizen.CitizenBodyPreset;
 import com.rexhub.createapparel.citizen.CitizenPresetManager;
+import com.rexhub.createapparel.citizen.CitizenPresetSelector;
 import com.rexhub.createapparel.citizen.CitizenSpawnInitialization;
 import com.rexhub.createapparel.entity.Citizen;
 import com.rexhub.createapparel.entity.CitizenAge;
+import com.rexhub.createapparel.entity.CitizenAppearance;
 import com.rexhub.createapparel.entity.CitizenState;
 import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
@@ -29,6 +32,45 @@ import java.util.Set;
 @PrefixGameTestTemplate(false)
 public final class CitizenSpawnEggGameTests {
     private CitizenSpawnEggGameTests() { }
+
+    private static boolean matchesBody(CitizenBodyPreset body, CitizenAppearance appearance) {
+        return body.armProfile() == appearance.armProfile() && body.chestProfile() == appearance.chestProfile()
+                && body.hairStyle().equals(appearance.hairStyleId()) && body.skinTones().contains(appearance.skinTone())
+                && body.hairColors().stream().anyMatch(color -> color.tintRgb() == appearance.hairColorRgb())
+                && body.eyeColors().stream().anyMatch(color -> color.tintRgb() == appearance.eyeColorRgb());
+    }
+
+    @GameTest(template = "apparel_state", batch = "citizen", timeoutTicks = 200)
+    public static void genderPoolsStayBalancedAndRemovedBaldPresetDoesNotSpawn(GameTestHelper helper) {
+        var live = CitizenPresetManager.snapshot();
+        helper.assertTrue(!live.bodies().get(CitizenAge.ADULT).containsKey(net.minecraft.resources.ResourceLocation.parse("createapparel:male_bald")),
+                "Deleted male bald preset is not in the loaded catalog");
+        for (var age : CitizenAge.values()) {
+            var males = live.bodies().get(age).entrySet().stream().filter(entry -> entry.getKey().getPath().startsWith("male_"))
+                    .map(java.util.Map.Entry::getValue).toList();
+            var females = live.bodies().get(age).entrySet().stream().filter(entry -> entry.getKey().getPath().startsWith("female_"))
+                    .map(java.util.Map.Entry::getValue).toList();
+            helper.assertTrue(!males.isEmpty() && !females.isEmpty() && males.size() != females.size(), "Shipped age group has unequal male/female preset counts");
+            var random = RandomSource.create(1855050 + age.ordinal());
+            int maleCount = 0;
+            for (int i = 0; i < 2000; i++) {
+                var appearance = CitizenPresetSelector.select(live, age, random).appearance();
+                boolean male = males.stream().anyMatch(body -> matchesBody(body, appearance));
+                boolean female = females.stream().anyMatch(body -> matchesBody(body, appearance));
+                helper.assertTrue(male != female, "Spawn appearance belongs to exactly one named gender pool");
+                maleCount += male ? 1 : 0;
+            }
+            helper.assertTrue(maleCount > 900 && maleCount < 1100, "Shipped gender draws are balanced: " + age + " / " + maleCount);
+            for (int i = 0; i < 24; i++) {
+                var citizen = ModEntities.CITIZEN.get().create(helper.getLevel());
+                helper.assertTrue(citizen != null, "Citizen factory");
+                CitizenSpawnInitialization.initialize(citizen, age, random);
+                helper.assertTrue(citizen.citizenState().age() == age, "Balanced spawn retains its age");
+                checkSaved(helper, citizen);
+            }
+        }
+        helper.succeed();
+    }
 
     private static void checkSaved(GameTestHelper helper, Citizen citizen) {
         helper.assertTrue(CitizenCoverage.isCovered(citizen.citizenState().loadout()), "Spawned Citizen is clothed");

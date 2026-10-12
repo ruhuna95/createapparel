@@ -16,12 +16,25 @@ public final class CitizenPresetSelector {
     private CitizenPresetSelector() { }
 
     public static Selection select(CitizenPresetManager.Snapshot snapshot, CitizenAge age, RandomSource random) {
-        List<CitizenBodyPreset> bodies = snapshot.bodies().getOrDefault(age, Map.of()).entrySet().stream()
+        var eligible = snapshot.bodies().getOrDefault(age, Map.of()).entrySet().stream()
                 .filter(entry -> !entry.getKey().equals(FALLBACK_PRESET_ID))
-                .map(Map.Entry::getValue)
-                .filter(body -> body.garmentPresets().stream().anyMatch(id -> isSelectableGarment(snapshot, id)))
+                .filter(entry -> entry.getValue().garmentPresets().stream().anyMatch(id -> isSelectableGarment(snapshot, id)))
                 .toList();
-        if (bodies.isEmpty()) return fallback();
+        if (eligible.isEmpty()) return fallback();
+        List<CitizenBodyPreset> males = eligible.stream().filter(entry -> entry.getKey().getPath().startsWith("male_"))
+                .map(Map.Entry::getValue).toList();
+        List<CitizenBodyPreset> females = eligible.stream().filter(entry -> entry.getKey().getPath().startsWith("female_"))
+                .map(Map.Entry::getValue).toList();
+        List<CitizenBodyPreset> bodies;
+        if (!males.isEmpty() && !females.isEmpty()) {
+            bodies = random.nextBoolean() ? males : females;
+        } else if (!males.isEmpty()) {
+            bodies = males;
+        } else if (!females.isEmpty()) {
+            bodies = females;
+        } else {
+            bodies = eligible.stream().map(Map.Entry::getValue).toList();
+        }
         CitizenBodyPreset body = bodies.get(random.nextInt(bodies.size()));
         List<ResourceLocation> garments = body.garmentPresets().stream().filter(id -> isSelectableGarment(snapshot, id)).toList();
         CitizenGarmentPreset garment = snapshot.garments().get(CitizenPresetJson.choose(garments, random));

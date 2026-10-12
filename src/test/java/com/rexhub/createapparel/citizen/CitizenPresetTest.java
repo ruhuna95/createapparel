@@ -119,6 +119,68 @@ class CitizenPresetTest {
     }
 
     @Test
+    void genderIsBalancedBeforeUniformBodySelectionDespiteDifferentPresetCounts() {
+        var shared = ResourceLocation.parse("createapparel:shared");
+        for (var age : CitizenAge.values()) {
+            Map<ResourceLocation, CitizenBodyPreset> bodies = new java.util.LinkedHashMap<>();
+            for (int i = 0; i < 7; i++) {
+                var json = body();
+                boolean male = i < 2;
+                json.addProperty("arm_profile", "classic");
+                json.addProperty("chest_profile", "flat");
+                json.addProperty("hair_style", male ? "createapparel:short" : "createapparel:bob");
+                json.addProperty("skin_tone", SkinTone.values()[male ? i : i - 2].getSerializedName());
+                bodies.put(ResourceLocation.parse("createapparel:" + (male ? "male_" : "female_") + i), CitizenBodyPreset.fromJson(json));
+            }
+            var legacyJson = body();
+            legacyJson.addProperty("hair_style", "createapparel:bald");
+            var legacy = CitizenBodyPreset.fromJson(legacyJson);
+            bodies.put(ResourceLocation.parse("createapparel:legacy"), legacy);
+            bodies.put(ResourceLocation.parse("createapparel:default"), legacy);
+            var snapshot = new CitizenPresetManager.Snapshot(Map.of(age, bodies),
+                    Map.of(shared, CitizenGarmentPreset.builtIn()), Map.of(), Map.of());
+            Map<CitizenAppearance, Integer> counts = new java.util.HashMap<>();
+            var random = RandomSource.create(185050 + age.ordinal());
+            int maleCount = 0;
+            for (int i = 0; i < 20000; i++) {
+                var appearance = CitizenPresetSelector.select(snapshot, age, random).appearance();
+                assertNotEquals(legacy.appearance(), appearance, "Unclassified and default bodies stay outside gendered draws");
+                maleCount += appearance.hairStyleId().getPath().equals("short") ? 1 : 0;
+                counts.merge(appearance, 1, Integer::sum);
+            }
+            assertTrue(maleCount > 9600 && maleCount < 10400, "Gender ratio stays close to fifty percent: " + maleCount);
+            assertEquals(7, counts.size());
+            for (var entry : counts.entrySet()) {
+                boolean male = entry.getKey().hairStyleId().getPath().equals("short");
+                int expected = male ? 5000 : 2000;
+                assertTrue(entry.getValue() > expected * 0.85 && entry.getValue() < expected * 1.15,
+                        "Bodies remain uniform within their gender: " + entry);
+            }
+        }
+    }
+
+    @Test
+    void missingGenderUsesAvailablePoolWithoutSelectingDefaultOrUnusableBodies() {
+        var shared = ResourceLocation.parse("createapparel:shared");
+        var unavailableJson = body();
+        unavailableJson.add("garment_presets", JsonParser.parseString("[\"createapparel:default\"]"));
+        var unavailable = CitizenBodyPreset.fromJson(unavailableJson);
+        for (var age : CitizenAge.values()) for (String available : List.of("male", "female")) {
+            var validJson = body();
+            validJson.addProperty("hair_style", "createapparel:bob");
+            var valid = CitizenBodyPreset.fromJson(validJson);
+            var snapshot = new CitizenPresetManager.Snapshot(Map.of(age, Map.of(
+                    ResourceLocation.parse("createapparel:" + available + "_valid"), valid,
+                    ResourceLocation.parse("createapparel:" + (available.equals("male") ? "female" : "male") + "_invalid"), unavailable,
+                    ResourceLocation.parse("createapparel:default"), unavailable)),
+                    Map.of(shared, CitizenGarmentPreset.builtIn(), ResourceLocation.parse("createapparel:default"), CitizenGarmentPreset.builtIn()),
+                    Map.of(), Map.of());
+            var random = RandomSource.create(1851);
+            for (int i = 0; i < 100; i++) assertEquals(valid.appearance(), CitizenPresetSelector.select(snapshot, age, random).appearance());
+        }
+    }
+
+    @Test
     void emptyOrUnresolvedCatalogUsesBuiltInFallbackForBothAges() {
         for (CitizenAge age : CitizenAge.values()) {
             for (var bodies : List.of(Map.<CitizenAge, Map<ResourceLocation, CitizenBodyPreset>>of(),
