@@ -376,4 +376,75 @@ public final class CitizenMenuGameTests {
                     "Reload preserves edited appearance, actual clothes and equipped styles");
         });
     }
+
+    @GameTest(template = "apparel_state", batch = "citizen")
+    public static void appearanceWheelStepsUseCurrentServerValuesAndWrapEveryOption(GameTestHelper helper) {
+        var f = fixture(helper);
+        CitizenActionPacket.tab(f.menu(), CitizenMenu.Tab.APPEARANCE).handle(f.player());
+        var options = new java.util.EnumMap<CitizenActionPacket.Action, List<String>>(CitizenActionPacket.Action.class);
+        options.put(CitizenActionPacket.Action.ARM_PROFILE, List.of("classic", "slim"));
+        options.put(CitizenActionPacket.Action.CHEST_PROFILE, List.of("flat", "bust"));
+        options.put(CitizenActionPacket.Action.SKIN_TONE, java.util.Arrays.stream(SkinTone.values()).map(SkinTone::getSerializedName).toList());
+        options.put(CitizenActionPacket.Action.HAIR_STYLE, com.rexhub.createapparel.citizen.CitizenHairStyles.BUILT_IN.stream()
+                .map(name -> "createapparel:" + name).toList());
+        options.put(CitizenActionPacket.Action.HAIR_COLOR, java.util.Arrays.stream(FabricColor.values()).map(FabricColor::getSerializedName).toList());
+        options.put(CitizenActionPacket.Action.EYE_COLOR, options.get(CitizenActionPacket.Action.HAIR_COLOR));
+        for (var entry : options.entrySet()) {
+            var field = entry.getKey();
+            var values = entry.getValue();
+            CitizenActionPacket.select(f.menu(), field, values.get(0)).handle(f.player());
+            for (int click = 0; click < 3; click++) CitizenActionPacket.step(f.menu(), field, 1).handle(f.player());
+            helper.assertTrue(appearanceOption(f.citizen(), field).equals(values.get(3 % values.size())), "Rapid steps accumulate from server state: " + field);
+            for (int click = 0; click < 2; click++) CitizenActionPacket.step(f.menu(), field, -1).handle(f.player());
+            helper.assertTrue(appearanceOption(f.citizen(), field).equals(values.get(1)), "Upward wheel reverses exactly one step: " + field);
+            for (int click = 0; click < values.size(); click++) CitizenActionPacket.step(f.menu(), field, 1).handle(f.player());
+            helper.assertTrue(appearanceOption(f.citizen(), field).equals(values.get(1)), "Full cycle visits every option and wraps: " + field);
+            CitizenActionPacket.select(f.menu(), field, values.get(0)).handle(f.player());
+            CitizenActionPacket.step(f.menu(), field, -1).handle(f.player());
+            helper.assertTrue(appearanceOption(f.citizen(), field).equals(values.get(values.size() - 1)), "Negative step wraps at start: " + field);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "citizen")
+    public static void appearanceWheelRejectsInvalidDeltasAndHiddenTabsAndHandlesLegacyColors(GameTestHelper helper) {
+        var f = fixture(helper);
+        CitizenActionPacket.tab(f.menu(), CitizenMenu.Tab.APPEARANCE).handle(f.player());
+        var before = f.citizen().citizenState().serializeNBT();
+        for (int delta : new int[]{0, 2, -2, Integer.MIN_VALUE, Integer.MAX_VALUE}) {
+            CitizenActionPacket.step(f.menu(), CitizenActionPacket.Action.HAIR_COLOR, delta).handle(f.player());
+        }
+        new CitizenActionPacket(19, f.citizen().getId(), CitizenActionPacket.Action.HAIR_COLOR, 1, "", "navy").handle(f.player());
+        new CitizenActionPacket(20, f.citizen().getId(), CitizenActionPacket.Action.HAIR_COLOR, 1, "", "").handle(f.player());
+        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()), "Invalid delta, mixed absolute value and stale menu rejected");
+        for (var tab : List.of(CitizenMenu.Tab.GARMENT, CitizenMenu.Tab.BEHAVIOR)) {
+            CitizenActionPacket.tab(f.menu(), tab).handle(f.player());
+            CitizenActionPacket.step(f.menu(), CitizenActionPacket.Action.HAIR_COLOR, 1).handle(f.player());
+            helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()), "Hidden appearance buttons cannot change values");
+        }
+        CitizenActionPacket.tab(f.menu(), CitizenMenu.Tab.APPEARANCE).handle(f.player());
+        for (int direction : new int[]{1, -1}) {
+            var appearance = f.citizen().citizenState().appearance();
+            f.citizen().citizenState().setAppearance(new com.rexhub.createapparel.entity.CitizenAppearance(appearance.skinTone(),
+                    appearance.armProfile(), appearance.chestProfile(), appearance.hairStyleId(), 0x123456, appearance.eyeColorRgb()));
+            CitizenActionPacket.step(f.menu(), CitizenActionPacket.Action.HAIR_COLOR, direction).handle(f.player());
+            helper.assertTrue(f.citizen().citizenState().appearance().hairColorRgb()
+                    == (direction > 0 ? FabricColor.WHITE : FabricColor.PLUM).tintRgb(), "Legacy custom RGB enters palette at requested edge");
+        }
+        helper.succeed();
+    }
+
+    private static String appearanceOption(Citizen citizen, CitizenActionPacket.Action action) {
+        var appearance = citizen.citizenState().appearance();
+        return switch (action) {
+            case ARM_PROFILE -> appearance.armProfile().getSerializedName();
+            case CHEST_PROFILE -> appearance.chestProfile().getSerializedName();
+            case SKIN_TONE -> appearance.skinTone().getSerializedName();
+            case HAIR_STYLE -> appearance.hairStyleId().toString();
+            case HAIR_COLOR, EYE_COLOR -> java.util.Arrays.stream(FabricColor.values())
+                    .filter(color -> color.tintRgb() == (action == CitizenActionPacket.Action.HAIR_COLOR ? appearance.hairColorRgb() : appearance.eyeColorRgb()))
+                    .findFirst().orElseThrow().getSerializedName();
+            default -> throw new IllegalArgumentException("Not an appearance field: " + action);
+        };
+    }
 }

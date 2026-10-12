@@ -9,11 +9,14 @@ import com.rexhub.createapparel.citizen.CitizenHairStyles;
 import com.rexhub.createapparel.entity.CitizenAppearance;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.menu.CitizenMenu;
+import com.rexhub.createapparel.material.FabricColor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
 
 public record CitizenActionPacket(int containerId, int entityId, @Nullable Action action,
                                   int index, String category, String value) {
@@ -27,6 +30,11 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
     public static CitizenActionPacket tab(CitizenMenu menu, CitizenMenu.Tab tab) {
         return new CitizenActionPacket(menu.containerId, menu.citizen() == null ? -1 : menu.citizen().getId(),
                 Action.TAB, tab.ordinal(), "", "");
+    }
+
+    public static CitizenActionPacket step(CitizenMenu menu, Action action, int direction) {
+        return new CitizenActionPacket(menu.containerId, menu.citizen() == null ? -1 : menu.citizen().getId(),
+                action, direction, "", "");
     }
 
     public static CitizenActionPacket style(CitizenMenu menu, GarmentSlot slot, String category, String value) {
@@ -66,9 +74,14 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
             }
             return;
         }
-        if (menu.tab() != CitizenMenu.Tab.APPEARANCE || index != 0 || !category.isEmpty()) return;
+        if (menu.tab() != CitizenMenu.Tab.APPEARANCE || !category.isEmpty()) return;
         var state = menu.citizen().citizenState();
         var current = state.appearance();
+        String selectedValue = value;
+        if (index != 0) {
+            if (!value.isEmpty() || index != -1 && index != 1) return;
+            selectedValue = steppedValue(current, action, index);
+        }
         try {
             var skin = current.skinTone();
             var arms = current.armProfile();
@@ -77,20 +90,48 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
             int hairColor = current.hairColorRgb();
             int eyeColor = current.eyeColorRgb();
             switch (action) {
-                case ARM_PROFILE -> arms = ArmProfile.fromSerializedName(value);
-                case CHEST_PROFILE -> chest = ChestProfile.fromSerializedName(value);
-                case SKIN_TONE -> skin = SkinTone.fromSerializedName(value);
+                case ARM_PROFILE -> arms = ArmProfile.fromSerializedName(selectedValue);
+                case CHEST_PROFILE -> chest = ChestProfile.fromSerializedName(selectedValue);
+                case SKIN_TONE -> skin = SkinTone.fromSerializedName(selectedValue);
                 case HAIR_STYLE -> {
-                    var id = ResourceLocation.tryParse(value);
+                    var id = ResourceLocation.tryParse(selectedValue);
                     if (id == null || !id.getNamespace().equals(CreateApparel.MOD_ID)
                             || !CitizenHairStyles.BUILT_IN.contains(id.getPath())) return;
                     hair = id;
                 }
-                case HAIR_COLOR -> hairColor = CitizenDyeColors.namedRgb(value).orElseThrow(IllegalArgumentException::new);
-                case EYE_COLOR -> eyeColor = CitizenDyeColors.namedRgb(value).orElseThrow(IllegalArgumentException::new);
+                case HAIR_COLOR -> hairColor = CitizenDyeColors.namedRgb(selectedValue).orElseThrow(IllegalArgumentException::new);
+                case EYE_COLOR -> eyeColor = CitizenDyeColors.namedRgb(selectedValue).orElseThrow(IllegalArgumentException::new);
                 default -> { return; }
             }
             state.setAppearance(new CitizenAppearance(skin, arms, chest, hair, hairColor, eyeColor));
         } catch (IllegalArgumentException ignored) { }
+    }
+
+    private static String steppedValue(CitizenAppearance appearance, Action action, int direction) {
+        return switch (action) {
+            case ARM_PROFILE -> cycle(Arrays.stream(ArmProfile.values()).map(ArmProfile::getSerializedName).toList(),
+                    appearance.armProfile().getSerializedName(), direction);
+            case CHEST_PROFILE -> cycle(Arrays.stream(ChestProfile.values()).map(ChestProfile::getSerializedName).toList(),
+                    appearance.chestProfile().getSerializedName(), direction);
+            case SKIN_TONE -> cycle(Arrays.stream(SkinTone.values()).map(SkinTone::getSerializedName).toList(),
+                    appearance.skinTone().getSerializedName(), direction);
+            case HAIR_STYLE -> cycle(CitizenHairStyles.BUILT_IN.stream().map(name -> CreateApparel.MOD_ID + ":" + name).toList(),
+                    appearance.hairStyleId().toString(), direction);
+            case HAIR_COLOR -> cycleColor(appearance.hairColorRgb(), direction);
+            case EYE_COLOR -> cycleColor(appearance.eyeColorRgb(), direction);
+            default -> "";
+        };
+    }
+
+    private static String cycleColor(int rgb, int direction) {
+        String current = Arrays.stream(FabricColor.values()).filter(color -> color.tintRgb() == rgb)
+                .map(FabricColor::getSerializedName).findFirst().orElse("");
+        return cycle(Arrays.stream(FabricColor.values()).map(FabricColor::getSerializedName).toList(), current, direction);
+    }
+
+    private static String cycle(List<String> options, String current, int direction) {
+        int index = options.indexOf(current);
+        return options.get(index < 0 ? (direction > 0 ? 0 : options.size() - 1)
+                : Math.floorMod(index + direction, options.size()));
     }
 }

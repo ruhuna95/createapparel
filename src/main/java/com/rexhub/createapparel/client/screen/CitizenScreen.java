@@ -92,6 +92,7 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
                 .bounds(leftPos + x, topPos + y, 92, 18).build()
                 : new ColorButton(leftPos + x, topPos + y, 92, 18, onPress, swatch);
         appearanceButtons.put(action, addRenderableWidget(button));
+        buttonScroll.bind(button, direction -> ModNetwork.updateCitizen(CitizenActionPacket.step(menu, action, direction)));
     }
 
     private static Component label(String prefix, String value) {
