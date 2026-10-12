@@ -6,6 +6,9 @@ import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModMenuTypes {
+    public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.CitizenMenu>> CITIZEN =
+            ModRegistries.MENU_TYPES.register("citizen",
+                    () -> IForgeMenuType.create(com.rexhub.createapparel.menu.CitizenMenu::new));
     public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.MannequinMenu>> MANNEQUIN =
             ModRegistries.MENU_TYPES.register("mannequin",
                     () -> IForgeMenuType.create(com.rexhub.createapparel.menu.MannequinMenu::new));

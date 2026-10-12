@@ -1,11 +1,12 @@
 package com.rexhub.createapparel.entity;
 
 import com.rexhub.createapparel.apparel.ApparelLoadout;
+import com.rexhub.createapparel.citizen.CitizenLoadout;
 import net.minecraft.nbt.CompoundTag;
 import java.util.Objects;
 
 public final class CitizenState {
-    private final ApparelLoadout loadout = new ApparelLoadout();
+    private final ApparelLoadout loadout = new CitizenLoadout();
     private CitizenAppearance appearance = CitizenAppearance.DEFAULT;
     private CitizenAge age = CitizenAge.ADULT;
     private Runnable changeListener = () -> { };

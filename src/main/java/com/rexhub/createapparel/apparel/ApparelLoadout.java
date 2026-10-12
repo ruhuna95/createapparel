@@ -210,6 +210,26 @@ public class ApparelLoadout extends ItemStackHandler {
         return List.copyOf(contents);
     }
 
+    public ApparelLoadout copy() {
+        ApparelLoadout copy = new ApparelLoadout(allowedSlots);
+        copy.setDefinitionLookup(definitionLookup);
+        copy.deserializeNBT(serializeNBT().copy());
+        return copy;
+    }
+
+    public boolean replaceWith(ApparelLoadout candidate) {
+        for (GarmentSlot slot : GarmentSlot.values()) {
+            ItemStack stack = candidate.getStack(slot);
+            if (!stack.isEmpty() && (!isItemValid(slot.ordinal(), stack) || stack.getCount() != 1)) return false;
+        }
+        CompoundTag next = candidate.serializeNBT().copy();
+        if (!serializeNBT().equals(next)) {
+            deserializeNBT(next);
+            notifyChanged();
+        }
+        return true;
+    }
+
     public List<ItemStack> removeAll() {
         List<ItemStack> removed = new ArrayList<>();
         suppressChangeNotification = true;

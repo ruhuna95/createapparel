@@ -16,6 +16,8 @@ import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.menu.WardrobeMenu;
 import com.rexhub.createapparel.menu.ApparelMenu;
 import com.rexhub.createapparel.menu.MannequinMenu;
+import com.rexhub.createapparel.menu.CitizenMenu;
+import com.rexhub.createapparel.network.CitizenActionPacket;
 import com.rexhub.createapparel.network.MannequinActionPacket;
 import com.rexhub.createapparel.network.ModNetwork;
 import com.rexhub.createapparel.network.WardrobeActionPacket;
@@ -38,7 +40,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScreen<T> {
+public class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScreen<T> {
     private static final ResourceLocation VANILLA_CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(
             "minecraft",
             "textures/gui/container/generic_54.png"
@@ -68,7 +70,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     private static final ResourceLocation[] EMPTY_APPAREL_SLOT_TEXTURES = createEmptyApparelSlotTextures();
 
     private final List<Button> styleButtons = new ArrayList<>();
-    private final ButtonValueScroll buttonScroll = new ButtonValueScroll();
+    protected final ButtonValueScroll buttonScroll = new ButtonValueScroll();
     private final List<GarmentSlot> slotSelectionOrder;
     private GarmentSlot selectedSlot = GarmentSlot.TOP;
     private ItemStack observedStack = ItemStack.EMPTY;
@@ -101,7 +103,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
                 .toList();
     }
 
-    private final SelectionMenu selectionMenu = new SelectionMenu();
+    protected final SelectionMenu selectionMenu = new SelectionMenu();
 
     @Override
     protected void init() {
@@ -115,6 +117,11 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
         previewSkinTone = ClientApparelInventories.skinTone(minecraft.player);
         selectedSlot = firstEquippedSlot().orElse(slotSelectionOrder.contains(GarmentSlot.TOP)
                 ? GarmentSlot.TOP : slotSelectionOrder.get(0));
+
+        if (initCustomControls()) {
+            refreshSelectedGarment(true);
+            return;
+        }
 
         if (menu instanceof MannequinMenu mannequinMenu) {
             rotationButton = addRenderableWidget(Button.builder(Component.empty(), button -> cycleRotation(1))
@@ -142,11 +149,29 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
         refreshSelectedGarment(true);
     }
 
+    protected boolean initCustomControls() { return false; }
+
+    protected boolean showGarmentControls() { return true; }
+
+    protected int garmentControlsOffset() { return 0; }
+
+    protected void renderTitle(GuiGraphics graphics) {
+        graphics.drawString(font, title, 8, 6, TEXT_COLOR, false);
+    }
+
+    protected void updateGarmentControls() {
+        styleButtons.forEach(button -> {
+            button.visible = showGarmentControls();
+            button.active = showGarmentControls();
+        });
+    }
+
     @Override
     protected void containerTick() {
         super.containerTick();
         refreshSelectedGarment(false);
         updatePoseButton();
+        updateGarmentControls();
     }
 
     @Override
@@ -171,6 +196,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (selectionMenu.mouseScrolled(delta)) return true;
         if (buttonScroll.mouseScrolled(mouseX, mouseY, delta)) return true;
+        if (!showGarmentControls()) return super.mouseScrolled(mouseX, mouseY, delta);
         if (delta == 0 || mouseX < leftPos || mouseX >= leftPos + imageWidth
                 || mouseY < topPos || mouseY >= topPos + PLAYER_INVENTORY_LABEL_Y) {
             return super.mouseScrolled(mouseX, mouseY, delta);
@@ -224,7 +250,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
             Button button = Button.builder(Component.empty(), ignored -> cycleStyle(category, 1))
                     .bounds(
                             leftPos + SELECTION_X,
-                            topPos + STYLE_BUTTON_Y + index * 20,
+                            topPos + STYLE_BUTTON_Y + garmentControlsOffset() + index * 20,
                             STYLE_BUTTON_WIDTH,
                             BUTTON_HEIGHT
                     )
@@ -234,6 +260,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
             index++;
         }
         updateStyleButtonMessages();
+        updateGarmentControls();
     }
 
     private void cycleStyle(String category, int direction) {
@@ -248,6 +275,10 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
         String current = previewStyles.styles().getOrDefault(category, values.get(0));
         String next = values.get(Math.floorMod(values.indexOf(current) + direction, values.size()));
         if (next.equals(current)) return;
+        if (menu instanceof CitizenMenu citizenMenu) {
+            ModNetwork.updateCitizen(CitizenActionPacket.style(citizenMenu, selectedSlot, category, next));
+            return;
+        }
         previewStyles = previewStyles.with(category, next);
         cachedPreview = null;
         updateStyleButtonMessages();
@@ -273,6 +304,9 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     }
 
     private Map<GarmentSlot, EquippedStyleState> targetStyles() {
+        if (menu instanceof CitizenMenu citizenMenu) {
+            return citizenMenu.citizen() == null ? Map.of() : citizenMenu.citizen().citizenState().loadout().copyStyles();
+        }
         if (menu instanceof MannequinMenu mannequinMenu) {
             return mannequinMenu.mannequin().mannequinState().loadout().copyStyles();
         }
@@ -281,6 +315,9 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     }
 
     private long targetRevision() {
+        if (menu instanceof CitizenMenu citizenMenu) {
+            return citizenMenu.citizen() == null ? 0 : citizenMenu.citizen().citizenState().revision();
+        }
         if (menu instanceof MannequinMenu mannequinMenu) return mannequinMenu.mannequin().mannequinState().revision();
         return minecraft == null || minecraft.player == null ? 0 : ClientApparelInventories.revision(minecraft.player);
     }
@@ -403,9 +440,9 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
         renderInsetPanel(
                 graphics,
                 leftPos + PREVIEW_PANEL_X,
-                topPos + PREVIEW_PANEL_Y,
+                topPos + PREVIEW_PANEL_Y + garmentControlsOffset(),
                 PREVIEW_PANEL_WIDTH,
-                128
+                128 - garmentControlsOffset()
         );
 
         for (int index = 0; index < menu.slots.size(); index++) {
@@ -467,7 +504,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
         return true;
     }
 
-    private void renderPlayerPreview(GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderPlayerPreview(GuiGraphics graphics, int mouseX, int mouseY) {
         if (menu instanceof MannequinMenu mannequinMenu) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(graphics,
                     leftPos + PREVIEW_CENTER_X, topPos + 88, 35,
@@ -506,19 +543,19 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, 8, 6, TEXT_COLOR, false);
+        renderTitle(graphics);
         Component selectedName = observedStack.isEmpty()
                 ? Component.translatable("screen.createapparel.wardrobe.empty")
                 : observedStack.getHoverName();
         renderFittedSelectionText(graphics,
                 Component.translatable("screen.createapparel.wardrobe.selected_garment", Component.empty()),
-                SELECTED_GARMENT_Y, TEXT_COLOR);
+                SELECTED_GARMENT_Y + garmentControlsOffset(), TEXT_COLOR);
         renderSelectedName(graphics, selectedName);
         if (selectedDefinition != null && selectedDefinition.stylesFor(selectedSlot).isEmpty()) {
             renderFittedSelectionText(
                     graphics,
                     Component.translatable("screen.createapparel.wardrobe.no_styles"),
-                    STYLE_BUTTON_Y,
+                    STYLE_BUTTON_Y + garmentControlsOffset(),
                     MUTED_TEXT_COLOR
             );
         }
@@ -533,7 +570,7 @@ public final class WardrobeScreen<T extends ApparelMenu> extends AbstractContain
     }
 
     private void renderSelectedName(GuiGraphics graphics, Component name) {
-        int y = SELECTED_GARMENT_Y + 10;
+        int y = SELECTED_GARMENT_Y + garmentControlsOffset() + 10;
         int overflow = font.width(name) - SELECTION_WIDTH;
         if (overflow <= 0) {
             graphics.drawString(font, name, SELECTION_X, y, TEXT_COLOR, false);

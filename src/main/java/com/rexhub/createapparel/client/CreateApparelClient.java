@@ -100,6 +100,7 @@ public final class CreateApparelClient {
                     register(ModMenuTypes.WARDROBE.get(), WardrobeScreen::new);
             MenuScreens.<MannequinMenu, WardrobeScreen<MannequinMenu>>
                     register(ModMenuTypes.MANNEQUIN.get(), WardrobeScreen::new);
+            MenuScreens.register(ModMenuTypes.CITIZEN.get(), com.rexhub.createapparel.client.screen.CitizenScreen::new);
         });
     }
 

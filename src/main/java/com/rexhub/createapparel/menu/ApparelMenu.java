@@ -41,15 +41,23 @@ public abstract class ApparelMenu extends AbstractContainerMenu {
     private void addApparelSlots(ItemStackHandler apparelInventory) {
         for (GarmentSlot garmentSlot : GarmentSlot.values()) {
             SlotPosition position = apparelSlotPosition(garmentSlot);
-            addSlot(new SlotItemHandler(apparelInventory, garmentSlot.ordinal(), position.x(), position.y()) {
+            addSlot(createApparelSlot(apparelInventory, garmentSlot, position.x(), position.y()));
+        }
+    }
+
+    protected boolean slotsEnabled() { return true; }
+
+    protected Slot createApparelSlot(ItemStackHandler apparelInventory, GarmentSlot garmentSlot, int x, int y) {
+        return new SlotItemHandler(apparelInventory, garmentSlot.ordinal(), x, y) {
                 @Override
-                public boolean isActive() { return loadout.supports(garmentSlot); }
+                public boolean isActive() { return slotsEnabled() && loadout.supports(garmentSlot); }
                 @Override
                 public boolean mayPlace(ItemStack stack) {
-                    return loadout.supports(garmentSlot) && super.mayPlace(stack);
+                    return isActive() && super.mayPlace(stack);
                 }
-            });
-        }
+                @Override
+                public boolean mayPickup(Player player) { return isActive() && super.mayPickup(player); }
+            };
     }
 
     private static SlotPosition apparelSlotPosition(GarmentSlot slot) {
@@ -84,7 +92,14 @@ public abstract class ApparelMenu extends AbstractContainerMenu {
                         column + row * 9 + 9,
                         PLAYER_INVENTORY_X + column * 18,
                         PLAYER_INVENTORY_Y + row * 18
-                ));
+                ) {
+                    @Override
+                    public boolean isActive() { return slotsEnabled(); }
+                    @Override
+                    public boolean mayPlace(ItemStack stack) { return isActive() && super.mayPlace(stack); }
+                    @Override
+                    public boolean mayPickup(Player player) { return isActive() && super.mayPickup(player); }
+                });
             }
         }
         for (int column = 0; column < 9; column++) {
@@ -93,7 +108,14 @@ public abstract class ApparelMenu extends AbstractContainerMenu {
                     column,
                     PLAYER_INVENTORY_X + column * 18,
                     PLAYER_INVENTORY_Y + 58
-            ));
+            ) {
+                @Override
+                public boolean isActive() { return slotsEnabled(); }
+                @Override
+                public boolean mayPlace(ItemStack stack) { return isActive() && super.mayPlace(stack); }
+                @Override
+                public boolean mayPickup(Player player) { return isActive() && super.mayPickup(player); }
+            });
         }
     }
 

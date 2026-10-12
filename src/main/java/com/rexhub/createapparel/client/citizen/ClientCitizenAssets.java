@@ -31,6 +31,8 @@ public final class ClientCitizenAssets extends SimpleJsonResourceReloadListener 
 
     public long generation() { return generation; }
 
+    public boolean hasStyle(ResourceLocation id) { return styles.containsKey(id); }
+
     public CitizenHairStyle resolve(ResourceLocation id) {
         return styles.getOrDefault(id, styles.getOrDefault(CitizenAppearance.DEFAULT_HAIR, FALLBACK));
     }

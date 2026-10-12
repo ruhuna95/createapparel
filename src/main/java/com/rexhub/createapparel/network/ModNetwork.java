@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "10";
+    private static final String PROTOCOL_VERSION = "11";
 
     private static SimpleChannel channel;
 
@@ -71,6 +71,14 @@ public final class ModNetwork {
         channel.messageBuilder(MannequinActionPacket.class, 5, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(MannequinActionPacket::encode)
                 .decoder(MannequinActionPacket::decode)
+                .consumerMainThread((packet, context) -> {
+                    ServerPlayer player = context.get().getSender();
+                    if (player != null) packet.handle(player);
+                })
+                .add();
+        channel.messageBuilder(CitizenActionPacket.class, 6, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(CitizenActionPacket::encode)
+                .decoder(CitizenActionPacket::decode)
                 .consumerMainThread((packet, context) -> {
                     ServerPlayer player = context.get().getSender();
                     if (player != null) packet.handle(player);
@@ -151,6 +159,10 @@ public final class ModNetwork {
     }
 
     public static void updateMannequin(MannequinActionPacket packet) {
+        channel().sendToServer(packet);
+    }
+
+    public static void updateCitizen(CitizenActionPacket packet) {
         channel().sendToServer(packet);
     }
 }

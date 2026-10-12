@@ -1,7 +1,7 @@
 package com.rexhub.createapparel.citizen;
 
 import com.rexhub.createapparel.entity.CitizenState;
-import com.rexhub.createapparel.garment.GarmentSlot;
+import com.rexhub.createapparel.apparel.ApparelLoadout;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -16,11 +16,12 @@ public enum CitizenOutfitPreset {
     }
 
     public void equip(CitizenState state) {
-        for (GarmentSlot slot : GarmentSlot.values()) state.loadout().setStackInSlot(slot.ordinal(), ItemStack.EMPTY);
+        var candidate = new ApparelLoadout();
         CitizenGarmentPreset.builtIn().garments().forEach((slot, entry) -> {
             ItemStack stack = new ItemStack(ForgeRegistries.ITEMS.getValue(entry.item()));
             entry.appearance().write(stack);
-            state.loadout().setStackInSlot(slot.ordinal(), stack);
+            candidate.setStackInSlot(slot.ordinal(), stack);
         });
+        state.loadout().replaceWith(candidate);
     }
 }
