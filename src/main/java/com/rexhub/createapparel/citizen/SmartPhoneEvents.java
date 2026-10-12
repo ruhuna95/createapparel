@@ -13,9 +13,8 @@ public final class SmartPhoneEvents {
     @SubscribeEvent
     public static void interact(PlayerInteractEvent.EntityInteract event) {
         var stack = event.getEntity().getItemInHand(event.getHand());
-        if (!(stack.getItem() instanceof SmartPhoneItem) && event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND) {
-            stack = event.getEntity().getOffhandItem();
+        if (stack.getItem() instanceof SmartPhoneItem phone) {
+            phone.interact(event);
         }
-        if (stack.getItem() instanceof SmartPhoneItem phone) phone.interact(event);
     }
 }

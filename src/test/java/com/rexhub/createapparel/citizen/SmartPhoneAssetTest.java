@@ -13,6 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SmartPhoneAssetTest {
     @Test
+    void interactionOnlyUsesTheHandFromTheEvent() throws Exception {
+        String source = Files.readString(Path.of("src/main/java/com/rexhub/createapparel/citizen/SmartPhoneEvents.java")).replace("\r\n", "\n");
+        assertTrue(source.contains("var stack = event.getEntity().getItemInHand(event.getHand());"));
+        assertTrue(source.contains("if (stack.getItem() instanceof SmartPhoneItem phone) {\n            phone.interact(event);\n        }"));
+        assertFalse(source.contains("getOffhandItem()"));
+    }
+
+    @Test
     void usageTooltipMatchesRequestedJapaneseAndEnglishTranslations() throws Exception {
         String key = "tooltip.createapparel.smart_phone.convert_villager";
         for (var translation : java.util.Map.of("ja_jp", "村人に使用することで市民に変えることができる。",

@@ -65,10 +65,15 @@ public final class CitizenConversionGameTests {
             ItemStack phone = new ItemStack(ModItems.SMART_PHONE.get());
             player.setItemInHand(hand, phone);
             CompoundTag before = phone.save(new CompoundTag());
-            var event = new PlayerInteractEvent.EntityInteract(player, InteractionHand.MAIN_HAND, original);
+            var otherHand = hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+            var unrelated = new PlayerInteractEvent.EntityInteract(player, otherHand, original);
+            SmartPhoneEvents.interact(unrelated);
+            helper.assertTrue(!unrelated.isCanceled() && !original.isRemoved() && nearby(helper, original).isEmpty(),
+                    "Phone in the other hand does not intercept this interaction");
+            var event = new PlayerInteractEvent.EntityInteract(player, hand, original);
             SmartPhoneEvents.interact(event);
             helper.assertTrue(event.isCanceled() && event.getCancellationResult() == InteractionResult.CONSUME,
-                    "Phone in either hand takes priority over villager trading");
+                    "Phone in the interaction hand converts the villager");
             SmartPhoneEvents.interact(new PlayerInteractEvent.EntityInteract(player, hand, original));
             helper.assertTrue(original.isRemoved() && nearby(helper, original).size() == 1, "Exactly one Citizen, no Villager");
             var citizen = nearby(helper, original).get(0);
