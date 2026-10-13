@@ -9,6 +9,7 @@ public final class CitizenState {
     private final ApparelLoadout loadout = new CitizenLoadout();
     private CitizenAppearance appearance = CitizenAppearance.DEFAULT;
     private CitizenAge age = CitizenAge.ADULT;
+    private CitizenBehaviorState behavior = CitizenBehaviorState.DEFAULT;
     private Runnable changeListener = () -> { };
     private long revision;
 
@@ -17,6 +18,7 @@ public final class CitizenState {
     public ApparelLoadout loadout() { return loadout; }
     public CitizenAppearance appearance() { return appearance; }
     public CitizenAge age() { return age; }
+    public CitizenBehaviorState behavior() { return behavior; }
     public long revision() { return revision; }
     public void setChangeListener(Runnable listener) { changeListener = Objects.requireNonNull(listener); }
 
@@ -34,6 +36,13 @@ public final class CitizenState {
         }
     }
 
+    public void setBehavior(CitizenBehaviorState next) {
+        if (!behavior.equals(Objects.requireNonNull(next))) {
+            behavior = next;
+            changed();
+        }
+    }
+
     private void changed() {
         revision++;
         changeListener.run();
@@ -44,13 +53,14 @@ public final class CitizenState {
         appearance.write(tag);
         tag.putString("Age", age.getSerializedName());
         tag.put("ApparelSlots", loadout.serializeNBT());
-        tag.putString("BaseMode", "stand");
+        behavior.write(tag);
         return tag;
     }
 
     public void deserializeNBT(CompoundTag tag) {
         appearance = CitizenAppearance.read(tag);
         age = CitizenAge.read(tag.getString("Age"));
+        behavior = CitizenBehaviorState.read(tag);
         if (tag.contains("ApparelSlots", CompoundTag.TAG_COMPOUND)) {
             loadout.deserializeNBT(tag.getCompound("ApparelSlots"));
         }

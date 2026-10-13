@@ -1,6 +1,11 @@
 package com.rexhub.createapparel.entity;
 
 import com.rexhub.createapparel.citizen.CitizenOutfitPreset;
+import com.rexhub.createapparel.citizen.CitizenBehaviorGoal;
+import com.rexhub.createapparel.citizen.CitizenNavigation;
+import com.rexhub.createapparel.citizen.CitizenLookController;
+import com.mojang.serialization.Dynamic;
+import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -19,6 +24,8 @@ public final class Citizen extends PathfinderMob {
             SynchedEntityData.defineId(Citizen.class, EntityDataSerializers.COMPOUND_TAG);
     private final CitizenState citizenState = new CitizenState();
     private float ageScale = 1;
+    private CitizenBehaviorState observedBehavior = CitizenBehaviorState.DEFAULT;
+    private final CitizenLookController lookController = new CitizenLookController(this);
 
     public Citizen(EntityType<? extends Citizen> type, Level level) {
         super(type, level);
@@ -37,9 +44,41 @@ public final class Citizen extends PathfinderMob {
 
     public CitizenState citizenState() { return citizenState; }
 
+    @Override
+    protected Brain<Citizen> makeBrain(Dynamic<?> data) { return CitizenLookController.createBrain(data); }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Brain<Citizen> getBrain() { return (Brain<Citizen>) super.getBrain(); }
+
+    @Override
+    protected void customServerAiStep() { lookController.tick(); }
+
     public void syncState() {
         refreshAgeDimensions();
-        if (!level().isClientSide) entityData.set(DATA_STATE, citizenState.serializeNBT());
+        if (!level().isClientSide) {
+            if (!citizenState.behavior().equals(observedBehavior)) {
+                getNavigation().stop();
+                setZza(0);
+                setXxa(0);
+                observedBehavior = citizenState.behavior();
+            }
+            entityData.set(DATA_STATE, citizenState.serializeNBT());
+        }
+    }
+
+    public boolean setBehavior(CitizenBehaviorState behavior) {
+        if (level().isClientSide || getUUID().equals(behavior.followTargetUuid())) return false;
+        getNavigation().stop();
+        citizenState.setBehavior(behavior);
+        return true;
+    }
+
+    public void setPoseYaw(float yaw) {
+        if (level().isClientSide || citizenState.behavior().mode() != CitizenBehaviorMode.POSE) return;
+        setYRot(net.minecraft.util.Mth.wrapDegrees(yaw));
+        yBodyRot = yHeadRot = getYRot();
+        setYHeadRot(getYRot());
     }
 
     @Override
@@ -96,11 +135,20 @@ public final class Citizen extends PathfinderMob {
 
     @Override
     protected void registerGoals() {
-        // STAND intentionally registers no movement goals.
+        goalSelector.addGoal(0, new CitizenBehaviorGoal(this));
+    }
+
+    @Override
+    protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(Level level) {
+        return new CitizenNavigation(this, level);
     }
 
     @Override
     protected float tickHeadTurn(float yaw, float step) {
+        if (citizenState != null && (citizenState.behavior().mode().moves()
+                || citizenState.behavior().mode() == CitizenBehaviorMode.STAND && citizenState.behavior().lookMode() == CitizenLookMode.BODY)) {
+            return super.tickHeadTurn(yaw, step);
+        }
         yBodyRot = getYRot();
         return 0;
     }
@@ -108,6 +156,12 @@ public final class Citizen extends PathfinderMob {
     @Override
     public void tick() {
         super.tick();
-        yBodyRot = yHeadRot = getYRot();
+        var behavior = citizenState.behavior();
+        if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.BODY) {
+            if (!level().isClientSide && !isNoAi()) setYRot(yBodyRot);
+        } else if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.HEAD) {
+            yBodyRot = getYRot();
+            yHeadRot = net.minecraft.util.Mth.rotateIfNecessary(yHeadRot, yBodyRot, getMaxHeadYRot());
+        } else if (!behavior.mode().moves()) yBodyRot = yHeadRot = getYRot();
     }
 }

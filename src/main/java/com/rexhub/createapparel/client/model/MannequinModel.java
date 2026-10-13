@@ -83,10 +83,7 @@ public final class MannequinModel extends HumanoidModel<Mannequin> {
     }
 
     private static void rotate(ModelPart part, PosePreset.Rotation rotation) {
-        float radians = (float) Math.PI / 180;
-        part.xRot = rotation.x() * radians;
-        part.yRot = rotation.y() * radians;
-        part.zRot = rotation.z() * radians;
+        HumanoidPose.rotate(part, rotation);
     }
 
     @Override

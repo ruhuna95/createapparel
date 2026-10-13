@@ -7,6 +7,13 @@ import com.rexhub.createapparel.apparel.SkinTone;
 import com.rexhub.createapparel.citizen.CitizenHairStyles;
 import com.rexhub.createapparel.client.citizen.ClientCitizenAssets;
 import com.rexhub.createapparel.entity.CitizenAppearance;
+import com.rexhub.createapparel.entity.CitizenBehaviorMode;
+import com.rexhub.createapparel.entity.CitizenBehaviorState;
+import com.rexhub.createapparel.entity.CitizenLookMode;
+import com.rexhub.createapparel.entity.MannequinForm;
+import com.rexhub.createapparel.entity.PosePreset;
+import net.minecraft.util.Mth;
+import org.joml.Quaternionf;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.menu.CitizenMenu;
 import com.rexhub.createapparel.network.CitizenActionPacket;
@@ -30,6 +37,14 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
     private float previewRotation;
     private Button rotationButton;
     private CitizenMenu.Tab observedTab;
+    private final Map<CitizenActionPacket.Action, Button> behaviorButtons = new EnumMap<>(CitizenActionPacket.Action.class);
+    private Button radiusButton;
+    private Button worldRotationButton;
+    private CitizenBehaviorMode observedMode;
+
+    private CitizenBehaviorState behavior() {
+        return menu.citizen() == null ? CitizenBehaviorState.DEFAULT : menu.citizen().citizenState().behavior();
+    }
 
     public CitizenScreen(CitizenMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -43,6 +58,7 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
     protected boolean initCustomControls() {
         appearanceButtons.clear();
         tabButtons.clear();
+        behaviorButtons.clear();
         for (var tab : CitizenMenu.Tab.values()) {
             tabButtons.put(tab, addRenderableWidget(Button.builder(Component.translatable(tabKey(tab)), button -> {
                 selectionMenu.close();
@@ -75,8 +91,40 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
         rotationButton = addRenderableWidget(Button.builder(Component.empty(), button -> rotate(1))
                 .bounds(leftPos + 102, topPos + 113, 96, 18).build());
         buttonScroll.bind(rotationButton, this::rotate);
+        addBehaviorChoice(CitizenActionPacket.Action.BEHAVIOR_MODE, 4, 52,
+                List.of(CitizenBehaviorMode.STAND, CitizenBehaviorMode.WANDER, CitizenBehaviorMode.FOLLOW).stream()
+                        .map(CitizenBehaviorMode::id).toList(),
+                () -> behavior().mode().id(), "behavior.createapparel.");
+        addBehaviorChoice(CitizenActionPacket.Action.STAND_LOOK_MODE, 4, 86,
+                List.of(CitizenLookMode.values()).stream().map(CitizenLookMode::id).toList(),
+                () -> behavior().lookMode().id(), "look_mode.createapparel.");
+        addBehaviorChoice(CitizenActionPacket.Action.POSE_PRESET, 204, 52,
+                MannequinForm.FULL.poses().stream().map(PosePreset::id).toList(),
+                () -> behavior().pose().id(), "pose.createapparel.");
+        radiusButton = addRenderableWidget(Button.builder(Component.empty(), button -> {
+            var radii = java.util.stream.IntStream.rangeClosed(CitizenBehaviorState.MIN_RADIUS, CitizenBehaviorState.MAX_RADIUS)
+                    .mapToObj(Integer::toString).toList();
+            selectionMenu.open(button, width, height, radii.stream().map(value -> (Component) Component.literal(value)).toList(),
+                    List.of(), behavior().wanderRadius() - 1, index -> ModNetwork.updateCitizen(
+                            CitizenActionPacket.select(menu, CitizenActionPacket.Action.WANDER_RADIUS, radii.get(index))));
+        }).bounds(leftPos + 204, topPos + 52, 92, 18).build());
+        buttonScroll.bind(radiusButton, direction -> ModNetwork.updateCitizen(CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, direction)));
+        worldRotationButton = addRenderableWidget(Button.builder(Component.empty(), button -> rotateWorld(1))
+                .bounds(leftPos + 204, topPos + 86, 92, 18).build());
+        buttonScroll.bind(worldRotationButton, this::rotateWorld);
         updateControls();
         return true;
+    }
+
+    private void addBehaviorChoice(CitizenActionPacket.Action action, int x, int y, List<String> options,
+                                   Supplier<String> current, String prefix) {
+        var button = addRenderableWidget(Button.builder(Component.empty(), pressed ->
+                selectionMenu.open(pressed, width, height, options.stream().map(value -> label(prefix, value)).toList(),
+                        List.of(), Math.max(0, options.indexOf(current.get())), index ->
+                                ModNetwork.updateCitizen(CitizenActionPacket.select(menu, action, options.get(index)))))
+                .bounds(leftPos + x, topPos + y, 92, 18).build());
+        behaviorButtons.put(action, button);
+        buttonScroll.bind(button, direction -> ModNetwork.updateCitizen(CitizenActionPacket.step(menu, action, direction)));
     }
 
     private void addChoice(CitizenActionPacket.Action action, int x, int y, Supplier<List<String>> values,
@@ -117,9 +165,15 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
         updateControls();
     }
 
+    private void rotateWorld(int direction) {
+        ModNetwork.updateCitizen(new CitizenActionPacket(menu.containerId, menu.citizen() == null ? -1 : menu.citizen().getId(),
+                CitizenActionPacket.Action.POSE_ROTATION_STEP, direction, "", "step"));
+    }
+
     private void updateControls() {
-        if (observedTab != menu.tab()) selectionMenu.close();
+        if (observedTab != menu.tab() || observedMode != behavior().mode()) selectionMenu.close();
         observedTab = menu.tab();
+        observedMode = behavior().mode();
         appearanceButtons.values().forEach(button -> {
             button.visible = menu.tab() == CitizenMenu.Tab.APPEARANCE;
             button.active = button.visible;
@@ -133,6 +187,20 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
         appearanceButtons.get(CitizenActionPacket.Action.HAIR_COLOR).setMessage(label("", colorName(appearance.hairColorRgb())));
         appearanceButtons.get(CitizenActionPacket.Action.EYE_COLOR).setMessage(label("", colorName(appearance.eyeColorRgb())));
         rotationButton.setMessage(Component.translatable("screen.createapparel.citizen.preview_rotation", Math.round(previewRotation)));
+        boolean behaviorTab = menu.tab() == CitizenMenu.Tab.BEHAVIOR;
+        behaviorButtons.forEach((action, button) -> {
+            button.visible = behaviorTab && (action == CitizenActionPacket.Action.BEHAVIOR_MODE
+                    || action == CitizenActionPacket.Action.STAND_LOOK_MODE && behavior().mode() == CitizenBehaviorMode.STAND
+                    || action == CitizenActionPacket.Action.POSE_PRESET && behavior().mode() == CitizenBehaviorMode.POSE);
+            button.active = button.visible;
+        });
+        behaviorButtons.get(CitizenActionPacket.Action.BEHAVIOR_MODE).setMessage(label("behavior.createapparel.", behavior().mode().id()));
+        behaviorButtons.get(CitizenActionPacket.Action.STAND_LOOK_MODE).setMessage(label("look_mode.createapparel.", behavior().lookMode().id()));
+        behaviorButtons.get(CitizenActionPacket.Action.POSE_PRESET).setMessage(label("pose.createapparel.", behavior().pose().id()));
+        radiusButton.visible = radiusButton.active = behaviorTab && behavior().mode() == CitizenBehaviorMode.WANDER;
+        radiusButton.setMessage(Component.literal(Integer.toString(behavior().wanderRadius())));
+        worldRotationButton.visible = worldRotationButton.active = behaviorTab && behavior().mode() == CitizenBehaviorMode.POSE;
+        worldRotationButton.setMessage(Component.translatable("screen.createapparel.citizen.world_rotation", menu.poseRotationStep() * 22.5F));
         updateGarmentControls();
     }
 
@@ -159,14 +227,25 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
     protected void renderPlayerPreview(GuiGraphics graphics, int mouseX, int mouseY) {
         var citizen = menu.citizen();
         if (citizen == null) return;
+        float previousBodyNow = citizen.yBodyRot;
         float previousBody = citizen.yBodyRotO;
+        float previousHead = citizen.yHeadRot;
+        float previousHeadOld = citizen.yHeadRotO;
         try {
-            float yaw = (float) Math.atan((leftPos + 150 - mouseX) / 40.0F) + previewRotation / 20.0F;
-            citizen.yBodyRotO = 180 + yaw * 20;
-            InventoryScreen.renderEntityInInventoryFollowsAngle(graphics, leftPos + 150, topPos + 108, 35,
-                    yaw, (float) Math.atan((topPos + 49 - mouseY) / 40.0F), citizen);
+            float poseRotation = behavior().mode() == CitizenBehaviorMode.POSE ? menu.poseRotationStep() * 22.5F : 0;
+            float yaw = (float) Math.atan((leftPos + 150 - mouseX) / 40.0F) * 20 + previewRotation + poseRotation;
+            float pitch = (float) Math.atan((topPos + 49 - mouseY) / 40.0F) * 20 * Mth.DEG_TO_RAD;
+            float relativeHead = Mth.wrapDegrees(previousHead - previousBodyNow);
+            citizen.yBodyRot = citizen.yBodyRotO = 180 + yaw;
+            citizen.yHeadRot = citizen.yHeadRotO = citizen.yBodyRot + relativeHead;
+            var camera = new Quaternionf().rotateX(pitch);
+            var pose = new Quaternionf().rotateZ((float) Math.PI).mul(camera);
+            InventoryScreen.renderEntityInInventory(graphics, leftPos + 150, topPos + 108, 35, pose, camera, citizen);
         } finally {
             citizen.yBodyRotO = previousBody;
+            citizen.yBodyRot = previousBodyNow;
+            citizen.yHeadRot = previousHead;
+            citizen.yHeadRotO = previousHeadOld;
         }
     }
 
@@ -177,7 +256,30 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
             return;
         }
         if (menu.tab() == CitizenMenu.Tab.BEHAVIOR) {
-            graphics.drawString(font, Component.translatable("screen.createapparel.citizen.stand"), 8, 38, 0x404040, false);
+            var state = behavior();
+            graphics.drawString(font, Component.translatable("screen.createapparel.citizen.behavior"), 4, 38, 0x404040, false);
+            if (state.mode() == CitizenBehaviorMode.STAND) {
+                graphics.drawString(font, Component.translatable("screen.createapparel.citizen.look_at"), 4, 72, 0x404040, false);
+            }
+            if (state.mode() == CitizenBehaviorMode.WANDER) {
+                graphics.drawString(font, Component.translatable("screen.createapparel.citizen.radius"), 204, 38, 0x404040, false);
+                graphics.drawString(font, Component.translatable("screen.createapparel.citizen.anchor"), 8, 140, 0x404040, false);
+                var anchor = state.anchor();
+                graphics.drawString(font, Component.literal(anchor == null ? "—" : anchor.getX() + ", " + anchor.getY() + ", " + anchor.getZ()),
+                        8, 154, 0x404040, false);
+                if (state.anchorDimension() != null) graphics.drawString(font, Component.literal(state.anchorDimension().location().toString()),
+                        8, 166, 0x404040, false);
+            } else if (state.mode() == CitizenBehaviorMode.POSE) {
+                graphics.drawString(font, Component.translatable("screen.createapparel.citizen.pose"), 204, 38, 0x404040, false);
+            } else if (state.mode() == CitizenBehaviorMode.FOLLOW) {
+                graphics.drawString(font, Component.translatable("screen.createapparel.citizen.target"), 8, 140, 0x404040, false);
+                int y = 154;
+                for (var line : font.split(menu.followDisplay(), 284)) {
+                    graphics.drawString(font, line, 8, y, 0x404040, false);
+                    y += 10;
+                    if (y > 212) break;
+                }
+            }
             return;
         }
         for (var action : appearanceButtons.keySet()) {

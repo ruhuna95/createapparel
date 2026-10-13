@@ -2,6 +2,10 @@ package com.rexhub.createapparel.client.model;
 
 import com.rexhub.createapparel.entity.Citizen;
 import com.rexhub.createapparel.entity.CitizenAge;
+import com.rexhub.createapparel.entity.CitizenBehaviorMode;
+import com.rexhub.createapparel.entity.PosePreset;
+import com.rexhub.createapparel.entity.CitizenLookMode;
+import net.minecraft.util.Mth;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -39,6 +43,33 @@ public final class CitizenModel extends HumanoidModel<Citizen> {
         leftLeg.setRotation(0, 0, 0);
         boolean slim = entity.citizenState().appearance().armProfile() == com.rexhub.createapparel.apparel.ArmProfile.SLIM;
         rightArm.y = leftArm.y = slim ? 2.5F : 2;
+        var behavior = entity.citizenState().behavior();
+        if (behavior.mode() == CitizenBehaviorMode.POSE) {
+            applyPose(behavior.pose());
+        } else if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() != CitizenLookMode.IDLE) {
+            head.yRot = Mth.wrapDegrees(Mth.rotLerp(partialTick, entity.yHeadRotO, entity.yHeadRot)
+                    - Mth.rotLerp(partialTick, entity.yBodyRotO, entity.yBodyRot)) * Mth.DEG_TO_RAD;
+            head.xRot = Mth.lerp(partialTick, entity.xRotO, entity.getXRot()) * Mth.DEG_TO_RAD;
+            hat.copyFrom(head);
+        } else if (behavior.mode().moves()) {
+            float swing = entity.walkAnimation.position(partialTick);
+            float amount = entity.walkAnimation.speed(partialTick);
+            rightArm.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F + (float) Math.PI) * amount;
+            leftArm.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F) * amount;
+            rightLeg.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F) * 1.4F * amount;
+            leftLeg.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F + (float) Math.PI) * 1.4F * amount;
+        }
+    }
+
+    public void applyPose(PosePreset preset) {
+        var pose = preset.rotations();
+        HumanoidPose.rotate(head, pose.head());
+        HumanoidPose.rotate(body, pose.body());
+        HumanoidPose.rotate(leftArm, pose.leftArm());
+        HumanoidPose.rotate(rightArm, pose.rightArm());
+        HumanoidPose.rotate(leftLeg, pose.leftLeg());
+        HumanoidPose.rotate(rightLeg, pose.rightLeg());
+        hat.copyFrom(head);
     }
 
     public void applyAge(CitizenAge age) {

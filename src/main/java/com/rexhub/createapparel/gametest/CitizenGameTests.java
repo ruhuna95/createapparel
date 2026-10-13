@@ -152,8 +152,8 @@ public final class CitizenGameTests {
         entity.setDeltaMovement(Vec3.ZERO);
         helper.getLevel().addFreshEntity(entity);
         double x = entity.getX(), z = entity.getZ(), y = entity.getY();
-        helper.assertTrue(entity.goalSelector.getAvailableGoals().isEmpty()
-                && entity.targetSelector.getAvailableGoals().isEmpty(), "STAND registers no goals");
+        helper.assertTrue(entity.goalSelector.getAvailableGoals().stream().noneMatch(goal -> goal.canUse())
+                && entity.targetSelector.getAvailableGoals().isEmpty(), "STAND has no runnable autonomous goals");
         helper.assertTrue(!entity.isNoAi(), "Normal physics and AI controls remain enabled");
         helper.assertTrue(entity.hurt(entity.damageSources().generic(), 2) && entity.getHealth() == 18, "Normal damage");
         helper.runAfterDelay(40, () -> {

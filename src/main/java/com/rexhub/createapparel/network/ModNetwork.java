@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "12";
+    private static final String PROTOCOL_VERSION = "14";
 
     private static SimpleChannel channel;
 
@@ -83,6 +83,11 @@ public final class ModNetwork {
                     ServerPlayer player = context.get().getSender();
                     if (player != null) packet.handle(player);
                 })
+                .add();
+        channel.messageBuilder(CitizenBehaviorInfoPacket.class, 7, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(CitizenBehaviorInfoPacket::encode)
+                .decoder(CitizenBehaviorInfoPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient())
                 .add();
     }
 
@@ -164,5 +169,9 @@ public final class ModNetwork {
 
     public static void updateCitizen(CitizenActionPacket packet) {
         channel().sendToServer(packet);
+    }
+
+    public static void sendCitizenBehaviorInfo(ServerPlayer player, CitizenBehaviorInfoPacket packet) {
+        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 }

@@ -7,6 +7,11 @@ import com.rexhub.createapparel.apparel.SkinTone;
 import com.rexhub.createapparel.citizen.CitizenDyeColors;
 import com.rexhub.createapparel.citizen.CitizenHairStyles;
 import com.rexhub.createapparel.entity.CitizenAppearance;
+import com.rexhub.createapparel.entity.CitizenBehaviorMode;
+import com.rexhub.createapparel.entity.CitizenBehaviorState;
+import com.rexhub.createapparel.entity.CitizenLookMode;
+import com.rexhub.createapparel.entity.MannequinForm;
+import com.rexhub.createapparel.entity.PosePreset;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.menu.CitizenMenu;
 import com.rexhub.createapparel.material.FabricColor;
@@ -20,7 +25,8 @@ import java.util.List;
 
 public record CitizenActionPacket(int containerId, int entityId, @Nullable Action action,
                                   int index, String category, String value) {
-    public enum Action { TAB, STYLE, ARM_PROFILE, CHEST_PROFILE, SKIN_TONE, HAIR_STYLE, HAIR_COLOR, EYE_COLOR }
+    public enum Action { TAB, STYLE, ARM_PROFILE, CHEST_PROFILE, SKIN_TONE, HAIR_STYLE, HAIR_COLOR, EYE_COLOR,
+        BEHAVIOR_MODE, WANDER_RADIUS, POSE_ROTATION_STEP, STAND_LOOK_MODE, POSE_PRESET }
 
     public static CitizenActionPacket select(CitizenMenu menu, Action action, String value) {
         return new CitizenActionPacket(menu.containerId, menu.citizen() == null ? -1 : menu.citizen().getId(),
@@ -72,6 +78,53 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
             if (menu.tab() == CitizenMenu.Tab.GARMENT && index >= 0 && index < GarmentSlot.values().length) {
                 menu.loadout().setStyle(GarmentSlot.values()[index], category, value);
             }
+            return;
+        }
+        if (action == Action.BEHAVIOR_MODE || action == Action.WANDER_RADIUS || action == Action.POSE_ROTATION_STEP
+                || action == Action.STAND_LOOK_MODE || action == Action.POSE_PRESET) {
+            if (menu.tab() != CitizenMenu.Tab.BEHAVIOR || !category.isEmpty()) return;
+            var citizen = menu.citizen();
+            var behavior = citizen.citizenState().behavior();
+            if (action == Action.BEHAVIOR_MODE) {
+                CitizenBehaviorMode mode;
+                if (index == 0) mode = CitizenBehaviorMode.parse(value).orElse(null);
+                else if ((index == -1 || index == 1) && value.isEmpty()) {
+                    var modes = List.of(CitizenBehaviorMode.STAND, CitizenBehaviorMode.WANDER, CitizenBehaviorMode.FOLLOW);
+                    int current = modes.indexOf(behavior.mode());
+                    mode = modes.get(current < 0 ? (index > 0 ? 0 : modes.size() - 1) : Math.floorMod(current + index, modes.size()));
+                } else return;
+                if (mode == null || mode == CitizenBehaviorMode.POSE) return;
+                citizen.setBehavior(mode == CitizenBehaviorMode.FOLLOW
+                        ? CitizenBehaviorState.follow(player.getUUID(), player.level().dimension())
+                        : CitizenBehaviorState.anchored(mode, citizen.blockPosition(), citizen.level().dimension(), CitizenBehaviorState.DEFAULT_RADIUS));
+            } else if (action == Action.WANDER_RADIUS) {
+                if (behavior.mode() != CitizenBehaviorMode.WANDER) return;
+                int radius;
+                try {
+                    if (index == 0) radius = Integer.parseInt(value);
+                    else if ((index == -1 || index == 1) && value.isEmpty()) radius = behavior.wanderRadius() + index;
+                    else return;
+                } catch (NumberFormatException ignored) { return; }
+                if (CitizenBehaviorState.validRadius(radius)) citizen.setBehavior(behavior.withRadius(radius));
+            } else if (action == Action.STAND_LOOK_MODE) {
+                if (behavior.mode() != CitizenBehaviorMode.STAND) return;
+                String selected;
+                if (index == 0) selected = value;
+                else if ((index == -1 || index == 1) && value.isEmpty()) selected = cycle(Arrays.stream(CitizenLookMode.values())
+                        .map(CitizenLookMode::id).toList(), behavior.lookMode().id(), index);
+                else return;
+                CitizenLookMode.parse(selected).ifPresent(look -> citizen.setBehavior(behavior.withLookMode(look)));
+            } else if (action == Action.POSE_PRESET) {
+                if (behavior.mode() != CitizenBehaviorMode.POSE) return;
+                String selected;
+                if (index == 0) selected = value;
+                else if ((index == -1 || index == 1) && value.isEmpty()) selected = cycle(MannequinForm.FULL.poses().stream()
+                        .map(PosePreset::id).toList(), behavior.pose().id(), index);
+                else return;
+                MannequinForm.FULL.poses().stream().filter(pose -> pose.id().equals(selected)).findFirst()
+                        .ifPresent(pose -> citizen.setBehavior(CitizenBehaviorState.posed(pose)));
+            } else if (value.isEmpty()) menu.rotatePose(index);
+            else if (value.equals("step") && (index == -1 || index == 1)) menu.rotatePose(Math.floorMod(menu.poseRotationStep() + index, 16));
             return;
         }
         if (menu.tab() != CitizenMenu.Tab.APPEARANCE || !category.isEmpty()) return;
