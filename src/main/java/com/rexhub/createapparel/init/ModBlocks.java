@@ -14,6 +14,15 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Supplier;
 
 public final class ModBlocks {
+    public static final RegistryObject<Block> CITIZEN_ROUTE_MARKER = routeMarker("citizen_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.NORMAL);
+    public static final RegistryObject<Block> GATEWAY_ROUTE_MARKER = routeMarker("gateway_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.GATEWAY);
+    public static final RegistryObject<Block> CROSSING_ROUTE_MARKER = routeMarker("crossing_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.CROSSING);
+
+    private static RegistryObject<Block> routeMarker(String name, com.rexhub.createapparel.citizen.route.RouteMarkerType type) {
+        return ModRegistries.BLOCKS.register(name, () -> new com.rexhub.createapparel.block.CitizenRouteMarkerBlock(
+                BlockBehaviour.Properties.of().strength(0.2F).noCollission().noOcclusion().noLootTable(), type));
+    }
+
     public static final RegistryObject<Block> SILKWORM_REARING_TRAY = ModRegistries.BLOCKS.register(
             "silkworm_rearing_tray",
             () -> new com.rexhub.createapparel.block.SilkwormRearingTrayBlock(

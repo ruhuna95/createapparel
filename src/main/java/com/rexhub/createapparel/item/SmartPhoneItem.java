@@ -27,6 +27,7 @@ public final class SmartPhoneItem extends Item {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
         tooltip.add(Component.translatable("tooltip.createapparel.smart_phone.convert_villager").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.createapparel.smart_phone.routes").withStyle(ChatFormatting.GRAY));
     }
 
     public void interact(PlayerInteractEvent.EntityInteract event) {
@@ -36,6 +37,8 @@ public final class SmartPhoneItem extends Item {
             if (event.getLevel().isClientSide) {
                 event.setCancellationResult(InteractionResult.SUCCESS);
             } else if (event.getEntity() instanceof ServerPlayer player && CitizenMenu.canEdit(player, citizen)) {
+                com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.get(player.serverLevel())
+                        .forceActive(citizen, com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.Reason.INTERACTION, 100);
                 NetworkHooks.openScreen(player,
                         new SimpleMenuProvider((id, inventory, viewer) -> new CitizenMenu(id, inventory, citizen),
                                 Component.translatable("container.createapparel.citizen")),

@@ -29,17 +29,32 @@ public final class ModConfigs {
 
     public static final class Common {
         public final ForgeConfigSpec.BooleanValue enableMirrorCoatingFallback;
+        public final ForgeConfigSpec.IntValue maxNewPathRequestsPerTick;
+        public final ForgeConfigSpec.IntValue maxActiveCitizensPerDimension;
+        public final ForgeConfigSpec.IntValue activityRotationTicks;
+        public final ForgeConfigSpec.IntValue crossingWaitTimeout;
+        public final ForgeConfigSpec.DoubleValue crossingPenalty;
+        public final ForgeConfigSpec.IntValue gatewayTransitCooldown;
         private Common(ForgeConfigSpec.Builder builder) {
             builder.push("recipes").push("mirror");
             enableMirrorCoatingFallback = builder.comment("Enable heated zinc, glowstone and water mixing. Reload recipes after changing.")
                     .define("enableMirrorCoatingFallback", false);
             builder.pop(2);
+            builder.push("citizenRoutes");
+            maxNewPathRequestsPerTick = builder.defineInRange("maxNewPathRequestsPerTick", 4, 1, 64);
+            maxActiveCitizensPerDimension = builder.defineInRange("maxActiveCitizensPerDimension", 80, 1, 4096);
+            activityRotationTicks = builder.defineInRange("activityRotationTicks", 1200, 20, 12000);
+            crossingWaitTimeout = builder.defineInRange("crossingWaitTimeout", 600, 20, 12000);
+            crossingPenalty = builder.defineInRange("crossingPenalty", 16.0, 0, 1024);
+            gatewayTransitCooldown = builder.defineInRange("gatewayTransitCooldown", 100, 20, 12000);
+            builder.pop();
         }
     }
 
     public enum MirrorQuality { OFF, LOW, MEDIUM, HIGH }
 
     public static final class Client {
+        public final ForgeConfigSpec.IntValue routeMarkerRenderDistance;
         public final ForgeConfigSpec.BooleanValue enabled;
         public final ForgeConfigSpec.EnumValue<MirrorQuality> quality;
         public final ForgeConfigSpec.IntValue renderDistance;
@@ -53,6 +68,9 @@ public final class ModConfigs {
         public final ForgeConfigSpec.IntValue nearbyReflectionFps;
         public final ForgeConfigSpec.DoubleValue updateBudgetMillis;
         private Client(ForgeConfigSpec.Builder builder) {
+            builder.push("citizenRoutes");
+            routeMarkerRenderDistance = builder.defineInRange("renderDistance", 64, 8, 128);
+            builder.pop();
             builder.push("mirror");
             enabled = builder.define("enabled", true);
             quality = builder.defineEnum("quality", MirrorQuality.MEDIUM);

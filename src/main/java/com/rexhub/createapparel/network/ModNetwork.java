@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "14";
+    private static final String PROTOCOL_VERSION = "19";
 
     private static SimpleChannel channel;
 
@@ -89,6 +89,21 @@ public final class ModNetwork {
                 .decoder(CitizenBehaviorInfoPacket::decode)
                 .consumerMainThread((packet, context) -> packet.handleClient())
                 .add();
+        channel.messageBuilder(RouteMarkerActionPacket.class, 8, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(RouteMarkerActionPacket::encode).decoder(RouteMarkerActionPacket::decode)
+                .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
+        channel.messageBuilder(RouteMarkerInfoPacket.class, 9, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(RouteMarkerInfoPacket::encode).decoder(RouteMarkerInfoPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient()).add();
+        channel.messageBuilder(RouteViewRequestPacket.class, 10, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(RouteViewRequestPacket::encode).decoder(RouteViewRequestPacket::decode)
+                .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
+        channel.messageBuilder(RouteViewPacket.class, 11, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(RouteViewPacket::encode).decoder(RouteViewPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient()).add();
+        channel.messageBuilder(RouteEdgeActionPacket.class, 12, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(RouteEdgeActionPacket::encode).decoder(RouteEdgeActionPacket::decode)
+                .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
     }
 
     private static SimpleChannel channel() {
@@ -172,6 +187,16 @@ public final class ModNetwork {
     }
 
     public static void sendCitizenBehaviorInfo(ServerPlayer player, CitizenBehaviorInfoPacket packet) {
+        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+
+    public static void updateRouteMarker(RouteMarkerActionPacket packet) { channel().sendToServer(packet); }
+    public static void deleteRouteEdge(RouteEdgeActionPacket packet) { channel().sendToServer(packet); }
+    public static void requestRouteView(RouteViewRequestPacket packet) { channel().sendToServer(packet); }
+    public static void sendRouteMarkerInfo(ServerPlayer player, RouteMarkerInfoPacket packet) {
+        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+    public static void sendRouteView(ServerPlayer player, RouteViewPacket packet) {
         if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 }

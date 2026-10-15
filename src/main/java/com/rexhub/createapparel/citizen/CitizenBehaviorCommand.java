@@ -37,6 +37,7 @@ public final class CitizenBehaviorCommand {
     private static LiteralArgumentBuilder<CommandSourceStack> mode(String literal, CitizenBehaviorMode mode) {
         var branch = Commands.literal(literal);
         switch (mode) {
+            case WALK -> branch.executes(context -> apply(context, citizen(context), CitizenBehaviorState.walking(), ""));
             case STAND -> branch.executes(context -> anchored(context, mode, CitizenBehaviorState.DEFAULT_RADIUS))
                     .then(Commands.argument("look", StringArgumentType.word())
                             .suggests((context, builder) -> SharedSuggestionProvider.suggest(java.util.Arrays.stream(CitizenLookMode.values())

@@ -12,6 +12,7 @@ public final class ClientCitizenBehaviorInfo {
         if (player != null && player.containerMenu instanceof CitizenMenu menu && menu.containerId == packet.containerId()
                 && menu.citizen() != null && menu.citizen().getId() == packet.entityId()) {
             menu.acceptFollowDisplay(packet.targetUuid(), packet.display());
+            menu.acceptDestination(packet.destination());
         }
     }
 }

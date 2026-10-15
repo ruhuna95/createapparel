@@ -8,6 +8,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModBlockEntities {
+    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity>> CITIZEN_ROUTE_MARKER =
+            ModRegistries.BLOCK_ENTITY_TYPES.register("citizen_route_marker", () -> BlockEntityType.Builder.of(
+                    com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity::new, ModBlocks.CITIZEN_ROUTE_MARKER.get(),
+                    ModBlocks.GATEWAY_ROUTE_MARKER.get(), ModBlocks.CROSSING_ROUTE_MARKER.get()).build(null));
     public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.SilkwormRearingTrayBlockEntity>> SILKWORM_REARING_TRAY =
             ModRegistries.BLOCK_ENTITY_TYPES.register("silkworm_rearing_tray", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.SilkwormRearingTrayBlockEntity::new,

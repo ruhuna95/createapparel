@@ -50,6 +50,10 @@ public record CitizenBehaviorState(CitizenBehaviorMode mode, @Nullable BlockPos 
         return new CitizenBehaviorState(CitizenBehaviorMode.FOLLOW, null, null, DEFAULT_RADIUS, uuid, dimension, PosePreset.STANDING, CitizenLookMode.IDLE);
     }
 
+    public static CitizenBehaviorState walking() {
+        return new CitizenBehaviorState(CitizenBehaviorMode.WALK, null, null, DEFAULT_RADIUS, null, null, PosePreset.STANDING, CitizenLookMode.IDLE);
+    }
+
     public static CitizenBehaviorState posed(PosePreset pose) {
         return new CitizenBehaviorState(CitizenBehaviorMode.POSE, null, null, DEFAULT_RADIUS, null, null, pose, CitizenLookMode.IDLE);
     }

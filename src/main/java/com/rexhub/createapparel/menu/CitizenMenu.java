@@ -38,6 +38,7 @@ public final class CitizenMenu extends ApparelMenu {
     private Component followDisplay = Component.empty();
     @Nullable private java.util.UUID displayedTarget;
     @Nullable private CitizenBehaviorInfoPacket lastBehaviorInfo;
+    @Nullable private net.minecraft.core.BlockPos destination;
 
     public CitizenMenu(int id, Inventory inventory, FriendlyByteBuf buffer) {
         this(id, inventory, find(inventory, buffer.readVarInt()), false);
@@ -82,6 +83,8 @@ public final class CitizenMenu extends ApparelMenu {
     public Tab tab() { return Tab.values()[tab]; }
     public int poseRotationStep() { return poseRotationStep; }
     public float sessionBaseYaw() { return sessionBaseYaw; }
+    @Nullable public net.minecraft.core.BlockPos destination() { return destination; }
+    public void acceptDestination(@Nullable net.minecraft.core.BlockPos destination) { this.destination = destination; }
 
     public boolean rotatePose(int step) {
         if (owner.level().isClientSide || citizen == null || !stillValid(owner) || owner.containerMenu != this
@@ -117,7 +120,9 @@ public final class CitizenMenu extends ApparelMenu {
         var target = CitizenFollowTarget.resolve(citizen);
         Component display = target == null ? Component.empty() : target.getDisplayName().copy().append(" (")
                 .append(String.valueOf(ForgeRegistries.ENTITY_TYPES.getKey(target.getType()))).append(")");
-        var packet = new CitizenBehaviorInfoPacket(containerId, citizen.getId(), citizen.citizenState().behavior().followTargetUuid(), display);
+        var position = citizen.routeMovement().currentDestination();
+        destination = position == null ? null : net.minecraft.core.BlockPos.containing(position);
+        var packet = new CitizenBehaviorInfoPacket(containerId, citizen.getId(), citizen.citizenState().behavior().followTargetUuid(), display, destination);
         if (!packet.equals(lastBehaviorInfo)) {
             lastBehaviorInfo = packet;
             ModNetwork.sendCitizenBehaviorInfo(player, packet);

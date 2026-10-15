@@ -101,6 +101,7 @@ public final class CreateApparelClient {
             MenuScreens.<MannequinMenu, WardrobeScreen<MannequinMenu>>
                     register(ModMenuTypes.MANNEQUIN.get(), WardrobeScreen::new);
             MenuScreens.register(ModMenuTypes.CITIZEN.get(), com.rexhub.createapparel.client.screen.CitizenScreen::new);
+            MenuScreens.register(ModMenuTypes.ROUTE_MARKER.get(), com.rexhub.createapparel.client.screen.RouteMarkerScreen::new);
         });
     }
 

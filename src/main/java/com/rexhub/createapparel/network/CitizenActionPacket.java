@@ -89,12 +89,12 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
                 CitizenBehaviorMode mode;
                 if (index == 0) mode = CitizenBehaviorMode.parse(value).orElse(null);
                 else if ((index == -1 || index == 1) && value.isEmpty()) {
-                    var modes = List.of(CitizenBehaviorMode.STAND, CitizenBehaviorMode.WANDER, CitizenBehaviorMode.FOLLOW);
+                    var modes = List.of(CitizenBehaviorMode.STAND, CitizenBehaviorMode.WANDER, CitizenBehaviorMode.FOLLOW, CitizenBehaviorMode.WALK);
                     int current = modes.indexOf(behavior.mode());
                     mode = modes.get(current < 0 ? (index > 0 ? 0 : modes.size() - 1) : Math.floorMod(current + index, modes.size()));
                 } else return;
                 if (mode == null || mode == CitizenBehaviorMode.POSE) return;
-                citizen.setBehavior(mode == CitizenBehaviorMode.FOLLOW
+                citizen.setBehavior(mode == CitizenBehaviorMode.WALK ? CitizenBehaviorState.walking() : mode == CitizenBehaviorMode.FOLLOW
                         ? CitizenBehaviorState.follow(player.getUUID(), player.level().dimension())
                         : CitizenBehaviorState.anchored(mode, citizen.blockPosition(), citizen.level().dimension(), CitizenBehaviorState.DEFAULT_RADIUS));
             } else if (action == Action.WANDER_RADIUS) {

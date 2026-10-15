@@ -92,7 +92,7 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
                 .bounds(leftPos + 102, topPos + 113, 96, 18).build());
         buttonScroll.bind(rotationButton, this::rotate);
         addBehaviorChoice(CitizenActionPacket.Action.BEHAVIOR_MODE, 4, 52,
-                List.of(CitizenBehaviorMode.STAND, CitizenBehaviorMode.WANDER, CitizenBehaviorMode.FOLLOW).stream()
+                List.of(CitizenBehaviorMode.STAND, CitizenBehaviorMode.WANDER, CitizenBehaviorMode.FOLLOW, CitizenBehaviorMode.WALK).stream()
                         .map(CitizenBehaviorMode::id).toList(),
                 () -> behavior().mode().id(), "behavior.createapparel.");
         addBehaviorChoice(CitizenActionPacket.Action.STAND_LOOK_MODE, 4, 86,
@@ -257,6 +257,10 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
         }
         if (menu.tab() == CitizenMenu.Tab.BEHAVIOR) {
             var state = behavior();
+            var destination = menu.destination();
+            graphics.drawWordWrap(font, Component.translatable("screen.createapparel.citizen.destination",
+                    destination == null ? Component.translatable("screen.createapparel.citizen.destination.none")
+                            : Component.literal(destination.toShortString())), 8, 194, 284, 0x404040);
             graphics.drawString(font, Component.translatable("screen.createapparel.citizen.behavior"), 4, 38, 0x404040, false);
             if (state.mode() == CitizenBehaviorMode.STAND) {
                 graphics.drawString(font, Component.translatable("screen.createapparel.citizen.look_at"), 4, 72, 0x404040, false);
@@ -277,7 +281,7 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
                 for (var line : font.split(menu.followDisplay(), 284)) {
                     graphics.drawString(font, line, 8, y, 0x404040, false);
                     y += 10;
-                    if (y > 212) break;
+                    if (y > 174) break;
                 }
             }
             return;

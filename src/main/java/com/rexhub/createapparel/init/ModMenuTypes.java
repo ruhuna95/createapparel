@@ -6,6 +6,8 @@ import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModMenuTypes {
+    public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.RouteMarkerMenu>> ROUTE_MARKER =
+            ModRegistries.MENU_TYPES.register("route_marker", () -> IForgeMenuType.create(com.rexhub.createapparel.menu.RouteMarkerMenu::new));
     public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.CitizenMenu>> CITIZEN =
             ModRegistries.MENU_TYPES.register("citizen",
                     () -> IForgeMenuType.create(com.rexhub.createapparel.menu.CitizenMenu::new));

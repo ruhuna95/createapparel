@@ -16,6 +16,9 @@ import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
+import com.rexhub.createapparel.citizen.route.CitizenPathfindingScheduler;
+import com.rexhub.createapparel.citizen.route.CitizenActivityScheduler;
+import net.minecraft.server.level.ServerLevel;
 
 public final class CitizenBehaviorGoal extends Goal {
     public static final int FOLLOW_INTERVAL = 20;
@@ -38,7 +41,7 @@ public final class CitizenBehaviorGoal extends Goal {
     }
 
     @Override
-    public boolean canUse() { return !citizen.level().isClientSide && citizen.citizenState().behavior().mode().moves(); }
+    public boolean canUse() { return !citizen.level().isClientSide && (citizen.citizenState().behavior().mode().moves() || citizen.routeMovement().hasDestination()); }
 
     @Override
     public boolean canContinueToUse() { return canUse(); }
@@ -48,6 +51,8 @@ public final class CitizenBehaviorGoal extends Goal {
 
     @Override
     public void stop() {
+        if (citizen.level() instanceof ServerLevel level) CitizenPathfindingScheduler.get(level).cancel(citizen);
+        citizen.routeMovement().reset();
         citizen.getNavigation().stop();
         target = null;
         lastTargetPosition = null;
@@ -64,7 +69,8 @@ public final class CitizenBehaviorGoal extends Goal {
         }
         if (pathDelay > 0) pathDelay--;
         if (teleportDelay > 0) teleportDelay--;
-        if (state.mode() == CitizenBehaviorMode.FOLLOW) follow(state);
+        if (state.mode() == CitizenBehaviorMode.WALK || citizen.routeMovement().hasDestination()) citizen.routeMovement().tick();
+        else if (state.mode() == CitizenBehaviorMode.FOLLOW) follow(state);
         else if (state.mode() == CitizenBehaviorMode.WANDER) wander(state);
     }
 
@@ -114,11 +120,20 @@ public final class CitizenBehaviorGoal extends Goal {
         Vec3 destination = target.position();
         Vec3 delta = destination.subtract(citizen.position());
         if (delta.lengthSqr() > 144) destination = citizen.position().add(delta.normalize().scale(12));
-        Path path = citizen.getNavigation().createPath(BlockPos.containing(destination), 1);
-        if (path == null || path.getNodeCount() < 2 || !citizen.getNavigation().moveTo(path, 1)) {
-            citizen.getNavigation().stop();
-            pathDelay = FAILURE_BACKOFF;
-        } else lastTargetPosition = target.position();
+        var expectedTarget = target;
+        var waypoint = BlockPos.containing(destination);
+        var level = (ServerLevel) citizen.level();
+        CitizenActivityScheduler.get(level).forceActive(citizen, CitizenActivityScheduler.Reason.PLAYER, 40);
+        CitizenPathfindingScheduler.get(level).submit(citizen, CitizenPathfindingScheduler.Priority.PLAYER,
+                () -> state.equals(citizen.citizenState().behavior()) && CitizenFollowTarget.valid(citizen, state, expectedTarget)
+                        && !citizen.isPassenger() && !citizen.isLeashed() && citizen.distanceToSqr(expectedTarget) > STOP_DISTANCE_SQUARED
+                        && citizen.distanceToSqr(expectedTarget) < 144, () -> {
+                    Path path = citizen.getNavigation().createPath(waypoint, 1);
+                    if (path == null || path.getNodeCount() < 2 || !citizen.getNavigation().moveTo(path, 1)) {
+                        citizen.getNavigation().stop();
+                        pathDelay = FAILURE_BACKOFF;
+                    } else lastTargetPosition = expectedTarget.position();
+                });
     }
 
     private void teleportToTarget(Entity followTarget) {
@@ -153,12 +168,15 @@ public final class CitizenBehaviorGoal extends Goal {
             citizen.getNavigation().stop();
             return;
         }
-        if (pathDelay > 0 || !citizen.getNavigation().isDone()) return;
+        if (pathDelay > 0 || !citizen.getNavigation().isDone()
+                || CitizenActivityScheduler.get((ServerLevel) citizen.level()).state(citizen) == CitizenActivityScheduler.State.THROTTLED
+                || CitizenPathfindingScheduler.get((ServerLevel) citizen.level()).pending(citizen)) return;
         pathDelay = FAILURE_BACKOFF;
         if (!loadedSearchRegion()) return;
         var random = citizen.getRandom();
         int radius = state.wanderRadius();
         int stepRadius = Math.min(radius, 12);
+        var destinations = new java.util.ArrayList<BlockPos>();
         for (int attempt = 0; attempt < 8; attempt++) {
             int x = citizen.blockPosition().getX() + random.nextInt(stepRadius * 2 + 1) - stepRadius;
             int z = citizen.blockPosition().getZ() + random.nextInt(stepRadius * 2 + 1) - stepRadius;
@@ -176,17 +194,23 @@ public final class CitizenBehaviorGoal extends Goal {
                 }
             }
             if (walkable == null) continue;
-            Path path = citizen.getNavigation().createPath(walkable, 0);
-            if (path == null || !path.canReach() || path.getNodeCount() < 2) continue;
-            boolean contained = true;
-            for (int node = 0; node < path.getNodeCount(); node++) {
-                if (!inside(state, path.getNodePos(node))) { contained = false; break; }
-            }
-            if (contained && citizen.getNavigation().moveTo(path, 1)) {
-                pathDelay = 60 + random.nextInt(81);
-                return;
-            }
+            destinations.add(walkable);
         }
+        requestWanderPath(state, destinations, 0);
+    }
+
+    private void requestWanderPath(CitizenBehaviorState state, java.util.List<BlockPos> destinations, int index) {
+        if (index >= destinations.size()) { pathDelay = FAILURE_BACKOFF; return; }
+        CitizenPathfindingScheduler.get((ServerLevel) citizen.level()).submit(citizen, CitizenPathfindingScheduler.Priority.AUTONOMY,
+                () -> state.equals(citizen.citizenState().behavior()) && citizen.getNavigation().isDone(), () -> {
+                    Path path = citizen.getNavigation().createPath(destinations.get(index), 0);
+                    boolean contained = path != null && path.canReach() && path.getNodeCount() >= 2;
+                    if (contained) for (int node = 0; node < path.getNodeCount(); node++) {
+                        if (!inside(state, path.getNodePos(node))) { contained = false; break; }
+                    }
+                    if (contained && citizen.getNavigation().moveTo(path, 1)) pathDelay = 60 + citizen.getRandom().nextInt(81);
+                    else requestWanderPath(state, destinations, index + 1);
+                });
     }
 
     private static boolean inside(CitizenBehaviorState state, BlockPos pos) {

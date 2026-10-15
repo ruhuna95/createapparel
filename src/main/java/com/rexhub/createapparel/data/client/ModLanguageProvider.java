@@ -21,6 +21,7 @@ public final class ModLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        RouteLanguage.add(this::add, false);
         addEntityType(ModEntities.CITIZEN, "Citizen");
         addItem(ModItems.SMART_PHONE, "Smart Phone");
         addItem(ModItems.CITIZEN_SPAWN_EGG, "Citizen Spawn Egg");
@@ -338,6 +339,8 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("screen.createapparel.citizen.behavior", "Behavior");
         add("screen.createapparel.citizen.look_at", "Look at");
         add("screen.createapparel.citizen.anchor", "Anchor position");
+        add("screen.createapparel.citizen.destination", "Current destination: %s");
+        add("screen.createapparel.citizen.destination.none", "None");
         add("screen.createapparel.citizen.pose", "Pose");
         add("behavior.createapparel.stand", "Stand");
         add("behavior.createapparel.wander", "Wander");

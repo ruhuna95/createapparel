@@ -26,6 +26,8 @@ public final class Citizen extends PathfinderMob {
     private float ageScale = 1;
     private CitizenBehaviorState observedBehavior = CitizenBehaviorState.DEFAULT;
     private final CitizenLookController lookController = new CitizenLookController(this);
+    private final com.rexhub.createapparel.citizen.route.CitizenRouteMovement routeMovement =
+            new com.rexhub.createapparel.citizen.route.CitizenRouteMovement(this);
 
     public Citizen(EntityType<? extends Citizen> type, Level level) {
         super(type, level);
@@ -43,6 +45,7 @@ public final class Citizen extends PathfinderMob {
     }
 
     public CitizenState citizenState() { return citizenState; }
+    public com.rexhub.createapparel.citizen.route.CitizenRouteMovement routeMovement() { return routeMovement; }
 
     @Override
     protected Brain<Citizen> makeBrain(Dynamic<?> data) { return CitizenLookController.createBrain(data); }
@@ -58,6 +61,8 @@ public final class Citizen extends PathfinderMob {
         refreshAgeDimensions();
         if (!level().isClientSide) {
             if (!citizenState.behavior().equals(observedBehavior)) {
+                if (routeMovement != null) routeMovement.reset();
+                com.rexhub.createapparel.citizen.route.CitizenPathfindingScheduler.get((net.minecraft.server.level.ServerLevel) level()).cancel(this);
                 getNavigation().stop();
                 setZza(0);
                 setXxa(0);

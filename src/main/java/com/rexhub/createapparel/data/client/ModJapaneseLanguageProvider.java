@@ -19,6 +19,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        RouteLanguage.add(this::add, true);
         addEntityType(ModEntities.CITIZEN, "市民");
         addItem(ModItems.SMART_PHONE, "スマートフォン");
         addItem(ModItems.CITIZEN_SPAWN_EGG, "市民のスポーンエッグ");
@@ -336,6 +337,8 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("screen.createapparel.citizen.behavior", "行動");
         add("screen.createapparel.citizen.look_at", "視線");
         add("screen.createapparel.citizen.anchor", "アンカー座標");
+        add("screen.createapparel.citizen.destination", "現在の目的地：%s");
+        add("screen.createapparel.citizen.destination.none", "なし");
         add("screen.createapparel.citizen.pose", "ポーズ");
         add("behavior.createapparel.stand", "直立");
         add("behavior.createapparel.wander", "徘徊");

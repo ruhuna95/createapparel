@@ -31,7 +31,7 @@ class CitizenBehaviorStateTest {
         for (var state : new CitizenBehaviorState[]{CitizenBehaviorState.DEFAULT,
                 CitizenBehaviorState.anchored(CitizenBehaviorMode.STAND, new BlockPos(-4, 70, 9), dimension, 8),
                 CitizenBehaviorState.anchored(CitizenBehaviorMode.WANDER, new BlockPos(8, 63, -18), dimension, 64),
-                CitizenBehaviorState.follow(UUID.randomUUID(), dimension), CitizenBehaviorState.posed(PosePreset.ARMS_CROSSED)}) {
+                CitizenBehaviorState.follow(UUID.randomUUID(), dimension), CitizenBehaviorState.posed(PosePreset.ARMS_CROSSED), CitizenBehaviorState.walking()}) {
             var tag = new CompoundTag();
             state.write(tag);
             assertEquals(state, CitizenBehaviorState.read(tag));
@@ -46,7 +46,7 @@ class CitizenBehaviorStateTest {
         var tag = new CompoundTag();
         tag.putString("BaseMode", "stand");
         assertEquals(CitizenBehaviorState.DEFAULT, CitizenBehaviorState.read(tag));
-        tag.putString("BaseMode", "walk");
+        tag.putString("BaseMode", "unknown");
         assertEquals(CitizenBehaviorMode.STAND, CitizenBehaviorState.read(tag).mode());
     }
 

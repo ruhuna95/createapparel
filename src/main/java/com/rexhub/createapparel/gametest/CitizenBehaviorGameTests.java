@@ -49,6 +49,8 @@ public final class CitizenBehaviorGameTests {
         citizen.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(1, 2, 1))));
         citizen.setNoGravity(true);
         helper.getLevel().addFreshEntity(citizen);
+        com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.get(helper.getLevel()).forceActive(citizen,
+                com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.Reason.INTERACTION, 1000);
         return citizen;
     }
 
@@ -156,7 +158,7 @@ public final class CitizenBehaviorGameTests {
         var citizen = citizen(helper);
         var source = source(helper, citizen);
         String prefix = "createapparel behavior " + citizen.getUUID() + " ";
-        for (String suffix : List.of("walk", "wander 0", "wander 65", "pose left_30", "pose invalid", "follow " + citizen.getUUID(),
+        for (String suffix : List.of("unknown", "wander 0", "wander 65", "pose left_30", "pose invalid", "follow " + citizen.getUUID(),
                 "follow " + UUID.randomUUID(), "follow @e", "stand trailing")) rejected(helper, source, citizen, prefix + suffix);
         rejected(helper, source.withPermission(1), citizen, prefix + "wander");
         rejected(helper, source, citizen, prefix + "POSE casual");
@@ -179,13 +181,13 @@ public final class CitizenBehaviorGameTests {
         citizen.setBehavior(CitizenBehaviorState.follow(UUID.randomUUID(), helper.getLevel().dimension()));
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "follow").handle(player);
         helper.assertTrue(citizen.citizenState().behavior().followTargetUuid().equals(player.getUUID()), "GUI replaces any target with sender");
-        for (int tick = 0; tick < 3; tick++) CitizenActionPacket.step(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, 1).handle(player);
+        for (int tick = 0; tick < 4; tick++) CitizenActionPacket.step(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, 1).handle(player);
         helper.assertTrue(citizen.citizenState().behavior().mode() == CitizenBehaviorMode.FOLLOW
-                && citizen.citizenState().behavior().followTargetUuid().equals(player.getUUID()), "Fast mode wheel cycles three GUI choices from server state");
+                && citizen.citizenState().behavior().followTargetUuid().equals(player.getUUID()), "Fast mode wheel cycles four GUI choices from server state");
         var before = citizen.citizenState().serializeNBT();
         for (var packet : List.of(CitizenActionPacket.select(menu, CitizenActionPacket.Action.POSE_PRESET, "casual"),
                 CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "pose"),
-                CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "walk"),
+                CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "unknown"),
                 CitizenActionPacket.step(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, 2),
                 CitizenActionPacket.select(menu, CitizenActionPacket.Action.WANDER_RADIUS, "12"),
                 CitizenActionPacket.step(menu, CitizenActionPacket.Action.POSE_ROTATION_STEP, 1),
@@ -302,9 +304,21 @@ public final class CitizenBehaviorGameTests {
     public static void followTeleportsLikeGroundPetsAtTwelveBlocksForBothAges(GameTestHelper helper) {
         floor(helper);
         var targetPos = helper.absolutePos(new BlockPos(28, 1, 20));
+        var chunk = new net.minecraft.world.level.ChunkPos(targetPos);
+        var chunks = helper.getLevel().getChunkSource();
+        chunks.addRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 2, chunk);
+        for (int x = chunk.x - 2; x <= chunk.x + 2; x++) for (int z = chunk.z - 2; z <= chunk.z + 2; z++) helper.getLevel().getChunk(x, z);
         var target = new ArmorStand(helper.getLevel(), targetPos.getX() + 0.5, targetPos.getY(), targetPos.getZ() + 0.5);
         target.setNoGravity(true);
         helper.getLevel().addFreshEntity(target);
+        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(helper.getLevel().getEntity(target.getUUID()) == target,
+                "Target registration completes before UUID follow checks")).thenExecute(() -> {
+            try { checkPetTeleport(helper, target); }
+            finally { chunks.removeRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 2, chunk); }
+        });
+    }
+
+    private static void checkPetTeleport(GameTestHelper helper, ArmorStand target) {
         for (var age : com.rexhub.createapparel.entity.CitizenAge.values()) {
             var citizen = citizen(helper);
             citizen.citizenState().setAge(age);
@@ -324,7 +338,9 @@ public final class CitizenBehaviorGameTests {
             citizen.getRandom().setSeed(20);
             for (int tick = 0; tick < 200 && citizen.position().equals(start); tick++) goal.tick();
             helper.assertTrue(!citizen.position().equals(start) && citizen.distanceToSqr(target) <= 20,
-                    "Twelve blocks triggers a safe pet-style teleport for " + age);
+                    "Pet teleport for " + age + ": start=" + start + ", pos=" + citizen.position() + ", target=" + target.position()
+                            + ", distance=" + citizen.distanceToSqr(target) + ", resolved=" + (CitizenFollowTarget.resolve(citizen) == target)
+                            + ", passenger=" + citizen.isPassenger() + ", leashed=" + citizen.isLeashed());
             var pos = citizen.blockPosition();
             helper.assertTrue(Math.abs(pos.getX() - target.getX()) >= 2 || Math.abs(pos.getZ() - target.getZ()) >= 2,
                     "Landing avoids the owner's central two-block area");
@@ -486,7 +502,7 @@ public final class CitizenBehaviorGameTests {
         });
     }
 
-    @GameTest(template = "citizen_behavior", batch = "citizen_behavior_navigation")
+    @GameTest(template = "citizen_behavior", batch = "citizen_behavior_navigation", timeoutTicks = 180)
     public static void wanderBackoffRetriesAfterFloorBecomesWalkable(GameTestHelper helper) {
         var citizen = citizen(helper);
         citizen.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(20, 1, 20))));
@@ -502,11 +518,18 @@ public final class CitizenBehaviorGameTests {
             helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
         }
         floor(helper);
+        citizen.setNoGravity(false);
         for (int tick = 0; tick < CitizenBehaviorGoal.FAILURE_BACKOFF - 1; tick++) goal.tick();
         helper.assertTrue(citizen.getNavigation().isDone(), "Failure waits for backoff instead of pathfinding every tick");
         goal.tick();
-        helper.assertTrue(!citizen.getNavigation().isDone(), "Backoff expiration retries and finds a now-walkable path");
-        helper.succeed();
+        helper.assertTrue(com.rexhub.createapparel.citizen.route.CitizenPathfindingScheduler.get(helper.getLevel()).pending(citizen), "Backoff expiration queues a path");
+        var start = citizen.position();
+        helper.runAfterDelay(100, () -> {
+            helper.assertTrue(citizen.position().distanceToSqr(start) > 0.01, "Scheduled retries resume movement: pos=" + citizen.position()
+                    + ", active=" + com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.get(helper.getLevel()).state(citizen)
+                    + ", done=" + citizen.getNavigation().isDone() + ", ground=" + citizen.onGround());
+            helper.succeed();
+        });
     }
 
     @GameTest(template = "apparel_state", batch = "citizen_reload", timeoutTicks = 400)
