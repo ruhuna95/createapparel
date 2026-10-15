@@ -16,6 +16,14 @@ public final class RouteSettings {
     public static final int TEMPORARY_BLOCK_TICKS = 200;
     public static final int MAX_CACHED_ROUTES = 512;
     public static final int MAX_PLANNER_NODES = 4096;
+    public static final int PLANNER_SEARCHES_PER_TICK = 4;
+    public static final int PLANNER_NODES_PER_TICK = 512;
+    public static final int PLANNER_EDGES_PER_TICK = 2048;
+    public static final int MAX_ACTIVE_PLANS = 8;
+    public static final int MAX_PENDING_PLANS = 4096;
+    public static final int FAILURE_WAIT_THRESHOLD = 3;
+    public static final int FAILURE_RETRY_TICKS = 400;
+    public static final int PATH_PROGRESS_TIMEOUT = 100;
     public static final int MENU_PAGE_SIZE = 8;
     public static final int VIEW_BATCH_SIZE = 128;
     public static final int MAX_VIEW_NODES = 8192;

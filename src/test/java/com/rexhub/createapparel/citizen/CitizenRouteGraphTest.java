@@ -14,6 +14,19 @@ class CitizenRouteGraphTest {
     @BeforeAll static void bootstrap() throws ReflectiveOperationException { CitizenColorTestBootstrap.initializeTags(); }
     private static RouteMarker marker(int x, RouteMarkerType type) { return RouteMarker.create(UUID.randomUUID(), new BlockPos(x, 70, -17), type); }
 
+    @Test void removedMarkerDisconnectsIndexedControlReferencesAtomically() {
+        var graph = new CitizenRouteSavedData(); var source = marker(0, RouteMarkerType.CROSSING); var removed = marker(8, RouteMarkerType.NORMAL);
+        source = source.withCondition(new CrossingCondition(CrossingCondition.Mode.REDSTONE, removed.pos(), "", "", "", true, 7));
+        graph.put(source); graph.put(removed); graph.link(source.id(), removed.id(), false);
+        long version = graph.version(); assertTrue(graph.remove(removed.id()));
+        assertEquals(version + 1, graph.version()); assertTrue(graph.connected(source.id()).isEmpty());
+        var condition = graph.marker(source.id()).condition();
+        assertFalse(condition.configured()); assertTrue(condition.inverted()); assertEquals(7, condition.threshold());
+        var restored = CitizenRouteSavedData.load(graph.save(new CompoundTag()));
+        assertEquals(condition, restored.marker(source.id()).condition());
+        assertEquals(1, graph.save(new CompoundTag()).getInt("SchemaVersion"));
+    }
+
     @Test void idsEdgesIndexesVersionAndSaveRoundTripStayConsistent() {
         var graph = new CitizenRouteSavedData(); var a = marker(-17, RouteMarkerType.NORMAL); var b = marker(32, RouteMarkerType.NORMAL);
         assertTrue(graph.put(a)); assertTrue(graph.put(b)); assertTrue(graph.link(a.id(), b.id(), false));

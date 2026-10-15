@@ -23,6 +23,16 @@ public final class CitizenRouteManager {
     private final CitizenRoutePlanner planner;
     private long observedVersion = -1;
     private long loadRevision;
+    private long conditionRevision, conditionVersion = -1, nextConditionPoll;
+    private int conditionCursor;
+    private List<RouteEdge> conditionalEdges = List.of();
+    private final Map<UUID, Boolean> conditionStates = new HashMap<>();
+    private record Removed(com.rexhub.createapparel.network.RouteViewPacket.Edge edge, long expires) { }
+    private record Notice(BlockPos pos, int edges, boolean support, long expires) { }
+    private final LinkedHashMap<UUID, Removed> removedEdges = new LinkedHashMap<>();
+    private final Map<net.minecraft.server.level.ServerPlayer, Notice> notices = new WeakHashMap<>();
+    private final Map<net.minecraft.server.level.ServerPlayer, Long> noticeTimes = new WeakHashMap<>();
+    private long maintenanceRevision;
     private CitizenGatewayAccess gateways = CitizenGatewayAccess.UNAVAILABLE;
     private record EndpointKey(UUID from, UUID to, boolean child, long version, long loaded) { }
     private record EndpointCache(List<BlockPos> positions, long expires) { }
@@ -41,6 +51,37 @@ public final class CitizenRouteManager {
     public CitizenRoutePlanner planner() { refresh(); return planner; }
     public EdgeRuntimeState runtime() { refresh(); return runtime; }
     public long loadRevision() { return loadRevision; }
+    public long maintenanceRevision() { return maintenanceRevision; }
+    public List<com.rexhub.createapparel.network.RouteViewPacket.Edge> removedEdges() { return removedEdges.values().stream().map(Removed::edge).toList(); }
+    public void tickMaintenance() {
+        if (removedEdges.values().removeIf(entry -> entry.expires <= level.getGameTime())) maintenanceRevision++;
+        for (var player : level.players()) {
+            var notice = notices.get(player);
+            if (notice == null) continue;
+            if (notice.expires <= level.getGameTime() || !RouteMarkerPermissions.holdingPhone(player)) { notices.remove(player); continue; }
+            if (noticeTimes.getOrDefault(player, Long.MIN_VALUE / 2) + 20 > level.getGameTime()) continue;
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.createapparel.route."
+                    + (notice.support ? "support_removed" : "marker_removed"), notice.pos.toShortString(), notice.edges), true);
+            noticeTimes.put(player, level.getGameTime()); notices.remove(player);
+        }
+    }
+    public long conditionRevision() {
+        if (conditionVersion != data.version()) {
+            conditionVersion = data.version(); conditionalEdges = data.conditionalEdges();
+            conditionStates.clear(); conditionCursor = 0; conditionRevision++; nextConditionPoll = 0;
+        }
+        if (level.getGameTime() >= nextConditionPoll) {
+            nextConditionPoll = level.getGameTime() + 5;
+            for (int i = 0; i < Math.min(256, conditionalEdges.size()); i++) {
+                var edge = conditionalEdges.get(conditionCursor);
+                conditionCursor = (conditionCursor + 1) % conditionalEdges.size();
+                boolean open = crossingOpen(edge);
+                var previous = conditionStates.put(edge.id(), open);
+                if (previous != null && previous != open) conditionRevision++;
+            }
+        }
+        return conditionRevision;
+    }
     public void setGatewayAccess(CitizenGatewayAccess access) { gateways = Objects.requireNonNull(access); loadChanged(); }
 
     private void refresh() {
@@ -69,7 +110,7 @@ public final class CitizenRouteManager {
 
     public void reconcile(LevelChunk chunk) {
         for (var marker : data.inChunk(chunk.getPos().toLong())) {
-            if (!(chunk.getBlockState(marker.pos()).getBlock() instanceof CitizenRouteMarkerBlock)) data.remove(marker.id());
+            if (!(chunk.getBlockState(marker.pos()).getBlock() instanceof CitizenRouteMarkerBlock)) removeAt(marker.pos());
         }
         for (var entity : List.copyOf(chunk.getBlockEntities().values())) {
             if (entity instanceof CitizenRouteMarkerBlockEntity marker) register(marker);
@@ -89,7 +130,27 @@ public final class CitizenRouteManager {
 
     public boolean removeAt(BlockPos pos) {
         var marker = data.at(pos);
-        return marker != null && data.remove(marker.id());
+        if (marker == null) return false;
+        var removed = new ArrayList<com.rexhub.createapparel.network.RouteViewPacket.Edge>();
+        for (var edge : data.connected(marker.id())) {
+            var a = data.marker(edge.a()); var b = data.marker(edge.b());
+            if (a != null && b != null) removed.add(new com.rexhub.createapparel.network.RouteViewPacket.Edge(edge.id(), a.pos(), b.pos(),
+                    edge.conditional(), false, com.rexhub.createapparel.network.RouteViewPacket.Health.REMOVED));
+        }
+        if (!data.remove(marker.id())) return false;
+        for (var edge : removed) {
+            if (removedEdges.size() >= 128) removedEdges.remove(removedEdges.keySet().iterator().next());
+            removedEdges.put(edge.id(), new Removed(edge, level.getGameTime() + 200));
+        }
+        maintenanceRevision++;
+        if (!removed.isEmpty()) for (var player : level.players()) {
+            if (RouteMarkerPermissions.holdingPhone(player) && player.distanceToSqr(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5) <= 4096) {
+                var previous = notices.get(player);
+                notices.put(player, new Notice(pos, removed.size() + (previous == null ? 0 : previous.edges),
+                        !CitizenRouteMarkerBlock.supported(level, pos), level.getGameTime() + 200));
+            }
+        }
+        return true;
     }
 
     public boolean delete(UUID id) {

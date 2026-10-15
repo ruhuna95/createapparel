@@ -28,6 +28,7 @@ public final class SmartPhoneItem extends Item {
         super.appendHoverText(stack, level, tooltip, flag);
         tooltip.add(Component.translatable("tooltip.createapparel.smart_phone.convert_villager").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.createapparel.smart_phone.routes").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.createapparel.smart_phone.route_health").withStyle(ChatFormatting.GRAY));
     }
 
     public void interact(PlayerInteractEvent.EntityInteract event) {

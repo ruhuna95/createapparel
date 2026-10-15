@@ -40,12 +40,14 @@ public final class CitizenRouteEvents {
         if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof Citizen citizen) {
             CitizenActivityScheduler.get(level).remove(citizen.getUUID());
             CitizenPathfindingScheduler.get(level).cancel(citizen);
+            CitizenRouteManager.get(level).planner().cancel(citizen);
         }
     }
     @SubscribeEvent public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel level) {
             CitizenActivityScheduler.get(level).tick();
             CitizenPathfindingScheduler.get(level).tick();
+            CitizenRouteManager.get(level).tickMaintenance();
             RouteViewSynchronization.tick(level);
         }
     }

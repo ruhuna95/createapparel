@@ -16,7 +16,10 @@ public record RouteViewPacket(ResourceLocation dimension, long snapshot, int par
         public Node(UUID id, BlockPos pos, RouteMarkerType type, double radius, double tolerance, boolean enabled, @Nullable BlockPos controlPos) { this(id, pos, type, radius, tolerance, enabled, controlPos, false, false); }
         public Node(UUID id, BlockPos pos, RouteMarkerType type, double radius, double tolerance, boolean enabled) { this(id, pos, type, radius, tolerance, enabled, null); }
     }
-    public record Edge(UUID id, BlockPos a, BlockPos b, boolean conditional, boolean open) { }
+    public enum Health { NORMAL, UNLOADED, BLOCKED, REMOVED }
+    public record Edge(UUID id, BlockPos a, BlockPos b, boolean conditional, boolean open, Health health) {
+        public Edge(UUID id, BlockPos a, BlockPos b, boolean conditional, boolean open) { this(id, a, b, conditional, open, Health.NORMAL); }
+    }
     public RouteViewPacket { nodes = List.copyOf(nodes); edges = List.copyOf(edges); }
 
     public void encode(FriendlyByteBuf buffer) {
@@ -33,6 +36,7 @@ public record RouteViewPacket(ResourceLocation dimension, long snapshot, int par
         for (var edge : edges) {
             buffer.writeUUID(edge.id); buffer.writeBlockPos(edge.a); buffer.writeBlockPos(edge.b);
             buffer.writeBoolean(edge.conditional); buffer.writeBoolean(edge.open);
+            buffer.writeEnum(edge.health);
         }
     }
 
@@ -43,7 +47,7 @@ public record RouteViewPacket(ResourceLocation dimension, long snapshot, int par
         for (int i = 0; i < size; i++) nodes.add(new Node(buffer.readUUID(), buffer.readBlockPos(), buffer.readEnum(RouteMarkerType.class),
                 buffer.readDouble(), buffer.readDouble(), buffer.readBoolean(), buffer.readBoolean() ? buffer.readBlockPos() : null, buffer.readBoolean(), buffer.readBoolean()));
         size = bounded(buffer.readVarInt()); var edges = new ArrayList<Edge>(size);
-        for (int i = 0; i < size; i++) edges.add(new Edge(buffer.readUUID(), buffer.readBlockPos(), buffer.readBlockPos(), buffer.readBoolean(), buffer.readBoolean()));
+        for (int i = 0; i < size; i++) edges.add(new Edge(buffer.readUUID(), buffer.readBlockPos(), buffer.readBlockPos(), buffer.readBoolean(), buffer.readBoolean(), buffer.readEnum(Health.class)));
         if (part < 0 || part > RouteSettings.MAX_VIEW_EDGES / RouteSettings.VIEW_BATCH_SIZE) throw new IllegalArgumentException("Invalid route view part");
         return new RouteViewPacket(dimension, snapshot, part, last, selected, nodes, edges);
     }

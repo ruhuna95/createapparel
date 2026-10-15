@@ -53,6 +53,9 @@ public final class SmartPhoneRouteEditor {
         boolean marker = state.getBlock() instanceof CitizenRouteMarkerBlock;
         boolean control = !marker && !player.isShiftKeyDown() && player instanceof ServerPlayer server && selected(server) != null;
         if (!marker && !player.isShiftKeyDown() && !control) return;
+        var targeted = !marker && player.isShiftKeyDown() && player instanceof ServerPlayer server
+                && RouteMarkerPermissions.canEditRoutes(player, event.getHand()) ? targetedEdge(server) : null;
+        if (!marker && !control && targeted == null && !RouteMarkerPermissions.placementAvailable(player, event.getHand(), event.getHitVec())) return;
         event.setCanceled(true);
         if (!RouteMarkerPermissions.canEditRoutes(player, event.getHand())) {
             event.setCancellationResult(InteractionResult.CONSUME);
@@ -80,7 +83,7 @@ public final class SmartPhoneRouteEditor {
             } else clickMarker(server, node, event.getHand());
             event.setCancellationResult(InteractionResult.CONSUME);
         } else {
-            var edge = targetedEdge(server);
+            var edge = targeted;
             if (edge != null) {
                 deleteTargetedEdge(server, edge);
                 event.setCancellationResult(InteractionResult.CONSUME);

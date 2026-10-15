@@ -14,6 +14,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class RoutePacketsTest {
     @BeforeAll static void bootstrap() throws ReflectiveOperationException { CitizenColorTestBootstrap.initializeTags(); }
 
+    @Test void maintenanceHealthRoundTripsForEveryKindOfConnection() {
+        for (var health : RouteViewPacket.Health.values()) {
+            var edge = new RouteViewPacket.Edge(UUID.randomUUID(), BlockPos.ZERO, new BlockPos(16, 2, -4), false, true, health);
+            var packet = new RouteViewPacket(ResourceLocation.parse("minecraft:overworld"), 5, 0, true, null, List.of(), List.of(edge));
+            var buffer = new FriendlyByteBuf(Unpooled.buffer());
+            try { packet.encode(buffer); assertEquals(packet, RouteViewPacket.decode(buffer)); } finally { buffer.release(); }
+        }
+    }
+
     @Test void citizenBehaviorInfoPreservesOptionalDestinationAndFollowTarget() {
         for (UUID target : Arrays.asList(null, UUID.randomUUID())) {
             for (BlockPos destination : Arrays.asList(null, new BlockPos(-123, 72, 456))) {

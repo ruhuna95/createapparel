@@ -58,13 +58,19 @@ public final class RouteMarkerRenderer {
             }
         }
         for (var edge : ClientRouteView.edges()) {
-            if (!CitizenNavigation.hasLoadedRegion(minecraft.level, edge.a(), 0)
-                    || !CitizenNavigation.hasLoadedRegion(minecraft.level, edge.b(), 0)) continue;
+            if (edge.health() == RouteViewPacket.Health.NORMAL && (!CitizenNavigation.hasLoadedRegion(minecraft.level, edge.a(), 0)
+                    || !CitizenNavigation.hasLoadedRegion(minecraft.level, edge.b(), 0))) continue;
             var a = Vec3.atBottomCenterOf(edge.a()).add(0, 0.15, 0);
             var b = Vec3.atBottomCenterOf(edge.b()).add(0, 0.15, 0);
             int color = RouteGuideColors.routeEdge(edge.conditional(), edge.open());
+            color = switch (edge.health()) {
+                case NORMAL -> color;
+                case UNLOADED -> 0x805C718A;
+                case BLOCKED -> 0xA6CC88FF;
+                case REMOVED -> 0xA6FFAA33;
+            };
             if (targetedEdge != null && !targetedEdge.control() && edge.id().equals(targetedEdge.id())) color = minecraft.level.getGameTime() % 12 < 6 ? 0xA6FF3333 : 0x40FF3333;
-            edge(quads, event, a, b, origin, guideCamera, distance, true, color);
+            edge(quads, event, a, b, origin, guideCamera, distance, true, color, edge.health() != RouteViewPacket.Health.NORMAL);
         }
         for (var node : ClientRouteView.nodes()) {
             if (node.controlPos() == null || !CitizenNavigation.hasLoadedRegion(minecraft.level, node.pos(), 0)
@@ -118,12 +124,20 @@ public final class RouteMarkerRenderer {
 
     private static void edge(List<Quad> quads, RenderLevelStageEvent event, Vec3 a, Vec3 b, Vec3 origin,
                              Vec3 camera, double distance, boolean markerAtEnd, int color) {
+        edge(quads, event, a, b, origin, camera, distance, markerAtEnd, color, false);
+    }
+
+    private static void edge(List<Quad> quads, RenderLevelStageEvent event, Vec3 a, Vec3 b, Vec3 origin,
+                             Vec3 camera, double distance, boolean markerAtEnd, int color, boolean dashed) {
         if (!event.getFrustum().isVisible(new AABB(a, b).inflate(RouteGuideGeometry.EDGE_WIDTH))) return;
         var segment = RouteGuideGeometry.clipEdge(a, b, origin, distance);
         if (segment == null) return;
         var startBox = RouteGuideGeometry.markerBox(a.add(0, -0.15, 0));
         var boxes = markerAtEnd ? List.of(startBox, RouteGuideGeometry.markerBox(b.add(0, -0.15, 0))) : List.of(startBox);
-        for (var polygon : RouteGuideGeometry.ribbonOutsideNodes(segment, camera, boxes)) {
+        var segments = dashed ? List.of(new RouteGuideGeometry.Segment(segment.from(), segment.from().lerp(segment.to(), 0.2)),
+                new RouteGuideGeometry.Segment(segment.from().lerp(segment.to(), 0.4), segment.from().lerp(segment.to(), 0.6)),
+                new RouteGuideGeometry.Segment(segment.from().lerp(segment.to(), 0.8), segment.to())) : List.of(segment);
+        for (var piece : segments) for (var polygon : RouteGuideGeometry.ribbonOutsideNodes(piece, camera, boxes)) {
             if (polygon.size() == 4) quads.add(new Quad(polygon.get(0), polygon.get(1), polygon.get(2), polygon.get(3), color));
             else for (int i = 1; i + 1 < polygon.size(); i++) quads.add(new Quad(polygon.get(0), polygon.get(i), polygon.get(i + 1), polygon.get(i + 1), color));
         }

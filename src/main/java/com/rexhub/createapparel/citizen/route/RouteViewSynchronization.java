@@ -10,12 +10,19 @@ import java.util.*;
 public final class RouteViewSynchronization {
     private static final Map<UUID, View> VIEWS = new HashMap<>();
     private static long sequence;
+    private record Endpoints(long first, long second) {
+        static Endpoints of(RouteViewPacket.Edge edge) {
+            long a = edge.a().asLong(), b = edge.b().asLong();
+            return new Endpoints(Math.min(a, b), Math.max(a, b));
+        }
+    }
     private static final class View {
         int radius = 64;
         BlockPos center = BlockPos.ZERO;
         String dimension = "";
         long version = -1;
         long loaded = -1;
+        long runtime = -1, maintenance = -1;
         long snapshot;
         UUID selected;
         List<RouteViewPacket.Node> nodes = List.of();
@@ -48,9 +55,10 @@ public final class RouteViewSynchronization {
             var selected = SmartPhoneRouteEditor.selected(player);
             if (level.getGameTime() >= view.nextRefresh) {
                 boolean changed = view.version != manager.data().version() || view.loaded != manager.loadRevision()
+                        || view.runtime != manager.runtime().revision() || view.maintenance != manager.maintenanceRevision()
                         || !view.dimension.equals(level.dimension().location().toString()) || view.center.distSqr(player.blockPosition()) >= 16
                         || !Objects.equals(selected, view.selected) || conditionsChanged(view, manager);
-                if (changed) rebuild(view, player, manager, selected);
+                if (changed && view.part >= view.parts) rebuild(view, player, manager, selected);
                 view.nextRefresh = level.getGameTime() + 5;
             }
             if (view.part < view.parts) {
@@ -80,7 +88,8 @@ public final class RouteViewSynchronization {
         }
         int checked = Math.min(view.edges.size(), 256);
         for (int i = 0; i < checked; i++) {
-            var edge = view.edges.get(view.conditionCursor++ % view.edges.size());
+            var edge = view.edges.get(view.conditionCursor);
+            view.conditionCursor = (view.conditionCursor + 1) % view.edges.size();
             if (!edge.conditional()) continue;
             var current = manager.data().edge(edge.id());
             if (current == null || manager.crossingOpen(current) != edge.open()) return true;
@@ -101,14 +110,22 @@ public final class RouteViewSynchronization {
             for (var edge : manager.data().connected(node.id())) {
                 if (edges.size() >= RouteSettings.MAX_VIEW_EDGES) break;
                 var a = manager.data().marker(edge.a()); var b = manager.data().marker(edge.b());
-                if (manager.loaded(a) && manager.loaded(b)) edges.putIfAbsent(edge.id(),
-                        new RouteViewPacket.Edge(edge.id(), a.pos(), b.pos(), edge.conditional(), manager.crossingOpen(edge)));
+                if (a != null && b != null) edges.putIfAbsent(edge.id(),
+                        new RouteViewPacket.Edge(edge.id(), a.pos(), b.pos(), edge.conditional(), manager.crossingOpen(edge),
+                                !manager.loaded(a) || !manager.loaded(b) ? RouteViewPacket.Health.UNLOADED
+                                        : manager.runtime().knownFailed(edge.id(), player.level().getGameTime()) ? RouteViewPacket.Health.BLOCKED : RouteViewPacket.Health.NORMAL));
             }
         }
+        var liveEndpoints = new HashSet<Endpoints>();
+        for (var edge : edges.values()) liveEndpoints.add(Endpoints.of(edge));
+        for (var removed : manager.removedEdges()) if (edges.size() < RouteSettings.MAX_VIEW_EDGES && !liveEndpoints.contains(Endpoints.of(removed))
+                && Math.min(removed.a().distSqr(player.blockPosition()), removed.b().distSqr(player.blockPosition())) <= (double) view.radius * view.radius)
+            edges.putIfAbsent(removed.id(), removed);
         view.edges = List.copyOf(edges.values());
         view.center = player.blockPosition();
         view.dimension = player.level().dimension().location().toString();
         view.version = manager.data().version(); view.loaded = manager.loadRevision(); view.selected = selected;
+        view.runtime = manager.runtime().revision(); view.maintenance = manager.maintenanceRevision();
         view.snapshot = ++sequence;
         view.part = view.conditionCursor = view.nodeConditionCursor = 0;
         view.parts = Math.max(1, (Math.max(view.nodes.size(), view.edges.size()) + RouteSettings.VIEW_BATCH_SIZE - 1) / RouteSettings.VIEW_BATCH_SIZE);

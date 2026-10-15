@@ -51,9 +51,19 @@ public final class RouteMarkerPermissions {
     public static boolean canPlace(ServerPlayer player, InteractionHand hand, BlockHitResult hit) {
         var pos = hit.getBlockPos().above();
         var level = player.serverLevel();
-        return hit.getDirection() == net.minecraft.core.Direction.UP && player.isShiftKeyDown()
+        return placementAvailable(player, hand, hit)
                 && canEditRoutes(player, hand) && canModify(player, hit.getBlockPos())
                 && canModify(player, pos) && aimingAt(player, hit.getBlockPos()) && topFace(player)
+                && level.isEmptyBlock(pos) && level.getBlockEntity(pos) == null && level.getFluidState(pos).isEmpty()
+                && CitizenRouteMarkerBlock.supported(level, pos);
+    }
+
+    public static boolean placementAvailable(Player player, InteractionHand hand, BlockHitResult hit) {
+        var pos = hit.getBlockPos().above(); var level = player.level();
+        return canEditRoutes(player, hand) && player.isShiftKeyDown() && !player.isSpectator() && player.mayBuild()
+                && hit.getDirection() == net.minecraft.core.Direction.UP && level.isInWorldBounds(pos)
+                && level.getWorldBorder().isWithinBounds(pos)
+                && com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(level, pos, 0)
                 && level.isEmptyBlock(pos) && level.getBlockEntity(pos) == null && level.getFluidState(pos).isEmpty()
                 && CitizenRouteMarkerBlock.supported(level, pos);
     }

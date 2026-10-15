@@ -18,6 +18,8 @@ import java.util.*;
 public final class ClientRouteView {
     private static List<RouteViewPacket.Node> nodes = List.of();
     private static List<RouteViewPacket.Edge> edges = List.of();
+    private static Map<net.minecraft.core.BlockPos, RouteViewPacket.Node> positions = Map.of();
+    private static Set<net.minecraft.core.BlockPos> connected = Set.of();
     private static List<com.rexhub.createapparel.citizen.route.RouteEdgePicking.Candidate> edgeCandidates = List.of();
     private static final List<RouteViewPacket.Node> pendingNodes = new ArrayList<>();
     private static final List<RouteViewPacket.Edge> pendingEdges = new ArrayList<>();
@@ -41,6 +43,7 @@ public final class ClientRouteView {
     public static void clear() {
         RouteMarkerRenderer.clearSurfaces();
         nodes = List.of(); edges = List.of(); edgeCandidates = List.of(); pendingNodes.clear(); pendingEdges.clear(); selected = null;
+        positions = Map.of(); connected = Set.of();
         snapshot = -1; nextPart = 0; requestedRadius = 0;
     }
 
@@ -55,11 +58,28 @@ public final class ClientRouteView {
         pendingNodes.addAll(packet.nodes()); pendingEdges.addAll(packet.edges()); nextPart++;
         if (packet.last()) {
             nodes = List.copyOf(pendingNodes); edges = List.copyOf(pendingEdges); selected = packet.selected();
+            var indexed = new HashMap<net.minecraft.core.BlockPos, RouteViewPacket.Node>();
+            for (var node : nodes) indexed.put(node.pos(), node);
+            positions = Map.copyOf(indexed);
+            var endpoints = new HashSet<net.minecraft.core.BlockPos>();
+            for (var edge : edges) if (edge.health() != RouteViewPacket.Health.REMOVED) { endpoints.add(edge.a()); endpoints.add(edge.b()); }
+            connected = Set.copyOf(endpoints);
             var candidates = new ArrayList<com.rexhub.createapparel.citizen.route.RouteEdgePicking.Candidate>();
-            for (var edge : edges) candidates.add(new com.rexhub.createapparel.citizen.route.RouteEdgePicking.Candidate(edge.id(), edge.a(), edge.b()));
+            for (var edge : edges) if (edge.health() != RouteViewPacket.Health.REMOVED)
+                candidates.add(new com.rexhub.createapparel.citizen.route.RouteEdgePicking.Candidate(edge.id(), edge.a(), edge.b()));
             for (var node : nodes) if (node.controlPos() != null) candidates.add(new com.rexhub.createapparel.citizen.route.RouteEdgePicking.Candidate(node.id(), node.pos(), node.controlPos(), true));
             edgeCandidates = List.copyOf(candidates);
         }
+    }
+
+    @SubscribeEvent public static void maintenanceHint(net.minecraftforge.client.event.RenderGuiEvent.Post event) {
+        var minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || minecraft.screen != null || !RouteMarkerPermissions.holdingPhone(minecraft.player)
+                || !(minecraft.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit)) return;
+        var node = positions.get(hit.getBlockPos());
+        if (node == null || connected.contains(node.pos())) return;
+        event.getGuiGraphics().drawCenteredString(minecraft.font, net.minecraft.network.chat.Component.translatable("message.createapparel.route.disconnected"),
+                minecraft.getWindow().getGuiScaledWidth() / 2, minecraft.getWindow().getGuiScaledHeight() / 2 + 16, 0xFFBB55);
     }
 
     @SubscribeEvent public static void interact(net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) {

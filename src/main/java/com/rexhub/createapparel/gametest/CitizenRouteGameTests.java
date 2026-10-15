@@ -223,8 +223,8 @@ public final class CitizenRouteGameTests {
         SmartPhoneRouteEditor.tick(p);
         helper.assertTrue(RouteMarkerPermissions.holdingPhone(p) && !RouteMarkerPermissions.canEditRoutes(p, InteractionHand.OFF_HAND), "Offhand retains viewing only");
         helper.assertTrue(SmartPhoneRouteEditor.selected(p) == null && !menu.stillValid(p), "Moving phone to offhand clears link and invalidates marker menu");
-        var attack = new PlayerInteractEvent.LeftClickBlock(p, a.pos(), Direction.NORTH);
-        MinecraftForge.EVENT_BUS.post(attack);
+        var attack = net.minecraftforge.common.ForgeHooks.onLeftClickBlock(p, a.pos(), Direction.NORTH,
+                net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
         helper.assertTrue(attack.isCanceled(), "Offhand cannot mine a visible marker");
         for (var gameMode : List.of(GameType.SURVIVAL, GameType.CREATIVE)) {
             p.setGameMode(gameMode);
@@ -704,14 +704,17 @@ public final class CitizenRouteGameTests {
         var citizen = citizen(helper, a.center(), true);
         citizen.routeMovement().requestDestination(b.center(), CitizenPathfindingScheduler.Priority.PLAYER);
         var crossing = data.connected(a.id()).stream().filter(RouteEdge::conditional).findFirst().orElseThrow();
-        var blocked = new boolean[]{false};
-        helper.onEachTick(() -> { if (manager.runtime().blocked(citizen.getUUID(), crossing.id(), helper.getLevel().getGameTime())) blocked[0] = true; });
+        var waited = new boolean[]{false}; var detoured = new boolean[]{false};
+        helper.onEachTick(() -> {
+            if (citizen.routeMovement().state() == CitizenRouteMovement.State.WAIT_CROSSING) waited[0] = true;
+            if (citizen.getZ() > a.center().z + 4) detoured[0] = true;
+        });
         helper.runAtTickTime(40, () -> helper.assertTrue(citizen.routeMovement().state() == CitizenRouteMovement.State.WAIT_CROSSING, "Shortest closed crossing waits first"));
         helper.runAtTickTime(710, () -> {
             try {
-            helper.assertTrue(blocked[0], "Timeout block: pos=" + citizen.position() + ", state=" + citizen.routeMovement().state()
+            helper.assertTrue(waited[0], "Closed crossing waited before choosing a detour: pos=" + citizen.position() + ", state=" + citizen.routeMovement().state()
                     + ", wait=" + citizen.routeMovement().crossingWaitTicks(helper.getLevel().getGameTime()) + ", timeout=" + ModConfigs.COMMON.crossingWaitTimeout.get());
-            helper.assertTrue(citizen.routeMovement().state() != CitizenRouteMovement.State.WAIT_CROSSING && citizen.getZ() > a.center().z + 4,
+            helper.assertTrue(citizen.routeMovement().state() != CitizenRouteMovement.State.WAIT_CROSSING && detoured[0],
                     "Alternate route: pos=" + citizen.position() + ", state=" + citizen.routeMovement().state() + ", current=" + citizen.routeMovement().currentMarker()
                             + ", loaded=" + com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(helper.getLevel(), citizen.blockPosition(), 24));
             helper.assertTrue(data.edge(crossing.id()) != null, "Timeout does not remove saved conditional edge"); helper.succeed();
@@ -747,6 +750,10 @@ public final class CitizenRouteGameTests {
 
     @GameTest(template = "citizen_behavior", batch = "citizen_route_movement", timeoutTicks = 240)
     public static void inaccessibleStartMarkerRetriesAnotherLoadedCandidate(GameTestHelper helper) {
+        var chunk = new net.minecraft.world.level.ChunkPos(helper.absolutePos(new BlockPos(20, 1, 20)));
+        var chunks = helper.getLevel().getChunkSource();
+        chunks.addRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 3, chunk);
+        for (int x = chunk.x - 3; x <= chunk.x + 3; x++) for (int z = chunk.z - 3; z <= chunk.z + 3; z++) helper.getLevel().getChunk(x, z);
         floor(helper); var a = marker(helper, 10, 10, RouteMarkerType.NORMAL); var b = marker(helper, 18, 10, RouteMarkerType.NORMAL); var c = marker(helper, 26, 10, RouteMarkerType.NORMAL);
         var data = manager(helper).data(); data.link(a.id(), b.id(), false); data.link(b.id(), c.id(), false);
         helper.getLevel().setBlock(a.pos().above(), Blocks.STONE.defaultBlockState(), 3);
@@ -754,9 +761,14 @@ public final class CitizenRouteGameTests {
         var reached = new boolean[]{false};
         helper.onEachTick(() -> { if (b.id().equals(citizen.routeMovement().currentMarker()) || c.id().equals(citizen.routeMovement().currentMarker())) reached[0] = true; });
         helper.runAtTickTime(200, () -> {
-            helper.assertTrue(reached[0], "Inaccessible nearest marker does not prevent discovery of another loaded start");
-            helper.assertTrue(data.marker(a.id()) != null && data.connected(a.id()).size() == 1, "Failed entry preserves marker and saved edge");
-            citizen.discard(); helper.succeed();
+            try {
+            helper.assertTrue(reached[0], "Inaccessible nearest marker does not prevent discovery of another loaded start: pos=" + citizen.position()
+                    + ", state=" + citizen.routeMovement().state() + ", entityTicks=" + citizen.tickCount + ", requests=" + citizen.routeMovement().navigationRequests()
+                    + ", failures=" + citizen.routeMovement().consecutiveFailures() + ", retry=" + citizen.routeMovement().retryAt());
+            helper.assertTrue(data.marker(a.id()) != null && data.connected(a.id()).size() == 1, "Failed entry preserves marker and saved edge: a="
+                    + data.marker(a.id()) + ", aBlock=" + helper.getLevel().getBlockState(a.pos()) + ", bBlock=" + helper.getLevel().getBlockState(b.pos()));
+            helper.succeed();
+            } finally { citizen.discard(); chunks.removeRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 3, chunk); }
         });
     }
 }

@@ -6,6 +6,11 @@ final class RouteLanguage {
     private RouteLanguage() { }
     static void add(BiConsumer<String, String> add, boolean japanese) {
         add.accept("behavior.createapparel.walk", japanese ? "経路歩行" : "Walk");
+        add.accept("tooltip.createapparel.smart_phone.route_health", japanese ? "破線の保守表示：灰青＝未ロード、紫＝経路失敗、橙＝切断跡（10秒）。" : "Maintenance dashes: slate = unloaded, purple = path failure, orange = removed connection (10 seconds).");
+        add.accept("message.createapparel.route.support_removed", japanese ? "支持ブロックの撤去によりマーカー（%s）と接続%s本が削除されました。" : "Support removed: marker at %s and %s connections were removed.");
+        add.accept("message.createapparel.route.marker_removed", japanese ? "マーカー（%s）が消失し、接続%s本が削除されました。" : "Marker at %s disappeared; %s connections were removed.");
+        add.accept("message.createapparel.route.disconnected", japanese ? "未接続の経路マーカー" : "Disconnected route marker");
+        add.accept("message.createapparel.route.statistics", japanese ? "Navigation：%s／待機%s、Graph探索：%s／Node %s／Edge %s／待機%s、処理時間：%s ms" : "Navigation: %s / queued %s; graph searches: %s / nodes %s / edges %s / queued %s; time: %s ms");
         add.accept("container.createapparel.route_marker", japanese ? "経路マーカー" : "Route Marker");
         for (var entry : new String[][]{
                 {"settings", "Settings", "設定"}, {"type", "Type Settings", "タイプ設定"},
