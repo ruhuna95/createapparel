@@ -14,6 +14,18 @@ class CitizenRouteGraphTest {
     @BeforeAll static void bootstrap() throws ReflectiveOperationException { CitizenColorTestBootstrap.initializeTags(); }
     private static RouteMarker marker(int x, RouteMarkerType type) { return RouteMarker.create(UUID.randomUUID(), new BlockPos(x, 70, -17), type); }
 
+    @Test void distantEditsDoNotInvalidateViewsButConnectedRemoteEndpointsDo() {
+        var graph = new CitizenRouteSavedData(); var near = marker(0, RouteMarkerType.NORMAL); var far = marker(1000, RouteMarkerType.CROSSING);
+        graph.put(near); graph.put(far); long revision = graph.viewRevision(near.pos(), 64);
+        graph.put(far.withRegion(4, 2)); assertEquals(revision, graph.viewRevision(near.pos(), 64));
+        graph.link(near.id(), far.id(), false); assertTrue(graph.viewRevision(near.pos(), 64) > revision);
+        revision = graph.viewRevision(near.pos(), 64);
+        graph.put(graph.marker(far.id()).withRegion(5, 2)); assertTrue(graph.viewRevision(near.pos(), 64) > revision);
+        revision = graph.viewRevision(near.pos(), 64);
+        graph.remove(far.id()); assertTrue(graph.viewRevision(near.pos(), 64) > revision); assertTrue(graph.connected(near.id()).isEmpty());
+        assertEquals(1, graph.save(new CompoundTag()).getInt("SchemaVersion"));
+    }
+
     @Test void removedMarkerDisconnectsIndexedControlReferencesAtomically() {
         var graph = new CitizenRouteSavedData(); var source = marker(0, RouteMarkerType.CROSSING); var removed = marker(8, RouteMarkerType.NORMAL);
         source = source.withCondition(new CrossingCondition(CrossingCondition.Mode.REDSTONE, removed.pos(), "", "", "", true, 7));
@@ -114,5 +126,25 @@ class CitizenRouteGraphTest {
         runtime.update(1, 231); assertFalse(runtime.blocked(a, edge, 231)); assertFalse(runtime.blocked(d, edge, 231));
         runtime.failed(a, edge, 250, 1); runtime.update(2, 251); assertFalse(runtime.blocked(a, edge, 251));
         runtime.failed(a, edge, 300, 2); runtime.succeeded(a, edge); assertFalse(runtime.blocked(a, edge, 300));
+    }
+
+    @Test void localRevisionsIgnoreOtherCitizensButSharedFailuresAndExpiryInvalidateThem() {
+        var runtime = new EdgeRuntimeState(); var a = UUID.randomUUID(); var b = UUID.randomUUID(); var c = UUID.randomUUID(); var edge = UUID.randomUUID();
+        runtime.update(1, 0); long original = runtime.revision(a), view = runtime.viewRevision();
+        runtime.blockLocal(b, edge, 1); assertEquals(original, runtime.revision(a)); assertEquals(view, runtime.viewRevision());
+        runtime.blockLocal(a, edge, 1); assertNotEquals(original, runtime.revision(a)); long blocked = runtime.revision(a);
+        runtime.update(1, 202); assertNotEquals(blocked, runtime.revision(a)); assertFalse(runtime.blocked(a, edge, 202));
+        runtime.failed(b, edge, 210, 1); runtime.failed(c, edge, 210, 1); assertEquals(original, runtime.revision(a));
+        runtime.failed(UUID.randomUUID(), edge, 210, 1); assertNotEquals(original, runtime.revision(a)); assertTrue(runtime.blocked(a, edge, 210));
+        long shared = runtime.revision(a); runtime.succeeded(b, edge); assertNotEquals(shared, runtime.revision(a)); assertFalse(runtime.blocked(a, edge, 211));
+        runtime.clear(); long cleanView = runtime.viewRevision(); runtime.update(2, 212); assertEquals(cleanView, runtime.viewRevision());
+    }
+
+    @Test void legacyLowGraphVersionsStillInvalidateRegionalViewsAfterLoading() {
+        var graph = new CitizenRouteSavedData(); var a = marker(0, RouteMarkerType.NORMAL); var b = marker(8, RouteMarkerType.NORMAL);
+        graph.put(a); graph.put(b); var saved = graph.save(new CompoundTag()); saved.putLong("RouteGraphVersion", 0);
+        var restored = CitizenRouteSavedData.load(saved); long previous = restored.viewRevision(a.pos(), 64);
+        restored.put(a.withRegion(4, 2)); assertTrue(restored.viewRevision(a.pos(), 64) > previous);
+        assertEquals(1, restored.save(new CompoundTag()).getInt("SchemaVersion"));
     }
 }

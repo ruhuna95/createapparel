@@ -9,6 +9,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import javax.annotation.Nullable;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 public final class RouteEdgePicking {
     public static final double PICK_RADIUS = 0.10;
@@ -20,6 +22,16 @@ public final class RouteEdgePicking {
     public record Hit(Vec3 point, double rayDistance, double separation) { }
 
     private RouteEdgePicking() { }
+
+    public static List<Candidate> fromView(List<com.rexhub.createapparel.network.RouteViewPacket.Node> nodes,
+                                           List<com.rexhub.createapparel.network.RouteViewPacket.Edge> edges) {
+        var candidates = new ArrayList<Candidate>();
+        for (var edge : edges) if (edge.health() == com.rexhub.createapparel.network.RouteViewPacket.Health.NORMAL
+                || edge.health() == com.rexhub.createapparel.network.RouteViewPacket.Health.BLOCKED)
+            candidates.add(new Candidate(edge.id(), edge.a(), edge.b()));
+        for (var node : nodes) if (node.controlPos() != null) candidates.add(new Candidate(node.id(), node.pos(), node.controlPos(), true));
+        return List.copyOf(candidates);
+    }
 
     @Nullable public static Candidate pick(Player player, Iterable<Candidate> candidates) {
         if (!player.isShiftKeyDown() || !RouteMarkerPermissions.holdingPhone(player)

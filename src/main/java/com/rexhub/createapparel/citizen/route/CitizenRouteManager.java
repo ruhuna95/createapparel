@@ -97,6 +97,7 @@ public final class CitizenRouteManager {
 
     public RouteMarker register(CitizenRouteMarkerBlockEntity entity) {
         var existing = data.at(entity.getBlockPos());
+        boolean created = existing == null;
         var type = ((CitizenRouteMarkerBlock) entity.getBlockState().getBlock()).type();
         UUID id = entity.markerId();
         if (existing == null) {
@@ -104,7 +105,10 @@ public final class CitizenRouteManager {
             existing = RouteMarker.create(id, entity.getBlockPos(), type);
             data.put(existing);
         } else if (existing.type() != type) { existing = existing.withType(type); data.put(existing); }
-        if (!existing.id().equals(entity.markerId())) { entity.setMarkerId(existing.id()); loadChanged(); }
+        if (!existing.id().equals(entity.markerId())) {
+            entity.setMarkerId(existing.id());
+            if (!created) loadChanged();
+        }
         return existing;
     }
 

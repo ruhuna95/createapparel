@@ -7,8 +7,9 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public final class CitizenRoutePlanner {
-    public record Plan(List<UUID> nodes, List<UUID> edges, boolean fallback, boolean deferred) {
+    public record Plan(List<UUID> nodes, List<UUID> edges, boolean fallback, boolean deferred, long version, long loaded) {
         public Plan { nodes = List.copyOf(nodes); edges = List.copyOf(edges); }
+        public Plan(List<UUID> nodes, List<UUID> edges, boolean fallback, boolean deferred) { this(nodes, edges, fallback, deferred, -1, -1); }
         public static Plan vanilla() { return new Plan(List.of(), List.of(), true, false); }
         public static Plan pending() { return new Plan(List.of(), List.of(), false, true); }
     }
@@ -17,7 +18,9 @@ public final class CitizenRoutePlanner {
     private record Key(UUID citizen, List<Endpoint> starts, List<Endpoint> targets, long version, long loaded,
                        @Nullable UUID avoided, boolean openOnly) { }
     private record Visit(UUID marker, double cost) { }
-    private record Cached(Plan plan, long expires, long runtime, long conditions, boolean delivered) { }
+    private record Crossing(UUID edge, boolean open) { }
+    private record Cached(Plan plan, long expires, long runtime, long conditions, boolean delivered, boolean validated,
+                          List<Crossing> crossings, int probe) { }
     private static final class Search {
         final Citizen citizen;
         final Key key;
@@ -33,6 +36,10 @@ public final class CitizenRoutePlanner {
         boolean finishing;
         @Nullable UUID tracing;
         final List<UUID> resultNodes = new ArrayList<>(), resultEdges = new ArrayList<>();
+        final List<Crossing> resultCrossings = new ArrayList<>();
+        @Nullable Cached validating;
+        int validationCursor;
+        long validationRuntime;
         Search(Citizen citizen, Key key) { this.citizen = citizen; this.key = key; }
     }
     private final CitizenRouteManager manager;
@@ -86,28 +93,60 @@ public final class CitizenRoutePlanner {
     }
 
     private Plan query(Citizen citizen, List<Endpoint> starts, List<Endpoint> targets, @Nullable UUID avoided, boolean openOnly) {
+        refreshBudget();
         var key = new Key(citizen.getUUID(), starts, targets, manager.data().version(), manager.loadRevision(), avoided, openOnly);
         var previous = requests.get(citizen.getUUID());
         if (previous != null && equivalent(previous, key)) key = previous;
         else if (previous != null) cancel(citizen);
         var result = takeCached(key);
         if (result != null) return result;
-        cache.remove(key);
         if (!pending.containsKey(key)) {
             if (pending.size() >= RouteSettings.MAX_PENDING_PLANS) return Plan.pending();
-            pending.put(key, new Search(citizen, key));
+            var search = new Search(citizen, key);
+            var cached = cache.remove(key);
+            if (cached != null && !cached.delivered && cached.expires > manager.level().getGameTime()) {
+                search.validating = cached;
+                search.validationRuntime = manager.runtime().revision(key.citizen);
+            }
+            pending.put(key, search);
             requests.put(citizen.getUUID(), key);
         }
         tick();
         result = takeCached(key);
+        var completed = cache.get(key);
+        if (result == null && completed != null && !completed.validated && !pending.containsKey(key)) {
+            cache.remove(key);
+            var validation = new Search(citizen, key);
+            validation.validating = completed;
+            validation.validationRuntime = manager.runtime().revision(key.citizen);
+            pending.put(key, validation); requests.put(key.citizen, key);
+            tick(); result = takeCached(key);
+        }
         return result == null ? Plan.pending() : result;
     }
 
     @Nullable private Plan takeCached(Key key) {
         var cached = cache.get(key);
         if (cached == null || cached.expires <= manager.level().getGameTime()) return null;
-        if (cached.delivered && (cached.runtime != manager.runtime().revision() || cached.conditions != manager.conditionRevision())) return null;
-        if (!cached.delivered) cache.put(key, new Cached(cached.plan, manager.level().getGameTime() + 40, cached.runtime, cached.conditions, true));
+        long conditions = manager.conditionRevision();
+        if (!cached.validated || key.version != manager.data().version() || key.loaded != manager.loadRevision()
+                || cached.runtime != manager.runtime().revision(key.citizen)
+                || (cached.delivered || cached.plan.fallback()) && cached.conditions != conditions) return null;
+        if (!cached.crossings.isEmpty()) {
+            int probe = cached.probe;
+            while (probe < cached.crossings.size() && scannedEdges < RouteSettings.PLANNER_EDGES_PER_TICK) {
+                scannedEdges++;
+                var crossing = cached.crossings.get(probe++);
+                var edge = manager.data().edge(crossing.edge);
+                if (edge == null || manager.crossingOpen(edge) != crossing.open || key.openOnly && !crossing.open) { cache.remove(key); return null; }
+            }
+            if (probe < cached.crossings.size()) {
+                cache.put(key, new Cached(cached.plan, cached.expires, cached.runtime, cached.conditions, cached.delivered, true, cached.crossings, probe));
+                return Plan.pending();
+            }
+        }
+        cache.put(key, new Cached(cached.plan, cached.delivered ? cached.expires : manager.level().getGameTime() + 40,
+                cached.runtime, conditions, true, true, cached.crossings, 0));
         return cached.plan;
     }
 
@@ -145,13 +184,15 @@ public final class CitizenRoutePlanner {
                 requests.remove(key.citizen, key);
                 if (cache.size() >= RouteSettings.MAX_CACHED_ROUTES) cache.remove(cache.keySet().iterator().next());
                 cache.put(key, new Cached(result, manager.level().getGameTime() + RouteSettings.RETRY_INTERVAL * 2,
-                        manager.runtime().revision(), manager.conditionRevision(), false));
+                        manager.runtime().revision(key.citizen), manager.conditionRevision(), false, search.validating != null,
+                        search.validating == null ? List.copyOf(search.resultCrossings) : search.validating.crossings, 0));
             }
         }
         nanos += System.nanoTime() - started;
     }
 
     @Nullable private Plan advance(Search search) {
+        if (search.validating != null) return validateSlice(search);
         if (!search.initialized) {
             if (searches >= RouteSettings.PLANNER_SEARCHES_PER_TICK || active >= RouteSettings.MAX_ACTIVE_PLANS) return null;
             searches++; active++; search.initialized = true;
@@ -208,19 +249,48 @@ public final class CitizenRoutePlanner {
                 if (edge == null || manager.runtime().blocked(search.citizen.getUUID(), id, manager.level().getGameTime())
                         || search.key.openOnly && !manager.crossingOpen(edge)) { restart(search); return null; }
                 search.resultEdges.add(id);
+                if (edge.conditional()) search.resultCrossings.add(new Crossing(id, manager.crossingOpen(edge)));
             }
             search.tracing = previous;
         }
         if (search.tracing != null) return null;
         Collections.reverse(search.resultNodes); Collections.reverse(search.resultEdges);
-        return new Plan(search.resultNodes, search.resultEdges, false, false);
+        return new Plan(search.resultNodes, search.resultEdges, false, false, search.key.version, search.key.loaded);
+    }
+
+    @Nullable private Plan validateSlice(Search search) {
+        var cached = Objects.requireNonNull(search.validating);
+        if (cached.plan.fallback()) {
+            if (cached.runtime == manager.runtime().revision(search.key.citizen) && cached.conditions == manager.conditionRevision()) return cached.plan;
+            search.validating = null; return null;
+        }
+        long runtime = manager.runtime().revision(search.key.citizen);
+        if (runtime != search.validationRuntime) {
+            search.validationCursor = 0; search.validationRuntime = runtime;
+        }
+        int count = 0;
+        while (search.validationCursor < cached.plan.nodes.size() && count++ < 32
+                && visitedNodes < RouteSettings.PLANNER_NODES_PER_TICK && scannedEdges < RouteSettings.PLANNER_EDGES_PER_TICK) {
+            int i = search.validationCursor++; visitedNodes++;
+            var node = manager.data().marker(cached.plan.nodes.get(i));
+            boolean valid = manager.loaded(node);
+            if (i > 0) {
+                scannedEdges++;
+                var edge = manager.data().edge(cached.plan.edges.get(i - 1));
+                valid &= edge != null && Objects.equals(edge.other(cached.plan.nodes.get(i - 1)), cached.plan.nodes.get(i))
+                        && !edge.id().equals(search.key.avoided) && !manager.runtime().blocked(search.key.citizen, edge.id(), manager.level().getGameTime())
+                        && (!search.key.openOnly || manager.crossingOpen(edge));
+            }
+            if (!valid) { search.validating = null; return null; }
+        }
+        return search.validationCursor == cached.plan.nodes.size() ? cached.plan : null;
     }
 
     private void restart(Search search) {
         active--; search.initialized = search.finishing = false; search.tracing = search.bestGoal = null;
         search.bestCost = Double.POSITIVE_INFINITY; search.expanding = null; search.adjacent = Collections.emptyIterator();
         search.queue.clear(); search.costs.clear(); search.previous.clear(); search.via.clear(); search.goals.clear();
-        search.resultNodes.clear(); search.resultEdges.clear();
+        search.resultNodes.clear(); search.resultEdges.clear(); search.resultCrossings.clear();
     }
 
     public double cost(Plan plan) {

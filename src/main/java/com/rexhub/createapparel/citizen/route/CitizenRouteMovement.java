@@ -40,6 +40,7 @@ public final class CitizenRouteMovement {
     private Vec3 attemptOrigin = Vec3.ZERO;
     private boolean destinationPathIssued;
     @Nullable private UUID avoidedCrossing;
+    private boolean detouring;
     private State state = State.IDLE;
     private final Map<UUID, Long> inaccessibleMarkers = new HashMap<>();
 
@@ -48,6 +49,7 @@ public final class CitizenRouteMovement {
     public boolean hasDestination() { return destination != null; }
     public int consecutiveFailures() { return consecutiveFailures; }
     public int navigationRequests() { return navigationRequests; }
+    public boolean detouring() { return detouring; }
     public long retryAt() { return retryAfter; }
     @Nullable public Vec3 currentDestination() {
         if (destination != null) return destination;
@@ -78,6 +80,7 @@ public final class CitizenRouteMovement {
         edgeDefinition = null;
         destination = null;
         plan = null;
+        detouring = false;
         endpoints = List.of();
         endpointIndex = planIndex = 0;
         pathIssued = crossingStarted = false;
@@ -123,7 +126,7 @@ public final class CitizenRouteMovement {
         if (graphVersion != manager.data().version()) {
             graphVersion = manager.data().version();
             inaccessibleMarkers.clear();
-            plan = null;
+            if (!detouring) plan = null;
             var connection = edge == null ? null : manager.data().edge(edge);
             boolean committedCrossing = crossingStarted && connection != null && connection.conditional()
                     && manager.loaded(manager.data().marker(connection.a())) && manager.loaded(manager.data().marker(connection.b()));
@@ -131,6 +134,7 @@ public final class CitizenRouteMovement {
                     && (target == null || manager.loaded(manager.data().marker(target)) && Objects.equals(targetDefinition, manager.data().marker(target)))
                     && (edge == null || Objects.equals(edgeDefinition, connection));
             if (!committedCrossing && !unchanged) {
+                plan = null; detouring = false;
                 scheduler.cancel(citizen);
                 citizen.getNavigation().stop();
                 target = edge = null;
@@ -151,6 +155,7 @@ public final class CitizenRouteMovement {
                 citizen.getNavigation().stop();
                 current = target = edge = null;
                 plan = null;
+                detouring = false;
                 pathIssued = crossingStarted = false;
                 retryAfter = time + RouteSettings.RETRY_INTERVAL;
                 state = State.WAIT_ROUTE;
@@ -180,7 +185,12 @@ public final class CitizenRouteMovement {
                         var detour = manager.planner().openDetour(citizen, current, target, connection.id());
                         double direct = manager.data().marker(current).center().distanceTo(marker.center());
                         if (!detour.deferred() && !detour.fallback() && manager.planner().cost(detour) <= direct + (time - waitSince) * 0.1) {
-                            failEdge(manager, time, false); return;
+                            if (detour.version() == manager.data().version() && detour.loaded() == manager.loadRevision()) {
+                                failEdge(manager, time, false);
+                                plan = detour; planIndex = 1; detouring = true; retryAfter = time;
+                                start(manager, detour.nodes().get(1), detour.edges().get(0));
+                                return;
+                            }
                         }
                     }
                     if (time - waitSince >= ModConfigs.COMMON.crossingWaitTimeout.get()) {
@@ -241,6 +251,7 @@ public final class CitizenRouteMovement {
             start(manager, plan.nodes().get(planIndex), plan.edges().get(planIndex - 1));
             return;
         }
+        if (detouring) { detouring = false; plan = null; retryAfter = time + 1; return; }
         state = State.DESTINATION;
         if (!citizen.getNavigation().isDone()) {
             if (makingProgress(destination, time)) return;
@@ -288,6 +299,12 @@ public final class CitizenRouteMovement {
         }
         var marker = manager.data().marker(to);
         if (!manager.loaded(marker)) { plan = null; retryAfter = manager.level().getGameTime() + RouteSettings.RETRY_INTERVAL; return; }
+        if (connection != null) {
+            var selected = manager.data().edge(connection);
+            if (selected == null || current == null || !to.equals(selected.other(current))) {
+                plan = null; retryAfter = manager.level().getGameTime() + 5; return;
+            }
+        }
         target = to;
         attemptOrigin = citizen.position();
         edge = connection;
@@ -350,6 +367,7 @@ public final class CitizenRouteMovement {
         pathIssued = crossingStarted = false;
         waitSince = -1;
         plan = null;
+        detouring = false;
         if (navigationFailure) recordFailure(time); else retryAfter = time + 5;
         state = State.WAIT_ROUTE;
     }

@@ -45,6 +45,12 @@ public final class CitizenRouteResilienceGameTests {
     public static void releaseResilienceTickets(net.minecraft.server.level.ServerLevel level) { releaseTickets(level); }
     @net.minecraft.gametest.framework.AfterBatch(batch = "citizen_route_load")
     public static void releaseLoadTickets(net.minecraft.server.level.ServerLevel level) { releaseTickets(level); }
+    @net.minecraft.gametest.framework.AfterBatch(batch = "citizen_route_view_load")
+    public static void releaseViewTickets(net.minecraft.server.level.ServerLevel level) { releaseTickets(level); }
+    @net.minecraft.gametest.framework.AfterBatch(batch = "citizen_route_cache_runtime")
+    public static void releaseCacheRuntimeTickets(net.minecraft.server.level.ServerLevel level) { releaseTickets(level); }
+    @net.minecraft.gametest.framework.AfterBatch(batch = "citizen_route_cache_crossing")
+    public static void releaseCacheCrossingTickets(net.minecraft.server.level.ServerLevel level) { releaseTickets(level); }
     private static void releaseTickets(net.minecraft.server.level.ServerLevel level) {
         for (var chunk : TICKETS.getOrDefault(level, Set.of())) level.getChunkSource().removeRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 4, chunk);
         TICKETS.remove(level);
@@ -62,6 +68,14 @@ public final class CitizenRouteResilienceGameTests {
         if (spawn) { helper.getLevel().addFreshEntity(citizen); CitizenActivityScheduler.get(helper.getLevel()).forceActive(citizen, CitizenActivityScheduler.Reason.INTERACTION, 1600); }
         return citizen;
     }
+    private static void logRoute(GameTestHelper helper, Citizen walker, List<RouteMarker> nodes) {
+        if (helper.getTick() % 100 != 0) return;
+        var m = manager(helper);
+        LogUtils.getLogger().info("ROUTE_DETOUR_CHECK tick={} pos={} state={} current={} activeDetour={} nav={} failures={} planner={} nodes={}",
+                helper.getTick(), walker.position(), walker.routeMovement().state(), walker.routeMovement().currentMarker(), walker.routeMovement().detouring(),
+                walker.routeMovement().navigationRequests(), walker.routeMovement().consecutiveFailures(), m.planner().statistics(),
+                nodes.stream().map(n -> n.pos() + ":saved=" + (m.data().marker(n.id()) != null) + ":loaded=" + m.loaded(m.data().marker(n.id()))).toList());
+    }
 
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 400)
     public static void incrementalPlannerBudgetsResumeAndDoNotStarveCitizens(GameTestHelper helper) {
@@ -72,11 +86,18 @@ public final class CitizenRouteResilienceGameTests {
             if (!nodes.isEmpty()) data.link(nodes.get(nodes.size() - 1).id(), node.id(), false);
             nodes.add(node);
         }
+        var signalA = marker(helper, 34, 1, 24); var signalB = marker(helper, 35, 1, 24); var m = manager(helper);
+        m.changeType(signalA.id(), RouteMarkerType.CROSSING); m.changeType(signalB.id(), RouteMarkerType.CROSSING);
+        var signal = signalA.pos().north(2);
+        helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState(), 2);
+        for (var node : List.of(signalA, signalB)) data.put(data.marker(node.id()).withCondition(new CrossingCondition(CrossingCondition.Mode.REDSTONE, signal, "", "", "", false)));
+        data.link(signalA.id(), signalB.id(), false);
         var citizens = new ArrayList<Citizen>(); var completed = new HashSet<UUID>(); var deferred = new boolean[]{false};
         for (int i = 0; i < 16; i++) citizens.add(citizen(helper, nodes.get(0).center(), false));
         var planner = manager(helper).planner(); var polls = new int[]{0};
         helper.onEachTick(() -> {
             polls[0]++;
+            helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState().setValue(BlockStateProperties.POWERED, polls[0] % 2 == 0), 2);
             manager(helper).runtime().blockLocal(UUID.randomUUID(), UUID.randomUUID(), helper.getLevel().getGameTime());
             for (var citizen : citizens) if (!completed.contains(citizen.getUUID())) {
                 if (citizen == citizens.get(citizens.size() - 1) && polls[0] % 80 != 1) continue;
@@ -92,6 +113,197 @@ public final class CitizenRouteResilienceGameTests {
         helper.succeedWhen(() -> {
             helper.assertTrue(completed.size() == 16 && deferred[0], "All sixteen Citizens complete multi-tick searches without starvation");
             for (var citizen : citizens) planner.cancel(citizen);
+        });
+    }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_cache_runtime", timeoutTicks = 200)
+    public static void undeliveredCacheRechecksRuntimeAndMarkerValidity(GameTestHelper helper) {
+        floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var c = marker(helper, 12, 1, 16);
+        var m = manager(helper); var data = m.data(); data.link(a.id(), b.id(), false); data.link(a.id(), c.id(), false); data.link(c.id(), b.id(), false);
+        var blocked = data.connected(a.id()).stream().filter(e -> e.other(a.id()).equals(b.id())).findFirst().orElseThrow();
+        var walker = citizen(helper, a.center(), false); var planner = m.planner();
+        var reference = citizen(helper, a.center(), false); var readyAt = new long[]{Long.MAX_VALUE};
+        helper.onEachTick(() -> {
+            if (readyAt[0] != Long.MAX_VALUE) return;
+            var initial = planner.between(reference, a.id(), b.id());
+            if (initial.deferred()) return;
+            helper.assertTrue(initial.edges().contains(blocked.id()), "Fixture initially chooses the direct route");
+            for (int i = 0; i < RouteSettings.PLANNER_SEARCHES_PER_TICK; i++) planner.between(citizen(helper, a.center(), false), a.id(), b.id());
+            helper.assertTrue(planner.between(walker, a.id(), b.id()).deferred(), "Cache is produced asynchronously before its first delivery");
+            readyAt[0] = helper.getTick() + 9;
+            helper.runAfterDelay(8, () -> m.runtime().blockLocal(walker.getUUID(), blocked.id(), helper.getLevel().getGameTime()));
+        });
+        helper.succeedWhen(() -> {
+            helper.assertTrue(helper.getTick() >= readyAt[0], "Wait until the cached edge is blocked");
+            var plan = planner.between(walker, a.id(), b.id());
+            helper.assertTrue(!plan.deferred() && !plan.fallback() && plan.nodes().equals(List.of(a.id(), c.id(), b.id())), "Budgeted recomputation finds the actual alternative");
+            var entity = (CitizenRouteMarkerBlockEntity) helper.getLevel().getBlockEntity(c.pos());
+            Objects.requireNonNull(entity).setMarkerId(UUID.randomUUID());
+            m.loadChanged();
+            var unavailable = planner.between(walker, a.id(), b.id());
+            helper.assertTrue(unavailable.deferred() || unavailable.fallback(), "Unavailable marker is not handed off from cache");
+            entity.setMarkerId(c.id()); m.reconcile(helper.getLevel().getChunkAt(c.pos()));
+        });
+    }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_cache_crossing", timeoutTicks = 120)
+    public static void asynchronousFirstDeliveryRechecksCrossingChanges(GameTestHelper helper) {
+        floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var m = manager(helper);
+        m.changeType(a.id(), RouteMarkerType.CROSSING); m.changeType(b.id(), RouteMarkerType.CROSSING);
+        var signal = a.pos().north(2);
+        helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState().setValue(BlockStateProperties.POWERED, true), 2);
+        for (var node : List.of(a, b)) m.data().put(m.data().marker(node.id()).withCondition(new CrossingCondition(CrossingCondition.Mode.REDSTONE, signal, "", "", "", false)));
+        m.data().link(a.id(), b.id(), false);
+        var walker = citizen(helper, a.center(), false); var planner = m.planner(); var avoided = UUID.randomUUID();
+        var synchronous = citizen(helper, a.center(), false);
+        var immediate = planner.openDetour(synchronous, a.id(), b.id(), avoided);
+        if (!immediate.deferred()) {
+            helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState(), 2);
+            var closed = planner.openDetour(synchronous, a.id(), b.id(), avoided);
+            helper.assertTrue(closed.deferred() || closed.fallback(), "Even same-tick signal changes invalidate an open-only cache before the periodic revision poll");
+            helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState().setValue(BlockStateProperties.POWERED, true), 2);
+        }
+        for (int i = 0; i < RouteSettings.PLANNER_SEARCHES_PER_TICK; i++) {
+            var filler = citizen(helper, a.center(), false); planner.between(filler, a.id(), b.id());
+        }
+        helper.assertTrue(planner.openDetour(walker, a.id(), b.id(), avoided).deferred(), "Request begins behind the shared search budget");
+        helper.runAtTickTime(8, () -> helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState(), 2));
+        helper.runAtTickTime(9, () -> {
+            var plan = planner.openDetour(walker, a.id(), b.id(), avoided);
+            helper.assertTrue(plan.deferred() || plan.fallback(), "First delivery cannot reuse an open-only route after its signal closed");
+        });
+        helper.runAtTickTime(20, () -> helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState().setValue(BlockStateProperties.POWERED, true), 2));
+        helper.succeedWhen(() -> {
+            helper.assertTrue(helper.getTick() >= 21, "Wait for reopening");
+            var plan = planner.openDetour(walker, a.id(), b.id(), avoided);
+            helper.assertTrue(!plan.deferred() && !plan.fallback() && plan.edges().size() == 1, "Opening permits budgeted replanning rather than caching no-route indefinitely");
+        });
+    }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 1220)
+    public static void acceptedDetourIsFollowedAndSurvivesSignalOpening(GameTestHelper helper) {
+        floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var c = marker(helper, 8, 1, 29); var m = manager(helper);
+        m.changeType(a.id(), RouteMarkerType.CROSSING); m.changeType(b.id(), RouteMarkerType.CROSSING);
+        for (var node : List.of(a, b)) {
+            var signal = node.pos().north(2);
+            helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState(), 2);
+            m.data().put(m.data().marker(node.id()).withCondition(new CrossingCondition(CrossingCondition.Mode.REDSTONE, signal, "", "", "", false)));
+        }
+        m.data().link(a.id(), b.id(), false); m.data().link(a.id(), c.id(), false); m.data().link(c.id(), b.id(), false);
+        var unrelated = marker(helper, 32, 1, 32);
+        var walker = citizen(helper, a.center(), true); walker.routeMovement().requestDestination(b.center(), CitizenPathfindingScheduler.Priority.PLAYER);
+        var adopted = new boolean[]{false}; var visited = new boolean[]{false};
+        helper.onEachTick(() -> {
+            logRoute(helper, walker, List.of(a, b, c));
+            if (walker.routeMovement().detouring() && !adopted[0]) {
+                adopted[0] = true;
+                m.changeType(unrelated.id(), RouteMarkerType.GATEWAY);
+                for (var node : List.of(a, b)) {
+                    var signal = node.pos().north(2);
+                    helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState().setValue(BlockStateProperties.POWERED, true), 2);
+                }
+            }
+            if (c.id().equals(walker.routeMovement().currentMarker())) visited[0] = true;
+        });
+        helper.succeedWhen(() -> {
+            helper.assertTrue(adopted[0] && visited[0] && !walker.routeMovement().hasDestination() && walker.position().distanceToSqr(b.center()) <= 1.1,
+                    "Accepted detour is traversed without switching back when the signal opens: adopted=" + adopted[0] + ", visited=" + visited[0] + ", pos=" + walker.position());
+            walker.discard();
+        });
+    }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 1220)
+    public static void deletingAFutureDetourEdgeStopsSafelyWithoutReturningToTheClosedCrossing(GameTestHelper helper) {
+        floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var c = marker(helper, 8, 1, 29); var m = manager(helper);
+        m.changeType(a.id(), RouteMarkerType.CROSSING); m.changeType(b.id(), RouteMarkerType.CROSSING);
+        m.data().link(a.id(), b.id(), false); m.data().link(a.id(), c.id(), false); m.data().link(c.id(), b.id(), false);
+        var removed = m.data().connected(c.id()).stream().filter(e -> e.other(c.id()).equals(b.id())).findFirst().orElseThrow();
+        var walker = citizen(helper, a.center(), true); walker.routeMovement().requestDestination(b.center(), CitizenPathfindingScheduler.Priority.PLAYER);
+        var changed = new boolean[]{false}; var arrivedAt = new long[]{Long.MAX_VALUE};
+        helper.onEachTick(() -> {
+            logRoute(helper, walker, List.of(a, b, c));
+            if (!changed[0] && walker.routeMovement().detouring()) { changed[0] = true; m.data().removeEdge(removed.id()); }
+            if (c.id().equals(walker.routeMovement().currentMarker()) && arrivedAt[0] == Long.MAX_VALUE) arrivedAt[0] = helper.getTick();
+        });
+        helper.succeedWhen(() -> {
+            helper.assertTrue(changed[0] && arrivedAt[0] != Long.MAX_VALUE && helper.getTick() > arrivedAt[0] + 100 && c.contains(walker.position()) && walker.routeMovement().hasDestination()
+                    && walker.routeMovement().state() == CitizenRouteMovement.State.WAIT_ROUTE && walker.getNavigation().isDone(),
+                    "Changed detour must wait safely: adopted=" + changed[0] + ", arrived=" + arrivedAt[0] + ", pos=" + walker.position()
+                            + ", current=" + walker.routeMovement().currentMarker() + ", target=" + walker.routeMovement().currentDestination()
+                            + ", state=" + walker.routeMovement().state() + ", failures=" + walker.routeMovement().consecutiveFailures() + ", requests=" + walker.routeMovement().navigationRequests());
+            walker.discard();
+        });
+    }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_view_load", timeoutTicks = 280)
+    public static void routeViewMeasuresSharedSnapshotsAndFrequentEditDeltas(GameTestHelper helper) {
+        floor(helper); var m = manager(helper); var nodes = new ArrayList<RouteMarker>();
+        for (int x = 36; x <= 74; x++) for (int z = 36; z <= 74; z++) {
+            helper.setBlock(new BlockPos(x, 3, z), Blocks.STONE);
+            for (int y = 1; y <= 2; y++) helper.setBlock(new BlockPos(x, y, z), x == 36 || x == 74 || z == 36 || z == 74 ? Blocks.STONE : Blocks.AIR);
+        }
+        var players = new ArrayList<ServerPlayer>(); var receivers = new ArrayList<RouteViewTransfer.Receiver>();
+        for (int i = 0; i < 16; i++) {
+            var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-view-" + i));
+            player.setPos(helper.absoluteVec(new Vec3(52, 1, 52))); player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
+            players.add(player); receivers.add(new RouteViewTransfer.Receiver());
+        }
+        var stage = new int[]{0}; var tick = new int[]{0}; var bytes = new long[2][16]; var nanos = new long[2][16]; var packets = new long[2][16];
+        helper.onEachTick(() -> {
+            int offset = tick[0] % 60;
+            int count = new int[]{128, 600, 1024, 1024}[stage[0]];
+            if (offset == 0) {
+                while (nodes.size() < count) {
+                    int i = nodes.size(); var node = marker(helper, i % 32 + 1, 1, i / 32 + 1);
+                    if (!nodes.isEmpty()) m.data().link(nodes.get(nodes.size() - 1).id(), node.id(), false);
+                    nodes.add(node);
+                }
+                RouteViewSynchronization.clear();
+                for (int i = 0; i < receivers.size(); i++) receivers.set(i, new RouteViewTransfer.Receiver());
+                if (stage[0] == 3) for (int i = 0; i < players.size(); i++) players.get(i).setPos(helper.absoluteVec(new Vec3(50 + i % 4, 1, 50 + i / 4)));
+                for (int phase = 0; phase < 2; phase++) { Arrays.fill(bytes[phase], 0); Arrays.fill(nanos[phase], 0); Arrays.fill(packets[phase], 0); }
+            }
+            if (offset == 20) m.data().put(m.data().marker(nodes.get(0).id()).withRegion(stage[0] + 4, 2));
+            if (offset >= 40 && offset <= 45) m.data().put(m.data().marker(nodes.get(1).id()).withRegion(offset == 45 ? 7 : 7 + offset % 2, 2));
+            int phase = offset < 20 ? 0 : 1;
+            for (int i = 0; i < players.size(); i++) {
+                final int index = i;
+                long started = System.nanoTime();
+                RouteViewSynchronization.update(players.get(i), packet -> {
+                    packets[phase][index]++;
+                    var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+                    try { packet.encode(buffer); bytes[phase][index] += buffer.readableBytes(); }
+                    finally { buffer.release(); }
+                    receivers.get(index).accept(packet);
+                });
+                nanos[phase][index] += System.nanoTime() - started;
+                if (i == 0 || i == 3 || i == 15) {
+                    if (offset == 19 || offset == 39) LogUtils.getLogger().info("ROUTE_VIEW_SERVER nodes={} edges={} players={} spread={} phase={} packets={} bytes={} cpuMs={}",
+                            receivers.get(0).nodes().size(), receivers.get(0).edges().size(), i + 1, stage[0] == 3, phase,
+                            Arrays.stream(packets[phase], 0, i + 1).sum(), Arrays.stream(bytes[phase], 0, i + 1).sum(), Arrays.stream(nanos[phase], 0, i + 1).sum() / 1_000_000.0);
+                }
+            }
+            helper.assertTrue(RouteViewSynchronization.statistics(helper.getLevel()).captures() <= 2, "Distinct view reconstruction stays within the shared per-tick budget");
+            if (offset == 39) {
+                for (var node : nodes) if (!m.loaded(m.data().marker(node.id()))) {
+                    boolean loaded = com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(helper.getLevel(), node.pos(), 0);
+                    LogUtils.getLogger().warn("ROUTE_VIEW_MISSING stage={} pos={} chunkLoaded={} saved={} state={} entity={}", stage[0], node.pos(), loaded,
+                            m.data().marker(node.id()), loaded ? helper.getLevel().getBlockState(node.pos()) : null, loaded ? helper.getLevel().getBlockEntity(node.pos()) : null);
+                    break;
+                }
+                for (var receiver : receivers) helper.assertTrue(receiver.nodes().stream().anyMatch(n -> n.id().equals(nodes.get(0).id()) && n.radius() == stage[0] + 4), "Every independent view commits the node update");
+                helper.assertTrue(Arrays.stream(bytes[1]).sum() < Arrays.stream(bytes[0]).sum() / 10 && Arrays.stream(packets[1]).sum() == 16, "A single edit sends one small delta per player, not a full view");
+            }
+            tick[0]++;
+            if (offset == 59) {
+                for (var receiver : receivers) helper.assertTrue(receiver.nodes().stream().anyMatch(n -> n.id().equals(nodes.get(1).id()) && n.radius() == 7), "Continuous edits coalesce and retain their final value");
+                helper.assertTrue(Arrays.stream(packets[1]).sum() <= 16 * 4, "Frequent edits do not restart a full snapshot on every tick");
+                stage[0]++;
+                if (stage[0] == 4) {
+                    for (var player : players) RouteViewSynchronization.logout(player.getUUID());
+                    helper.succeed();
+                }
+            }
         });
     }
 
@@ -173,6 +385,20 @@ public final class CitizenRouteResilienceGameTests {
         var occupied = new PlayerInteractEvent.RightClickBlock(p, InteractionHand.MAIN_HAND, pos, new BlockHitResult(Vec3.atCenterOf(pos).add(0, 0.5, 0), Direction.UP, pos, false));
         SmartPhoneRouteEditor.interact(occupied); helper.assertTrue(!occupied.isCanceled(), "Occupied placement falls through");
         helper.succeed();
+    }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience")
+    public static void serverRechecksPredictedTargetsBeforeConsumingOrDeleting(GameTestHelper helper) {
+        floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var m = manager(helper);
+        m.data().link(a.id(), b.id(), false); var edge = m.data().connected(a.id()).get(0);
+        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-prediction"));
+        player.setGameMode(GameType.SURVIVAL); player.setPos(a.center().add(0, 0, -3)); player.setYRot(180); player.setXRot(0); player.setShiftKeyDown(true);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
+        var pos = a.pos().north(1); var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false);
+        var event = new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, pos, hit);
+        SmartPhoneRouteEditor.interact(event, true, new RouteEdgePicking.Candidate(edge.id(), a.pos(), b.pos()));
+        helper.assertTrue(!event.isCanceled() && m.data().edge(edge.id()) != null, "Client prediction cannot consume an unrelated block or remove an edge outside the authoritative ray");
+        SmartPhoneRouteEditor.logout(player.getUUID()); helper.succeed();
     }
 
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience")

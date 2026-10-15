@@ -20,6 +20,21 @@ public final class CitizenRouteSavedData extends SavedData {
     private final Set<UUID> conditionalEdges = new LinkedHashSet<>();
     private final Map<BlockPos, Set<UUID>> controls = new HashMap<>();
     private long routeGraphVersion;
+    private final Map<Long, Long> viewRevisions = new HashMap<>();
+    private long viewEpoch;
+
+    public long viewRevision(BlockPos center, int radius) {
+        long revision = viewEpoch;
+        for (int x = Math.floorDiv(center.getX() - radius, 16); x <= Math.floorDiv(center.getX() + radius, 16); x++)
+            for (int z = Math.floorDiv(center.getZ() - radius, 16); z <= Math.floorDiv(center.getZ() + radius, 16); z++)
+                revision = Math.max(revision, viewRevisions.getOrDefault(ChunkPos.asLong(x, z), 0L));
+        return revision;
+    }
+
+    private void touch(BlockPos pos) {
+        if (viewRevisions.size() >= 32768) { viewRevisions.clear(); viewEpoch = routeGraphVersion + 1; }
+        viewRevisions.put(new ChunkPos(pos).toLong(), routeGraphVersion + 1);
+    }
 
     public long version() { return routeGraphVersion; }
     public Collection<RouteMarker> markers() { return Collections.unmodifiableCollection(markers.values()); }
@@ -59,10 +74,12 @@ public final class CitizenRouteSavedData extends SavedData {
         if (occupied != null && !occupied.id().equals(marker.id())) return false;
         if (existing != null && !existing.pos().equals(marker.pos())) return false;
         if (marker.equals(existing)) return false;
+        touch(marker.pos());
         unindexControl(existing);
         markers.put(marker.id(), marker);
         if (marker.condition().configured()) controls.computeIfAbsent(marker.condition().pos(), ignored -> new HashSet<>()).add(marker.id());
         for (var edge : connected(marker.id())) {
+            touch(Objects.requireNonNull(markers.get(edge.other(marker.id()))).pos());
             boolean conditional = crossingEndpoints(edge.a(), edge.b());
             if (edge.conditional() != conditional) {
                 edges.put(edge.id(), new RouteEdge(edge.id(), edge.a(), edge.b(), conditional));
@@ -82,6 +99,7 @@ public final class CitizenRouteSavedData extends SavedData {
         if (conditional && !crossingEndpoints(a, b)) return false;
         if (connected(a).stream().anyMatch(edge -> edge.other(a).equals(b))) return false;
         var edge = new RouteEdge(UUID.randomUUID(), a, b, crossingEndpoints(a, b));
+        touch(first.pos()); touch(second.pos());
         addEdgeInternal(edge);
         changed();
         return true;
@@ -102,11 +120,12 @@ public final class CitizenRouteSavedData extends SavedData {
     public boolean remove(UUID id) {
         var marker = markers.remove(id);
         if (marker == null) return false;
+        touch(marker.pos());
         unindexControl(marker);
         var referencing = controls.remove(marker.pos());
         if (referencing != null) for (var reference : referencing) {
             var node = markers.get(reference);
-            if (node != null) markers.put(reference, node.withCondition(node.condition().disconnected()));
+            if (node != null) { touch(node.pos()); markers.put(reference, node.withCondition(node.condition().disconnected())); }
         }
         for (var edge : connected(id)) removeEdgeInternal(edge.id());
         adjacency.remove(id);
@@ -134,6 +153,9 @@ public final class CitizenRouteSavedData extends SavedData {
     private boolean removeEdgeInternal(UUID id) {
         var edge = edges.remove(id);
         if (edge == null) return false;
+        var a = markers.get(edge.a()); var b = markers.get(edge.b());
+        if (a != null) touch(a.pos());
+        if (b != null) touch(b.pos());
         conditionalEdges.remove(id);
         for (var endpoint : List.of(edge.a(), edge.b())) {
             var connected = adjacency.get(endpoint);
@@ -191,6 +213,7 @@ public final class CitizenRouteSavedData extends SavedData {
             } catch (RuntimeException exception) { repaired = true; LogUtils.getLogger().warn("Ignoring invalid route edge data", exception); }
         }
         result.routeGraphVersion = Math.max(0, tag.getLong("RouteGraphVersion")) + (repaired ? 1 : 0);
+        result.viewRevisions.clear(); result.viewEpoch = result.routeGraphVersion;
         result.setDirty(repaired);
         return result;
     }

@@ -47,15 +47,31 @@ public final class SmartPhoneRouteEditor {
     }
 
     public static void interact(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getLevel().isClientSide) return;
+        interact(event, false, null);
+    }
+
+    public enum Action { NONE, MARKER, CONTROL, DELETE_EDGE, PLACE }
+
+    public static Action action(boolean marker, boolean editing, boolean sneaking, boolean linking, boolean edge, boolean placement) {
+        if (marker) return Action.MARKER;
+        if (!editing) return Action.NONE;
+        if (!sneaking) return linking ? Action.CONTROL : Action.NONE;
+        return edge ? Action.DELETE_EDGE : placement ? Action.PLACE : Action.NONE;
+    }
+
+    public static void interact(PlayerInteractEvent.RightClickBlock event, boolean linking, @Nullable RouteEdgePicking.Candidate targeted) {
         var player = event.getEntity();
         if (!(player.getItemInHand(event.getHand()).getItem() instanceof SmartPhoneItem)) return;
         var state = event.getLevel().getBlockState(event.getPos());
         boolean marker = state.getBlock() instanceof CitizenRouteMarkerBlock;
-        boolean control = !marker && !player.isShiftKeyDown() && player instanceof ServerPlayer server && selected(server) != null;
-        if (!marker && !player.isShiftKeyDown() && !control) return;
-        var targeted = !marker && player.isShiftKeyDown() && player instanceof ServerPlayer server
-                && RouteMarkerPermissions.canEditRoutes(player, event.getHand()) ? targetedEdge(server) : null;
-        if (!marker && !control && targeted == null && !RouteMarkerPermissions.placementAvailable(player, event.getHand(), event.getHitVec())) return;
+        if (player instanceof ServerPlayer server) {
+            linking = selected(server) != null;
+            targeted = !marker && player.isShiftKeyDown() && RouteMarkerPermissions.canEditRoutes(player, event.getHand()) ? targetedEdge(server) : null;
+        }
+        var action = action(marker, RouteMarkerPermissions.canEditRoutes(player, event.getHand()), player.isShiftKeyDown(), linking,
+                targeted != null, RouteMarkerPermissions.placementAvailable(player, event.getHand(), event.getHitVec()));
+        if (action == Action.NONE) return;
         event.setCanceled(true);
         if (!RouteMarkerPermissions.canEditRoutes(player, event.getHand())) {
             event.setCancellationResult(InteractionResult.CONSUME);
@@ -65,7 +81,7 @@ public final class SmartPhoneRouteEditor {
         if (!(player instanceof ServerPlayer server)) return;
         long time = server.serverLevel().getGameTime();
         if (Objects.equals(LAST_ACTION.put(server.getUUID(), time), time)) { event.setCancellationResult(InteractionResult.CONSUME); return; }
-        if (control) {
+        if (action == Action.CONTROL) {
             connectControl(server, event.getPos(), event.getHand());
             event.setCancellationResult(InteractionResult.CONSUME);
             return;

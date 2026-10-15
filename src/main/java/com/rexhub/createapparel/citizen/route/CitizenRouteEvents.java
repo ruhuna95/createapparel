@@ -72,6 +72,7 @@ public final class CitizenRouteEvents {
     }
     @SubscribeEvent public static void unloadLevel(LevelEvent.Unload event) {
         if (event.getLevel() instanceof ServerLevel level) {
+            RouteViewSynchronization.unload(level);
             CitizenRouteManager.unload(level); CitizenActivityScheduler.unload(level); CitizenPathfindingScheduler.unload(level);
         }
     }
