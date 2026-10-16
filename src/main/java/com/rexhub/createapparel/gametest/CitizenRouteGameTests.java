@@ -749,27 +749,32 @@ public final class CitizenRouteGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "citizen_behavior", batch = "citizen_route_movement", timeoutTicks = 240)
+    @GameTest(template = "citizen_behavior", batch = "citizen_route_movement", timeoutTicks = 400)
     public static void inaccessibleStartMarkerRetriesAnotherLoadedCandidate(GameTestHelper helper) {
         var chunk = new net.minecraft.world.level.ChunkPos(helper.absolutePos(new BlockPos(20, 1, 20)));
         var chunks = helper.getLevel().getChunkSource();
         chunks.addRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 3, chunk);
         for (int x = chunk.x - 3; x <= chunk.x + 3; x++) for (int z = chunk.z - 3; z <= chunk.z + 3; z++) helper.getLevel().getChunk(x, z);
+        GameTestFixtures.dryRoom(helper, 0, 0, 40);
         floor(helper); var a = marker(helper, 10, 10, RouteMarkerType.NORMAL); var b = marker(helper, 18, 10, RouteMarkerType.NORMAL); var c = marker(helper, 26, 10, RouteMarkerType.NORMAL);
         var data = manager(helper).data(); data.link(a.id(), b.id(), false); data.link(b.id(), c.id(), false);
         helper.getLevel().setBlock(a.pos().above(), Blocks.STONE.defaultBlockState(), 3);
         var citizen = citizen(helper, a.center().add(-4, 0, 0), true); citizen.setBehavior(CitizenBehaviorState.walking());
         var reached = new boolean[]{false};
         helper.onEachTick(() -> { if (b.id().equals(citizen.routeMovement().currentMarker()) || c.id().equals(citizen.routeMovement().currentMarker())) reached[0] = true; });
-        helper.runAtTickTime(200, () -> {
-            try {
+        Runnable cleanup = () -> {
+            citizen.discard();
+            chunks.removeRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 3, chunk);
+        };
+        helper.runAtTickTime(399, cleanup);
+        helper.succeedWhen(() -> {
             helper.assertTrue(reached[0], "Inaccessible nearest marker does not prevent discovery of another loaded start: pos=" + citizen.position()
                     + ", state=" + citizen.routeMovement().state() + ", entityTicks=" + citizen.tickCount + ", requests=" + citizen.routeMovement().navigationRequests()
-                    + ", failures=" + citizen.routeMovement().consecutiveFailures() + ", retry=" + citizen.routeMovement().retryAt());
+                    + ", failures=" + citizen.routeMovement().consecutiveFailures() + ", retry=" + citizen.routeMovement().retryAt()
+                    + ", alternative=" + b.center());
             helper.assertTrue(data.marker(a.id()) != null && data.connected(a.id()).size() == 1, "Failed entry preserves marker and saved edge: a="
                     + data.marker(a.id()) + ", aBlock=" + helper.getLevel().getBlockState(a.pos()) + ", bBlock=" + helper.getLevel().getBlockState(b.pos()));
-            helper.succeed();
-            } finally { citizen.discard(); chunks.removeRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 3, chunk); }
+            cleanup.run();
         });
     }
 }

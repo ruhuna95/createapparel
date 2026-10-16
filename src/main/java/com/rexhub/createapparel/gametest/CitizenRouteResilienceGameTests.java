@@ -182,6 +182,7 @@ public final class CitizenRouteResilienceGameTests {
 
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 1220)
     public static void acceptedDetourIsFollowedAndSurvivesSignalOpening(GameTestHelper helper) {
+        GameTestFixtures.dryRoom(helper, 35, 35, 40);
         floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var c = marker(helper, 8, 1, 29); var m = manager(helper);
         m.changeType(a.id(), RouteMarkerType.CROSSING); m.changeType(b.id(), RouteMarkerType.CROSSING);
         for (var node : List.of(a, b)) {
@@ -214,6 +215,7 @@ public final class CitizenRouteResilienceGameTests {
 
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 1220)
     public static void deletingAFutureDetourEdgeStopsSafelyWithoutReturningToTheClosedCrossing(GameTestHelper helper) {
+        GameTestFixtures.dryRoom(helper, 35, 35, 40);
         floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var c = marker(helper, 8, 1, 29); var m = manager(helper);
         m.changeType(a.id(), RouteMarkerType.CROSSING); m.changeType(b.id(), RouteMarkerType.CROSSING);
         m.data().link(a.id(), b.id(), false); m.data().link(a.id(), c.id(), false); m.data().link(c.id(), b.id(), false);

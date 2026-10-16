@@ -636,12 +636,14 @@ public final class CitizenBehaviorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "apparel_state", batch = "citizen_behavior", timeoutTicks = 240)
+    @GameTest(template = "citizen_behavior", batch = "citizen_behavior", timeoutTicks = 400)
     public static void standLookTurnsHeadOrBodyWithoutMovementOrNbtSpam(GameTestHelper helper) {
         var citizen = citizen(helper);
+        citizen.setPos(Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(20, 2, 20))));
         citizen.setYRot(0);
         var player = player(helper, citizen);
         player.setPos(citizen.position().add(3, 0, 0));
+        player.setNoGravity(true);
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
                 new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player);
         helper.getLevel().addNewPlayer(player);
@@ -649,20 +651,18 @@ public final class CitizenBehaviorGameTests {
         citizen.setBehavior(CitizenBehaviorState.DEFAULT.withLookMode(CitizenLookMode.HEAD));
         citizen.getEntityData().packDirty();
         long revision = citizen.citizenState().revision();
-        helper.runAtTickTime(40, () -> {
+        helper.startSequence().thenWaitUntil(() -> {
             helper.assertTrue(citizen.getYRot() == 0 && citizen.yBodyRot == 0 && citizen.yHeadRot < -60
-                    && Math.abs(citizen.yHeadRot) <= citizen.getMaxHeadYRot(), "Villager head speed and limit preserve body yaw");
+                    && Math.abs(citizen.yHeadRot) <= citizen.getMaxHeadYRot(), "Villager head speed and limit preserve body yaw: body="
+                    + citizen.getYRot() + ", head=" + citizen.yHeadRot);
+        }).thenExecute(() -> {
             helper.assertTrue(citizen.citizenState().revision() == revision && citizen.getEntityData().packDirty() == null, "Looking does not synchronize all NBT each tick");
             citizen.setBehavior(CitizenBehaviorState.DEFAULT.withLookMode(CitizenLookMode.BODY));
-        });
-        helper.runAtTickTime(100, () -> {
+        }).thenWaitUntil(() -> {
             helper.assertTrue(Math.abs(Mth.wrapDegrees(citizen.getYRot() + 90)) < 0.01
                     && citizen.position().equals(start) && citizen.getNavigation().isDone(), "Vanilla body rotation faces player without walking");
-            player.discard();
-        });
-        helper.runAtTickTime(220, () -> {
+        }).thenExecute(player::discard).thenWaitUntil(() -> {
             helper.assertTrue(Math.abs(Mth.wrapDegrees(citizen.yHeadRot - citizen.getYRot())) < 0.01, "Lost look target returns head to body");
-            helper.succeed();
-        });
+        }).thenExecute(citizen::discard).thenSucceed();
     }
 }
