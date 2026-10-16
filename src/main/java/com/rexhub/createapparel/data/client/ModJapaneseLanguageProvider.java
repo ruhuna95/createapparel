@@ -20,6 +20,8 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         RouteLanguage.add(this::add, true);
+        ItemGuideLanguage.add(this::add, true);
+        PonderLanguage.add(this::add, true);
         addEntityType(ModEntities.CITIZEN, "市民");
         addItem(ModItems.SMART_PHONE, "スマートフォン");
         addItem(ModItems.CITIZEN_SPAWN_EGG, "市民のスポーンエッグ");
@@ -90,11 +92,10 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.garment.design", "デザイン: %s");
         add("tooltip.createapparel.garment.secondary_color", "サブカラー: %s");
         add("tooltip.createapparel.garment.accent_color", "アクセントカラー: %s");
-        add("tooltip.createapparel.watch.check_time", "装備中、両手が空なら左Shift長押しで時間を確認できます");
+        add("tooltip.createapparel.watch.check_time", "装備中、両手を空にして%s長押しで、一人称視点で時刻を確認できる。");
         add("tooltip.createapparel.hanger.normal", "トップスとアウターを掛けることができる。");
         add("tooltip.createapparel.hanger.clip", "ボトムスを掛けることができる。");
         add("tooltip.createapparel.wardrobe.change_clothes", "衣服を着替えることができる。");
-        add("tooltip.createapparel.smart_phone.convert_villager", "村人に使用することで市民に変えることができる。");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), materialName(material));
         }
@@ -124,22 +125,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.rearing.paused", "レッドストーンで一時停止");
         add("tooltip.createapparel.rearing.busy", "カイコは養蚕サイクルと出力待ちの完了後に取り出せる。");
         add("block.createapparel.silkworm_rearing_tray.tooltip.summary",
-                "_回転動力_でカイコに_餌_を与え、_繭_を自動生産する。_レッドストーン信号_で一時停止する。");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition1", "幼虫に使ったとき");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour1",
-                "_未収容の養蚕台_で幼虫を_右クリック_すると収容する。");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition2", "未収容の台を右クリックしたとき");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour2",
-                "_リード_で連れた幼虫が_7ブロック以内_にいるか、幼虫が_台の直上_にいると、_素手またはリード_で収容する。");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition3", "餌を持って右クリックしたとき");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour3",
-                "台に_餌を投入_する。回転動力があると_養蚕_を始める。");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition4", "素手で右クリックしたとき");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour4",
-                "_出力_を取り出す。出力がなければ_投入済みの餌_を取り出す。");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition5", "素手でスニークしながら右クリックしたとき");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour5",
-                "_養蚕サイクル_と_出力待ち_が終わり、台の上に空間があると_幼虫_を取り出す。");
+                "_回転動力_と_餌_で_繭_を自動生産する養蚕台。");
         addBlock(ModBlocks.LOOM, "織機");
         addBlock(ModBlocks.SEWING_MACHINE, "ミシン");
         addBlock(ModBlocks.WARDROBE, "ワードローブ");

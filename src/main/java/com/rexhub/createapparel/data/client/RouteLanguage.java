@@ -6,7 +6,6 @@ final class RouteLanguage {
     private RouteLanguage() { }
     static void add(BiConsumer<String, String> add, boolean japanese) {
         add.accept("behavior.createapparel.walk", japanese ? "経路歩行" : "Walk");
-        add.accept("tooltip.createapparel.smart_phone.route_health", japanese ? "破線の保守表示：灰青＝未ロード、紫＝経路失敗、橙＝切断跡（10秒）。" : "Maintenance dashes: slate = unloaded, purple = path failure, orange = removed connection (10 seconds).");
         add.accept("message.createapparel.route.support_removed", japanese ? "支持ブロックの撤去によりマーカー（%s）と接続%s本が削除されました。" : "Support removed: marker at %s and %s connections were removed.");
         add.accept("message.createapparel.route.marker_removed", japanese ? "マーカー（%s）が消失し、接続%s本が削除されました。" : "Marker at %s disappeared; %s connections were removed.");
         add.accept("message.createapparel.route.disconnected", japanese ? "未接続の経路マーカー" : "Disconnected route marker");
@@ -24,9 +23,9 @@ final class RouteLanguage {
                 {"enabled", "Enabled", "有効"}, {"gateway_disabled", "Disabled: Citizen Gauge unavailable", "無効：Citizen Gauge未実装"},
                 {"threshold", "Signal threshold", "信号しきい値"}, {"node_state", "Node:", "ノード状態："},
                 {"state.on", "ON", "ON"}, {"state.off", "OFF", "OFF"},
-                {"control_hint", "Use the smartphone to right-click a crossing marker, then a redstone source block.", "スマートフォンで横断マーカー、レッドストーン信号を出すブロックの順に右クリックして接続します。"},
+                {"control_hint", "Use the smartphone to right-click a crossing marker, then a redstone source block.", "スマートフォンで横断マーカー、レッドストーン信号を出すブロックの順に右クリックして接続する。"},
                 {"inverted.false", "Invert: Off", "条件反転：オフ"}, {"inverted.true", "Invert: On", "条件反転：オン"},
-                {"no_type_settings", "Normal markers have no type-specific settings.", "通常マーカーには固有の設定がありません。"},
+                {"no_type_settings", "Normal markers have no type-specific settings.", "通常マーカーには固有の設定はない。"},
                 {"update_timeout", "Settings update timed out. Check the marker before trying again.", "設定更新がタイムアウトしました。マーカーの状態を確認してください。"}
         }) add.accept("screen.createapparel.route." + entry[0], entry[japanese ? 2 : 1]);
         for (var entry : new String[][]{
@@ -44,8 +43,6 @@ final class RouteLanguage {
                 {"stale", "The marker changed. Settings have been refreshed; try again.", "マーカーが更新されました。最新の設定を確認して再操作してください。"},
                 {"invalid", "Invalid or unchanged settings, or unavailable connection.", "設定が不正・同値、または接続先が利用できません。"}
         }) add.accept("message.createapparel.route." + entry[0], entry[japanese ? 2 : 1]);
-        add.accept("tooltip.createapparel.smart_phone.routes", japanese ? "メインハンドで経路を編集。地面上面にスニーク右クリックで設置、マーカー2点を右クリックで接続、スニークで設定。オフハンドは表示専用。"
-                : "Main hand: sneak-use ground to place, right-click markers to link, sneak-use to configure. Offhand: view only.");
         for (var type : new String[][]{{"citizen_route_marker", "Route Marker", "経路マーカー"}, {"gateway_route_marker", "Gateway Route Marker", "ゲートウェイ経路マーカー"},
                 {"crossing_route_marker", "Crossing Route Marker", "横断経路マーカー"}}) add.accept("block.createapparel." + type[0], type[japanese ? 2 : 1]);
     }

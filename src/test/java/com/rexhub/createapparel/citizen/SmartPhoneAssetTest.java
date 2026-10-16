@@ -21,18 +21,17 @@ class SmartPhoneAssetTest {
     }
 
     @Test
-    void usageTooltipMatchesRequestedJapaneseAndEnglishTranslations() throws Exception {
-        String key = "tooltip.createapparel.smart_phone.convert_villager";
-        for (var translation : java.util.Map.of("ja_jp", "村人に使用することで市民に変えることができる。",
-                "en_us", "Can turn villagers into citizens when used on them.").entrySet()) {
+    void phoneSummaryAndShiftInstructionsCoverCitizenAndRouteEditing() throws Exception {
+        String prefix = "guide.createapparel.phone.tooltip.";
+        for (var translation : java.util.Map.of("ja_jp", "市民の管理と経路グラフの編集に使用。",
+                "en_us", "Manages Citizens and edits the Route Graph.").entrySet()) {
             var language = JsonParser.parseString(Files.readString(Path.of(
                     "src/generated/resources/assets/createapparel/lang/" + translation.getKey() + ".json"))).getAsJsonObject();
-            assertEquals(translation.getValue(), language.get(key).getAsString());
+            assertEquals(translation.getValue(), language.get(prefix + "summary").getAsString());
+            assertTrue(language.has(prefix + "behaviour1"));
+            assertTrue(language.has(prefix + "behaviour6"));
+            assertFalse(language.has("tooltip.createapparel.smart_phone.convert_villager"));
         }
-        String source = Files.readString(Path.of("src/main/java/com/rexhub/createapparel/item/SmartPhoneItem.java"));
-        assertTrue(source.contains("void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag)"));
-        assertTrue(source.contains("super.appendHoverText(stack, level, tooltip, flag);"));
-        assertTrue(source.contains("tooltip.add(Component.translatable(\"" + key + "\").withStyle(ChatFormatting.GRAY));"));
     }
 
     @Test

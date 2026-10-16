@@ -44,6 +44,10 @@ class GarmentTooltipEventsTest {
             var hint = tooltip.get(tooltip.size() - 1);
             assertEquals("tooltip.createapparel.watch.check_time",
                     assertInstanceOf(TranslatableContents.class, hint.getContents()).getKey());
+            var control = assertInstanceOf(Component.class,
+                    assertInstanceOf(TranslatableContents.class, hint.getContents()).getArgs()[0]);
+            assertEquals("key.sneak", assertInstanceOf(
+                    net.minecraft.network.chat.contents.KeybindContents.class, control.getContents()).getName());
             assertEquals(ChatFormatting.GRAY.getColor(), hint.getStyle().getColor().getValue());
         }
     }

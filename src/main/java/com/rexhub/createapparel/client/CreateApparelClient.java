@@ -25,9 +25,6 @@ import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModMenuTypes;
 import com.rexhub.createapparel.material.FabricAttributeMap;
 import com.rexhub.createapparel.material.FabricColor;
-import com.simibubi.create.foundation.item.ItemDescription;
-import com.simibubi.create.foundation.item.TooltipModifier;
-import net.createmod.catnip.lang.FontHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -94,8 +91,9 @@ public final class CreateApparelClient {
                     com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_FLUID.get(), net.minecraft.client.renderer.RenderType.translucent());
             net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(
                     com.rexhub.createapparel.init.ModFluids.FLOWING_MIRROR_COATING_FLUID.get(), net.minecraft.client.renderer.RenderType.translucent());
-            TooltipModifier.REGISTRY.register(ModItems.SILKWORM_REARING_TRAY.get(),
-                    new ItemDescription.Modifier(ModItems.SILKWORM_REARING_TRAY.get(), FontHelper.Palette.STANDARD_CREATE));
+            com.rexhub.createapparel.client.guide.ApparelItemDescriptions.register();
+            net.createmod.ponder.foundation.PonderIndex.addPlugin(
+                    new com.rexhub.createapparel.client.ponder.ApparelPonderPlugin());
             MenuScreens.<WardrobeMenu, WardrobeScreen<WardrobeMenu>>
                     register(ModMenuTypes.WARDROBE.get(), WardrobeScreen::new);
             MenuScreens.<MannequinMenu, WardrobeScreen<MannequinMenu>>

@@ -73,7 +73,7 @@ public final class GarmentTooltipEvents {
 
     static void appendWatchUsage(List<Component> tooltip, ResourceLocation itemId) {
         if (WATCH_ID.equals(itemId)) {
-            tooltip.add(Component.translatable("tooltip.createapparel.watch.check_time")
+            tooltip.add(Component.translatable("tooltip.createapparel.watch.check_time", Component.keybind("key.sneak"))
                     .withStyle(ChatFormatting.GRAY));
         }
     }

@@ -22,6 +22,8 @@ public final class ModLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         RouteLanguage.add(this::add, false);
+        ItemGuideLanguage.add(this::add, false);
+        PonderLanguage.add(this::add, false);
         addEntityType(ModEntities.CITIZEN, "Citizen");
         addItem(ModItems.SMART_PHONE, "Smart Phone");
         addItem(ModItems.CITIZEN_SPAWN_EGG, "Citizen Spawn Egg");
@@ -92,11 +94,10 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.garment.design", "Design: %s");
         add("tooltip.createapparel.garment.secondary_color", "Secondary Color: %s");
         add("tooltip.createapparel.garment.accent_color", "Accent Color: %s");
-        add("tooltip.createapparel.watch.check_time", "While equipped, hold Left Shift with both hands empty to check the time.");
+        add("tooltip.createapparel.watch.check_time", "While equipped, hold %s with both hands empty to check the time in first person.");
         add("tooltip.createapparel.hanger.normal", "Can hold tops and outerwear.");
         add("tooltip.createapparel.hanger.clip", "Can hold bottoms.");
         add("tooltip.createapparel.wardrobe.change_clothes", "Can change clothes.");
-        add("tooltip.createapparel.smart_phone.convert_villager", "Can turn villagers into citizens when used on them.");
         for (FabricMaterial material : FabricMaterial.values()) {
             add("fabric_material.createapparel." + material.getSerializedName(), material.displayName());
         }
@@ -126,22 +127,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("tooltip.createapparel.rearing.paused", "Paused by redstone");
         add("tooltip.createapparel.rearing.busy", "Finish the current cycle before releasing the silkworm.");
         add("block.createapparel.silkworm_rearing_tray.tooltip.summary",
-                "Uses _Rotational Force_ to _feed silkworms_ and produce _Cocoons_ automatically. A _Redstone signal_ pauses processing.");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition1", "When used on a Larva");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour1",
-                "_Right-click_ a larva with an _unoccupied tray_ to capture it.");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition2", "When R-Clicked while unoccupied");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour2",
-                "Capture a larva _leashed to you within 7 blocks_ or _directly above the tray_. Use an _empty hand or a Lead_.");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition3", "When R-Clicked with Food");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour3",
-                "_Insert food_ into the tray. _Rotational Force_ starts processing.");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition4", "When R-Clicked with an empty hand");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour4",
-                "_Collect output_. If there is no output, collect the _stored food_.");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.condition5", "When Sneak R-Clicked with an empty hand");
-        add("block.createapparel.silkworm_rearing_tray.tooltip.behaviour5",
-                "_Release the larva_ once processing and output delivery have finished, with _space above the tray_.");
+                "Uses _Rotational Force_ and _food_ to produce _Cocoons_.");
         addBlock(ModBlocks.LOOM, "Loom");
         addBlock(ModBlocks.SEWING_MACHINE, "Sewing Machine");
         addBlock(ModBlocks.WARDROBE, "Wardrobe");

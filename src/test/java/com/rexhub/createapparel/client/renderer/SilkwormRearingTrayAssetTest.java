@@ -48,18 +48,16 @@ class SilkwormRearingTrayAssetTest {
     }
 
     @Test
-    void descriptionsHaveContiguousCreateBehaviourKeysInBothLanguages() throws IOException {
+    void ponderReplacesShiftDetailsWhileTheSummaryRemainsInBothLanguages() throws IOException {
         String prefix = "block.createapparel.silkworm_rearing_tray.tooltip.";
         for (String language : new String[]{"ja_jp", "en_us"}) {
             var translations = JsonParser.parseString(Files.readString(Path.of(
                     "src/generated/resources/assets/createapparel/lang/" + language + ".json"))).getAsJsonObject();
             assertTrue(translations.has(prefix + "summary"), language);
             assertFalse(translations.has("tooltip.createapparel.rearing.speed"), "Unused speed translation: " + language);
-            for (int i = 1; i <= 5; i++) {
-                assertTrue(translations.has(prefix + "condition" + i), language + ": condition" + i);
-                assertTrue(translations.has(prefix + "behaviour" + i), language + ": behaviour" + i);
-                String text = translations.get(prefix + "behaviour" + i).getAsString();
-                assertEquals(0, text.chars().filter(c -> c == '_').count() % 2, "Balanced Create highlighting: " + text);
+            for (int i = 1; i <= 6; i++) {
+                assertFalse(translations.has(prefix + "condition" + i), language + ": condition" + i);
+                assertFalse(translations.has(prefix + "behaviour" + i), language + ": behaviour" + i);
             }
         }
     }
