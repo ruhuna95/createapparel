@@ -16,6 +16,13 @@ base {
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+sourceSets {
+    jeiTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
     // The mappings can be changed at any time and must be in the following format.
@@ -97,6 +104,16 @@ minecraft {
             args '--username', 'Dev2', '--uuid', '00000000-0000-0000-0000-000000000009'
         }
 
+        jeiTestClient {
+            parent minecraft.runs.client
+            workingDirectory project.file('run/phase23-client-' + providers.gradleProperty('jeiEnabled').getOrElse('true'))
+            property 'forge.logging.console.level', 'info'
+            property 'apparel.jeiTest.projectDir', project.projectDir.absolutePath
+            mods {
+                "${mod_id}" { source sourceSets.jeiTest }
+            }
+        }
+
         server {
             workingDirectory project.file('run/server')
             property 'forge.enabledGameTestNamespaces', mod_id
@@ -108,6 +125,16 @@ minecraft {
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
             property 'forge.enabledGameTestNamespaces', mod_id
+        }
+
+        jeiTestServer {
+            parent minecraft.runs.gameTestServer
+            workingDirectory project.file('run/phase23-server')
+            property 'forge.logging.console.level', 'info'
+            property 'apparel.jeiTest.server', 'true'
+            mods {
+                "${mod_id}" { source sourceSets.jeiTest }
+            }
         }
 
         data {
@@ -127,6 +154,11 @@ sourceSets.main.resources {
 }
 
 repositories {
+    maven {
+        name = 'JEI'
+        url = 'https://maven.blamejared.com'
+        content { includeGroup 'mezz.jei' }
+    }
     maven {
         name = 'Create'
         url = 'https://maven.createmod.net'
@@ -158,11 +190,11 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 
-    // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-common-api:${jei_version}")
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
-    // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+    if (providers.gradleProperty('jeiEnabled').getOrElse('true').toBoolean()) {
+        runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+    }
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
@@ -265,4 +297,24 @@ tasks.register('copyGameTestStructures', Copy) {
 
 tasks.matching { it.name == 'prepareRunGameTestServer' }.configureEach {
     dependsOn 'copyGameTestStructures'
+}
+
+tasks.register('copyJeiTestStructures', Copy) {
+    from 'src/test/resources/gameteststructures'
+    into 'run/phase23-server/gameteststructures'
+}
+
+tasks.matching { it.name == 'prepareRunJeiTestServer' }.configureEach {
+    dependsOn 'copyJeiTestStructures'
+}
+
+tasks.matching { it.name == 'runJeiTestClient' }.configureEach {
+    def mode = providers.gradleProperty('jeiEnabled').getOrElse('true').toBoolean() ? 'jei' : 'no_jei'
+    def result = layout.buildDirectory.file("phase23/client-${mode}-passed.txt")
+    doFirst { delete result.get().asFile }
+    doLast {
+        if (!result.get().asFile.exists()) {
+            throw new GradleException('JEI client checks failed; see build/phase23 and the client log.')
+        }
+    }
 }

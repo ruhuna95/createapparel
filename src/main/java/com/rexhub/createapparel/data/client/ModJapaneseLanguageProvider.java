@@ -22,6 +22,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         RouteLanguage.add(this::add, true);
         ItemGuideLanguage.add(this::add, true);
         PonderLanguage.add(this::add, true);
+        JeiLanguage.add(this::add, true);
         addEntityType(ModEntities.CITIZEN, "市民");
         addItem(ModItems.SMART_PHONE, "スマートフォン");
         addItem(ModItems.CITIZEN_SPAWN_EGG, "市民のスポーンエッグ");

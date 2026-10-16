@@ -24,6 +24,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         RouteLanguage.add(this::add, false);
         ItemGuideLanguage.add(this::add, false);
         PonderLanguage.add(this::add, false);
+        JeiLanguage.add(this::add, false);
         addEntityType(ModEntities.CITIZEN, "Citizen");
         addItem(ModItems.SMART_PHONE, "Smart Phone");
         addItem(ModItems.CITIZEN_SPAWN_EGG, "Citizen Spawn Egg");
