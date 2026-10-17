@@ -68,6 +68,11 @@ public final class CitizenRouteResilienceGameTests {
         if (spawn) { helper.getLevel().addFreshEntity(citizen); CitizenActivityScheduler.get(helper.getLevel()).forceActive(citizen, CitizenActivityScheduler.Reason.INTERACTION, 1600); }
         return citizen;
     }
+    private static String markerState(GameTestHelper helper, RouteMarker marker) {
+        return marker.pos() + ":saved=" + (manager(helper).data().marker(marker.id()) != null)
+                + ":block=" + helper.getLevel().getBlockState(marker.pos())
+                + ":support=" + helper.getLevel().getBlockState(marker.pos().below());
+    }
     private static void logRoute(GameTestHelper helper, Citizen walker, List<RouteMarker> nodes) {
         if (helper.getTick() % 100 != 0) return;
         var m = manager(helper);
@@ -95,8 +100,11 @@ public final class CitizenRouteResilienceGameTests {
         var citizens = new ArrayList<Citizen>(); var completed = new HashSet<UUID>(); var deferred = new boolean[]{false};
         for (int i = 0; i < 16; i++) citizens.add(citizen(helper, nodes.get(0).center(), false));
         var planner = manager(helper).planner(); var polls = new int[]{0};
+        var generations = new long[]{data.version(), m.loadRevision(), 0, 0};
         helper.onEachTick(() -> {
             polls[0]++;
+            if (data.version() != generations[0]) { generations[0] = data.version(); generations[2]++; }
+            if (m.loadRevision() != generations[1]) { generations[1] = m.loadRevision(); generations[3]++; }
             helper.getLevel().setBlock(signal, Blocks.LEVER.defaultBlockState().setValue(BlockStateProperties.POWERED, polls[0] % 2 == 0), 2);
             manager(helper).runtime().blockLocal(UUID.randomUUID(), UUID.randomUUID(), helper.getLevel().getGameTime());
             for (var citizen : citizens) if (!completed.contains(citizen.getUUID())) {
@@ -111,7 +119,10 @@ public final class CitizenRouteResilienceGameTests {
                     && stats.scannedEdges() <= RouteSettings.PLANNER_EDGES_PER_TICK, "Graph work stays within shared per-tick budgets");
         });
         helper.succeedWhen(() -> {
-            helper.assertTrue(completed.size() == 16 && deferred[0], "All sixteen Citizens complete multi-tick searches without starvation");
+            helper.assertTrue(completed.size() == 16 && deferred[0], "All sixteen Citizens complete multi-tick searches without starvation: completed="
+                    + completed.size() + ", deferred=" + deferred[0] + ", planner=" + planner.statistics() + ", graphChanges=" + generations[2]
+                    + ", loadChanges=" + generations[3] + ", invalid=" + nodes.stream().filter(node -> !m.loaded(data.marker(node.id())))
+                    .limit(4).map(node -> markerState(helper, node)).toList());
             for (var citizen : citizens) planner.cancel(citizen);
         });
     }
@@ -328,7 +339,10 @@ public final class CitizenRouteResilienceGameTests {
             walker.setPos(a.center()); walker.routeMovement().reset();
         });
         helper.runAtTickTime(1000, () -> {
-            helper.assertTrue(visited.containsAll(List.of(a.id(), b.id())) && transitions[0] >= 3, "A dead end returns along the previous edge");
+            helper.assertTrue(visited.containsAll(List.of(a.id(), b.id())) && transitions[0] >= 3, "A dead end returns along the previous edge: visited="
+                    + visited + ", transitions=" + transitions[0] + ", pos=" + walker.position() + ", state=" + walker.routeMovement().state()
+                    + ", requests=" + walker.routeMovement().navigationRequests() + ", ground=" + helper.getLevel().getBlockState(walker.blockPosition())
+                    + ", markers=" + List.of(markerState(helper, a), markerState(helper, b)));
             walker.discard(); helper.succeed();
         });
     }
@@ -341,7 +355,7 @@ public final class CitizenRouteResilienceGameTests {
         helper.runAtTickTime(650, () -> {
             helper.assertTrue(walker.routeMovement().consecutiveFailures() >= RouteSettings.FAILURE_WAIT_THRESHOLD
                     && walker.routeMovement().retryAt() > helper.getLevel().getGameTime(), "Repeated failures back off instead of spinning");
-            helper.assertTrue(manager(helper).data().marker(node.id()) != null, "Failures do not delete the graph");
+            helper.assertTrue(manager(helper).data().marker(node.id()) != null, "Failures do not delete the graph: " + markerState(helper, node));
             helper.getLevel().removeBlock(node.pos().above(), false);
         });
         helper.runAtTickTime(1180, () -> {

@@ -717,7 +717,9 @@ public final class CitizenRouteGameTests {
             helper.assertTrue(citizen.routeMovement().state() != CitizenRouteMovement.State.WAIT_CROSSING && detoured[0],
                     "Alternate route: pos=" + citizen.position() + ", state=" + citizen.routeMovement().state() + ", current=" + citizen.routeMovement().currentMarker()
                             + ", loaded=" + com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(helper.getLevel(), citizen.blockPosition(), 24)
-                            + ", detourNode=" + manager.loaded(data.marker(c.id())) + ", saved=" + data.marker(c.id()) + ", planner=" + manager.planner().statistics());
+                            + ", detourNode=" + manager.loaded(data.marker(c.id())) + ", saved=" + data.marker(c.id()) + ", planner=" + manager.planner().statistics()
+                            + ", feet=" + helper.getLevel().getBlockState(citizen.blockPosition()) + ", support=" + helper.getLevel().getBlockState(citizen.blockPosition().below())
+                            + ", velocity=" + citizen.getDeltaMovement() + ", requests=" + citizen.routeMovement().navigationRequests());
             helper.assertTrue(data.edge(crossing.id()) != null, "Timeout does not remove saved conditional edge"); helper.succeed();
             } finally { citizen.discard(); chunks.removeRegionTicket(net.minecraft.server.level.TicketType.FORCED, chunk, 3, chunk); }
         });

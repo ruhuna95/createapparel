@@ -23,6 +23,12 @@ sourceSets {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
+    routeTest {
+        java.setSrcDirs(['src/test/route/java'])
+        resources.setSrcDirs(['src/test/route/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
     recipeTest {
         java.setSrcDirs(['src/test/recipe/java'])
         resources.setSrcDirs(['src/test/recipe/resources'])
@@ -45,6 +51,7 @@ configurations {
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 def gameTestDirectory = project.file("run/gametest/${System.currentTimeMillis()}")
+def routeTestDirectory = project.file("run/route-tests/${System.currentTimeMillis()}")
 def recipeTestCase = providers.gradleProperty('recipeTestCase').getOrElse('A')
 def recipeTestFlags = [A: [false, false], B: [true, true], C: [false, false],
                        D: [true, true], E: [true, false], F: [false, true]]
@@ -179,6 +186,16 @@ minecraft {
             property 'apparel.jeiTest.server', 'true'
             mods {
                 "${mod_id}" { source sourceSets.jeiTest }
+            }
+        }
+
+        routeTestServer {
+            parent minecraft.runs.gameTestServer
+            workingDirectory routeTestDirectory
+            property 'forge.logging.console.level', 'info'
+            property 'apparel.routeTest.names', providers.gradleProperty('routeTests').getOrElse('')
+            mods {
+                "${mod_id}" { source sourceSets.routeTest }
             }
         }
 
@@ -385,13 +402,35 @@ tasks.matching { it.name == 'prepareRunDestroyClient' }.configureEach {
 }
 
 tasks.register('copyGameTestStructures', Copy) {
-    from 'src/test/resources/gameteststructures'
-    into new File(gameTestDirectory, 'gameteststructures')
+    from('src/test/resources/gameteststructures') { into 'gameteststructures' }
+    from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
+    into gameTestDirectory
     doFirst { logger.lifecycle("GameTest directory: ${gameTestDirectory}") }
 }
 
 tasks.matching { it.name == 'prepareRunGameTestServer' }.configureEach {
     dependsOn 'copyGameTestStructures'
+}
+
+tasks.register('copyRouteTestStructures', Copy) {
+    from('src/test/resources/gameteststructures') { into 'gameteststructures' }
+    from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
+    into routeTestDirectory
+}
+
+tasks.matching { it.name == 'prepareRunRouteTestServer' }.configureEach {
+    dependsOn 'copyRouteTestStructures'
+}
+
+tasks.matching { it.name == 'runRouteTestServer' }.configureEach {
+    doFirst { ext.routeTestStartedAt = System.currentTimeMillis() }
+    doLast {
+        def log = new File(routeTestDirectory, 'logs/latest.log')
+        if (!log.isFile() || log.lastModified() < routeTestStartedAt ||
+                !(log.getText('UTF-8') =~ /All \d+ required tests passed/).find()) {
+            throw new GradleException("Citizen route GameTests did not pass; see ${log}")
+        }
+    }
 }
 
 tasks.register('prepareRecipeTestWorld') {

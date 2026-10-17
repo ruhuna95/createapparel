@@ -11,6 +11,10 @@ import java.util.Set;
 
 public final class CitizenNavigation extends GroundPathNavigation {
     private boolean recomputePending;
+    @Nullable private Path checkedPath;
+    @Nullable private Path shortcutPath;
+    private int checkedNode = -1;
+    private int checkedAt;
     public CitizenNavigation(Mob mob, Level level) { super(mob, level); }
 
     @Override
@@ -26,10 +30,22 @@ public final class CitizenNavigation extends GroundPathNavigation {
     }
 
     @Override
-    public void stop() { super.stop(); recomputePending = false; }
+    public void stop() { super.stop(); recomputePending = false; checkedPath = shortcutPath = null; checkedNode = -1; }
+
+    @Override
+    public boolean shouldRecomputePath(BlockPos pos) {
+        if (path != null && path == shortcutPath && !path.isDone()) {
+            var next = path.getNextEntityPos(mob);
+            var swept = mob.getBoundingBox().expandTowards(next.subtract(mob.position())).inflate(1);
+            if (swept.intersects(new net.minecraft.world.phys.AABB(pos))) return true;
+        }
+        return super.shouldRecomputePath(pos);
+    }
 
     @Override
     protected void followThePath() {
+        if (mob instanceof com.rexhub.createapparel.entity.Citizen citizen && citizen.routeMovement().preciseArrival()
+                && path != null && !path.isDone()) smoothPath();
         if (mob instanceof com.rexhub.createapparel.entity.Citizen citizen && (citizen.routeMovement().preciseArrival()
                 || citizen.citizenState().behavior().mode() == com.rexhub.createapparel.entity.CitizenBehaviorMode.WANDER)
                 && path != null && path.getNextNodeIndex() == path.getNodeCount() - 1) {
@@ -39,6 +55,22 @@ public final class CitizenNavigation extends GroundPathNavigation {
                     && Math.abs(mob.getY() - next.y) < 1) path.advance();
             doStuckDetection(getTempMobPos());
         } else super.followThePath();
+    }
+
+    private void smoothPath() {
+        if (path == null || path.getNextNodeIndex() + 1 >= path.getNodeCount()) return;
+        int next = path.getNextNodeIndex();
+        if (checkedPath == path && checkedNode == next && mob.tickCount - checkedAt < 5) return;
+        checkedPath = path; checkedNode = next; checkedAt = mob.tickCount;
+        for (int index = Math.min(path.getNodeCount() - 1, next + 16); index > next; index--) {
+            var position = path.getEntityPosAtNode(mob, index);
+            if (!hasLoadedRegion(level, BlockPos.containing(position), 1)) continue;
+            var target = new net.minecraft.world.phys.Vec3(position.x, getGroundY(position), position.z);
+            if (!CitizenPathShortcut.canTravel(mob, target)) continue;
+            path.setNextNodeIndex(index);
+            shortcutPath = path;
+            return;
+        }
     }
 
     @Nullable

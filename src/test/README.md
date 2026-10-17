@@ -7,9 +7,10 @@
 - `src/test/resources/`：JUnitとGameTestの検証用リソース。
 - `src/test/jei/java/`：専用のJEIあり／なしClient・Server起動検証（`jeiTest` source set）。
 - `src/test/recipe/java/`：任意レシピ・銀MODの専用Server起動検証（`recipeTest` source set）。
+- `src/test/route/java/`：Citizen経路の選択実行と斜め移動・短絡安全性の専用GameTest（`routeTest` source set）。
 
 専用source setは対応する検証起動にだけ追加し、通常起動と配布JARには含めない。
-共通の`gameTest`は`runGameTestServer`と、それを継承するレシピ／JEIの検証Serverで読み込む。
+共通の`gameTest`は`runGameTestServer`と、それを継承する経路／レシピ／JEIの検証Serverで読み込む。
 通常の`runClient`／`runServer`には読み込まないため、そこで既存GameTestを`/test`から実行する構成ではない。
 以下のコマンドはすべてプロジェクトルートで実行する。
 
@@ -37,12 +38,27 @@ JEIなしのDedicated Serverを標準条件とする。
 各段階を別のGradle呼び出しにして、Datagenで更新したファイルを後続の`processResources`にも反映する。
 JUnitは`build/reports/tests/test/index.html`、GameTestのログは最新の`run/gametest/<実行ID>/logs/latest.log`を確認する。
 GameTestは実行ごとに新しい`run/gametest/<実行ID>/`を使用し、過去のWorldを再利用しない。テスト構造物はGradleがコピーする。
+標準GameTestと経路専用起動には`src/test/resources/gametest-server.properties`もコピーし、固定seed0・フラット地形・生成構造物なしで実行する。
+ForgeのGameTest起動は、設定を省略するとランダムseedの通常地形になる。地下の試験床への自然水流などを試験対象へ混入させない。
+通常Client／Dedicated Serverや既存Worldの設定には適用しない。
 
 ## 対象を絞る場合
 
 ```powershell
 .\gradlew.bat test --tests '*ResourceIntegrityTest' --tests '*GarmentResourceValidationTest'
 ```
+
+Citizen経路だけの実サーバー試験は次で実行する。専用起動ごとに新しい`run/route-tests/<実行ID>/`を使う。
+`routeTests`を省略すると既存のCitizen経路試験と専用の移動試験を実行し、指定するとメソッド名をカンマで選択する。
+選択名に対応する試験がなければ起動時に失敗する。
+
+```powershell
+.\gradlew.bat -PjeiEnabled=false runRouteTestServer
+.\gradlew.bat -PjeiEnabled=false '-ProuteTests=diagonalWalkDoesNotFollowAGridZigzag,childWalkSmoothlyAcrossANegativeDiagonal,shortcutsRejectUnsafeGroundAndBodyCollisions,anObstacleOnAShortcutReplansAroundTheWall' runRouteTestServer
+```
+
+斜め移動は実際の軌跡長・方向修正回数を検証し、短絡は障害物・頭上・穴・液体・段差・危険Block・未ロードで拒否する。
+移動中の壁追加では、経路再計算が共有Schedulerへ入り、迂回して到着することを確認する。
 
 `ResourceIntegrityTest`は手書き／生成リソースのJSON、PNG、重複パス、ローカルModel／Texture参照、Item Tagの循環とRecipeのTag参照を確認する。
 `GarmentResourceValidationTest`は全Garment Definition、全Slot／Style／Body Profile、Template／Part／Texture Variant、未使用Variantを含む画像規則と型紙の色Channelを確認する。
@@ -143,6 +159,9 @@ JEIなしの`runJeiTestClient`は同一JVMで3つの新規Worldを順に起動�
 追加方式（2026-10-17）はDatagen／build・JUnit794件、A〜FとC/Dの銀なし各11件・計88 GameTestが成功した。
 指定Destroyフォーク0.1.3-i+2でも、両製法共存／銀なしのJEI検索・化学反応表示・Datapack再読込が成功した。
 当時の通常Dedicated全体は新規Worldの2回とも224/226成功・Citizen経路試験2件失敗で、失敗対象も変動した。
+後続調査で、Forge GameTestの通常地形から地下試験場へ水が流入し、Markerが破壊されていたことを確認した。
+上記の固定flat化だけでも元のNavigationで全226件が成功した。安全な斜め移動の改善後もbuild／JUnit799件・全226件と専用移動4件が成功した。
+既存試験の期待値・期限は維持し、実プレイのMarker／水流の仕様は変更しない。Client目視はこの追加変更の確認には含めない。
 
 以下は強制Fallbackを排他的切替としていた変更前の検証履歴。現行の前提条件・追加Fallback方式の結果とは区別する。
 
