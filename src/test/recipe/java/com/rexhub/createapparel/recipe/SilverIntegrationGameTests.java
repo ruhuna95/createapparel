@@ -28,7 +28,7 @@ public final class SilverIntegrationGameTests {
         var nuggets = new java.util.ArrayList<net.minecraft.world.item.Item>();
         nuggets.add(Items.IRON_NUGGET);
         var silverTag = ItemTags.create(ResourceLocation.parse("forge:nuggets/silver"));
-        if (Boolean.getBoolean("apparel.recipeTest.destroy")) {
+        if (Boolean.getBoolean("apparel.recipeTest.destroy") && Boolean.getBoolean("apparel.recipeTest.silver")) {
             var silver = ForgeRegistries.ITEMS.getValue(ResourceLocation.parse("thesilverage:silver_nugget"));
             helper.assertTrue(silver != null && silver != Items.AIR && new ItemStack(silver).is(silverTag),
                     "The requested silver mod supplies a nugget through the common tag");
@@ -63,23 +63,30 @@ public final class SilverIntegrationGameTests {
     }
 
     @GameTest(template = "apparel_state", batch = "optional_integration")
-    public static void emptySilverTagsRejectTheRealDestroyRecipeBeforeDeserialization(GameTestHelper helper) throws Exception {
-        var id = ResourceLocation.parse("createapparel:mixing/mirror_coating_fluid_from_destroy");
-        var resource = helper.getLevel().getServer().getResourceManager().getResource(ResourceLocation.parse(
-                "createapparel:recipes/mixing/mirror_coating_fluid_from_destroy.json")).orElseThrow();
-        try (var reader = new java.io.InputStreamReader(resource.open(), java.nio.charset.StandardCharsets.UTF_8)) {
-            var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
-            var resources = helper.getLevel().getServer().getResourceManager();
-            var probe = new net.minecraft.world.item.crafting.RecipeManager(
-                    net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY) {
-                void load() {
-                    apply(java.util.Map.of(id, json), resources, net.minecraft.util.profiling.InactiveProfiler.INSTANCE);
-                }
-            };
-            probe.load();
-            helper.assertTrue(!probe.hadErrorsLoading() && probe.byKey(id).isEmpty(),
-                    "An empty silver-tag context rejects the actual JSON before optional ingredient deserialization");
+    public static void emptySilverTagsSelectFallbackBeforeOptionalDeserialization(GameTestHelper helper) throws Exception {
+        var resources = helper.getLevel().getServer().getResourceManager();
+        var recipes = new java.util.HashMap<ResourceLocation, com.google.gson.JsonElement>();
+        for (String path : java.util.List.of("mixing/mirror_coating_fluid_from_destroy", "mixing/mirror_coating_fluid",
+                "mixing/synthetic_fiber", "synthetic_fiber_from_nylon")) {
+            var resource = resources.getResource(ResourceLocation.parse("createapparel:recipes/" + path + ".json")).orElseThrow();
+            try (var reader = new java.io.InputStreamReader(resource.open(), java.nio.charset.StandardCharsets.UTF_8)) {
+                recipes.put(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, path), com.google.gson.JsonParser.parseReader(reader));
+            }
         }
+        var probe = new net.minecraft.world.item.crafting.RecipeManager(
+                net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY) {
+            void load() {
+                apply(recipes, resources, net.minecraft.util.profiling.InactiveProfiler.INSTANCE);
+            }
+        };
+        probe.load();
+        helper.assertTrue(!probe.hadErrorsLoading()
+                        && probe.byKey(ResourceLocation.parse("createapparel:mixing/mirror_coating_fluid_from_destroy")).isEmpty()
+                        && probe.byKey(ResourceLocation.parse("createapparel:mixing/mirror_coating_fluid")).isPresent(),
+                "The load context's empty silver tag enables fallback even when the live registry contains silver");
+        helper.assertTrue(probe.byKey(ResourceLocation.parse("createapparel:synthetic_fiber_from_nylon")).isPresent()
+                        == ModList.get().isLoaded("destroy"),
+                "Silver availability does not affect nylon crafting");
         helper.succeed();
     }
 
@@ -91,7 +98,7 @@ public final class SilverIntegrationGameTests {
 
     @GameTest(template = "apparel_state", batch = "optional_integration")
     public static void silverDissolutionAndComplexationConsumeRealReactants(GameTestHelper helper) {
-        if (ModList.get().isLoaded("destroy")) DestroyChemistryChecks.reactions(helper);
+        if (ModList.get().isLoaded("destroy") && Boolean.getBoolean("apparel.recipeTest.silver")) DestroyChemistryChecks.reactions(helper);
         else helper.succeed();
     }
 
@@ -103,12 +110,17 @@ public final class SilverIntegrationGameTests {
 
     @GameTest(template = "apparel_state", batch = "optional_integration")
     public static void selectedSilverModPopulatesTheCommonSilverTag(GameTestHelper helper) {
-        if (Boolean.getBoolean("apparel.recipeTest.destroy")) {
+        boolean expectedSilver = Boolean.getBoolean("apparel.recipeTest.destroy") && Boolean.getBoolean("apparel.recipeTest.silver");
+        helper.assertTrue(ModList.get().isLoaded("thesilverage") == expectedSilver, "The requested silver-mod fixture is actually loaded");
+        if (expectedSilver) {
             helper.assertTrue(ModList.get().isLoaded("thesilverage"), "The requested silver mod is actually loaded");
             var silver = ForgeRegistries.ITEMS.getValue(ResourceLocation.parse("thesilverage:silver_ingot"));
             var tag = ForgeRegistries.ITEMS.tags().getTag(ItemTags.create(ResourceLocation.parse("forge:ingots/silver")));
             helper.assertTrue(silver != null && silver != Items.AIR && tag.contains(silver),
                     "The Silver Age provides silver through the common tag");
+        } else {
+            helper.assertTrue(ForgeRegistries.ITEMS.tags().getTag(ItemTags.create(
+                    ResourceLocation.parse("forge:ingots/silver"))).isEmpty(), "The no-silver fixture has an empty common silver tag");
         }
         helper.succeed();
     }

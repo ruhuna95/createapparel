@@ -191,10 +191,10 @@ public final class JeiClientChecks implements IModPlugin {
                 VanillaTypes.ITEM_STACK, new ItemStack(ModItems.SYNTHETIC_FIBER.get()));
         check(manager.createRecipeLookup(mixing).limitFocus(List.of(fiberFocus)).get()
                         .anyMatch(recipe -> recipe.getId().equals(id("mixing/synthetic_fiber")))
-                        == clientRecipes.byKey(id("mixing/synthetic_fiber")).isPresent(), "Fiber recipe lookup is exclusive");
+                        == clientRecipes.byKey(id("mixing/synthetic_fiber")).isPresent(), "Fiber recipe lookup follows synced recipes");
         check(manager.createRecipeLookup(RecipeTypes.CRAFTING).limitFocus(List.of(fiberFocus)).get()
                         .anyMatch(recipe -> recipe.getId().equals(id("synthetic_fiber_from_nylon")))
-                        == clientRecipes.byKey(id("synthetic_fiber_from_nylon")).isPresent(), "Nylon recipe lookup is exclusive");
+                        == clientRecipes.byKey(id("synthetic_fiber_from_nylon")).isPresent(), "Nylon recipe lookup follows synced recipes");
         for (String recipe : List.of("mixing/dyeing/blue_cotton_fabric", "mixing/dyeing/navy_cotton_fabric", "mixing/decolorizing/cotton_fabric")) {
             var actual = manager.createRecipeLookup(mixing).get().filter(value -> value.getId().equals(id(recipe)))
                     .findFirst().orElseThrow();

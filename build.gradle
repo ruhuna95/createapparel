@@ -186,6 +186,7 @@ minecraft {
             parent minecraft.runs.gameTestServer
             workingDirectory recipeTestDirectory
             property 'apparel.recipeTest.destroy', providers.gradleProperty('destroyEnabled').getOrElse('false')
+            property 'apparel.recipeTest.silver', providers.gradleProperty('silverEnabled').getOrElse('true')
             property 'apparel.recipeTest.synthetic', recipeTestFlags[recipeTestCase][0].toString()
             property 'apparel.recipeTest.mirror', recipeTestFlags[recipeTestCase][1].toString()
             mods {
@@ -261,7 +262,9 @@ dependencies {
     optionalIntegrationMods.each { name, coordinate ->
         def dependency = new File(optionalIntegrationModsDirectory, name)
         if (dependency.isFile()) destroyClientMods fg.deobf(coordinate)
-        if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()) {
+        if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()
+                && (name != 'thesilverage-forge-1.20.1-1.3.0.jar'
+                || providers.gradleProperty('silverEnabled').getOrElse('true').toBoolean())) {
             if (!dependency.isFile()) throw new GradleException("Missing optional test mod: ${dependency}")
             runtimeOnly fg.deobf(coordinate)
         }

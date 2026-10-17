@@ -218,8 +218,8 @@ public final class MirrorGameTests {
         helper.assertTrue(helper.getLevel().getRecipeManager().byKey(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "filling/mirror_panel")).isPresent(), "Spout filling remains available without Destroy");
         helper.assertTrue(OptionalRecipeCondition.MIRROR_FALLBACK.test(
                         net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY)
-                        == OptionalRecipeRoutes.selection().useFallback(RecipeRouteSelection.Product.MIRROR_COATING),
-                "Mirror condition uses the server's route snapshot");
+                        == OptionalRecipeRoutes.selection().useFallback(RecipeRouteSelection.Product.MIRROR_COATING, false),
+                "An empty silver context enables fallback regardless of the world config");
         helper.succeed();
     }
 

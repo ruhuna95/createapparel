@@ -24,7 +24,7 @@ class OptionalIntegrationRecipeDataTest {
         assertEquals("createapparel:synthetic_fiber", recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("item").getAsString());
     }
 
-    @Test void nylonUsesTheExactOptionalItemAndAnOppositeCondition() throws Exception {
+    @Test void nylonUsesTheExactOptionalItemAndItsDestroyCondition() throws Exception {
         var recipe = read("synthetic_fiber_from_nylon");
         assertEquals("minecraft:crafting_shapeless", recipe.get("type").getAsString());
         assertEquals("createapparel:synthetic_fiber_destroy", condition(recipe));

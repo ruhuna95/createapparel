@@ -3,6 +3,9 @@ package com.rexhub.createapparel.recipe;
 import com.google.gson.JsonObject;
 import com.rexhub.createapparel.CreateApparel;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.common.crafting.conditions.IConditionSerializer;
@@ -10,6 +13,7 @@ import net.minecraftforge.common.crafting.conditions.IConditionSerializer;
 import java.util.List;
 
 public final class OptionalRecipeCondition implements ICondition {
+    private static final TagKey<Item> SILVER_INGOTS = ItemTags.create(ResourceLocation.parse("forge:ingots/silver"));
     public static final OptionalRecipeCondition SYNTHETIC_FALLBACK = new OptionalRecipeCondition(
             "synthetic_fiber_fallback", RecipeRouteSelection.Product.SYNTHETIC_FIBER, true);
     public static final OptionalRecipeCondition SYNTHETIC_DESTROY = new OptionalRecipeCondition(
@@ -42,6 +46,8 @@ public final class OptionalRecipeCondition implements ICondition {
     @Override public ResourceLocation getID() { return id; }
 
     @Override public boolean test(IContext context) {
-        return OptionalRecipeRoutes.selection().useFallback(product) == fallback;
+        boolean silverAvailable = product != RecipeRouteSelection.Product.MIRROR_COATING || !context.getTag(SILVER_INGOTS).isEmpty();
+        var selection = OptionalRecipeRoutes.selection();
+        return fallback ? selection.useFallback(product, silverAvailable) : selection.useDestroy(product, silverAvailable);
     }
 }

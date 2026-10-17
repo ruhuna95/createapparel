@@ -58,7 +58,8 @@ final class DestroyChemistryChecks {
             helper.assertTrue(reaction.getActivationEnergy() == 25f && reaction.getPreexponentialFactor() == 1e4f
                             && reaction.getEnthalpyChange() == 0f,
                     "Approved Destroy kinetic defaults are retained");
-            boolean selected = !OptionalRecipeRoutes.selection().useFallback(RecipeRouteSelection.Product.MIRROR_COATING);
+            boolean selected = helper.getLevel().getRecipeManager().byKey(ResourceLocation.parse(
+                    "createapparel:mixing/mirror_coating_fluid_from_destroy")).isPresent();
             helper.assertTrue(reaction.includeInJei() == selected, "Chemical JEI route follows the selected coating route");
         }
         helper.succeed();
@@ -99,8 +100,9 @@ final class DestroyChemistryChecks {
         var recipe = helper.getLevel().getRecipeManager().byKey(ResourceLocation.parse(
                 "createapparel:mixing/mirror_coating_fluid_from_destroy"));
         if (recipe.isEmpty()) {
-            helper.assertTrue(OptionalRecipeRoutes.selection().useFallback(RecipeRouteSelection.Product.MIRROR_COATING),
-                    "Destroy finishing recipe is absent only when forced to fallback");
+            helper.assertTrue(ForgeRegistries.ITEMS.tags().getTag(net.minecraft.tags.ItemTags.create(
+                            ResourceLocation.parse("forge:ingots/silver"))).isEmpty(),
+                    "Destroy finishing recipe is absent only when silver is unavailable");
             helper.succeed();
             return;
         }

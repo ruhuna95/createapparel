@@ -58,9 +58,9 @@ public final class ModConfigs {
 
         private Server(ForgeConfigSpec.Builder builder) {
             builder.push("recipes");
-            forceSyntheticFiberFallback = builder.comment("Use heated sugar, slime and water mixing even with Destroy installed. Restart the world/server after changing.")
+            forceSyntheticFiberFallback = builder.comment("Also enable heated sugar, slime and water mixing when Destroy is installed; keep the nylon recipe available. Restart the world/server after changing.")
                     .worldRestart().define("forceSyntheticFiberFallback", false);
-            forceMirrorCoatingFallback = builder.comment("Use heated zinc, glowstone and water mixing even with Destroy installed. Replaces COMMON recipes.mirror.enableMirrorCoatingFallback; set this key explicitly. Restart the world/server after changing.")
+            forceMirrorCoatingFallback = builder.comment("Also enable heated zinc, glowstone and water mixing when Destroy and silver are available; keep the Destroy recipe available. Without either prerequisite, fallback is automatic. Replaces COMMON recipes.mirror.enableMirrorCoatingFallback; set this key explicitly. Restart the world/server after changing.")
                     .worldRestart().define("forceMirrorCoatingFallback", false);
             builder.pop();
         }

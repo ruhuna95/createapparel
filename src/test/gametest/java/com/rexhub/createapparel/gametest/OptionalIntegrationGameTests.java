@@ -60,23 +60,25 @@ public final class OptionalIntegrationGameTests {
         }
         helper.assertTrue(OptionalRecipeRoutes.selection().equals(expected), "Route snapshot belongs to this world's SERVER config");
         var manager = helper.getLevel().getRecipeManager();
-        boolean syntheticFallback = expected.useFallback(RecipeRouteSelection.Product.SYNTHETIC_FIBER);
-        helper.assertTrue(manager.byKey(id("mixing/synthetic_fiber")).isPresent() == syntheticFallback,
-                "Synthetic fallback is exclusive in the actual RecipeManager");
-        helper.assertTrue(manager.byKey(id("synthetic_fiber_from_nylon")).isPresent() != syntheticFallback,
-                "Nylon recipe is absent when disabled, including without Destroy");
-        boolean mirrorFallback = expected.useFallback(RecipeRouteSelection.Product.MIRROR_COATING);
-        boolean mirrorDestroy = !mirrorFallback && !ForgeRegistries.ITEMS.tags().getTag(
+        boolean silverAvailable = !ForgeRegistries.ITEMS.tags().getTag(
                 net.minecraft.tags.ItemTags.create(ResourceLocation.parse("forge:ingots/silver"))).isEmpty();
+        boolean syntheticFallback = expected.useFallback(RecipeRouteSelection.Product.SYNTHETIC_FIBER, silverAvailable);
+        helper.assertTrue(manager.byKey(id("mixing/synthetic_fiber")).isPresent() == syntheticFallback,
+                "Synthetic fallback is automatic or explicitly added");
+        helper.assertTrue(manager.byKey(id("synthetic_fiber_from_nylon")).isPresent()
+                        == expected.useDestroy(RecipeRouteSelection.Product.SYNTHETIC_FIBER, silverAvailable),
+                "Nylon remains available with Destroy even when fallback is enabled");
+        boolean mirrorFallback = expected.useFallback(RecipeRouteSelection.Product.MIRROR_COATING, silverAvailable);
+        boolean mirrorDestroy = expected.useDestroy(RecipeRouteSelection.Product.MIRROR_COATING, silverAvailable);
         helper.assertTrue(manager.byKey(id("mixing/mirror_coating_fluid")).isPresent() == mirrorFallback,
                 "Mirror fallback follows its independent SERVER key");
         helper.assertTrue(manager.byKey(id("mixing/mirror_coating_fluid_from_destroy")).isPresent() == mirrorDestroy,
-                "Destroy coating follows the opposite condition");
+                "Destroy coating requires Destroy and silver, independently of forced fallback");
         long coatingRoutes = manager.getRecipes().stream().filter(recipe -> recipe.getId().getNamespace().equals(CreateApparel.MOD_ID)
                 && recipe instanceof MixingRecipe mixing && mixing.getFluidResults().stream()
                 .anyMatch(output -> output.getFluid() == ModFluids.MIRROR_COATING_FLUID.get())).count();
-        helper.assertTrue(coatingRoutes == (mirrorFallback || mirrorDestroy ? 1 : 0),
-                "Only the selected coating route is loaded; absent silver does not silently select fallback");
+        helper.assertTrue(coatingRoutes == (mirrorFallback ? 1 : 0) + (mirrorDestroy ? 1 : 0),
+                "Missing prerequisites enable fallback, and forced fallback can coexist with Destroy");
         helper.assertTrue(manager.byKey(id("filling/mirror_panel")).isPresent(), "Shared downstream filling remains available");
         helper.succeed();
     }

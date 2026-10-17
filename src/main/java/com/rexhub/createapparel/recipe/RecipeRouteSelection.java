@@ -6,8 +6,12 @@ public record RecipeRouteSelection(boolean destroyLoaded, boolean forceSynthetic
 
     public enum Product { SYNTHETIC_FIBER, MIRROR_COATING }
 
-    public boolean useFallback(Product product) {
-        return !destroyLoaded || switch (product) {
+    public boolean useDestroy(Product product, boolean silverAvailable) {
+        return destroyLoaded && (product != Product.MIRROR_COATING || silverAvailable);
+    }
+
+    public boolean useFallback(Product product, boolean silverAvailable) {
+        return !useDestroy(product, silverAvailable) || switch (product) {
             case SYNTHETIC_FIBER -> forceSyntheticFiberFallback;
             case MIRROR_COATING -> forceMirrorCoatingFallback;
         };

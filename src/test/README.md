@@ -88,12 +88,13 @@ JEIは既定で有効で、不要なら`-PjeiEnabled=false runDestroyClient`を�
 
 鏡のDestroy製法は共通銀Tagを使う硝酸溶解→アンモニア錯体化→HoneyとのMixing。
 銀インゴット1個は4.5 mol、最終工程は錯体1 mol/LのMixture 900 mB＋Honey 100 mB→加工液1000 mB。
-亜鉛製法を使う場合だけ、Worldの`serverconfig/createapparel-server.toml`で
+Destroyまたは共通銀Tagがなければ亜鉛製法を自動で使用する。Destroy＋銀が揃った環境で亜鉛製法も追加する場合は、Worldの`serverconfig/createapparel-server.toml`で
 `forceMirrorCoatingFallback = true`に設定し、Worldを再起動する。
 
 ### 自動検証
 
-`RecipeRouteSelectionTest`はDestroy有無×2製品の強制設定の全8組合せを確認する。
+`RecipeRouteSelectionTest`はDestroy有無×銀Tag有無×2製品の強制設定の全16組合せを確認する。
+銀の条件は鏡だけに適用し、強制ONは有効なDestroy製法を保持したままFallbackを追加する。
 `OptionalIntegrationRecipeDataTest`はDatagenの条件・入力・出力を確認する。
 `OptionalIntegrationGameTests`は実際のRecipeManager、初回SERVER設定、標準Datapack再読込、
 加熱Basinの素材／液体消費、Nylonの通常クラフトを検証する。
@@ -105,6 +106,8 @@ JEIは既定で有効で、不要なら`-PjeiEnabled=false runDestroyClient`を�
 .\gradlew.bat -PjeiEnabled=false -PdestroyEnabled=true -PrecipeTestCase=D runRecipeTestServer
 .\gradlew.bat -PjeiEnabled=false -PdestroyEnabled=true -PrecipeTestCase=E runRecipeTestServer
 .\gradlew.bat -PjeiEnabled=false -PdestroyEnabled=true -PrecipeTestCase=F runRecipeTestServer
+.\gradlew.bat -PjeiEnabled=false -PdestroyEnabled=true -PsilverEnabled=false -PrecipeTestCase=C runRecipeTestServer
+.\gradlew.bat -PjeiEnabled=false -PdestroyEnabled=true -PsilverEnabled=false -PrecipeTestCase=D runRecipeTestServer
 .\gradlew.bat -PdestroyEnabled=true runJeiTestClient
 .\gradlew.bat -PdestroyEnabled=true -PjeiMirrorFallback=true runJeiTestClient
 .\gradlew.bat -PjeiEnabled=false -PdestroyEnabled=true runJeiTestClient
@@ -123,9 +126,10 @@ Create6.0.8では公開版Destroy0.1.3が削除済み`TagGen.tagBlockAndItem`呼
 この0.1.4は公開安定版ではなく、PRの互換修正版である。公開版0.1.3の動作保証と混同しない。
 JARはローカルの検証専用であり、Create: Apparelの配布物には含めない。
 
-ケースA/BはDestroyなし、C〜FはDestroyあり。C/EはMirrorをDestroy製法、D/Fは強制Fallbackとする。
+ケースA/BはDestroyなし、C〜FはDestroy＋銀あり。C/EはMirrorをDestroy製法のみ、D/FはDestroy＋Fallbackとする。
+`-PsilverEnabled=false`は検証runtimeからThe Silver Ageだけを外す。C/Dで鏡の自動FallbackとNylon製法の継続を確認する。
 `SilverIntegrationGameTests`は実銀Tag、銀種・反応量論・4.5 molの実消費、錯体化、NBT往復、
-最終Mixingの実液体消費と濃度制限、空の銀Tag ContextでのRecipe読み込み拒否を確認する。
+最終Mixingの実液体消費と濃度制限、空の銀Tag ContextでのDestroy製法の読み込み拒否とFallbackの有効化を確認する。
 銀アクセサリー素体は鉄／実The Silver Ageの銀ナゲットでCompactingし、ネックレス3個・ブレスレット2個の消費、
 不足時の拒否、銀Tag未導入時にEmpty Tagのバリアを材料として扱わないことも確認する。
 JEIの追加検証は、同期された最終Recipeに応じて化学2反応が表示／非表示になることと、
@@ -135,6 +139,12 @@ JEIの追加検証は、同期された最終Recipeに応じて化学2反応が�
 `-PrecipeTestRunId=<ID>`で同じ検証Worldを再使用して再起動を確認できる。
 JEIなしの`runJeiTestClient`は同一JVMで3つの新規Worldを順に起動し、SERVER設定の
 `false/false → true/true → false/false`と停止時の選択クリアも確認する。
+
+追加方式（2026-10-17）はDatagen／build・JUnit794件、A〜FとC/Dの銀なし各11件・計88 GameTestが成功した。
+指定Destroyフォーク0.1.3-i+2でも、両製法共存／銀なしのJEI検索・化学反応表示・Datapack再読込が成功した。
+当時の通常Dedicated全体は新規Worldの2回とも224/226成功・Citizen経路試験2件失敗で、失敗対象も変動した。
+
+以下は強制Fallbackを排他的切替としていた変更前の検証履歴。現行の前提条件・追加Fallback方式の結果とは区別する。
 
 鏡化学実装前の2026-10-17の確認では、DestroyなしのDatagen／JUnit792件・build／全Dedicated GameTest226件、
 A/B各6件が成功した。実ClientはJEIあり／なし双方の新規World作成とレシピ同期、
@@ -159,6 +169,8 @@ JEIなしはDestroyあり／なし双方で3 World切替、SERVER設定と同期
 旧COMMON `recipes.mirror.enableMirrorCoatingFallback`は廃止した。
 `<world>/serverconfig/createapparel-server.toml`の`[recipes]`に
 `forceSyntheticFiberFallback = false`と`forceMirrorCoatingFallback = false`を既定値として持つ。
-旧設定は自動移行しない。Destroy導入時も従来の亜鉛製法を使う場合は新しい
+旧設定は自動移行しない。Destroy＋銀ありでも従来の亜鉛製法を追加する場合は新しい
 `forceMirrorCoatingFallback = true`を明示設定する。変更後はWorld／Serverを再起動する。
 Destroy未導入なら、両設定がfalseでも自動的にFallback製法を使用する。
+Destroy導入時も共通銀Tagが空なら鏡は自動Fallbackとなる。以前trueでDestroy製法を隠していたWorldも、
+更新後は前提条件が揃えばDestroy＋Fallbackとなる。既存の設定値の変換は不要だが、World／Serverを再起動する。

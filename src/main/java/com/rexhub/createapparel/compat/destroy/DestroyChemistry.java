@@ -42,7 +42,7 @@ public final class DestroyChemistry {
     }
 
     private static boolean isSelected() {
-        return !OptionalRecipeRoutes.selection().useFallback(RecipeRouteSelection.Product.MIRROR_COATING)
-                && !ForgeRegistries.ITEMS.tags().getTag(ItemTags.create(ResourceLocation.parse("forge:ingots/silver"))).isEmpty();
+        return OptionalRecipeRoutes.selection().useDestroy(RecipeRouteSelection.Product.MIRROR_COATING,
+                !ForgeRegistries.ITEMS.tags().getTag(ItemTags.create(ResourceLocation.parse("forge:ingots/silver"))).isEmpty());
     }
 }
