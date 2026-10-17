@@ -50,9 +50,19 @@ public final class ApparelInventoryEvents {
             return;
         }
         ApparelCapabilities.get(serverPlayer).ifPresent(inventory -> {
+            inventory.migrateLegacyCoats();
+            inventory.returnPendingItems(serverPlayer);
             inventory.updateArmProfile(ArmProfile.defaultFor(serverPlayer));
             ModNetwork.sendApparelInventory(serverPlayer, inventory);
         });
+    }
+
+    @SubscribeEvent
+    public static void recoverPendingItems(net.minecraftforge.event.TickEvent.PlayerTickEvent event) {
+        if (event.phase == net.minecraftforge.event.TickEvent.Phase.END
+                && event.player instanceof ServerPlayer player && player.tickCount % 20 == 0) {
+            ApparelCapabilities.get(player).ifPresent(inventory -> inventory.returnPendingItems(player));
+        }
     }
 
     @SubscribeEvent

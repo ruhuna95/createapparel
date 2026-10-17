@@ -256,12 +256,14 @@ class DressCollectionAssetTest {
         var texture = dress.parts().get(0).textures();
         var bottom = new ResolvedGarment(dress.definition(), null, List.of(new ResolvedPart("torso", skirt, texture)));
         var outer = new ResolvedGarment(dress.definition(), null, List.of(new ResolvedPart("torso", coat, texture)));
+        var player = DualEnvelopeDeformerTest.player();
+        player.leftLeg.xRot = -1.4F;
         var frame = new ApparelRenderFrame(slot -> switch (slot) {
             case TOP -> Optional.of(dress);
             case BOTTOM -> Optional.of(bottom);
-            case OUTER -> Optional.of(outer);
+            case COAT -> Optional.of(outer);
             default -> Optional.empty();
-        }, DualEnvelopeDeformerTest.player());
+        }, player);
         var pose = frame.envelope(dressTorso).orElseThrow();
         assertSame(pose, frame.skirtSlope().orElseThrow().envelope());
         assertTrue(pose.changed());

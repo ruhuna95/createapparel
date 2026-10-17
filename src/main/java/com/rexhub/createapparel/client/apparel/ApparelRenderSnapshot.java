@@ -56,7 +56,8 @@ public final class ApparelRenderSnapshot implements GarmentRenderSource {
     private Optional<ResolvedGarment> resolve(GarmentSlot slot) {
         ItemStack stack = contents.get(slot.ordinal());
         return stack.isEmpty() ? Optional.empty() : ClientGarmentAssets.INSTANCE.resolve(stack,
-                    new GarmentWearContext(slot, styles.getOrDefault(slot, EquippedStyleState.EMPTY)), armProfile, chestProfile);
+                    new GarmentWearContext(slot, styles.getOrDefault(slot, EquippedStyleState.EMPTY),
+                            !isEmpty(GarmentSlot.COAT)), armProfile, chestProfile);
     }
 
     public ResourceLocation texture(ResolvedPart part) {

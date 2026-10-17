@@ -87,6 +87,7 @@ public final class Mannequin extends LivingEntity {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         mannequinState.deserializeNBT(tag.getCompound("MannequinState"), variant.form());
+        if (!level().isClientSide) mannequinState.loadout().migrateLegacyCoats();
         setNoGravity(false);
         syncState();
     }

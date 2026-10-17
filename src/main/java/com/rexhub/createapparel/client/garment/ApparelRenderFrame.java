@@ -24,12 +24,16 @@ public final class ApparelRenderFrame {
                 for (var part : garment.parts()) {
                     part.model().legEnvelope().ifPresent(motion -> envelopes.computeIfAbsent(part.model(),
                             ignored -> new DualEnvelopeDeformer.Pose(motion.geometry(), legs,
-                                    motion.clearance() + (slot == GarmentSlot.OUTER
-                                            ? LegEnvelopeGeometry.layerClearance(slot) : 0), slot != GarmentSlot.OUTER)));
+                                    motion.clearance() + (slot == GarmentSlot.OUTER || slot == GarmentSlot.COAT
+                                            ? LegEnvelopeGeometry.layerClearance(slot) : 0),
+                                    slot != GarmentSlot.OUTER && slot != GarmentSlot.COAT)));
                 }
             });
         }
-        Optional<GarmentHemGeometry.Slope> bottomSlope = envelopeSlope(GarmentSlot.BOTTOM);
+        Optional<GarmentHemGeometry.Slope> bottomSlope = envelopeSlope(GarmentSlot.BOTTOM).or(() ->
+                garment(GarmentSlot.BOTTOM).flatMap(bottom -> GarmentHemGeometry.bottomGeometry(bottom)
+                        .map(geometry -> GarmentHemGeometry.dualSlope(new DualEnvelopeDeformer.Pose(geometry,
+                                new LegEnvelopeGeometry(player, bottom), 0)))));
         bottomSlope.ifPresent(slope -> garment(GarmentSlot.TOP).ifPresent(garment -> {
             for (var part : garment.parts()) {
                 var envelope = envelopes.get(part.model());
@@ -41,6 +45,13 @@ public final class ApparelRenderFrame {
             for (var part : garment.parts()) {
                 var envelope = envelopes.get(part.model());
                 if (envelope != null) envelope.enclose(slope.envelope(), LegEnvelopeGeometry.layerClearance(GarmentSlot.OUTER));
+            }
+        }));
+        Optional<GarmentHemGeometry.Slope> coatInner = envelopeSlope(GarmentSlot.OUTER).or(() -> skirtSlope);
+        coatInner.ifPresent(slope -> garment(GarmentSlot.COAT).ifPresent(garment -> {
+            for (var part : garment.parts()) {
+                var envelope = envelopes.get(part.model());
+                if (envelope != null) envelope.enclose(slope.envelope(), LegEnvelopeGeometry.layerClearance(GarmentSlot.COAT));
             }
         }));
     }

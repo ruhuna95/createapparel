@@ -27,16 +27,24 @@ public abstract class ApparelMenu extends AbstractContainerMenu {
     private static final int APPAREL_ROW_SPACING = 20;
 
     protected final ApparelLoadout loadout;
+    private final Player inventoryOwner;
 
     protected ApparelMenu(MenuType<?> type, int containerId,
                           Inventory playerInventory, ApparelLoadout loadout) {
         super(type, containerId);
         this.loadout = loadout;
+        inventoryOwner = playerInventory.player;
         addApparelSlots(loadout);
         addPlayerInventory(playerInventory);
     }
 
     public ApparelLoadout loadout() { return loadout; }
+
+    @Override
+    public void broadcastChanges() {
+        loadout.returnPendingItems(inventoryOwner);
+        super.broadcastChanges();
+    }
 
     private void addApparelSlots(ItemStackHandler apparelInventory) {
         for (GarmentSlot garmentSlot : GarmentSlot.values()) {
@@ -66,9 +74,10 @@ public abstract class ApparelMenu extends AbstractContainerMenu {
             case HEAD -> apparelGridPosition(1.0F, 2.5F);
             case NECK -> apparelGridPosition(2.0F, 1.5F);
             case BACK -> apparelGridPosition(2.0F, 2.5F);
-            case INNER_TOP -> apparelGridPosition(3.0F, 1.0F);
-            case TOP -> apparelGridPosition(3.0F, 2.0F);
-            case OUTER -> apparelGridPosition(3.0F, 3.0F);
+            case INNER_TOP -> apparelGridPosition(3.0F, 0.5F);
+            case TOP -> apparelGridPosition(3.0F, 1.5F);
+            case OUTER -> apparelGridPosition(3.0F, 2.5F);
+            case COAT -> apparelGridPosition(3.0F, 3.5F);
             case HANDS -> apparelGridPosition(4.0F, 3.0F);
             case INNER_BOTTOM -> apparelGridPosition(4.0F, 1.0F);
             case BOTTOM -> apparelGridPosition(4.0F, 2.0F);

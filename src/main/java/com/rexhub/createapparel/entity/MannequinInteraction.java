@@ -163,16 +163,16 @@ public final class MannequinInteraction {
             case HEAD -> local.z < -0.8F ? List.of(GarmentSlot.FACE, GarmentSlot.HEAD)
                     : List.of(GarmentSlot.HEAD, GarmentSlot.FACE);
             case LEFT_ARM, RIGHT_ARM -> local.y >= 6
-                    ? List.of(GarmentSlot.HANDS, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP)
-                    : List.of(GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP);
+                    ? List.of(GarmentSlot.HANDS, GarmentSlot.COAT, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP)
+                    : List.of(GarmentSlot.COAT, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP);
             case LEFT_LEG, RIGHT_LEG -> local.y > 8
                     ? List.of(GarmentSlot.FEET, GarmentSlot.LEGWEAR, GarmentSlot.BOTTOM, GarmentSlot.INNER_BOTTOM)
                     : List.of(GarmentSlot.BOTTOM, GarmentSlot.LEGWEAR, GarmentSlot.INNER_BOTTOM, GarmentSlot.TOP);
             case BODY -> form == MannequinForm.LOWER
                     ? List.of(GarmentSlot.BOTTOM, GarmentSlot.LEGWEAR, GarmentSlot.INNER_BOTTOM)
-                    : local.y < 3 ? List.of(GarmentSlot.NECK, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP)
-                    : local.z > 1.6F ? List.of(GarmentSlot.BACK, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP)
-                    : List.of(GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP, GarmentSlot.BACK);
+                    : local.y < 3 ? List.of(GarmentSlot.NECK, GarmentSlot.COAT, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP)
+                    : local.z > 1.6F ? List.of(GarmentSlot.BACK, GarmentSlot.COAT, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP)
+                    : List.of(GarmentSlot.COAT, GarmentSlot.OUTER, GarmentSlot.TOP, GarmentSlot.INNER_TOP, GarmentSlot.BACK);
         };
     }
 }

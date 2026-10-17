@@ -38,6 +38,28 @@ public final class LegEnvelopeGeometry {
         }
     }
 
+    public LegEnvelopeGeometry(HumanoidModel<?> player, ClientGarmentAssets.ResolvedGarment garment) {
+        this(player);
+        Matrix4f inverse = pose(player.body).invert();
+        for (var part : garment.parts()) {
+            if (!part.semanticName().contains("leg")) continue;
+            var element = part.model().elements().get(0);
+            boolean right = element.from().x() + element.to().x() < 0;
+            Matrix4f matrix = new Matrix4f(inverse).mul(pose(right ? player.rightLeg : player.leftLeg))
+                    .translate(right ? 1.9F : -1.9F, -12, 0);
+            float[] target = legs[right ? 0 : 1];
+            int[] order = {0, 1, 4, 5, 3, 2, 7, 6};
+            Vector3f point = new Vector3f();
+            for (int i = 0; i < 8; i++) {
+                var corner = FlatGarmentGeometry.rotate(element.corners().get(order[i]), element.rotation());
+                matrix.transformPosition(point.set(corner.x(), 24 - corner.y(), corner.z()));
+                target[i * 3] = point.x;
+                target[i * 3 + 1] = 24 - point.y;
+                target[i * 3 + 2] = point.z;
+            }
+        }
+    }
+
     private static Vector3f direction(Matrix4f matrix, float x, float y, float z) {
         Vector3f result = matrix.transformDirection(new Vector3f(x, y, z)).normalize();
         result.y = -result.y;
@@ -67,7 +89,7 @@ public final class LegEnvelopeGeometry {
     }
 
     public static float layerClearance(GarmentSlot slot) {
-        return slot == GarmentSlot.OUTER ? 0.05F : 0.025F;
+        return slot == GarmentSlot.COAT ? 0.075F : slot == GarmentSlot.OUTER ? 0.05F : 0.025F;
     }
 
     private static Matrix4f pose(ModelPart part) {

@@ -25,9 +25,24 @@ public record GarmentDefinition(
         String textureVariant,
         Set<String> designs,
         Map<String, List<String>> styles,
-        Map<GarmentSlot, Map<String, List<String>>> slotStyles
+        Map<GarmentSlot, Map<String, List<String>>> slotStyles,
+        List<ContextModelVariant> contextModelVariants
 ) {
     private static final int MAX_COLLECTION_SIZE = 256;
+
+    public GarmentDefinition(ResourceLocation id, GarmentSlot defaultSlot, Set<GarmentSlot> allowedSlots,
+                             ResourceLocation modelTemplate, String modelVariant, Map<GarmentSlot, String> slotModelVariants,
+                             String textureVariant, Set<String> designs, Map<String, List<String>> styles,
+                             Map<GarmentSlot, Map<String, List<String>>> slotStyles) {
+        this(id, defaultSlot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant,
+                designs, styles, slotStyles, List.of());
+    }
+
+    public record ContextModelVariant(boolean coatPresent, String modelVariant) {
+        public ContextModelVariant {
+            if (modelVariant.isBlank()) throw new IllegalArgumentException("Blank context model variant");
+        }
+    }
 
     public GarmentDefinition(ResourceLocation id, GarmentSlot slot, ResourceLocation modelTemplate,
                              String modelVariant, String textureVariant, Set<String> designs,
@@ -39,11 +54,20 @@ public record GarmentDefinition(
         return slotModelVariants.getOrDefault(slot, modelVariant);
     }
 
+    public String modelVariantFor(GarmentWearContext context) {
+        return contextModelVariants.stream().filter(rule -> rule.coatPresent() == context.coatPresent())
+                .map(ContextModelVariant::modelVariant).findFirst().orElseGet(() -> modelVariantFor(context.slot()));
+    }
+
     public Map<String, List<String>> stylesFor(GarmentSlot slot) {
         return slotStyles.getOrDefault(slot, styles);
     }
 
     public GarmentDefinition {
+        contextModelVariants = List.copyOf(contextModelVariants);
+        if (contextModelVariants.stream().map(ContextModelVariant::coatPresent).distinct().count() != contextModelVariants.size()) {
+            throw new IllegalArgumentException("Ambiguous context model variants: " + id);
+        }
         allowedSlots = Set.copyOf(allowedSlots);
         slotModelVariants = Map.copyOf(slotModelVariants);
         if (!allowedSlots.contains(defaultSlot) || !allowedSlots.containsAll(slotModelVariants.keySet())
@@ -148,7 +172,18 @@ public record GarmentDefinition(
             });
             slotStyles.put(GarmentSlot.fromSerializedName(entry.getKey()), categories);
         });
-        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant, designs, styles, slotStyles);
+        List<ContextModelVariant> contextVariants = new ArrayList<>();
+        for (JsonElement entry : GsonHelper.getAsJsonArray(json, "context_model_variants", new JsonArray())) {
+            JsonObject rule = GsonHelper.convertToJsonObject(entry, "context_model_variants");
+            JsonObject when = GsonHelper.getAsJsonObject(rule, "when");
+            if (!when.keySet().equals(Set.of("coat_present"))) {
+                throw new IllegalArgumentException("Unsupported model context condition: " + id);
+            }
+            contextVariants.add(new ContextModelVariant(GsonHelper.getAsBoolean(when, "coat_present"),
+                    GsonHelper.getAsString(rule, "model_variant")));
+        }
+        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants,
+                textureVariant, designs, styles, slotStyles, contextVariants);
     }
 
     public void write(FriendlyByteBuf buffer) {
@@ -177,6 +212,10 @@ public record GarmentDefinition(
                 buffer.writeUtf(key);
                 buffer.writeCollection(values, FriendlyByteBuf::writeUtf);
             });
+        });
+        buffer.writeCollection(contextModelVariants, (buf, rule) -> {
+            buf.writeBoolean(rule.coatPresent());
+            buf.writeUtf(rule.modelVariant());
         });
     }
 
@@ -236,7 +275,14 @@ public record GarmentDefinition(
                 throw new IllegalArgumentException("Duplicate slot style override");
             }
         }
-        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant, designs, styles, slotStyles);
+        int contextCount = buffer.readVarInt();
+        if (contextCount < 0 || contextCount > 2) throw new IllegalArgumentException("Invalid model context count");
+        List<ContextModelVariant> contextVariants = new ArrayList<>();
+        for (int index = 0; index < contextCount; index++) {
+            contextVariants.add(new ContextModelVariant(buffer.readBoolean(), buffer.readUtf()));
+        }
+        return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants,
+                textureVariant, designs, styles, slotStyles, contextVariants);
     }
 
     private static ResourceLocation parseResourceLocation(String value, String field) {

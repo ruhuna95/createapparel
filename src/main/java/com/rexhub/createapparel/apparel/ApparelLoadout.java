@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
@@ -24,6 +26,11 @@ import java.util.Objects;
 
 public class ApparelLoadout extends ItemStackHandler {
     public static final int SLOT_COUNT = GarmentSlot.values().length;
+    private static final int DATA_VERSION = 1;
+    private static final Set<String> LEGACY_COATS = Set.of("trench_coat", "chesterfield_coat", "pea_coat",
+            "duffle_coat", "balmacaan_coat", "overcoat");
+    private int dataVersion = DATA_VERSION;
+    private final List<ItemStack> pendingReturns = new ArrayList<>();
 
     private Runnable changeListener = () -> {
     };
@@ -232,6 +239,8 @@ public class ApparelLoadout extends ItemStackHandler {
 
     public List<ItemStack> removeAll() {
         List<ItemStack> removed = new ArrayList<>();
+        removed.addAll(pendingReturns);
+        pendingReturns.clear();
         suppressChangeNotification = true;
         try {
             for (int slot = 0; slot < SLOT_COUNT; slot++) {
@@ -270,6 +279,10 @@ public class ApparelLoadout extends ItemStackHandler {
     @Override
     public CompoundTag serializeNBT() {
         CompoundTag tag = super.serializeNBT();
+        tag.putInt("ApparelDataVersion", dataVersion);
+        ListTag pending = new ListTag();
+        pendingReturns.forEach(stack -> pending.add(stack.save(new CompoundTag())));
+        tag.put("ApparelPendingReturns", pending);
         CompoundTag styles = new CompoundTag();
         styleStates.forEach((slot, state) -> {
             if (!getStack(slot).isEmpty()) {
@@ -287,6 +300,12 @@ public class ApparelLoadout extends ItemStackHandler {
         suppressChangeNotification = true;
         try {
             super.deserializeNBT(normalizedTag);
+            dataVersion = tag.getInt("ApparelDataVersion");
+            pendingReturns.clear();
+            for (var entry : tag.getList("ApparelPendingReturns", CompoundTag.TAG_COMPOUND)) {
+                ItemStack stack = ItemStack.of((CompoundTag) entry);
+                if (!stack.isEmpty()) pendingReturns.add(stack);
+            }
             styleStates.clear();
             CompoundTag savedStyles = tag.getCompound("ApparelStyles");
             for (GarmentSlot slot : GarmentSlot.values()) {
@@ -298,6 +317,40 @@ public class ApparelLoadout extends ItemStackHandler {
         } finally {
             suppressChangeNotification = false;
         }
+    }
+
+    public void migrateLegacyCoats() {
+        if (dataVersion >= DATA_VERSION) return;
+        ItemStack outer = getStack(GarmentSlot.OUTER);
+        ResourceLocation id = ForgeRegistries.ITEMS.getKey(outer.getItem());
+        if (!outer.isEmpty() && id != null && id.getNamespace().equals("createapparel")
+                && LEGACY_COATS.contains(id.getPath()) && isItemValid(GarmentSlot.COAT.ordinal(), outer)
+                && !isItemValid(GarmentSlot.OUTER.ordinal(), outer)) {
+            if (getStack(GarmentSlot.COAT).isEmpty()) {
+                stacks.set(GarmentSlot.COAT.ordinal(), outer.copy());
+                styleStates.put(GarmentSlot.COAT, styleState(GarmentSlot.OUTER));
+            } else {
+                pendingReturns.add(outer.copy());
+            }
+            stacks.set(GarmentSlot.OUTER.ordinal(), ItemStack.EMPTY);
+            clearStyleState(GarmentSlot.OUTER);
+        }
+        dataVersion = DATA_VERSION;
+        reconcileStyles();
+        notifyChanged();
+    }
+
+    public void returnPendingItems(Player player) {
+        if (player.level().isClientSide || pendingReturns.isEmpty()) return;
+        boolean changed = false;
+        for (var iterator = pendingReturns.iterator(); iterator.hasNext();) {
+            ItemStack stack = iterator.next();
+            int count = stack.getCount();
+            player.getInventory().add(stack);
+            if (stack.getCount() != count) changed = true;
+            if (stack.isEmpty()) iterator.remove();
+        }
+        if (changed) notifyChanged();
     }
 
     public Optional<GarmentSlot> resolveEmptySlot(ItemStack stack) {

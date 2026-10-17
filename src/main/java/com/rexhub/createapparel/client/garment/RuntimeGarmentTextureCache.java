@@ -47,7 +47,8 @@ public final class RuntimeGarmentTextureCache {
 
     private static CacheKey key(GarmentPartModel part, ResolvedTextures textures, GarmentAppearance data) {
         return new CacheKey(
-                part.id(),
+                part.textureWidth(),
+                part.textureHeight(),
                 textures.base(),
                 textures.secondary(),
                 textures.accent(),
@@ -175,7 +176,8 @@ public final class RuntimeGarmentTextureCache {
     }
 
     private record CacheKey(
-            ResourceLocation part,
+            int width,
+            int height,
             ResourceLocation base,
             Optional<ResourceLocation> secondary,
             Optional<ResourceLocation> accent,

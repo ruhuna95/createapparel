@@ -34,7 +34,8 @@ public final class LoadoutRenderSnapshot implements GarmentRenderSource {
         ItemStack stack = contents.get(slot.ordinal());
         return stack.isEmpty() || !slots.contains(slot) ? Optional.empty()
                 : ClientGarmentAssets.INSTANCE.resolve(stack,
-                new GarmentWearContext(slot, styles.getOrDefault(slot, EquippedStyleState.EMPTY)),
+                new GarmentWearContext(slot, styles.getOrDefault(slot, EquippedStyleState.EMPTY),
+                        !contents.get(GarmentSlot.COAT.ordinal()).isEmpty()),
                 armProfile, chestProfile);
     }
 

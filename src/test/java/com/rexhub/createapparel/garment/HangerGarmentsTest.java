@@ -16,8 +16,8 @@ class HangerGarmentsTest {
             var definition = new GarmentDefinition(ResourceLocation.fromNamespaceAndPath("test", "arbitrary"), slot,
                     ResourceLocation.fromNamespaceAndPath("test", "arbitrary_model"), "default", "default",
                     Set.of("plain"), Map.of());
-            assertEquals(slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER, HangerGarments.accepts(definition));
-            assertEquals(slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER, HangerType.NORMAL.accepts(definition));
+            assertEquals(slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER || slot == GarmentSlot.COAT, HangerGarments.accepts(definition));
+            assertEquals(slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER || slot == GarmentSlot.COAT, HangerType.NORMAL.accepts(definition));
             assertEquals(slot == GarmentSlot.BOTTOM, HangerType.CLIP.accepts(definition));
         }
     }

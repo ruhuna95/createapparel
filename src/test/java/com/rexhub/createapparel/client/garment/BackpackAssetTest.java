@@ -24,6 +24,49 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BackpackAssetTest {
+    @Test
+    void coatVariantsMoveBodiesAndBothSidesOfStrapsWithoutChangingTextures() throws Exception {
+        for (String id : IDS) {
+            var definition = GarmentDefinition.fromJson(resource(id), json(Path.of(
+                    "src/main/resources/data/createapparel/garments/" + id + ".json")));
+            var template = json(ASSETS.resolve("garment_models/templates/" + id + ".json"));
+            assertEquals("default", definition.modelVariantFor(com.rexhub.createapparel.garment.GarmentWearContext.defaultsFor(definition)));
+            assertEquals("over_coat", definition.modelVariantFor(new com.rexhub.createapparel.garment.GarmentWearContext(
+                    com.rexhub.createapparel.garment.GarmentSlot.BACK, EquippedStyleState.defaultsFor(definition), true)));
+            for (String semantic : template.getAsJsonObject("default").keySet()) {
+                String path = template.getAsJsonObject("default").getAsJsonObject(semantic).get("model").getAsString().split(":")[1];
+                var normal = part(path);
+                var coat = part(path + "_over_coat");
+                assertEquals(normal.variants(), coat.variants());
+                assertEquals(normal.designs(), coat.designs());
+                assertEquals(normal.textureWidth(), coat.textureWidth());
+                var key = RuntimeGarmentTextureCache.class.getDeclaredMethod("key", GarmentPartModel.class,
+                        ClientGarmentAssets.ResolvedTextures.class, com.rexhub.createapparel.garment.GarmentAppearance.class);
+                key.setAccessible(true);
+                var data = new com.rexhub.createapparel.garment.GarmentData(
+                        com.rexhub.createapparel.material.FabricMaterial.COTTON, "plain",
+                        com.rexhub.createapparel.material.FabricColor.WHITE, java.util.Optional.empty(), java.util.Optional.empty());
+                assertEquals(key.invoke(null, normal, normal.resolveTextures(definition, data), data),
+                        key.invoke(null, coat, coat.resolveTextures(definition, data), data));
+                for (int i = 0; i < normal.elements().size(); i++) {
+                    var before = normal.elements().get(i);
+                    var after = coat.elements().get(i);
+                    assertEquals(before.faces(), after.faces());
+                    assertEquals(before.from().y(), after.from().y());
+                    assertEquals(before.from().x(), after.from().x());
+                    assertEquals(before.to().x(), after.to().x());
+                    if (semantic.startsWith("torso")) {
+                        assertEquals(before.from().z() + Math.signum(before.from().z()) * 0.375F, after.from().z(), EPS);
+                        assertEquals(before.to().z() + Math.signum(before.to().z()) * 0.375F, after.to().z(), EPS);
+                    } else {
+                        float delta = semantic.endsWith("front") ? -0.375F : 0.375F;
+                        assertEquals(before.from().z() + delta, after.from().z(), EPS);
+                        assertEquals(before.to().z() + delta, after.to().z(), EPS);
+                    }
+                }
+            }
+        }
+    }
     private static final Path ASSETS = Path.of("src/main/resources/assets/createapparel");
     private static final List<String> IDS = List.of("backpack", "daypack", "crossbody_bag");
     private static final float EPS = 0.00001F;

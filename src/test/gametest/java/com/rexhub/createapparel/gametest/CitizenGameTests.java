@@ -48,7 +48,7 @@ public final class CitizenGameTests {
         var entity = create(helper);
         helper.assertTrue(entity.citizenState().appearance().equals(CitizenAppearance.DEFAULT), "Adult appearance defaults");
         helper.assertTrue(!entity.isBaby() && entity.isPersistenceRequired() && entity.getHealth() == 20, "Persistent healthy adult");
-        helper.assertTrue(entity.citizenState().loadout().getSlots() == 12, "Same twelve apparel slots as Player");
+        helper.assertTrue(entity.citizenState().loadout().getSlots() == GarmentSlot.values().length, "Same apparel slots as Player");
         for (GarmentSlot slot : GarmentSlot.values()) helper.assertTrue(entity.citizenState().loadout().supports(slot), "Supported slot " + slot);
         for (GarmentSlot slot : new GarmentSlot[]{GarmentSlot.TOP, GarmentSlot.BOTTOM, GarmentSlot.FEET}) {
             var stack = entity.citizenState().loadout().getStack(slot);

@@ -97,7 +97,7 @@ class DenimPantsAssetTest {
             }
             assertTrue(seamPixels > 0);
             var body = part.elements().get(0);
-            assertEquals(torso ? 11.996 : 1.995, body.from().y(), 0.000001);
+            assertEquals(torso ? 11.996 : 2.046875, body.from().y(), 0.000001);
             assertEquals(torso ? 14.004 : 12.005, body.to().y(), 0.000001);
             assertEquals(torso ? -2.249 : -2.25, body.from().z(), 0.000001);
             assertEquals(torso ? 2.249 : 2.25, body.to().z(), 0.000001);
@@ -115,12 +115,14 @@ class DenimPantsAssetTest {
                 }
             } else {
                 assertEquals(1, part.elements().size());
-                assertEquals(name.equals("left_leg") ? -0.005 : -4.005, body.from().x(), 0.000001);
-                assertEquals(name.equals("left_leg") ? 4.005 : 0.005, body.to().x(), 0.000001);
+                assertEquals(name.equals("left_leg") ? -0.09375 : -4.09375, body.from().x(), 0.000001);
+                assertEquals(name.equals("left_leg") ? 4.09375 : 0.09375, body.to().x(), 0.000001);
+                assertEquals(name.equals("left_leg") ? -0.005 : -4.005, body.corners().get(4).x(), 0.000001);
+                assertEquals(name.equals("left_leg") ? 4.005 : 0.005, body.corners().get(5).x(), 0.000001);
                 assertTrue(body.faces().containsKey(LEFT));
                 assertTrue(body.faces().containsKey(RIGHT));
                 assertEquals(name.equals("left_leg"), (body.from().x() + body.to().x()) > 0);
-                assertEquals(4.01, body.to().x() - body.from().x(), 0.000001);
+                assertEquals(4.1875, body.to().x() - body.from().x(), 0.000001);
                 for (int x = 0; x < 16; x++) {
                     assertEquals(255, base.getRGB(x, 13) >>> 24);
                     for (int y = 14; y < 24; y++) {

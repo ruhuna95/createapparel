@@ -5,7 +5,6 @@ import com.mojang.math.Axis;
 import com.rexhub.createapparel.client.CreateApparelClient;
 import com.rexhub.createapparel.client.citizen.ClientCitizenAssets;
 import com.rexhub.createapparel.client.garment.CitizenTextureCache;
-import com.rexhub.createapparel.client.garment.CitizenGarmentRenderSource;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.garment.GarmentRenderContext;
 import com.rexhub.createapparel.client.garment.LoadoutRenderSnapshot;
@@ -40,8 +39,7 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
             var cached = snapshots.get(entity);
             long generation = ClientGarmentAssets.INSTANCE.generation();
             if (cached == null || cached.revision() != state.revision() || cached.generation() != generation) {
-                var source = new CitizenGarmentRenderSource(new LoadoutRenderSnapshot(state.loadout(),
-                        appearance.armProfile(), appearance.chestProfile()));
+                var source = new LoadoutRenderSnapshot(state.loadout(), appearance.armProfile(), appearance.chestProfile());
                 cached = new CachedLoadout(state.revision(), generation, source);
                 snapshots.put(entity, cached);
             }
@@ -83,5 +81,5 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
         return CitizenTextureCache.get(appearance, ClientCitizenAssets.INSTANCE.resolve(appearance.hairStyleId()));
     }
 
-    private record CachedLoadout(long revision, long generation, CitizenGarmentRenderSource snapshot) { }
+    private record CachedLoadout(long revision, long generation, LoadoutRenderSnapshot snapshot) { }
 }

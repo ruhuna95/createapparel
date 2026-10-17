@@ -5,6 +5,12 @@
   ],
   "model_template": "createapparel:crossbody_bag",
   "model_variant": "default",
+  "context_model_variants": [
+    {
+      "when": { "coat_present": true },
+      "model_variant": "over_coat"
+    }
+  ],
   "texture_variant": "crossbody_bag",
   "designs": [
     "plain",

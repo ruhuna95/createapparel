@@ -34,6 +34,18 @@ public final class GarmentHemGeometry {
                 .map(envelope -> envelope.geometry().reference()).findFirst().map(GarmentHemGeometry::slope);
     }
 
+    public static Optional<DualEnvelopeDeformer.Prepared> bottomGeometry(ResolvedGarment garment) {
+        if (garment.parts().stream().anyMatch(part -> part.model().legEnvelope().isPresent())) return Optional.empty();
+        var torso = garment.parts().stream().filter(part -> part.semanticName().equals("torso"))
+                .map(ClientGarmentAssets.ResolvedPart::model).findFirst();
+        if (torso.isEmpty()) return Optional.empty();
+        Element panel = torso.get().elements().get(0);
+        if (panel.rotation() != null && panel.rotation().angle() != 0) return Optional.empty();
+        var bottom = garment.parts().stream().filter(part -> part.semanticName().contains("leg"))
+                .map(part -> part.model().elements().get(0).from().y()).min(Float::compare);
+        return bottom.filter(y -> y < panel.from().y()).map(y -> torso.get().hemGeometry().bottomEnvelope(panel, y));
+    }
+
 
     static Slope slope(Element panel) {
         var c = panel.corners();
@@ -89,6 +101,7 @@ public final class GarmentHemGeometry {
         private final List<Quad> quads;
         private final Map<Float, List<Quad>> skirtQuads = new LinkedHashMap<>();
         private final Map<EnvelopeKey, List<Quad>> dualQuads = new LinkedHashMap<>();
+        private final Map<Float, DualEnvelopeDeformer.Prepared> bottomEnvelopes = new LinkedHashMap<>();
 
         private Prepared(float hem, List<Element> source) {
             this.hem = hem;
@@ -98,6 +111,27 @@ public final class GarmentHemGeometry {
 
         public float hem() {
             return hem;
+        }
+
+        private DualEnvelopeDeformer.Prepared bottomEnvelope(Element panel, float bottom) {
+            if (!bottomEnvelopes.containsKey(bottom) && bottomEnvelopes.size() >= 8) {
+                bottomEnvelopes.remove(bottomEnvelopes.keySet().iterator().next());
+            }
+            return bottomEnvelopes.computeIfAbsent(bottom, ignored -> {
+                Slope slope = slope(panel);
+                float height = slope.min().y() - bottom;
+                float west = slope.min().x() + slope.west() * height;
+                float east = slope.max().x() + slope.east() * height;
+                float north = slope.min().z() + slope.north() * height;
+                float south = slope.max().z() + slope.south() * height;
+                var corners = List.of(new Vec3(west, bottom, north), new Vec3(east, bottom, north),
+                        new Vec3(east, bottom, south), new Vec3(west, bottom, south),
+                        slope.min(), new Vec3(slope.max().x(), slope.min().y(), slope.min().z()),
+                        slope.max(), new Vec3(slope.min().x(), slope.min().y(), slope.max().z()));
+                Element reference = new Element(panel.name(), corners.get(0),
+                        new Vec3(east, slope.min().y(), south), null, Map.of(), corners);
+                return new DualEnvelopeDeformer.Prepared(List.of(), reference, true, true);
+            });
         }
 
         public List<Quad> quads() {
@@ -171,7 +205,7 @@ public final class GarmentHemGeometry {
     }
 
     private static boolean supportsHemConform(String semantic, GarmentSlot slot) {
-        return (slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER)
+        return (slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER || slot == GarmentSlot.COAT)
                 && semantic.contains("torso") && !semantic.startsWith("tucked_");
     }
 

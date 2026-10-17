@@ -398,6 +398,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("garment_slot.createapparel.inner_top", "インナートップ");
         add("garment_slot.createapparel.top", "トップス");
         add("garment_slot.createapparel.outer", "アウター");
+        add("garment_slot.createapparel.coat", "コート");
         add("garment_slot.createapparel.inner_bottom", "インナーボトム");
         add("garment_slot.createapparel.bottom", "ボトムス");
         add("garment_slot.createapparel.legwear", "レッグウェア");

@@ -1,7 +1,7 @@
 {
-  "default_slot": "outer",
+  "default_slot": "coat",
   "allowed_slots": [
-    "outer"
+    "coat"
   ],
   "model_template": "createapparel:coat",
   "model_variant": "trench",

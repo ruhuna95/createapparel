@@ -1,0 +1,597 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "upper",
+        "from": [
+          -1.98875,
+          20.819323,
+          -5.195
+        ],
+        "to": [
+          1.01125,
+          22.819323,
+          -3.195
+        ],
+        "rotation": {
+          "origin": [
+            -0.48875,
+            19.819323,
+            -3.195
+          ],
+          "axis": "z",
+          "angle": -39.344544
+        },
+        "faces": {
+          "right": {
+            "uv": [
+              0,
+              2,
+              2,
+              4
+            ],
+            "uv_corners": [
+              [
+                0,
+                4
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                2,
+                4
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              2,
+              2,
+              5,
+              4
+            ],
+            "uv_corners": [
+              [
+                2,
+                4
+              ],
+              [
+                2.5,
+                2
+              ],
+              [
+                4.5,
+                2
+              ],
+              [
+                5,
+                4
+              ]
+            ]
+          },
+          "left": {
+            "uv": [
+              5,
+              2,
+              7,
+              4
+            ],
+            "uv_corners": [
+              [
+                5,
+                4
+              ],
+              [
+                5,
+                2
+              ],
+              [
+                6,
+                2
+              ],
+              [
+                7,
+                4
+              ]
+            ]
+          },
+          "front": {
+            "uv": [
+              7,
+              2,
+              10,
+              4
+            ],
+            "uv_corners": [
+              [
+                7,
+                4
+              ],
+              [
+                7.5,
+                2
+              ],
+              [
+                9.5,
+                2
+              ],
+              [
+                10,
+                4
+              ]
+            ]
+          },
+          "top": {
+            "uv": [
+              2,
+              0,
+              4,
+              1
+            ],
+            "uv_corners": [
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ]
+            ]
+          }
+        },
+        "top_inset": [
+          0.5,
+          1,
+          0.5,
+          0
+        ]
+      },
+      {
+        "name": "middle",
+        "from": [
+          -1.98875,
+          16.819323,
+          -5.195
+        ],
+        "to": [
+          1.01125,
+          20.819323,
+          -3.195
+        ],
+        "rotation": {
+          "origin": [
+            -0.48875,
+            19.819323,
+            -3.195
+          ],
+          "axis": "z",
+          "angle": -39.344544
+        },
+        "faces": {
+          "right": {
+            "uv": [
+              0,
+              4,
+              2,
+              8
+            ],
+            "uv_corners": [
+              [
+                0,
+                8
+              ],
+              [
+                0,
+                4
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                2,
+                8
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              2,
+              4,
+              5,
+              8
+            ],
+            "uv_corners": [
+              [
+                2,
+                8
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                5,
+                4
+              ],
+              [
+                5,
+                8
+              ]
+            ]
+          },
+          "left": {
+            "uv": [
+              5,
+              4,
+              7,
+              8
+            ],
+            "uv_corners": [
+              [
+                5,
+                8
+              ],
+              [
+                5,
+                4
+              ],
+              [
+                7,
+                4
+              ],
+              [
+                7,
+                8
+              ]
+            ]
+          },
+          "front": {
+            "uv": [
+              7,
+              4,
+              10,
+              8
+            ],
+            "uv_corners": [
+              [
+                7,
+                8
+              ],
+              [
+                7,
+                4
+              ],
+              [
+                10,
+                4
+              ],
+              [
+                10,
+                8
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "lower",
+        "from": [
+          -1.98875,
+          15.819323,
+          -5.195
+        ],
+        "to": [
+          1.01125,
+          16.819323,
+          -3.195
+        ],
+        "rotation": {
+          "origin": [
+            -0.48875,
+            19.819323,
+            -3.195
+          ],
+          "axis": "z",
+          "angle": -39.344544
+        },
+        "faces": {
+          "right": {
+            "uv": [
+              0,
+              8,
+              2,
+              9
+            ],
+            "uv_corners": [
+              [
+                1,
+                9
+              ],
+              [
+                0,
+                8
+              ],
+              [
+                2,
+                8
+              ],
+              [
+                2,
+                9
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              2,
+              8,
+              5,
+              9
+            ],
+            "uv_corners": [
+              [
+                2.5,
+                9
+              ],
+              [
+                2,
+                8
+              ],
+              [
+                5,
+                8
+              ],
+              [
+                4.5,
+                9
+              ]
+            ]
+          },
+          "left": {
+            "uv": [
+              5,
+              8,
+              7,
+              9
+            ],
+            "uv_corners": [
+              [
+                5,
+                9
+              ],
+              [
+                5,
+                8
+              ],
+              [
+                7,
+                8
+              ],
+              [
+                6,
+                9
+              ]
+            ]
+          },
+          "front": {
+            "uv": [
+              7,
+              8,
+              10,
+              9
+            ],
+            "uv_corners": [
+              [
+                7.5,
+                9
+              ],
+              [
+                7,
+                8
+              ],
+              [
+                10,
+                8
+              ],
+              [
+                9.5,
+                9
+              ]
+            ]
+          },
+          "bottom": {
+            "uv": [
+              5,
+              0,
+              7,
+              1
+            ],
+            "uv_corners": [
+              [
+                7,
+                0
+              ],
+              [
+                7,
+                1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                5,
+                0
+              ]
+            ]
+          }
+        },
+        "bottom_inset": [
+          0.5,
+          1,
+          0.5,
+          0
+        ]
+      },
+      {
+        "name": "upper_decoration",
+        "from": [
+          -2.23875,
+          20.819323,
+          -5.445
+        ],
+        "to": [
+          1.26125,
+          23.069323,
+          -2.945
+        ],
+        "rotation": {
+          "origin": [
+            -0.48875,
+            19.819323,
+            -3.195
+          ],
+          "axis": "z",
+          "angle": -39.344544
+        },
+        "faces": {
+          "front": {
+            "uv": [
+              7,
+              11,
+              10,
+              13
+            ],
+            "uv_corners": [
+              [
+                7,
+                13
+              ],
+              [
+                7.5,
+                11
+              ],
+              [
+                9.5,
+                11
+              ],
+              [
+                10,
+                13
+              ]
+            ]
+          }
+        },
+        "top_inset": [
+          0.5,
+          1,
+          0.5,
+          0
+        ]
+      },
+      {
+        "name": "middle_decoration",
+        "from": [
+          -2.23875,
+          16.819323,
+          -5.445
+        ],
+        "to": [
+          1.26125,
+          20.819323,
+          -2.945
+        ],
+        "rotation": {
+          "origin": [
+            -0.48875,
+            19.819323,
+            -3.195
+          ],
+          "axis": "z",
+          "angle": -39.344544
+        },
+        "faces": {
+          "front": {
+            "uv": [
+              7,
+              13,
+              10,
+              17
+            ],
+            "uv_corners": [
+              [
+                7,
+                17
+              ],
+              [
+                7,
+                13
+              ],
+              [
+                10,
+                13
+              ],
+              [
+                10,
+                17
+              ]
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/crossbody_bag/back/base/crossbody_bag",
+        "designs": {
+          "contrast_flap": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/back_front/masks/contrast_flap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/back_front/masks/two_tone/secondary"
+          }
+        }
+      },
+      "crossbody_bag": {
+        "base": "createapparel:garment/crossbody_bag/back/base/crossbody_bag",
+        "designs": {
+          "contrast_flap": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/back_front/masks/contrast_flap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/back_front/masks/two_tone/secondary"
+          }
+        }
+      }
+    },
+    "designs": {}
+  }
+}

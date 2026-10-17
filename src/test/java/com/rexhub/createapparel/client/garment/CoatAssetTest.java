@@ -24,13 +24,107 @@ class CoatAssetTest {
     private static final List<String> VARIANTS=List.of("chesterfield","trench","duffle","pea");
 
     @Test
+    void coatMinimalFacesAndHoodsAvoidCoplanarFacesAcrossTheGarmentCatalog() throws Exception {
+        var coats = new java.util.ArrayList<ClientGarmentAssets.GarmentPartModel>();
+        var lower = new java.util.LinkedHashMap<ResourceLocation, ClientGarmentAssets.GarmentPartModel>();
+        try (var paths = Files.list(Path.of("src/main/resources/data/createapparel/garments"))) {
+            for (var path : paths.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var definition = GarmentDefinition.fromJson(ResourceLocation.parse("createapparel:" + path.getFileName().toString().replace(".json", "")),
+                        JsonParser.parseString(Files.readString(path)).getAsJsonObject());
+                if (definition.allowedSlots().stream().noneMatch(slot -> slot == GarmentSlot.TOP || slot == GarmentSlot.OUTER || slot == GarmentSlot.HEAD)) continue;
+                var template = ClientGarmentAssetLoader.parseTemplate(definition.modelTemplate(), JsonParser.parseString(Files.readString(
+                        ASSETS.resolve("garment_models/templates/" + definition.modelTemplate().getPath() + ".json"))).getAsJsonObject());
+                for (var variant : template.variants().values()) for (var id : variant.values()) {
+                    if (!lower.containsKey(id)) lower.put(id, DualEnvelopeDeformerTest.part(id.getPath()));
+                }
+            }
+        }
+        try (var paths = Files.walk(ASSETS.resolve("garment_models/parts/coat"))) {
+            for (var path : paths.filter(p -> p.toString().endsWith(".json")).toList()) {
+                coats.add(DualEnvelopeDeformerTest.part(ASSETS.resolve("garment_models/parts").relativize(path)
+                        .toString().replace('\\', '/').replace(".json", "")));
+            }
+        }
+        var innerPlanes = lower.values().stream().flatMap(part -> planes(part).stream()).toList();
+        for (var coat : coats) for (var outside : planes(coat)) for (var inside : innerPlanes) {
+            assertFalse(outside.overlaps(inside), coat.id() + " / " + outside + " / " + inside);
+        }
+        for (String variant : VARIANTS) for (String name : List.of("bust", "bust_opened")) {
+            var coat = DualEnvelopeDeformerTest.part("coat/" + variant + "/" + name);
+            var jacket = DualEnvelopeDeformerTest.part("jacket/" + name);
+            for (int i = 0; i < 2; i++) {
+                assertTrue(coat.elements().get(i).from().y() <= jacket.elements().get(i).from().y() - 0.03125F);
+            }
+        }
+        for (String variant : VARIANTS) for (String profile : List.of("classic", "slim")) {
+            var torso = DualEnvelopeDeformerTest.part("coat/" + variant + "/torso").elements().get(0);
+            var sleeve = DualEnvelopeDeformerTest.part("coat/" + variant + "/left_sleeve_" + profile).elements().get(0);
+            assertTrue(sleeve.to().y() - torso.to().y() >= 0.015625F);
+        }
+    }
+
+    private static List<Plane> planes(ClientGarmentAssets.GarmentPartModel part) {
+        var result = new java.util.ArrayList<Plane>();
+        for (var element : part.elements()) {
+            if (element.rotation() != null && element.rotation().angle() != 0) continue;
+            for (var face : element.bakedFaces()) {
+                float[] min = {Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY};
+                float[] max = {Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY};
+                for (var vertex : face.vertices()) {
+                    float[] point = {vertex.x(), vertex.y(), vertex.z()};
+                    for (int axis = 0; axis < 3; axis++) {
+                        min[axis] = Math.min(min[axis], point[axis]);
+                        max[axis] = Math.max(max[axis], point[axis]);
+                    }
+                }
+                for (int axis = 0; axis < 3; axis++) if (max[axis] - min[axis] < 0.000001F) {
+                    result.add(new Plane(axis, min, max, face.normal()));
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    private record Plane(int axis, float[] min, float[] max, ClientGarmentAssets.Vec3 normal) {
+        boolean overlaps(Plane other) {
+            if (axis != other.axis || !normal.equals(other.normal) || Math.abs(min[axis] - other.min[axis]) > 0.000001F) return false;
+            for (int coordinate = 0; coordinate < 3; coordinate++) {
+                if (coordinate != axis && Math.min(max[coordinate], other.max[coordinate])
+                        - Math.max(min[coordinate], other.min[coordinate]) < 0.00001F) return false;
+            }
+            return true;
+        }
+    }
+
+    @Test
+    void closedCoatShellsSitOutsideSuitJacketDecorationsForEveryProfile() throws Exception {
+        for (String variant : VARIANTS) for (var arms : ArmProfile.values()) for (var chest : ChestProfile.values()) {
+            var names = new java.util.ArrayList<>(List.of("torso", "left_sleeve_" + arms.getSerializedName(),
+                    "right_sleeve_" + arms.getSerializedName()));
+            if (chest == ChestProfile.BUST) names.add("bust");
+            for (String semantic : names) {
+                var coat = DualEnvelopeDeformerTest.part("coat/" + variant + "/" + semantic);
+                var jacket = DualEnvelopeDeformerTest.part("jacket/" + semantic);
+                var shell = coat.elements().get(0);
+                double coatFront = shell.corners().stream().map(point -> FlatGarmentGeometry.rotate(point, shell.rotation()))
+                        .mapToDouble(ClientGarmentAssets.Vec3::z).min().orElseThrow();
+                double jacketFront = jacket.elements().stream().flatMap(element -> element.corners().stream()
+                                .map(point -> FlatGarmentGeometry.rotate(point, element.rotation())))
+                        .mapToDouble(ClientGarmentAssets.Vec3::z).min().orElseThrow();
+                assertTrue(coatFront < jacketFront - 0.01, variant + "/" + semantic + "/" + chest);
+            }
+        }
+    }
+
+    @Test
     void allProfilesOpeningsAndDuffleHoodsResolveToTheirOwnResources() throws Exception {
         var templates=JsonParser.parseString(Files.readString(ASSETS.resolve("garment_models/templates/coat.json"))).getAsJsonObject();
         assertEquals(Set.copyOf(VARIANTS),templates.keySet());
         for(String variant:VARIANTS) {
             var definition=GarmentDefinition.fromJson(ResourceLocation.parse("createapparel:"+variant+"_coat"),
                     JsonParser.parseString(Files.readString(Path.of("src/main/resources/data/createapparel/garments/"+variant+"_coat.json"))).getAsJsonObject());
-            assertEquals(Set.of(GarmentSlot.OUTER),definition.allowedSlots());
+            assertEquals(Set.of(GarmentSlot.COAT),definition.allowedSlots());
             assertEquals(variant,definition.modelVariant()); assertEquals(variant,definition.textureVariant());
             assertEquals(List.of("closed","open"),definition.styles().get("open"));
             assertEquals(variant.equals("duffle"),definition.styles().containsKey("hood"));
@@ -65,11 +159,11 @@ class CoatAssetTest {
             assertEquals(14,reference.to().y());
             assertEquals(24-lengths[i]-.01F,reference.from().y(),.00001F);
             assertEquals(widths[i]+.02F,reference.to().x()-reference.from().x(),.00001F);
-            assertEquals(depths[i]+1,reference.to().z()-reference.from().z(),.00001F);
-            assertEquals(4.01F,reference.corners().get(5).x(),.00001F);
-            assertEquals(-2.5F,reference.corners().get(4).z(),.00001F);
+            assertEquals(depths[i]+1.625F,reference.to().z()-reference.from().z(),.00001F);
+            assertEquals(4.03125F,reference.corners().get(5).x(),.00001F);
+            assertEquals(-2.8125F,reference.corners().get(4).z(),.00001F);
             for(var e:part.elements()) assertFalse(e.faces().containsKey(BOTTOM));
-            assertEquals(24.01F,part.elements().get(0).to().y());
+            assertEquals(24.03125F,part.elements().get(0).to().y());
         }
     }
 

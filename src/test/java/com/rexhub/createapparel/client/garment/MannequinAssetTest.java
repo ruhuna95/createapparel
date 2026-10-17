@@ -191,7 +191,7 @@ class MannequinAssetTest {
         assertEquals(12, MannequinVariant.values().length);
         assertEquals(12, Arrays.stream(MannequinVariant.values()).map(MannequinVariant::id).distinct().count());
         assertEquals(EnumSet.allOf(GarmentSlot.class), MannequinForm.FULL.slots());
-        assertEquals(Set.of(GarmentSlot.INNER_TOP, GarmentSlot.TOP, GarmentSlot.OUTER,
+        assertEquals(Set.of(GarmentSlot.INNER_TOP, GarmentSlot.TOP, GarmentSlot.OUTER, GarmentSlot.COAT,
                 GarmentSlot.HEAD, GarmentSlot.FACE, GarmentSlot.BACK, GarmentSlot.HANDS, GarmentSlot.NECK), MannequinForm.UPPER.slots());
         assertEquals(Set.of(GarmentSlot.INNER_BOTTOM, GarmentSlot.BOTTOM, GarmentSlot.LEGWEAR, GarmentSlot.FEET), MannequinForm.LOWER.slots());
         assertEquals(Set.of(GarmentSlot.HEAD, GarmentSlot.FACE), MannequinForm.HEAD.slots());

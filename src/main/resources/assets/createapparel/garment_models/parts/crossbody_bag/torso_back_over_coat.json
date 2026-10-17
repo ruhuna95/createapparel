@@ -1,0 +1,661 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "shoulder_belt",
+        "from": [
+          -3.954923,
+          24,
+          -3.175
+        ],
+        "to": [
+          -1.954923,
+          24.02,
+          3.175
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              2,
+              0,
+              4,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "front_belt",
+        "from": [
+          -3.774712,
+          23.02,
+          -3.175
+        ],
+        "to": [
+          9.235118,
+          25.02,
+          -3.155
+        ],
+        "top_inset": [
+          1.639579,
+          0,
+          2.43965,
+          0
+        ],
+        "bottom_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "rotation": {
+          "origin": [
+            -2.954922,
+            24.02,
+            -2.8
+          ],
+          "axis": "z",
+          "angle": -50.655456
+        },
+        "faces": {
+          "front": {
+            "uv": [
+              2,
+              4,
+              16,
+              6
+            ],
+            "uv_corners": [
+              [
+                2,
+                6
+              ],
+              [
+                3.639579,
+                4
+              ],
+              [
+                12.57018,
+                4
+              ],
+              [
+                15.00983,
+                6
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "rear_upper_belt",
+        "from": [
+          0,
+          21.505383,
+          -1.823002
+        ],
+        "to": [
+          0.02,
+          24.02,
+          3.574615
+        ],
+        "top_inset": [
+          0,
+          0,
+          0,
+          2.061457
+        ],
+        "bottom_inset": [
+          0,
+          2.061458,
+          0,
+          0
+        ],
+        "bottom_raise": [
+          0,
+          1.267965
+        ],
+        "rotation": {
+          "origin": [
+            0,
+            0,
+            2.8
+          ],
+          "axis": "y",
+          "angle": 90
+        },
+        "faces": {
+          "left": {
+            "uv": [
+              2,
+              7,
+              6,
+              9
+            ],
+            "uv_corners": [
+              [
+                2.000001,
+                7
+              ],
+              [
+                3.612021,
+                7
+              ],
+              [
+                5.251601,
+                9
+              ],
+              [
+                2,
+                8.999999
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "right_side_belt",
+        "from": [
+          4.49,
+          13.9141,
+          -3.175
+        ],
+        "to": [
+          4.51,
+          15.9141,
+          3.175
+        ],
+        "faces": {
+          "right": {
+            "uv": [
+              16,
+              4,
+              20,
+              6
+            ]
+          }
+        }
+      },
+      {
+        "name": "rear_lower_belt",
+        "from": [
+          2.390697,
+          16.49928,
+          3.155
+        ],
+        "to": [
+          6.148926,
+          18.49928,
+          3.175
+        ],
+        "top_inset": [
+          0,
+          0,
+          2.43965,
+          0
+        ],
+        "bottom_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "rotation": {
+          "origin": [
+            2.390697,
+            17.49928,
+            2.8
+          ],
+          "axis": "z",
+          "angle": -50.655456
+        },
+        "faces": {
+          "back": {
+            "uv": [
+              8,
+              7,
+              13,
+              9
+            ],
+            "uv_corners": [
+              [
+                8.357968,
+                9
+              ],
+              [
+                10.797618,
+                7
+              ],
+              [
+                12.116197,
+                7
+              ],
+              [
+                12.116197,
+                9
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "upper_attachment",
+        "from": [
+          -0.51125,
+          22.799323,
+          3.175
+        ],
+        "to": [
+          1.48875,
+          22.819323,
+          3.195
+        ],
+        "rotation": {
+          "origin": [
+            0.48875,
+            19.819323,
+            2.82
+          ],
+          "axis": "z",
+          "angle": 39.344544
+        },
+        "faces": {
+          "top": {
+            "uv": [
+              14,
+              7,
+              16,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "name": "lower_attachment",
+        "from": [
+          -0.51125,
+          16.819323,
+          3.175
+        ],
+        "to": [
+          1.48875,
+          16.839323,
+          3.195
+        ],
+        "rotation": {
+          "origin": [
+            0.48875,
+            19.819323,
+            2.82
+          ],
+          "axis": "z",
+          "angle": 39.344544
+        },
+        "faces": {
+          "bottom": {
+            "uv": [
+              14,
+              7,
+              16,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "name": "front_side_join_0",
+        "from": [
+          4,
+          13.9141,
+          -3.175
+        ],
+        "to": [
+          4.51001,
+          13.95888,
+          -3.155
+        ],
+        "top_inset": [
+          0,
+          0,
+          0.00001,
+          0
+        ],
+        "bottom_inset": [
+          0.51,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              2,
+              4,
+              16,
+              6
+            ],
+            "uv_corners": [
+              [
+                15.367791,
+                5.633982
+              ],
+              [
+                15.00983,
+                6
+              ],
+              [
+                15.333161,
+                5.605593
+              ],
+              [
+                15.367798,
+                5.633975
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "front_side_join_1",
+        "from": [
+          4,
+          13.95888,
+          -3.175
+        ],
+        "to": [
+          4.51,
+          15.9141,
+          -3.155
+        ],
+        "top_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "bottom_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              2,
+              4,
+              16,
+              6
+            ],
+            "uv_corners": [
+              [
+                15.00983,
+                6
+              ],
+              [
+                13.497765,
+                4.760425
+              ],
+              [
+                13.821096,
+                4.366018
+              ],
+              [
+                15.333161,
+                5.605593
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "front_side_join_2",
+        "from": [
+          4,
+          15.9141,
+          -3.175
+        ],
+        "to": [
+          4.51,
+          17.113542,
+          -3.155
+        ],
+        "top_inset": [
+          0,
+          0,
+          0.50999,
+          0
+        ],
+        "bottom_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "front": {
+            "uv": [
+              2,
+              4,
+              16,
+              6
+            ],
+            "uv_corners": [
+              [
+                13.497765,
+                4.760425
+              ],
+              [
+                12.57018,
+                4
+              ],
+              [
+                12.570186,
+                4
+              ],
+              [
+                13.821096,
+                4.366018
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "rear_side_join_0",
+        "from": [
+          4,
+          13.9141,
+          3.155
+        ],
+        "to": [
+          4.51001,
+          13.95888,
+          3.175
+        ],
+        "top_inset": [
+          0,
+          0,
+          0.00001,
+          0
+        ],
+        "bottom_inset": [
+          0.51,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "back": {
+            "uv": [
+              8,
+              7,
+              13,
+              9
+            ],
+            "uv_corners": [
+              [
+                8,
+                8.633975
+              ],
+              [
+                8.034637,
+                8.605593
+              ],
+              [
+                8.357968,
+                9
+              ],
+              [
+                8.000006,
+                8.633982
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "rear_side_join_1",
+        "from": [
+          4,
+          13.95888,
+          3.155
+        ],
+        "to": [
+          4.51,
+          15.9141,
+          3.175
+        ],
+        "top_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "bottom_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "back": {
+            "uv": [
+              8,
+              7,
+              13,
+              9
+            ],
+            "uv_corners": [
+              [
+                8.034637,
+                8.605593
+              ],
+              [
+                9.546701,
+                7.366018
+              ],
+              [
+                9.870032,
+                7.760425
+              ],
+              [
+                8.357968,
+                9
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "name": "rear_side_join_2",
+        "from": [
+          4,
+          15.9141,
+          3.155
+        ],
+        "to": [
+          4.51,
+          17.113542,
+          3.175
+        ],
+        "top_inset": [
+          0,
+          0,
+          0.50999,
+          0
+        ],
+        "bottom_inset": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "faces": {
+          "back": {
+            "uv": [
+              8,
+              7,
+              13,
+              9
+            ],
+            "uv_corners": [
+              [
+                9.546701,
+                7.366018
+              ],
+              [
+                10.797612,
+                7
+              ],
+              [
+                10.797618,
+                7
+              ],
+              [
+                9.870032,
+                7.760425
+              ]
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/crossbody_bag/torso/base/crossbody_bag",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/two_tone/secondary"
+          }
+        }
+      },
+      "crossbody_bag": {
+        "base": "createapparel:garment/crossbody_bag/torso/base/crossbody_bag",
+        "designs": {
+          "contrast_strap": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/contrast_strap/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/crossbody_bag/torso_back/masks/two_tone/secondary"
+          }
+        }
+      }
+    },
+    "designs": {}
+  }
+}

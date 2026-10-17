@@ -90,11 +90,11 @@ class GarmentDecorationShellTest {
                     if (shell.name().contains("sleeve")) {
                         assertEquals(body.from().y() - spacing, shell.from().y(), EPSILON, name);
                         if (body.from().x() > 0) {
-                            assertEquals(4F - 0.0055F, shell.from().x(), EPSILON, name);
+                            assertEquals(name.startsWith("coat/") ? 3.97325F : 4F - 0.0055F, shell.from().x(), EPSILON, name);
                             assertEquals(body.to().x() + spacing, shell.to().x(), EPSILON, name);
                             assertTrue(shell.faces().containsKey(Face.LEFT), name);
                         } else {
-                            assertEquals(-4F + 0.0055F, shell.to().x(), EPSILON, name);
+                            assertEquals(name.startsWith("coat/") ? -3.97325F : -4F + 0.0055F, shell.to().x(), EPSILON, name);
                             assertEquals(body.from().x() - spacing, shell.from().x(), EPSILON, name);
                             assertTrue(shell.faces().containsKey(Face.RIGHT), name);
                         }

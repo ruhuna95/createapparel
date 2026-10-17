@@ -1,4 +1,12 @@
 {
+  "over_coat": {
+    "torso": {
+      "model": "createapparel:daypack/torso_over_coat"
+    },
+    "back": {
+      "model": "createapparel:daypack/back_over_coat"
+    }
+  },
   "default": {
     "torso": {
       "model": "createapparel:daypack/torso"

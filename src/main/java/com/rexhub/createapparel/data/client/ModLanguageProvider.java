@@ -400,6 +400,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("garment_slot.createapparel.inner_top", "Inner Tops");
         add("garment_slot.createapparel.top", "Tops");
         add("garment_slot.createapparel.outer", "Outerwear");
+        add("garment_slot.createapparel.coat", "Coats");
         add("garment_slot.createapparel.inner_bottom", "Inner Bottoms");
         add("garment_slot.createapparel.bottom", "Bottoms");
         add("garment_slot.createapparel.legwear", "Legwear");

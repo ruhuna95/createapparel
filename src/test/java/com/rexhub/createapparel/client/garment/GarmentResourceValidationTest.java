@@ -52,32 +52,37 @@ class GarmentResourceValidationTest {
             assertNotNull(template, "Missing template: " + definition.id());
             template.stylesForItem(definition);
             for (var slot : definition.allowedSlots()) {
-                var variant = template.variants().get(definition.modelVariantFor(slot));
-                assertNotNull(variant, "Missing model variant: " + definition.id() + "/" + slot);
-                definition.stylesFor(slot).forEach((category, values) -> {
-                    assertTrue(STYLES.containsKey(category), "Unknown style category: " + definition.id() + "/" + category);
-                    assertTrue(STYLES.get(category).containsAll(values), "Unknown style value: " + definition.id() + "/" + values);
-                });
-                assertTrue(variant.keySet().containsAll(GarmentPartSelection.requiredStyleParts(
-                        definition.stylesFor(slot), variant.containsKey("bust"))), "Missing style parts: " + definition.id());
-                for (var partId : variant.values()) {
-                    var part = PARTS.get(partId);
-                    assertNotNull(part, "Missing part: " + definition.id() + " -> " + partId);
-                    assertTrue(part.variants().containsKey(definition.textureVariant()) || part.variants().containsKey("default"),
-                            "Missing texture variant: " + definition.id() + " -> " + partId);
-                }
-                for (var styles : combinations(definition.stylesFor(slot))) {
-                    for (var arms : ArmProfile.values()) for (var chest : ChestProfile.values()) {
-                        var selected = GarmentPartSelection.select(styles, arms, chest, variant.keySet());
-                        assertFalse(selected.isEmpty(), definition.id().toString());
-                        assertTrue(variant.keySet().containsAll(selected),
-                                () -> "Unresolved selected parts: " + definition.id() + "/" + slot + "/" + styles + " -> " + selected);
+                var variantNames = new java.util.LinkedHashSet<String>();
+                variantNames.add(definition.modelVariantFor(slot));
+                definition.contextModelVariants().forEach(rule -> variantNames.add(rule.modelVariant()));
+                for (var variantName : variantNames) {
+                    var variant = template.variants().get(variantName);
+                    assertNotNull(variant, "Missing model variant: " + definition.id() + "/" + slot);
+                    definition.stylesFor(slot).forEach((category, values) -> {
+                        assertTrue(STYLES.containsKey(category), "Unknown style category: " + definition.id() + "/" + category);
+                        assertTrue(STYLES.get(category).containsAll(values), "Unknown style value: " + definition.id() + "/" + values);
+                    });
+                    assertTrue(variant.keySet().containsAll(GarmentPartSelection.requiredStyleParts(
+                            definition.stylesFor(slot), variant.containsKey("bust"))), "Missing style parts: " + definition.id());
+                    for (var partId : variant.values()) {
+                        var part = PARTS.get(partId);
+                        assertNotNull(part, "Missing part: " + definition.id() + " -> " + partId);
+                        assertTrue(part.variants().containsKey(definition.textureVariant()) || part.variants().containsKey("default"),
+                                "Missing texture variant: " + definition.id() + " -> " + partId);
                     }
-                }
-                for (String design : definition.designs()) {
-                    assertTrue(design.equals("plain") || variant.values().stream()
-                            .anyMatch(id -> PARTS.get(id).designsFor(definition.textureVariant()).containsKey(design)),
-                            "Design has no reachable texture: " + definition.id() + "/" + design);
+                    for (var styles : combinations(definition.stylesFor(slot))) {
+                        for (var arms : ArmProfile.values()) for (var chest : ChestProfile.values()) {
+                            var selected = GarmentPartSelection.select(styles, arms, chest, variant.keySet());
+                            assertFalse(selected.isEmpty(), definition.id().toString());
+                            assertTrue(variant.keySet().containsAll(selected),
+                                    () -> "Unresolved selected parts: " + definition.id() + "/" + slot + "/" + styles + " -> " + selected);
+                        }
+                    }
+                    for (String design : definition.designs()) {
+                        assertTrue(design.equals("plain") || variant.values().stream()
+                                .anyMatch(id -> PARTS.get(id).designsFor(definition.textureVariant()).containsKey(design)),
+                                "Design has no reachable texture: " + definition.id() + "/" + design);
+                    }
                 }
             }
             ProjectResources.find("assets/{namespace}/models/item", definition.id(), ".json");

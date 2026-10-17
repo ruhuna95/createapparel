@@ -16,7 +16,7 @@ public final class ResolvedApparelState {
     public static final List<GarmentSlot> RENDER_ORDER = List.of(
             GarmentSlot.INNER_TOP, GarmentSlot.INNER_BOTTOM, GarmentSlot.LEGWEAR,
             GarmentSlot.TOP, GarmentSlot.BOTTOM, GarmentSlot.HANDS, GarmentSlot.FEET,
-            GarmentSlot.NECK, GarmentSlot.OUTER, GarmentSlot.BACK, GarmentSlot.FACE, GarmentSlot.HEAD);
+            GarmentSlot.NECK, GarmentSlot.OUTER, GarmentSlot.COAT, GarmentSlot.BACK, GarmentSlot.FACE, GarmentSlot.HEAD);
 
     private final Function<GarmentSlot, Optional<ResolvedGarment>> resolver;
     private final Map<GarmentSlot, Optional<ResolvedGarment>> garments = new EnumMap<>(GarmentSlot.class);

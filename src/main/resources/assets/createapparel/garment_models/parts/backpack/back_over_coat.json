@@ -1,0 +1,457 @@
+{
+  "render_type": "cutout",
+  "texture_size": [
+    32,
+    32
+  ],
+  "geometry": {
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "elements": [
+      {
+        "name": "upper",
+        "from": [
+          -3.5,
+          21,
+          3.195
+        ],
+        "to": [
+          3.5,
+          23,
+          7.195
+        ],
+        "top_inset": [
+          1,
+          0,
+          1,
+          1
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              4,
+              4,
+              6
+            ],
+            "uv_corners": [
+              [
+                0,
+                6
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                4,
+                6
+              ]
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              4,
+              11,
+              6
+            ],
+            "uv_corners": [
+              [
+                4,
+                6
+              ],
+              [
+                5,
+                4
+              ],
+              [
+                10,
+                4
+              ],
+              [
+                11,
+                6
+              ]
+            ]
+          },
+          "right": {
+            "uv": [
+              11,
+              4,
+              15,
+              6
+            ],
+            "uv_corners": [
+              [
+                11,
+                6
+              ],
+              [
+                11,
+                4
+              ],
+              [
+                14,
+                4
+              ],
+              [
+                15,
+                6
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              15,
+              4,
+              22,
+              6
+            ],
+            "uv_corners": [
+              [
+                15,
+                6
+              ],
+              [
+                16,
+                4
+              ],
+              [
+                21,
+                4
+              ],
+              [
+                22,
+                6
+              ]
+            ]
+          },
+          "top": {
+            "uv": [
+              4,
+              0,
+              9,
+              3
+            ]
+          }
+        }
+      },
+      {
+        "name": "lower",
+        "from": [
+          -3.5,
+          12,
+          3.195
+        ],
+        "to": [
+          3.5,
+          21,
+          7.195
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              6,
+              4,
+              15
+            ],
+            "uv_corners": [
+              [
+                0,
+                15
+              ],
+              [
+                0,
+                6
+              ],
+              [
+                4,
+                6
+              ],
+              [
+                4,
+                15
+              ]
+            ]
+          },
+          "front": {
+            "uv": [
+              4,
+              6,
+              11,
+              15
+            ],
+            "uv_corners": [
+              [
+                4,
+                15
+              ],
+              [
+                4,
+                6
+              ],
+              [
+                11,
+                6
+              ],
+              [
+                11,
+                15
+              ]
+            ]
+          },
+          "right": {
+            "uv": [
+              11,
+              6,
+              15,
+              15
+            ],
+            "uv_corners": [
+              [
+                11,
+                15
+              ],
+              [
+                11,
+                6
+              ],
+              [
+                15,
+                6
+              ],
+              [
+                15,
+                15
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              15,
+              6,
+              22,
+              15
+            ],
+            "uv_corners": [
+              [
+                15,
+                15
+              ],
+              [
+                15,
+                6
+              ],
+              [
+                22,
+                6
+              ],
+              [
+                22,
+                15
+              ]
+            ]
+          },
+          "bottom": {
+            "uv": [
+              11,
+              0,
+              18,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "name": "upper_decoration",
+        "from": [
+          -3.75,
+          21,
+          2.945
+        ],
+        "to": [
+          3.75,
+          23.25,
+          7.445
+        ],
+        "top_inset": [
+          1,
+          0,
+          1,
+          1
+        ],
+        "faces": {
+          "top": {
+            "uv": [
+              4,
+              15,
+              9,
+              18
+            ]
+          }
+        }
+      },
+      {
+        "name": "lower_decoration",
+        "from": [
+          -3.75,
+          11.75,
+          2.945
+        ],
+        "to": [
+          3.75,
+          21,
+          7.445
+        ],
+        "faces": {
+          "left": {
+            "uv": [
+              0,
+              21,
+              4,
+              30
+            ],
+            "uv_corners": [
+              [
+                0,
+                30
+              ],
+              [
+                0,
+                21
+              ],
+              [
+                4,
+                21
+              ],
+              [
+                4,
+                30
+              ]
+            ]
+          },
+          "right": {
+            "uv": [
+              11,
+              21,
+              15,
+              30
+            ],
+            "uv_corners": [
+              [
+                11,
+                30
+              ],
+              [
+                11,
+                21
+              ],
+              [
+                15,
+                21
+              ],
+              [
+                15,
+                30
+              ]
+            ]
+          },
+          "back": {
+            "uv": [
+              15,
+              21,
+              22,
+              30
+            ],
+            "uv_corners": [
+              [
+                15,
+                30
+              ],
+              [
+                15,
+                21
+              ],
+              [
+                22,
+                21
+              ],
+              [
+                22,
+                30
+              ]
+            ]
+          },
+          "bottom": {
+            "uv": [
+              11,
+              15,
+              18,
+              19
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "variants": {
+      "default": {
+        "base": "createapparel:garment/backpack/back/base/backpack",
+        "overlay": "createapparel:garment/backpack/back/overlay/backpack",
+        "designs": {
+          "contrast_pocket": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/contrast_pocket/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/backpack/back/masks/logo_round/accent",
+            "overlay": "createapparel:garment/backpack/back/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_word/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/two_tone/secondary"
+          }
+        }
+      },
+      "backpack": {
+        "base": "createapparel:garment/backpack/back/base/backpack",
+        "overlay": "createapparel:garment/backpack/back/overlay/backpack",
+        "designs": {
+          "contrast_pocket": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/contrast_pocket/secondary"
+          },
+          "logo_creeper": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_creeper/secondary"
+          },
+          "logo_round": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_round/secondary",
+            "accent_mask": "createapparel:garment/backpack/back/masks/logo_round/accent",
+            "overlay": "createapparel:garment/backpack/back/overlay/logo_round"
+          },
+          "logo_word": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/logo_word/secondary"
+          },
+          "two_tone": {
+            "secondary_mask": "createapparel:garment/backpack/back/masks/two_tone/secondary"
+          }
+        }
+      }
+    },
+    "designs": {}
+  }
+}

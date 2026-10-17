@@ -1,4 +1,12 @@
 {
+  "over_coat": {
+    "torso": {
+      "model": "createapparel:backpack/torso_over_coat"
+    },
+    "back": {
+      "model": "createapparel:backpack/back_over_coat"
+    }
+  },
   "default": {
     "torso": {
       "model": "createapparel:backpack/torso"

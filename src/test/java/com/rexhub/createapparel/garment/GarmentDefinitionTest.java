@@ -14,6 +14,30 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GarmentDefinitionTest {
+    @Test
+    void coatContextOverridesSlotVariantAndSurvivesNetworkRoundTrip() {
+        var definition = GarmentDefinition.fromJson(ID, json("\"default_slot\":\"top\",\"allowed_slots\":[\"top\",\"outer\"],"
+                + "\"slot_model_variants\":{\"outer\":\"outer_open\"},"
+                + "\"context_model_variants\":[{\"when\":{\"coat_present\":true},\"model_variant\":\"over_coat\"}]"));
+        assertEquals("top", definition.modelVariantFor(new GarmentWearContext(GarmentSlot.TOP, EquippedStyleState.EMPTY)));
+        assertEquals("outer_open", definition.modelVariantFor(new GarmentWearContext(GarmentSlot.OUTER, EquippedStyleState.EMPTY)));
+        assertEquals("over_coat", definition.modelVariantFor(new GarmentWearContext(GarmentSlot.OUTER, EquippedStyleState.EMPTY, true)));
+        var buffer = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            definition.write(buffer);
+            assertEquals(definition, GarmentDefinition.read(buffer));
+            assertEquals(0, buffer.readableBytes());
+        } finally {
+            buffer.release();
+        }
+        var duplicate = json("\"slot\":\"back\",\"context_model_variants\":["
+                + "{\"when\":{\"coat_present\":true},\"model_variant\":\"a\"},"
+                + "{\"when\":{\"coat_present\":true},\"model_variant\":\"b\"}]");
+        assertThrows(IllegalArgumentException.class, () -> GarmentDefinition.fromJson(ID, duplicate));
+        assertEquals(2, GarmentSlot.OUTER.ordinal());
+        assertEquals(11, GarmentSlot.NECK.ordinal());
+        assertEquals(12, GarmentSlot.COAT.ordinal());
+    }
     private static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("createapparel", "test");
 
     private static JsonObject json(String slots) {

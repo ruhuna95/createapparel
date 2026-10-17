@@ -13,6 +13,7 @@ class ApparelBodyModeTest {
             GarmentSlot.INNER_TOP,
             GarmentSlot.TOP,
             GarmentSlot.OUTER,
+            GarmentSlot.COAT,
             GarmentSlot.INNER_BOTTOM,
             GarmentSlot.BOTTOM,
             GarmentSlot.LEGWEAR,

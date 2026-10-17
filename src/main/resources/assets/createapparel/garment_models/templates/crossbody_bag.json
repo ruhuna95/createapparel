@@ -1,4 +1,18 @@
 {
+  "over_coat": {
+    "torso_back": {
+      "model": "createapparel:crossbody_bag/torso_back_over_coat"
+    },
+    "back_back": {
+      "model": "createapparel:crossbody_bag/back_back_over_coat"
+    },
+    "torso_front": {
+      "model": "createapparel:crossbody_bag/torso_front_over_coat"
+    },
+    "back_front": {
+      "model": "createapparel:crossbody_bag/back_front_over_coat"
+    }
+  },
   "default": {
     "torso_back": {
       "model": "createapparel:crossbody_bag/torso_back"

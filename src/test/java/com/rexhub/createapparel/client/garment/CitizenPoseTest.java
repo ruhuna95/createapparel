@@ -24,6 +24,43 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CitizenPoseTest {
     @Test
+    void unadjustedTrouserAndShoeVerticesMatchPlayerForTheSameAdultPose() throws Exception {
+        var method = CommonGarmentRenderer.class.getDeclaredMethod("humanoidGarmentPose", HumanoidModel.class,
+                ArmProfile.class, ClientGarmentAssets.ResolvedPart.class);
+        method.setAccessible(true);
+        for (var profile : ArmProfile.values()) {
+            var player = new net.minecraft.client.model.PlayerModel<>(net.minecraft.client.model.geom.builders.LayerDefinition.create(
+                    net.minecraft.client.model.PlayerModel.createMesh(net.minecraft.client.model.geom.builders.CubeDeformation.NONE,
+                            profile == ArmProfile.SLIM), 64, 64).bakeRoot(), profile == ArmProfile.SLIM);
+            var citizen = new CitizenModel(CitizenModel.createBodyLayer().bakeRoot());
+            for (var pose : MannequinForm.FULL.poses()) {
+                citizen.applyPose(pose);
+                player.leftLeg.setRotation(citizen.leftLeg.xRot, citizen.leftLeg.yRot, citizen.leftLeg.zRot);
+                player.rightLeg.setRotation(citizen.rightLeg.xRot, citizen.rightLeg.yRot, citizen.rightLeg.zRot);
+                for (String family : List.of("denim_pants", "slacks", "shoes", "boots", "tall_boots")) {
+                    for (String side : List.of("left_leg", "right_leg")) {
+                        var part = DualEnvelopeDeformerTest.part(family + "/" + side);
+                        var resolved = new ClientGarmentAssets.ResolvedPart(side, part, null);
+                        var playerPose = method.invoke(null, player, profile, resolved);
+                        var citizenPose = method.invoke(null, citizen, profile, resolved);
+                        var apply = playerPose.getClass().getDeclaredMethod("apply", PoseStack.class);
+                        apply.setAccessible(true);
+                        var expected = new PoseStack();
+                        var actual = new PoseStack();
+                        apply.invoke(playerPose, expected);
+                        apply.invoke(citizenPose, actual);
+                        for (var element : part.elements()) for (var corner : element.corners()) {
+                            var point = new Vector3f(corner.x(), 24 - corner.y(), corner.z());
+                            assertTrue(new Vector3f(point).mulPosition(expected.last().pose()).equals(
+                                    new Vector3f(point).mulPosition(actual.last().pose()), 0.000001F),
+                                    profile + "/" + pose + "/" + family + "/" + side);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @Test
     void allEightPosesMatchMannequinPartsAndKeepChildHeadScale() {
         var mannequin = new MannequinModel(MannequinModel.createBodyLayer(false).bakeRoot());
         var citizen = new CitizenModel(CitizenModel.createBodyLayer().bakeRoot());

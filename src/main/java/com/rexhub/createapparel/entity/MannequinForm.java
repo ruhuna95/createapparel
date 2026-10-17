@@ -10,7 +10,7 @@ public enum MannequinForm {
     FULL(EnumSet.allOf(GarmentSlot.class), List.of(PosePreset.STANDING, PosePreset.ATTENTION,
             PosePreset.CASUAL, PosePreset.RUNWAY, PosePreset.HAND_ON_HIP, PosePreset.ONE_LEG_FORWARD,
             PosePreset.ARMS_CROSSED, PosePreset.WALKING)),
-    UPPER(EnumSet.of(GarmentSlot.INNER_TOP, GarmentSlot.TOP, GarmentSlot.OUTER, GarmentSlot.HEAD,
+    UPPER(EnumSet.of(GarmentSlot.INNER_TOP, GarmentSlot.TOP, GarmentSlot.OUTER, GarmentSlot.COAT, GarmentSlot.HEAD,
             GarmentSlot.FACE, GarmentSlot.BACK, GarmentSlot.HANDS, GarmentSlot.NECK),
             List.of(PosePreset.STRAIGHT, PosePreset.CASUAL, PosePreset.ARMS_CROSSED, PosePreset.SLIGHT_TURN)),
     LOWER(EnumSet.of(GarmentSlot.INNER_BOTTOM, GarmentSlot.BOTTOM, GarmentSlot.LEGWEAR, GarmentSlot.FEET),

@@ -131,6 +131,7 @@ public final class Citizen extends PathfinderMob {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         citizenState.deserializeNBT(tag);
+        if (!level().isClientSide) citizenState.loadout().migrateLegacyCoats();
         setPersistenceRequired();
         syncState();
     }

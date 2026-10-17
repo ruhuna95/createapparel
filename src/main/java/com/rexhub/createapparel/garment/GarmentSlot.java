@@ -14,7 +14,8 @@ public enum GarmentSlot implements StringRepresentable {
     FACE("face"),
     BACK("back"),
     HANDS("hands"),
-    NECK("neck");
+    NECK("neck"),
+    COAT("coat");
 
     private final String serializedName;
 
