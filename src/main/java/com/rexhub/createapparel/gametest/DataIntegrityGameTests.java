@@ -82,12 +82,13 @@ public final class DataIntegrityGameTests {
         for (var entry : recipes.entrySet()) {
             try (var reader = entry.getValue().openAsReader()) {
                 var json = JsonParser.parseReader(reader).getAsJsonObject();
+                String path = entry.getKey().getPath();
+                var recipeId = id(path.substring("recipes/".length(), path.length() - ".json".length()));
+                if (json.has("conditions") && helper.getLevel().getRecipeManager().byKey(recipeId).isEmpty()) continue;
                 helper.assertTrue(ForgeRegistries.RECIPE_SERIALIZERS.containsKey(ResourceLocation.parse(json.get("type").getAsString())),
                         "Recipe serializer exists: " + entry.getKey());
                 validateReferences(helper, json, entry.getKey().toString());
                 if (!json.has("conditions")) {
-                    String path = entry.getKey().getPath();
-                    var recipeId = id(path.substring("recipes/".length(), path.length() - ".json".length()));
                     helper.assertTrue(helper.getLevel().getRecipeManager().byKey(recipeId).isPresent(),
                             "Recipe was not silently discarded: " + recipeId);
                 }

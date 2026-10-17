@@ -200,8 +200,11 @@ class NeckAccessoryAssetTest {
             assertEquals("create:compacting", compacting.get("type").getAsString());
             assertEquals(3, compacting.getAsJsonArray("ingredients").size());
             for (var ingredient : compacting.getAsJsonArray("ingredients")) {
-                assertEquals(metal == MetalAccessoryData.MetalColor.GOLD ? "minecraft:gold_nugget" : "minecraft:iron_nugget",
-                        ingredient.getAsJsonObject().get("item").getAsString());
+                if (metal == MetalAccessoryData.MetalColor.SILVER) {
+                    assertEquals("createapparel:silver_accessory_nuggets", ingredient.getAsJsonObject().get("tag").getAsString());
+                } else {
+                    assertEquals("minecraft:gold_nugget", ingredient.getAsJsonObject().get("item").getAsString());
+                }
             }
             assertFalse(compacting.has("heatRequirement"));
             for (var gem : MetalAccessoryData.Gem.values()) {

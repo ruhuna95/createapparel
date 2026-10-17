@@ -21,6 +21,10 @@ public final class ModLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        add("createapparel.chemical.silver_ion", "Silver Ion");
+        add("createapparel.chemical.diamminesilver_i", "Diamminesilver(I) Ion");
+        add("createapparel.reaction.silver_dissolution", "Silver Dissolution");
+        add("createapparel.reaction.silver_ammonia_complexation", "Silver Ammonia Complexation");
         RouteLanguage.add(this::add, false);
         ItemGuideLanguage.add(this::add, false);
         PonderLanguage.add(this::add, false);

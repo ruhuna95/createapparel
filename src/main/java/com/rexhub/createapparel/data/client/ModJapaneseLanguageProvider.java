@@ -19,6 +19,10 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        add("createapparel.chemical.silver_ion", "銀イオン");
+        add("createapparel.chemical.diamminesilver_i", "ジアンミン銀(I)イオン");
+        add("createapparel.reaction.silver_dissolution", "銀の溶解");
+        add("createapparel.reaction.silver_ammonia_complexation", "銀のアンモニア錯体化");
         RouteLanguage.add(this::add, true);
         ItemGuideLanguage.add(this::add, true);
         PonderLanguage.add(this::add, true);

@@ -23,8 +23,7 @@ logs
 run
 run-data
 src/generated/resources/.cache/
-scripts/*
-!scripts/validate.ps1
+scripts
 tools
 
 .codex/

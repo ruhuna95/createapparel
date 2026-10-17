@@ -2,10 +2,10 @@
   "type": "create:compacting",
   "ingredients": [
     {
-      "item": "minecraft:iron_nugget"
+      "tag": "createapparel:silver_accessory_nuggets"
     },
     {
-      "item": "minecraft:iron_nugget"
+      "tag": "createapparel:silver_accessory_nuggets"
     }
   ],
   "results": [

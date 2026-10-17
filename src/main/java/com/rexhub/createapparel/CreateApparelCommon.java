@@ -14,6 +14,9 @@ public final class CreateApparelCommon {
 
     public static void onCommonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
+            if (net.minecraftforge.fml.ModList.get().isLoaded("destroy")) {
+                com.rexhub.createapparel.compat.destroy.DestroyChemistry.register();
+            }
             ModNetwork.initialize();
             com.rexhub.createapparel.mirror.MirrorMovementChecks.register();
             BlockStressValues.IMPACTS.register(ModBlocks.SILKWORM_REARING_TRAY.get(),

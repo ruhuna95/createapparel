@@ -36,6 +36,8 @@ public final class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
+        getBuilder("destroy:chemistry/atom/silver")
+                .parent(new ModelFile.UncheckedModelFile("destroy:chemistry/atom/iron"));
         for (var color : MannequinColor.values()) {
             existingFileHelper.trackGenerated(modLoc("item/mannequin/" + color.id()),
                     PackType.CLIENT_RESOURCES, ".png", "textures");

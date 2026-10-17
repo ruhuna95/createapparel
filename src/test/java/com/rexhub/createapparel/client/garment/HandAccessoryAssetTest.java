@@ -199,14 +199,26 @@ class HandAccessoryAssetTest {
             var ingredients = recipe.getAsJsonArray("ingredients");
             assertEquals(2, ingredients.size(), baseId);
             for (var ingredient : ingredients) {
-                assertEquals("minecraft:" + metal.getValue() + "_nugget",
-                        ingredient.getAsJsonObject().get("item").getAsString());
+                if (metal.getKey().equals("silver")) {
+                    assertEquals("createapparel:silver_accessory_nuggets", ingredient.getAsJsonObject().get("tag").getAsString());
+                } else {
+                    assertEquals("minecraft:gold_nugget", ingredient.getAsJsonObject().get("item").getAsString());
+                }
             }
             var results = recipe.getAsJsonArray("results");
             assertEquals(1, results.size());
             assertEquals("createapparel:" + baseId,
                     results.get(0).getAsJsonObject().get("item").getAsString());
         }
+    }
+
+    @Test
+    void silverAccessoryNuggetsKeepIronAndOptionallyIncludeCommonSilver() throws Exception {
+        var tag = json(GENERATED.getParent().resolve("tags/items/silver_accessory_nuggets.json")).getAsJsonArray("values");
+        assertEquals(2, tag.size());
+        assertEquals("minecraft:iron_nugget", tag.get(0).getAsString());
+        assertEquals("#forge:nuggets/silver", tag.get(1).getAsJsonObject().get("id").getAsString());
+        assertFalse(tag.get(1).getAsJsonObject().get("required").getAsBoolean());
     }
 
     private static GarmentPartModel part(String id, String semantic) throws Exception {

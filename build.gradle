@@ -17,14 +17,41 @@ base {
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 sourceSets {
+    recipeTest {
+        java.setSrcDirs(['src/test/recipe/java'])
+        resources.setSrcDirs(['src/test/recipe/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
     jeiTest {
+        java.setSrcDirs(['src/test/jei/java'])
+        resources.setSrcDirs(['src/test/jei/resources'])
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
 }
 
+configurations {
+    destroyClientMods {
+        canBeConsumed = false
+    }
+}
+
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 def gameTestDirectory = project.file("run/gametest/${System.currentTimeMillis()}")
+def recipeTestCase = providers.gradleProperty('recipeTestCase').getOrElse('A')
+def recipeTestFlags = [A: [false, false], B: [true, true], C: [false, false],
+                       D: [true, true], E: [true, false], F: [false, true]]
+if (!recipeTestFlags.containsKey(recipeTestCase)) throw new GradleException('recipeTestCase must be A-F')
+def recipeTestDirectory = project.file('run/phase25/server-' + recipeTestCase + '/' +
+        providers.gradleProperty('recipeTestRunId').getOrElse(System.currentTimeMillis().toString()))
+def optionalIntegrationModsDirectory = project.file(providers.gradleProperty('optionalIntegrationModsDir')
+        .getOrElse('run/phase25/dependencies'))
+def optionalIntegrationMods = [
+        'destroy-1.20.1-0.1.4.jar': 'local.phase25:destroy-1.20.1:0.1.4',
+        'petrolpark-1.20.1-1.4.24.jar': 'local.phase25:petrolpark-1.20.1:1.4.24',
+        'thesilverage-forge-1.20.1-1.3.0.jar': 'local.phase25:thesilverage-forge-1.20.1:1.3.0'
+]
 minecraft {
     // The mappings can be changed at any time and must be in the following format.
     // Channel:   Version:
@@ -84,7 +111,8 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            args '--mixin', 'createapparel.mixins.json'
+            args '--mixin', 'createapparel.mixins.json', '--mixin', 'createapparel.destroy.mixins.json',
+                    '--mixin', 'createapparel.destroy_jei.mixins.json'
 
             mods {
                 "${mod_id}" {
@@ -105,11 +133,17 @@ minecraft {
             args '--username', 'Dev2', '--uuid', '00000000-0000-0000-0000-000000000009'
         }
 
+        destroyClient {
+            parent minecraft.runs.client
+            workingDirectory project.file('run/phase25/client')
+        }
+
         jeiTestClient {
             parent minecraft.runs.client
             workingDirectory project.file('run/phase23-client-' + providers.gradleProperty('jeiEnabled').getOrElse('true'))
             property 'forge.logging.console.level', 'info'
             property 'apparel.jeiTest.projectDir', project.projectDir.absolutePath
+            property 'apparel.jeiTest.mirrorFallback', providers.gradleProperty('jeiMirrorFallback').getOrElse('false')
             mods {
                 "${mod_id}" { source sourceSets.jeiTest }
             }
@@ -140,6 +174,17 @@ minecraft {
             }
         }
 
+        recipeTestServer {
+            parent minecraft.runs.gameTestServer
+            workingDirectory recipeTestDirectory
+            property 'apparel.recipeTest.destroy', providers.gradleProperty('destroyEnabled').getOrElse('false')
+            property 'apparel.recipeTest.synthetic', recipeTestFlags[recipeTestCase][0].toString()
+            property 'apparel.recipeTest.mirror', recipeTestFlags[recipeTestCase][1].toString()
+            mods {
+                "${mod_id}" { source sourceSets.recipeTest }
+            }
+        }
+
         data {
             // example of overriding the workingDirectory set in configureEach above
             workingDirectory project.file('run-data')
@@ -157,6 +202,11 @@ sourceSets.main.resources {
 }
 
 repositories {
+    flatDir {
+        name = 'OptionalIntegrationTestMods'
+        dirs optionalIntegrationModsDirectory
+        content { includeGroup 'local.phase25' }
+    }
     maven {
         name = 'JEI'
         url = 'https://maven.blamejared.com'
@@ -192,11 +242,21 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    compileOnly fg.deobf(optionalIntegrationMods['destroy-1.20.1-0.1.4.jar'])
+    compileOnly fg.deobf(optionalIntegrationMods['petrolpark-1.20.1-1.4.24.jar'])
 
     compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
     compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
     if (providers.gradleProperty('jeiEnabled').getOrElse('true').toBoolean()) {
         runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+    }
+    optionalIntegrationMods.each { name, coordinate ->
+        def dependency = new File(optionalIntegrationModsDirectory, name)
+        if (dependency.isFile()) destroyClientMods fg.deobf(coordinate)
+        if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()) {
+            if (!dependency.isFile()) throw new GradleException("Missing optional test mod: ${dependency}")
+            runtimeOnly fg.deobf(coordinate)
+        }
     }
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
@@ -240,7 +300,7 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'MixinConfigs'           : 'createapparel.mixins.json'
+                'MixinConfigs'           : 'createapparel.mixins.json,createapparel.destroy.mixins.json,createapparel.destroy_jei.mixins.json'
         ])
     }
 
@@ -293,6 +353,26 @@ tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
 
+tasks.register('copyDestroyClientMods') {
+    doLast {
+        if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()) {
+            throw new GradleException('runDestroyClient loads optional mods itself; omit -PdestroyEnabled=true.')
+        }
+        optionalIntegrationMods.keySet().each { name ->
+            def dependency = new File(optionalIntegrationModsDirectory, name)
+            if (!dependency.isFile()) throw new GradleException("Missing optional client mod: ${dependency}")
+        }
+        copy {
+            from configurations.destroyClientMods
+            into 'run/phase25/client/mods'
+        }
+    }
+}
+
+tasks.matching { it.name == 'prepareRunDestroyClient' }.configureEach {
+    dependsOn 'copyDestroyClientMods'
+}
+
 tasks.register('copyGameTestStructures', Copy) {
     from 'src/test/resources/gameteststructures'
     into new File(gameTestDirectory, 'gameteststructures')
@@ -301,6 +381,35 @@ tasks.register('copyGameTestStructures', Copy) {
 
 tasks.matching { it.name == 'prepareRunGameTestServer' }.configureEach {
     dependsOn 'copyGameTestStructures'
+}
+
+tasks.register('prepareRecipeTestWorld') {
+    doLast {
+        copy {
+            from 'src/test/resources/gameteststructures'
+            into new File(recipeTestDirectory, 'gameteststructures')
+        }
+        def config = new File(recipeTestDirectory, 'world/serverconfig/createapparel-server.toml')
+        config.parentFile.mkdirs()
+        config.setText("[recipes]\nforceSyntheticFiberFallback = ${recipeTestFlags[recipeTestCase][0]}\n" +
+                "forceMirrorCoatingFallback = ${recipeTestFlags[recipeTestCase][1]}\n", 'UTF-8')
+        logger.lifecycle("Phase25 case ${recipeTestCase}: ${recipeTestDirectory}")
+    }
+}
+
+tasks.matching { it.name == 'prepareRunRecipeTestServer' }.configureEach {
+    dependsOn 'prepareRecipeTestWorld'
+}
+
+tasks.matching { it.name == 'runRecipeTestServer' }.configureEach {
+    doFirst { ext.recipeTestStartedAt = System.currentTimeMillis() }
+    doLast {
+        def log = new File(recipeTestDirectory, 'logs/latest.log')
+        if (!log.isFile() || log.lastModified() < recipeTestStartedAt ||
+                !(log.getText('UTF-8') =~ /All \d+ required tests passed/).find()) {
+            throw new GradleException("Optional recipe GameTests did not pass; see ${log}")
+        }
+    }
 }
 
 tasks.register('copyJeiTestStructures', Copy) {

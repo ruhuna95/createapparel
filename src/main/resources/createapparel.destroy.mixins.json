@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "com.rexhub.createapparel.compat.destroy.mixin",
+  "plugin": "com.rexhub.createapparel.compat.destroy.DestroyMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": ["LegacyElementMixin"],
+  "injectors": {"defaultRequire": 1}
+}

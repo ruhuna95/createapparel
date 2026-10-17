@@ -49,6 +49,7 @@ public final class ModTags {
         public static final TagKey<Item> GEMS_PEARL = create("gems/pearl");
 
         public static final TagKey<Item> SILKWORM_FOOD = create("silkworm_food");
+        public static final TagKey<Item> SILVER_ACCESSORY_NUGGETS = create("silver_accessory_nuggets");
 
         private Items() {
         }

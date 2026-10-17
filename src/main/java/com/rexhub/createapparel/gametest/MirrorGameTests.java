@@ -5,11 +5,12 @@ import com.rexhub.createapparel.block.MirrorBlock;
 import com.rexhub.createapparel.block.MirrorFurnitureBlock;
 import com.rexhub.createapparel.block.MirroredDoorBlock;
 import com.rexhub.createapparel.block.entity.MirrorBlockEntity;
-import com.rexhub.createapparel.config.ModConfigs;
 import com.rexhub.createapparel.init.ModFluids;
 import com.rexhub.createapparel.init.ModMirrors;
 import com.rexhub.createapparel.mirror.MirrorWood;
-import com.rexhub.createapparel.recipe.MirrorFallbackCondition;
+import com.rexhub.createapparel.recipe.OptionalRecipeCondition;
+import com.rexhub.createapparel.recipe.OptionalRecipeRoutes;
+import com.rexhub.createapparel.recipe.RecipeRouteSelection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -215,13 +216,10 @@ public final class MirrorGameTests {
         helper.assertTrue(ModFluids.MIRROR_COATING_FLUID.get().getFluidType() == ModFluids.FLOWING_MIRROR_COATING_FLUID.get().getFluidType(), "One fluid type serves source and flowing coating");
         helper.assertTrue(ModFluids.MIRROR_COATING_FLUID.get().getBucket() == ModFluids.MIRROR_COATING_BUCKET.get(), "Coating works with standard bucket transport");
         helper.assertTrue(helper.getLevel().getRecipeManager().byKey(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "filling/mirror_panel")).isPresent(), "Spout filling remains available without Destroy");
-        boolean initial = ModConfigs.COMMON.enableMirrorCoatingFallback.get();
-        try {
-            ModConfigs.COMMON.enableMirrorCoatingFallback.set(false);
-            helper.assertTrue(!MirrorFallbackCondition.INSTANCE.test(net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY), "Fallback off hides zinc recipe");
-            ModConfigs.COMMON.enableMirrorCoatingFallback.set(true);
-            helper.assertTrue(MirrorFallbackCondition.INSTANCE.test(net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY), "Fallback on enables zinc recipe without silver");
-        } finally { ModConfigs.COMMON.enableMirrorCoatingFallback.set(initial); }
+        helper.assertTrue(OptionalRecipeCondition.MIRROR_FALLBACK.test(
+                        net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY)
+                        == OptionalRecipeRoutes.selection().useFallback(RecipeRouteSelection.Product.MIRROR_COATING),
+                "Mirror condition uses the server's route snapshot");
         helper.succeed();
     }
 

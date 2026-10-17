@@ -176,6 +176,25 @@ public final class JeiClientChecks implements IModPlugin {
                     new ItemStack(Items.SHEARS), display.id());
         }
         var mixing = manager.getRecipeType(ResourceLocation.parse("create:mixing"), BasinRecipe.class).orElseThrow();
+        var clientRecipes = Minecraft.getInstance().level.getRecipeManager();
+        for (String path : List.of("mixing/synthetic_fiber", "mixing/mirror_coating_fluid", "mixing/mirror_coating_fluid_from_destroy")) {
+            check(manager.createRecipeLookup(mixing).get().anyMatch(recipe -> recipe.getId().equals(id(path)))
+                            == clientRecipes.byKey(id(path)).isPresent(), "Optional mixing follows synchronized recipes: " + path);
+        }
+        clientRecipes.byKey(id("mixing/mirror_coating_fluid_from_destroy")).ifPresent(recipe -> {
+            var layout = manager.createRecipeLayoutDrawable(manager.getRecipeCategory(mixing), (BasinRecipe) recipe,
+                    runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup()).orElseThrow();
+            check(layout.getRecipeSlotsView().getSlotViews().size() >= 3, "Native Destroy coating mixing layout");
+        });
+        if (net.minecraftforge.fml.ModList.get().isLoaded("destroy")) DestroyJeiChecks.audit(runtime);
+        var fiberFocus = runtime.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.OUTPUT,
+                VanillaTypes.ITEM_STACK, new ItemStack(ModItems.SYNTHETIC_FIBER.get()));
+        check(manager.createRecipeLookup(mixing).limitFocus(List.of(fiberFocus)).get()
+                        .anyMatch(recipe -> recipe.getId().equals(id("mixing/synthetic_fiber")))
+                        == clientRecipes.byKey(id("mixing/synthetic_fiber")).isPresent(), "Fiber recipe lookup is exclusive");
+        check(manager.createRecipeLookup(RecipeTypes.CRAFTING).limitFocus(List.of(fiberFocus)).get()
+                        .anyMatch(recipe -> recipe.getId().equals(id("synthetic_fiber_from_nylon")))
+                        == clientRecipes.byKey(id("synthetic_fiber_from_nylon")).isPresent(), "Nylon recipe lookup is exclusive");
         for (String recipe : List.of("mixing/dyeing/blue_cotton_fabric", "mixing/dyeing/navy_cotton_fabric", "mixing/decolorizing/cotton_fabric")) {
             var actual = manager.createRecipeLookup(mixing).get().filter(value -> value.getId().equals(id(recipe)))
                     .findFirst().orElseThrow();
@@ -230,6 +249,7 @@ public final class JeiClientChecks implements IModPlugin {
 
     private static void auditReload() {
         var manager = runtime.getRecipeManager();
+        if (net.minecraftforge.fml.ModList.get().isLoaded("destroy")) DestroyJeiChecks.audit(runtime);
         var spinning = manager.createRecipeLookup(ApparelJeiRecipeTypes.SPINNING).get().toList();
         check(spinning.stream().noneMatch(display -> display.recipe().getId().equals(id("spinning/cotton_thread"))), "Removed recipe disappears");
         var added = spinning.stream().filter(display -> display.recipe().getId().equals(id("phase23_test"))).findFirst().orElseThrow();

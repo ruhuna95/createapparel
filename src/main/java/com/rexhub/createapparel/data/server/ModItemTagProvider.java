@@ -8,6 +8,7 @@ import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -33,6 +34,8 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         addThreadTags();
         addFabricTags();
         addGemTags();
+        tag(ModTags.Items.SILVER_ACCESSORY_NUGGETS).add(Items.IRON_NUGGET)
+                .addOptionalTag(ResourceLocation.parse("forge:nuggets/silver"));
         tag(ModTags.Items.CITIZEN_LOWER_COVERING_TOPS).add(
                 ModItems.A_LINE_DRESS_KNEE.get(), ModItems.A_LINE_DRESS_MIDI.get(),
                 ModItems.FIT_AND_FLARE_DRESS_KNEE.get(), ModItems.FIT_AND_FLARE_DRESS_MIDI.get(),

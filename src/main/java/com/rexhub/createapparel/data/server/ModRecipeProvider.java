@@ -93,11 +93,6 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 asResource("mirror_panel")).require(Items.GLASS_PANE)
                 .require(com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_FLUID.get(), 250)
                 .output(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL.get()).build(consumer));
-        register(consumer -> new ProcessingRecipeBuilder<>(MixingRecipe::new, asResource("mirror_coating_fluid"))
-                .require(Fluids.WATER, 1000).require(AllItems.ZINC_NUGGET.get()).require(Items.GLOWSTONE_DUST)
-                .requiresHeat(com.simibubi.create.content.processing.recipe.HeatCondition.HEATED)
-                .output(com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_FLUID.get(), 1000)
-                .withCondition(com.rexhub.createapparel.recipe.MirrorFallbackCondition.INSTANCE).build(consumer));
         var panel = com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL.get();
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS,
                         com.rexhub.createapparel.init.ModMirrors.IRON_FULL_LENGTH_MIRROR.get())
@@ -173,6 +168,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
+        register(OptionalIntegrationRecipes::build);
         register(consumer -> MechanicalCraftingRecipeBuilder.shapedRecipe(ModItems.SMART_PHONE.get())
                 .patternLine("GGG").patternLine("TRT").patternLine("CPC").patternLine("TRT").patternLine("BBB")
                 .key('G', Items.GLASS_PANE).key('T', AllItems.ELECTRON_TUBE.get()).key('R', Items.REDSTONE)
@@ -567,7 +563,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                                 RegistryObject<Item> goldBase, RegistryObject<Item> silverBase, int nuggetCount) {
         for (MetalColor metal : MetalColor.values()) {
             RegistryObject<Item> base = metal == MetalColor.GOLD ? goldBase : silverBase;
-            Item nugget = metal == MetalColor.GOLD ? Items.GOLD_NUGGET : Items.IRON_NUGGET;
+            Ingredient nugget = metal == MetalColor.GOLD ? Ingredient.of(Items.GOLD_NUGGET)
+                    : Ingredient.of(ModTags.Items.SILVER_ACCESSORY_NUGGETS);
             register(consumer -> {
                 var builder = new ProcessingRecipeBuilder<>(CompactingRecipe::new,
                         asResource(base.getId().getPath()));

@@ -17,8 +17,7 @@ public final class CreateApparel {
 
         ModRegistries.register(modEventBus);
         ModConfigs.register(context);
-        net.minecraftforge.common.crafting.CraftingHelper.register(
-                com.rexhub.createapparel.recipe.MirrorFallbackCondition.SERIALIZER);
+        com.rexhub.createapparel.recipe.OptionalRecipeCondition.register();
         modEventBus.addListener(ApparelCapabilities::register);
         modEventBus.addListener(CreateApparelCommon::onCommonSetup);
         modEventBus.addListener(CreateApparelDataGenerators::gatherData);

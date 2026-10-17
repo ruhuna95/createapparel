@@ -7,8 +7,10 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public final class ModConfigs {
     private static final ForgeConfigSpec COMMON_SPEC;
     private static final ForgeConfigSpec CLIENT_SPEC;
+    private static final ForgeConfigSpec SERVER_SPEC;
     public static final Common COMMON;
     public static final Client CLIENT;
+    public static final Server SERVER;
 
     static {
         var common = new ForgeConfigSpec.Builder().configure(Common::new);
@@ -17,6 +19,9 @@ public final class ModConfigs {
         var client = new ForgeConfigSpec.Builder().configure(Client::new);
         CLIENT = client.getLeft();
         CLIENT_SPEC = client.getRight();
+        var server = new ForgeConfigSpec.Builder().configure(Server::new);
+        SERVER = server.getLeft();
+        SERVER_SPEC = server.getRight();
     }
 
     private ModConfigs() {
@@ -25,10 +30,10 @@ public final class ModConfigs {
     public static void register(FMLJavaModLoadingContext context) {
         context.registerConfig(ModConfig.Type.COMMON, COMMON_SPEC, "createapparel-common.toml");
         context.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC, "createapparel-client.toml");
+        context.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC, "createapparel-server.toml");
     }
 
     public static final class Common {
-        public final ForgeConfigSpec.BooleanValue enableMirrorCoatingFallback;
         public final ForgeConfigSpec.IntValue maxNewPathRequestsPerTick;
         public final ForgeConfigSpec.IntValue maxActiveCitizensPerDimension;
         public final ForgeConfigSpec.IntValue activityRotationTicks;
@@ -36,10 +41,6 @@ public final class ModConfigs {
         public final ForgeConfigSpec.DoubleValue crossingPenalty;
         public final ForgeConfigSpec.IntValue gatewayTransitCooldown;
         private Common(ForgeConfigSpec.Builder builder) {
-            builder.push("recipes").push("mirror");
-            enableMirrorCoatingFallback = builder.comment("Enable heated zinc, glowstone and water mixing. Reload recipes after changing.")
-                    .define("enableMirrorCoatingFallback", false);
-            builder.pop(2);
             builder.push("citizenRoutes");
             maxNewPathRequestsPerTick = builder.defineInRange("maxNewPathRequestsPerTick", 4, 1, 64);
             maxActiveCitizensPerDimension = builder.defineInRange("maxActiveCitizensPerDimension", 80, 1, 4096);
@@ -47,6 +48,20 @@ public final class ModConfigs {
             crossingWaitTimeout = builder.defineInRange("crossingWaitTimeout", 600, 20, 12000);
             crossingPenalty = builder.defineInRange("crossingPenalty", 16.0, 0, 1024);
             gatewayTransitCooldown = builder.defineInRange("gatewayTransitCooldown", 100, 20, 12000);
+            builder.pop();
+        }
+    }
+
+    public static final class Server {
+        public final ForgeConfigSpec.BooleanValue forceSyntheticFiberFallback;
+        public final ForgeConfigSpec.BooleanValue forceMirrorCoatingFallback;
+
+        private Server(ForgeConfigSpec.Builder builder) {
+            builder.push("recipes");
+            forceSyntheticFiberFallback = builder.comment("Use heated sugar, slime and water mixing even with Destroy installed. Restart the world/server after changing.")
+                    .worldRestart().define("forceSyntheticFiberFallback", false);
+            forceMirrorCoatingFallback = builder.comment("Use heated zinc, glowstone and water mixing even with Destroy installed. Replaces COMMON recipes.mirror.enableMirrorCoatingFallback; set this key explicitly. Restart the world/server after changing.")
+                    .worldRestart().define("forceMirrorCoatingFallback", false);
             builder.pop();
         }
     }
