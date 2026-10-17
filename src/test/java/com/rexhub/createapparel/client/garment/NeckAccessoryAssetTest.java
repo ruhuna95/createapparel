@@ -234,7 +234,16 @@ class NeckAccessoryAssetTest {
                 case SAPPHIRE -> "lapis_lazuli";
                 case PEARL -> "quartz";
             };
-            assertEquals("minecraft:" + fallback, tag.getAsJsonArray("values").get(0).getAsString());
+            var values = tag.getAsJsonArray("values");
+            assertEquals("minecraft:" + fallback, values.get(0).getAsString());
+            if (gem == MetalAccessoryData.Gem.RUBY || gem == MetalAccessoryData.Gem.SAPPHIRE) {
+                assertEquals(2, values.size());
+                var optional = values.get(1).getAsJsonObject();
+                assertEquals("#forge:gems/" + gem.getSerializedName(), optional.get("id").getAsString());
+                assertFalse(optional.get("required").getAsBoolean());
+            } else {
+                assertEquals(1, values.size());
+            }
         }
         var tie = json(GENERATED.resolve("recipes/necktie.json"));
         assertEquals("createapparel:sewing", tie.get("type").getAsString());

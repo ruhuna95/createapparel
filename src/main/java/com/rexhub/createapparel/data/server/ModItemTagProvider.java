@@ -109,8 +109,8 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         tag(ModTags.Items.GEMS_DIAMOND).add(Items.DIAMOND);
         tag(ModTags.Items.GEMS_EMERALD).add(Items.EMERALD);
         tag(ModTags.Items.GEMS_AMETHYST).add(Items.AMETHYST_SHARD);
-        tag(ModTags.Items.GEMS_RUBY).add(Items.REDSTONE);
-        tag(ModTags.Items.GEMS_SAPPHIRE).add(Items.LAPIS_LAZULI);
+        tag(ModTags.Items.GEMS_RUBY).add(Items.REDSTONE).addOptionalTag(ResourceLocation.parse("forge:gems/ruby"));
+        tag(ModTags.Items.GEMS_SAPPHIRE).add(Items.LAPIS_LAZULI).addOptionalTag(ResourceLocation.parse("forge:gems/sapphire"));
         tag(ModTags.Items.GEMS_PEARL).add(Items.QUARTZ);
     }
 
