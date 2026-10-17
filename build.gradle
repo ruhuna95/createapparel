@@ -17,6 +17,12 @@ base {
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 sourceSets {
+    gameTest {
+        java.setSrcDirs(['src/test/gametest/java'])
+        resources.setSrcDirs(['src/test/gametest/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
     recipeTest {
         java.setSrcDirs(['src/test/recipe/java'])
         resources.setSrcDirs(['src/test/recipe/resources'])
@@ -157,11 +163,13 @@ minecraft {
 
         // This run config launches GameTestServer and runs all registered gametests, then exits.
         // By default, the server will crash when no gametests are provided.
-        // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
             workingDirectory gameTestDirectory
             property 'forge.enabledGameTestNamespaces', mod_id
             property 'forge.logging.console.level', 'info'
+            mods {
+                "${mod_id}" { source sourceSets.gameTest }
+            }
         }
 
         jeiTestServer {

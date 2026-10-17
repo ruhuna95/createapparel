@@ -3,11 +3,14 @@
 ## 配置と実行区分
 
 - `src/test/java/`：JUnitテスト。
+- `src/test/gametest/java/`：共通GameTestとFixture（`gameTest` source set）。
 - `src/test/resources/`：JUnitとGameTestの検証用リソース。
 - `src/test/jei/java/`：専用のJEIあり／なしClient・Server起動検証（`jeiTest` source set）。
 - `src/test/recipe/java/`：任意レシピ・銀MODの専用Server起動検証（`recipeTest` source set）。
 
 専用source setは対応する検証起動にだけ追加し、通常起動と配布JARには含めない。
+共通の`gameTest`は`runGameTestServer`と、それを継承するレシピ／JEIの検証Serverで読み込む。
+通常の`runClient`／`runServer`には読み込まないため、そこで既存GameTestを`/test`から実行する構成ではない。
 以下のコマンドはすべてプロジェクトルートで実行する。
 
 ## 一括検証
