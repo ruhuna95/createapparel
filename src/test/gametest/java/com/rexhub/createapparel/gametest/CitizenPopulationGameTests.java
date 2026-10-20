@@ -342,7 +342,7 @@ public final class CitizenPopulationGameTests {
                 helper.runAfterDelay(10, () -> {
                     helper.assertTrue(other.districtId().equals(routes.data().marker(ids.get(2)).districtId()), "Midpoint partition gives overlap block to the closer District");
                     var saved = population.data().save(new CompoundTag());
-                    helper.assertTrue(saved.getInt("SchemaVersion") == 5 && saved.getCompound("Territory").contains("Seeds"), "Territory policy and seeds are persisted for maps");
+                    helper.assertTrue(saved.getInt("SchemaVersion") == 6 && saved.getCompound("Territory").contains("Seeds"), "Territory policy and seeds are persisted for maps");
                     var restored = CitizenPopulationSavedData.load(saved);
                     helper.assertTrue(other.districtId().equals(restored.territory().districtAt(positions.get(2))), "Exact block ownership survives reload without terrain access");
                     population.remove(other.id());
@@ -481,7 +481,7 @@ public final class CitizenPopulationGameTests {
     }
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
     public static void creativeDiscardRequiresCreativeModeAndNeverDeletesRegisteredDistricts(GameTestHelper helper) {
-        room(helper); var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = recordedGauge(helper, center, 2);
+        room(helper); var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = legacyRecordedGauge(helper, center, 2);
         var data = manager(helper).data(); var player = player(helper, Vec3.atCenterOf(center).add(0, 1, 2));
         var packet = com.rexhub.createapparel.network.GaugeReservationDiscardPacket.fromStack(stack.copyWithCount(1));
         helper.assertTrue(packet != null, "Only reservation-bearing Gauges have a discard notification");
@@ -496,7 +496,7 @@ public final class CitizenPopulationGameTests {
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
     public static void destroyedGaugeReleasesOnlyTheLastItemAndKeepsRecordedTooltip(GameTestHelper helper) {
         room(helper); var center = helper.absolutePos(new BlockPos(10, 0, 10)); var level = helper.getLevel();
-        var stack = recordedGauge(helper, center, 3); var data = manager(helper).data();
+        var stack = legacyRecordedGauge(helper, center, 3); var data = manager(helper).data();
         var tooltip = new ArrayList<net.minecraft.network.chat.Component>();
         stack.getItem().appendHoverText(stack, level, tooltip, net.minecraft.world.item.TooltipFlag.NORMAL);
         helper.assertTrue(tooltip.size() == 1 && tooltip.get(0).getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents centerLine
@@ -555,10 +555,18 @@ public final class CitizenPopulationGameTests {
                 new BlockHitResult(Vec3.atCenterOf(center).add(0, .5, 0), Direction.UP, center, false))).consumesAction(), "Records a fresh center");
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY); return stack;
     }
+    private static ItemStack legacyRecordedGauge(GameTestHelper helper, BlockPos center, int count) {
+        var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get(), count);
+        var id = manager(helper).data().reserveCenter(center, null, count, helper.getLevel().dimension().location().toString(), helper.getLevel().getGameTime());
+        helper.assertTrue(id != null, "Restores a legacy multi-item reservation fixture");
+        var tag = stack.getOrCreateTag(); tag.putLong("GaugeCenter", center.asLong());
+        tag.putString("GaugeDimension", helper.getLevel().dimension().location().toString()); tag.putUUID("GaugeCenterReservation", id);
+        return stack;
+    }
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
     public static void forgePlayerDestroyEventReleasesOnlyDestroyedItemsAndNotPlacedDistricts(GameTestHelper helper) {
         room(helper); var level = helper.getLevel(); var data = manager(helper).data();
-        var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = recordedGauge(helper, center, 3);
+        var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = legacyRecordedGauge(helper, center, 3);
         var player = player(helper, Vec3.atCenterOf(center));
         net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem(player, stack.split(1), InteractionHand.MAIN_HAND);
         helper.assertTrue(!data.centerAvailable(center, null), "Forge's common destruction event preserves surviving split items");
@@ -573,7 +581,7 @@ public final class CitizenPopulationGameTests {
     public static void gaugeResetCraftingPreviewIsPureAndBothGridsReleaseOneConsumedItemAtATime(GameTestHelper helper) {
         room(helper); var level = helper.getLevel(); var data = manager(helper).data();
         for (int width : new int[]{2, 3}) {
-            var center = helper.absolutePos(new BlockPos(10 + width, 0, 10)); var stack = recordedGauge(helper, center, 3);
+            var center = helper.absolutePos(new BlockPos(10 + width, 0, 10)); var stack = legacyRecordedGauge(helper, center, 3);
             stack.setHoverName(net.minecraft.network.chat.Component.literal("Custom Gauge")); stack.getOrCreateTag().putInt("OtherModData", 42);
             var player = player(helper, Vec3.atCenterOf(center)); player.getInventory().clearContent();
             net.minecraft.world.inventory.AbstractContainerMenu menu;
@@ -608,7 +616,7 @@ public final class CitizenPopulationGameTests {
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
     public static void shiftCraftResetClearsWholeStackAndFlowWithoutDeletingPlacedDistrict(GameTestHelper helper) {
         room(helper); var level = helper.getLevel(); var data = manager(helper).data();
-        var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = recordedGauge(helper, center, 4);
+        var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = legacyRecordedGauge(helper, center, 4);
         var stale = stack.copyWithCount(1);
         var player = player(helper, Vec3.atCenterOf(center)); player.getInventory().clearContent();
         var menu = player.inventoryMenu; var grid = menu.getCraftSlots(); grid.setItem(0, stack);

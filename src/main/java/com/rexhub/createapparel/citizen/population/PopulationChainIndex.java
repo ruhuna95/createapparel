@@ -11,22 +11,31 @@ public final class PopulationChainIndex {
     private final Map<UUID, Integer> incoming = new HashMap<>();
     private final Map<UUID, Integer> outgoing = new HashMap<>();
     private final Map<UUID, Integer> busy = new HashMap<>();
+    private final Map<UUID, java.util.Set<UUID>> chainsByGauge = new HashMap<>();
 
     public int incoming(UUID gauge) { return incoming.getOrDefault(gauge, 0); }
     public int outgoing(UUID gauge) { return outgoing.getOrDefault(gauge, 0); }
     public boolean busy(UUID gauge) { return busy.containsKey(gauge); }
+    public java.util.Set<UUID> chains(UUID gauge) { return java.util.Set.copyOf(chainsByGauge.getOrDefault(gauge, java.util.Set.of())); }
 
     public void put(PopulationTransferChain chain) {
         remove(chain.id());
         if (chain.complete()) return;
         var entry = new Entry(chain.path(), chain.hop());
         entries.put(chain.id(), entry);
+        for (var gauge : entry.path) chainsByGauge.computeIfAbsent(gauge, ignored -> new java.util.HashSet<>()).add(chain.id());
         apply(entry, 1);
     }
 
     public void remove(UUID chain) {
         var previous = entries.remove(chain);
-        if (previous != null) apply(previous, -1);
+        if (previous != null) {
+            apply(previous, -1);
+            for (var gauge : previous.path) {
+                var ids = chainsByGauge.get(gauge); ids.remove(chain);
+                if (ids.isEmpty()) chainsByGauge.remove(gauge);
+            }
+        }
     }
 
     private void apply(Entry entry, int delta) {

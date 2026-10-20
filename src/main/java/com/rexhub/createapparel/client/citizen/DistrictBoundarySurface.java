@@ -18,6 +18,10 @@ public final class DistrictBoundarySurface {
     @FunctionalInterface public interface Reader { double height(int x, int z, double ceiling); }
     private final LinkedHashMap<Long, Sample> samples = new LinkedHashMap<>(128, .75F, true);
     private final LinkedHashSet<Long> pending = new LinkedHashSet<>();
+    public void unloadChunk(long chunk) {
+        samples.keySet().removeIf(column -> ChunkPos.getX(column) >> 4 == ChunkPos.getX(chunk) && ChunkPos.getZ(column) >> 4 == ChunkPos.getZ(chunk));
+        pending.removeIf(column -> ChunkPos.getX(column) >> 4 == ChunkPos.getX(chunk) && ChunkPos.getZ(column) >> 4 == ChunkPos.getZ(chunk));
+    }
 
     public void request(int x, int z, double ceiling, long tick) {
         long key = ChunkPos.asLong(x, z);

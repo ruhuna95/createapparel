@@ -19,7 +19,8 @@ import java.util.*;
 public final class ClientGaugeView {
     private static List<CitizenGauge> gauges = List.of();
     private static String dimension = "";
-    private static long receivedAt;
+    private static long viewRevision = -1, nextResync;
+    private static net.minecraft.nbt.CompoundTag snapshot;
     private static CitizenGauge selected;
     private static boolean relocating;
     private static String selectionDimension = "";
@@ -40,23 +41,37 @@ public final class ClientGaugeView {
             if (minecraft.player.containerMenu instanceof CitizenGaugeMenu menu && menu.containerId == packet.containerId() && menu.gaugeId().equals(packet.gaugeId())) menu.accept(packet.info());
             return;
         }
+        var merged = GaugeViewDelta.apply(snapshot, viewRevision, packet.info());
+        if (merged == null) { snapshot = null; viewRevision = -1; return; }
+        snapshot = merged; viewRevision = packet.info().getLong("Revision");
         var parsed = new ArrayList<CitizenGauge>();
-        for (var raw : packet.info().getList("Gauges", Tag.TAG_COMPOUND)) {
+        for (var raw : merged.getList("Gauges", Tag.TAG_COMPOUND)) {
             if (parsed.size() >= 256) break;
             try { parsed.add(CitizenGauge.load((net.minecraft.nbt.CompoundTag) raw)); } catch (IllegalArgumentException ignored) { }
         }
-        String nextDimension = packet.info().getString("Dimension");
+        String nextDimension = merged.getString("Dimension");
         if (!dimension.equals(nextDimension)) territory = new ClientDistrictTerritory();
-        gauges = List.copyOf(parsed); dimension = nextDimension; receivedAt = minecraft.level.getGameTime();
+        gauges = List.copyOf(parsed); dimension = nextDimension;
         parsed.clear();
-        if (packet.info().getBoolean("TerritoryComplete")) for (var raw : packet.info().getList("TerritoryGauges", Tag.TAG_COMPOUND)) {
+        if (merged.getBoolean("TerritoryComplete")) for (var raw : merged.getList("TerritoryGauges", Tag.TAG_COMPOUND)) {
             if (parsed.size() >= 1024) break;
             try { parsed.add(CitizenGauge.load((net.minecraft.nbt.CompoundTag) raw)); } catch (IllegalArgumentException ignored) { }
         }
         territoryGauges = List.copyOf(parsed);
         territory.accept(territoryGauges.stream().filter(gauge -> presentOrUnloaded(minecraft.level, gauge)).toList());
     }
-    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { gauges = List.of(); territoryGauges = List.of(); territory = new ClientDistrictTerritory(); dimension = ""; selected = null; }
+    private static void clearView() { gauges = List.of(); territoryGauges = List.of(); territory = new ClientDistrictTerritory(); dimension = ""; snapshot = null; viewRevision = -1; nextResync = 0; }
+    public static void resetRendering() { territory = new ClientDistrictTerritory(); territory.accept(territoryGauges); }
+    @SubscribeEvent public static void unloadChunk(net.minecraftforge.event.level.ChunkEvent.Unload event) {
+        if (event.getLevel().isClientSide()) territory.chunkChanged(event.getChunk().getPos().toLong());
+    }
+    @SubscribeEvent public static void loadChunk(net.minecraftforge.event.level.ChunkEvent.Load event) {
+        if (event.getLevel().isClientSide()) territory.chunkChanged(event.getChunk().getPos().toLong());
+    }
+    @SubscribeEvent public static void unloadLevel(net.minecraftforge.event.level.LevelEvent.Unload event) {
+        if (event.getLevel().isClientSide()) clearView();
+    }
+    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clearView(); selected = null; }
     @SubscribeEvent public static void districtHint(RenderGuiEvent.Post event) {
         var mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.screen != null || mc.options.hideGui
@@ -83,10 +98,17 @@ public final class ClientGaugeView {
         if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) return;
         var mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
+        if (!dimension.isEmpty() && !dimension.equals(mc.level.dimension().location().toString())) clearView();
+        if (!GaugeInteractions.observingDistricts(mc.player)) { if (snapshot != null) clearView(); }
         if (GaugeInteractions.observingDistricts(mc.player)) {
+            if (snapshot == null && mc.level.getGameTime() >= nextResync) {
+                nextResync = mc.level.getGameTime() + 40;
+                com.rexhub.createapparel.network.ModNetwork.updateGauge(new com.rexhub.createapparel.network.CitizenGaugeActionPacket(-1, new UUID(0, 0), 0,
+                        com.rexhub.createapparel.network.CitizenGaugeActionPacket.Action.RESYNC, 0, 0, null));
+            }
             var stack = mc.player.getMainHandItem().getItem() instanceof CitizenGaugeItem ? mc.player.getMainHandItem() : mc.player.getOffhandItem();
             territory.preview(stack.getItem() instanceof CitizenGaugeItem ? CitizenGaugeItem.center(stack, mc.level) : null, CitizenGauge.DEFAULT_RANGE);
-            if (dimension.equals(mc.level.dimension().location().toString()) && mc.level.getGameTime() - receivedAt <= 100 && mc.level.getGameTime() % 5 == 0)
+            if (dimension.equals(mc.level.dimension().location().toString()) && mc.level.getGameTime() % 5 == 0)
                 territory.accept(territoryGauges.stream().filter(gauge -> presentOrUnloaded(mc.level, gauge)).toList());
             territory.tick(mc.level, mc.player.position());
         }
@@ -120,7 +142,7 @@ public final class ClientGaugeView {
         var pose = event.getPoseStack(); var camera = event.getCamera().getPosition();
         pose.pushPose();
         var buffers = minecraft.renderBuffers().bufferSource(); var consumer = buffers.getBuffer(RenderType.lines());
-        if (dimension.equals(minecraft.level.dimension().location().toString()) && minecraft.level.getGameTime() - receivedAt <= 100) {
+        if (dimension.equals(minecraft.level.dimension().location().toString()) && snapshot != null) {
             territory.render(consumer, pose.last(), minecraft.player.getY(), camera);
         }
         if (center != null) {

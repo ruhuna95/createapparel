@@ -64,6 +64,11 @@ public final class GaugeWireRouter {
     private long checkedAt = -1;
 
     private GaugeWireRouter() { }
+    public static void resetCaches() {
+        for (var router : ROUTERS.values()) {
+            router.routes.clear(); router.wires.clear(); router.fixed.clear(); router.checked.clear(); router.checkedAt = -1;
+        }
+    }
 
     @SubscribeEvent public static void loadChunk(ChunkEvent.Load event) {
         if (event.getLevel() instanceof Level level && level.isClientSide && event.getChunk() instanceof LevelChunk chunk)
@@ -156,7 +161,7 @@ public final class GaugeWireRouter {
             var old = previous.get(link);
             var path = old != null && GaugeWirePath.clear(level, state, link.first(), old.forward(), blocked) ? old.forward()
                     : GaugeWirePath.find(level, state, link.first(), link.second(), blocked);
-            result.put(link, Route.of(path)); occupied.reserve(points(plane, state, link.first(), path));
+            result.put(link, old != null && old.forward() == path ? old : Route.of(path)); occupied.reserve(points(plane, state, link.first(), path));
         }
         routes.put(plane, result);
     }

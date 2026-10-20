@@ -3,6 +3,7 @@ package com.rexhub.createapparel.citizen.population;
 import java.util.*;
 
 public final class PopulationRequest {
+    private record Step(UUID gauge, int depth, @javax.annotation.Nullable Step parent) { }
     private final UUID id = UUID.randomUUID();
     private final UUID requester;
     private final long createdAt;
@@ -16,7 +17,8 @@ public final class PopulationRequest {
     public long retryAt() { return retryAt; }
     public void retryAt(long time) { retryAt = time; }
     public long lastAttemptAt() { return lastAttemptAt; }
-    public void attempted(long now, int retryTicks) { lastAttemptAt = now; retryAt(now + retryTicks); }
+    public void attempted(long now, int retryTicks) { defer(now, now + retryTicks); }
+    public void defer(long now, long until) { lastAttemptAt = now; retryAt(until); }
     public static Comparator<PopulationRequest> schedulingOrder(java.util.function.ToDoubleFunction<PopulationRequest> ratio) {
         return Comparator.comparingLong(PopulationRequest::lastAttemptAt).thenComparingLong(PopulationRequest::createdAt).thenComparingDouble(ratio);
     }
@@ -30,24 +32,28 @@ public final class PopulationRequest {
                                 java.util.function.Predicate<CitizenGauge> donor, boolean preferExisting) {
         visited.clear(); visited.add(requester);
         List<UUID> sourceFallback = List.of();
-        var queue = new ArrayDeque<List<UUID>>(); queue.add(List.of(requester));
+        var queue = new ArrayDeque<Step>(); queue.add(new Step(requester, 0, null));
         while (!queue.isEmpty() && visited.size() <= maxNodes) {
-            var path = queue.removeFirst();
-            if (path.size() > maxHops) continue;
-            for (var id : data.linked(path.get(path.size() - 1))) {
+            var step = queue.removeFirst();
+            if (step.depth >= maxHops) continue;
+            for (var id : data.linked(step.gauge)) {
                 if (visited.size() >= maxNodes || !visited.add(id)) continue;
                 var gauge = data.gauge(id);
                 if (gauge == null) continue;
-                var next = new ArrayList<>(path); next.add(id);
+                var next = new Step(id, step.depth + 1, step);
                 if (donor.test(gauge)) {
-                    var supply = new ArrayList<>(next); Collections.reverse(supply);
-                    if (!preferExisting || !gauge.influx()) return List.copyOf(supply);
-                    if (sourceFallback.isEmpty()) sourceFallback = List.copyOf(supply);
+                    if (!preferExisting || !gauge.influx()) return path(next);
+                    if (sourceFallback.isEmpty()) sourceFallback = path(next);
                 }
                 if (!gauge.source()) queue.addLast(next);
             }
         }
         return sourceFallback;
+    }
+    private static List<UUID> path(Step end) {
+        var path = new ArrayList<UUID>();
+        for (var step = end; step != null; step = step.parent) path.add(step.gauge);
+        return List.copyOf(path);
     }
     public static boolean improves(CitizenGauge donor, int population, CitizenGauge requester, int requestedPopulation) {
         if (requester.source() || requester.target() == 0 || donor.outflow()) return false;

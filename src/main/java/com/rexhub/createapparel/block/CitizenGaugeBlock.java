@@ -107,7 +107,10 @@ public final class CitizenGaugeBlock extends FaceAttachedHorizontalDirectionalBl
         return super.getDrops(state, builder);
     }
     @Override @SuppressWarnings("deprecation") public void onRemove(BlockState state, Level level, BlockPos pos, BlockState next, boolean moving) {
-        if (!state.is(next.getBlock()) && level instanceof net.minecraft.server.level.ServerLevel server) CitizenPopulationManager.get(server).removeAt(pos);
+        if (!state.is(next.getBlock()) && level instanceof net.minecraft.server.level.ServerLevel server) {
+            if (moving) CitizenPopulationManager.get(server).suspendAt(pos);
+            else CitizenPopulationManager.get(server).removeAt(pos);
+        }
         super.onRemove(state, level, pos, next, moving);
     }
 }

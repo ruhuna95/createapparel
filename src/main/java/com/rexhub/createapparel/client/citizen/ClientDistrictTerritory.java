@@ -24,6 +24,7 @@ public final class ClientDistrictTerritory {
     private List<Line> preview = List.of();
     private int viewX = Integer.MIN_VALUE, viewZ;
     private long builtRevision = -1;
+    public void chunkChanged(long chunk) { meshes.remove(chunk); surfaces.unloadChunk(chunk); builtRevision = -1; }
 
     public void preview(@Nullable BlockPos center, int radius) {
         if (Objects.equals(center, previewCenter)) return;

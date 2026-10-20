@@ -102,6 +102,7 @@ public final class ApparelCommand {
                 .then(garmentCommand())
                 .then(wardrobeCommand())
                 .then(CitizenCommand.command())
+                .then(com.rexhub.createapparel.citizen.population.CitizenGaugeCommand.command())
                 .then(CitizenBehaviorCommand.behaviorCommand())
                 .then(bodyCommand()));
     }

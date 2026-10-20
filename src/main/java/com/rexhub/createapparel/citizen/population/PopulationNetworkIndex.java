@@ -5,14 +5,14 @@ import java.util.*;
 
 public final class PopulationNetworkIndex {
     public static final class Network {
-        private final Set<UUID> members = new HashSet<>();
-        private final Set<UUID> districts = new HashSet<>();
-        private final LinkedHashSet<UUID> shortages = new LinkedHashSet<>();
-        private final LinkedHashSet<UUID> surpluses = new LinkedHashSet<>();
-        private boolean complete, outflow;
-        public boolean saturated() { return complete && !districts.isEmpty() && shortages.isEmpty(); }
-        public boolean hasOutflow() { return outflow; }
-        public boolean hasSurplus() { return !surpluses.isEmpty(); }
+        private Set<UUID> members = new HashSet<>();
+        private Set<UUID> districts = new HashSet<>();
+        private LinkedHashSet<UUID> shortages = new LinkedHashSet<>();
+        private LinkedHashSet<UUID> surpluses = new LinkedHashSet<>();
+        private boolean complete, outflow, invalid, unresolved;
+        public boolean saturated() { return complete && !invalid && !unresolved && !districts.isEmpty() && shortages.isEmpty(); }
+        public boolean hasOutflow() { return !invalid && outflow; }
+        public boolean hasSurplus() { return !invalid && !surpluses.isEmpty(); }
         public boolean contains(UUID gauge) { return members.contains(gauge); }
         public int surplusCount() { return surpluses.size(); }
         public int shortageCount() { return shortages.size(); }
@@ -25,51 +25,61 @@ public final class PopulationNetworkIndex {
     }
     private final CitizenPopulationSavedData data;
     private final Map<UUID, Network> networks = new HashMap<>();
-    private final ArrayDeque<UUID> roots = new ArrayDeque<>(), frontier = new ArrayDeque<>();
-    private final Set<UUID> requested = new HashSet<>();
-    private long version = -1;
+    private final LinkedHashSet<UUID> roots = new LinkedHashSet<>();
+    private final ArrayDeque<UUID> frontier = new ArrayDeque<>();
+    private final Set<Network> components = Collections.newSetFromMap(new IdentityHashMap<>());
+    private int lastVisited;
     @Nullable private Network building;
 
     public PopulationNetworkIndex(CitizenPopulationSavedData data) { this.data = data; }
-    private void validate() {
-        if (version == data.version()) return;
-        version = data.version(); networks.clear(); roots.clear(); requested.clear(); frontier.clear(); building = null;
+    public void invalidate(UUID gauge) {
+        var network = networks.get(gauge);
+        if (network != null && !network.invalid) {
+            network.invalid = true; components.remove(network);
+            network.members = Set.of(); network.districts = Set.of();
+            network.shortages = new LinkedHashSet<>(); network.surpluses = new LinkedHashSet<>();
+        }
+        if (building != null && building.invalid) { frontier.clear(); building = null; }
     }
+    public void removed(UUID gauge) { invalidate(gauge); networks.remove(gauge); }
+    public int cacheCount() { return components.size(); }
+    public int lastVisited() { return lastVisited; }
     @Nullable public Network cached(UUID gauge) {
-        validate(); var network = networks.get(gauge);
-        return network != null && network.complete ? network : null;
+        var network = networks.get(gauge);
+        return network != null && network.complete && !network.invalid ? network : null;
     }
     @Nullable public Network request(UUID gauge) {
-        validate();
-        if (!networks.containsKey(gauge) && data.gauge(gauge) != null && requested.add(gauge)) roots.addLast(gauge);
+        var network = networks.get(gauge);
+        if ((network == null || network.invalid) && data.gauge(gauge) != null) roots.add(gauge);
         return cached(gauge);
     }
     public void tick(int budget) {
-        validate();
+        lastVisited = 0;
         while (budget > 0) {
             if (building == null) {
                 if (roots.isEmpty()) return;
-                var root = roots.removeFirst(); requested.remove(root);
-                if (networks.containsKey(root)) continue;
-                building = new Network(); building.members.add(root); networks.put(root, building); frontier.add(root);
+                var iterator = roots.iterator(); var root = iterator.next(); iterator.remove();
+                if (data.gauge(root) == null || networks.containsKey(root) && !networks.get(root).invalid) { budget--; continue; }
+                building = new Network(); components.add(building); building.members.add(root); networks.put(root, building); frontier.add(root);
             }
-            var id = frontier.removeFirst(); budget--;
+            var id = frontier.removeFirst(); budget--; lastVisited++;
             var gauge = data.gauge(id);
             if (gauge != null) {
                 if (gauge.outflow()) building.outflow = true;
                 if (!gauge.source()) { building.districts.add(id); refresh(building, gauge); }
                 for (var linked : data.linked(id)) if (building.members.add(linked)) {
+                    roots.remove(linked);
                     networks.put(linked, building); frontier.addLast(linked);
                 }
-            }
+            } else building.unresolved = true;
             if (frontier.isEmpty()) { building.complete = true; building = null; }
         }
     }
     public void populationChanged(@Nullable UUID district) {
-        validate(); var gauge = data.district(district);
+        var gauge = data.district(district);
         if (gauge == null) return;
         var network = networks.get(gauge.id());
-        if (network != null && network.districts.contains(gauge.id())) refresh(network, gauge);
+        if (network != null && !network.invalid && network.districts.contains(gauge.id())) refresh(network, gauge);
     }
     private void refresh(Network network, CitizenGauge gauge) {
         int population = data.population(gauge.districtId());

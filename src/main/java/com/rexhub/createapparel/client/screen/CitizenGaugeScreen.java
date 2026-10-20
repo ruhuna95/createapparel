@@ -128,6 +128,20 @@ public final class CitizenGaugeScreen extends AbstractContainerScreen<CitizenGau
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics); super.render(graphics, mouseX, mouseY, partialTick); renderTooltip(graphics, mouseX, mouseY);
         var info = menu.info();
+        if (districtLayout && isHovering(18, 94, 18, 18, mouseX, mouseY) || !districtLayout && isHovering(60, 32, imageWidth - 72, 24, mouseX, mouseY)) {
+            long last = info.getLong("LastSuccessfulAction");
+            var lines = new java.util.ArrayList<Component>(); lines.add(text("diagnostics"));
+            if (districtLayout) {
+                lines.add(text("population_summary", info.getInt("Population"), info.getInt("Target"))); lines.add(text("effective", info.getInt("Effective")));
+                lines.add(text("reserved", info.getInt("Incoming"), info.getInt("Outgoing")));
+            }
+            lines.add(text("population_status", text("status." + info.getString("PopulationStatus"))));
+            lines.add(text("request_status", text("request." + info.getString("RequestStatus")), info.getLong("RequestCreatedAt") < 0 || minecraft.level == null ? 0 : Math.max(0, minecraft.level.getGameTime() - info.getLong("RequestCreatedAt")) / 20));
+            lines.add(text("chains", info.getInt("ActiveChains")));
+            lines.add(last < 0 ? text("last_action_never") : text("last_action", Math.max(0, (info.getLong("Now") - last) / 20)));
+            lines.add(text("blocked", text("blocked." + info.getString("BlockedReason"))));
+            graphics.renderComponentTooltip(font, lines, mouseX, mouseY);
+        }
         if (districtLayout) {
             if (isHovering(12, imageHeight - 38, imageWidth - 82, 28, mouseX, mouseY))
                 graphics.renderComponentTooltip(font, List.of(text("name"), Component.literal(name.getValue().isEmpty() ? name.placeholder : name.getValue())), mouseX, mouseY);
@@ -216,6 +230,7 @@ public final class CitizenGaugeScreen extends AbstractContainerScreen<CitizenGau
         graphics.drawString(font, text("reserved", info.getInt("Incoming"), info.getInt("Outgoing")), 54, 106, 0xE4D5BE, false);
         long elapsed = minecraft.level == null ? 0 : Math.max(0, minecraft.level.getGameTime() - info.getLong("Now"));
         graphics.drawString(font, text("next_action", Math.max(0, (info.getLong("CooldownUntil") - info.getLong("Now") - elapsed + 19) / 20)), 54, 122, 0xE4D5BE, false);
+        graphics.drawString(font, "?", 23, 98, 0xE4D5BE, false);
         graphics.drawString(font, text("name"), 12, imageHeight - 38, 0x555555, false);
         if (invalidRange() || info.getInt("Overlaps") > 0) graphics.drawString(font, "!", 216, 54, invalidRange() ? 0xFF7777 : 0xFFBB55, false);
         if (invalidTarget()) graphics.drawString(font, "!", 216, 86, 0xFF7777, false);

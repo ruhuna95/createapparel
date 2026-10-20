@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 public record CitizenGaugeActionPacket(int containerId, UUID gaugeId, long version, Action action, int range, int target, @Nullable UUID other, @Nullable String name) {
-    public enum Action { SETTINGS, UNLINK, CONNECT, RELOCATE, CANCEL, FLOW }
+    public enum Action { SETTINGS, UNLINK, CONNECT, RELOCATE, CANCEL, FLOW, RESYNC }
     public CitizenGaugeActionPacket(int containerId, UUID gaugeId, long version, Action action, int range, int target, @Nullable UUID other) {
         this(containerId, gaugeId, version, action, range, target, other, null);
     }
@@ -22,6 +22,12 @@ public record CitizenGaugeActionPacket(int containerId, UUID gaugeId, long versi
                 buffer.readNullable(input -> input.readUtf(com.rexhub.createapparel.citizen.population.CitizenGauge.MAX_NAME_LENGTH)));
     }
     public void handle(ServerPlayer player) {
+        if (action == Action.RESYNC) {
+            if (containerId >= 0) {
+                if (player.containerMenu instanceof CitizenGaugeMenu menu && menu.containerId == containerId && menu.gaugeId().equals(gaugeId)) menu.resync(player);
+            } else com.rexhub.createapparel.citizen.population.GaugeViewSynchronization.resync(player);
+            return;
+        }
         if (action == Action.CANCEL) { com.rexhub.createapparel.citizen.population.GaugeInteractions.cancel(player, gaugeId); return; }
         if (player.containerMenu instanceof CitizenGaugeMenu menu) menu.apply(player, this);
     }

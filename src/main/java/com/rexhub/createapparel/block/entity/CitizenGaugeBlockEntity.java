@@ -23,14 +23,23 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
     private java.util.List<Connection> connections = java.util.List.of();
     private final boolean[] panels = new boolean[4];
     private final UUID[] ids = new UUID[4];
+    private final com.rexhub.createapparel.citizen.population.CitizenGauge[] definitions = new com.rexhub.createapparel.citizen.population.CitizenGauge[4];
+    private final String[] registrationIssues = new String[4];
     private final BlockPos[] centers = new BlockPos[4];
     private final boolean[] outflows = new boolean[4];
     private final DistrictStatus[] districtStatuses = new DistrictStatus[4];
+    @Nullable private CompoundTag lastUpdateStructure;
     public CitizenGaugeBlockEntity(BlockPos pos, BlockState state) { super(ModBlockEntities.CITIZEN_GAUGE.get(), pos, state); }
     public boolean hasPanel(int slot) { return slot >= 0 && slot < 4 && panels[slot]; }
     public int panelCount() { int count = 0; for (boolean panel : panels) if (panel) count++; return count; }
     @Nullable public UUID gaugeId() { return gaugeId(0); }
     @Nullable public UUID gaugeId(int slot) { return ids[slot]; }
+    @Nullable public com.rexhub.createapparel.citizen.population.CitizenGauge definition(int slot) { return definitions[slot]; }
+    @Nullable public String registrationIssue(int slot) { return registrationIssues[slot]; }
+    public void registrationIssue(int slot, @Nullable String issue) {
+        if (issue != null && !issue.equals(registrationIssues[slot])) com.mojang.logging.LogUtils.getLogger().warn("Citizen Gauge registration isolated at {} slot {}: {}", worldPosition, slot, issue);
+        registrationIssues[slot] = issue;
+    }
     public boolean contains(UUID id) { for (int slot = 0; slot < 4; slot++) if (panels[slot] && id.equals(ids[slot])) return true; return false; }
     @Nullable public BlockPos initialCenter() { return initialCenter(0); }
     @Nullable public BlockPos initialCenter(int slot) { return centers[slot]; }
@@ -45,6 +54,12 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
     }
     public void setGaugeId(int slot, UUID id) {
         if (!id.equals(ids[slot])) { panels[slot] = true; ids[slot] = id; sync(); }
+    }
+    public void registered(com.rexhub.createapparel.citizen.population.CitizenGauge gauge) {
+        int slot = gauge.slot();
+        boolean changed = !gauge.id().equals(ids[slot]) || !java.util.Objects.equals(gauge.center(), centers[slot]) || gauge.outflow() != outflows[slot];
+        panels[slot] = true; ids[slot] = gauge.id(); centers[slot] = gauge.center(); outflows[slot] = gauge.outflow(); definitions[slot] = gauge;
+        registrationIssues[slot] = null; if (changed) sync();
     }
     public void initialize(@Nullable BlockPos center) { initialize(0, center); }
     public boolean initialize(int slot, @Nullable BlockPos center) {
@@ -73,12 +88,16 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
     }
     public boolean removePanel(int slot) {
         if (!hasPanel(slot)) return false;
-        if (level instanceof ServerLevel server && ids[slot] != null) CitizenPopulationManager.get(server).remove(ids[slot]);
+        if (level instanceof ServerLevel server && ids[slot] != null) {
+            var manager = CitizenPopulationManager.get(server); var gauge = manager.data().at(worldPosition, slot);
+            if (gauge != null && gauge.id().equals(ids[slot])) manager.remove(ids[slot]);
+        }
         detachPanel(slot); return true;
     }
-    public void detachPanel(int slot) { panels[slot] = false; ids[slot] = null; centers[slot] = null; outflows[slot] = false; districtStatuses[slot] = null; sync(); }
+    public void detachPanel(int slot) { panels[slot] = false; ids[slot] = null; centers[slot] = null; outflows[slot] = false; districtStatuses[slot] = null; definitions[slot] = null; registrationIssues[slot] = null; sync(); }
     public void acceptMovedPanel(com.rexhub.createapparel.citizen.population.CitizenGauge gauge) {
         int slot = gauge.slot(); panels[slot] = true; ids[slot] = gauge.id(); centers[slot] = gauge.center(); outflows[slot] = gauge.outflow(); sync();
+        definitions[slot] = gauge;
     }
     public java.util.List<Connection> connections() { return connections; }
     @Override public net.minecraft.world.phys.AABB getRenderBoundingBox() {
@@ -97,18 +116,36 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
     }
     @Override protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
+        tag.put("Panels", writePanels(true));
+    }
+    private ListTag writePanels(boolean backup) {
         var entries = new ListTag();
         for (int slot = 0; slot < 4; slot++) if (panels[slot]) {
             var entry = new CompoundTag(); entry.putInt("Slot", slot);
             if (ids[slot] != null) entry.putUUID("GaugeId", ids[slot]);
             if (centers[slot] != null) entry.putLong("GaugeCenter", centers[slot].asLong());
             if (outflows[slot]) entry.putBoolean("GaugeOutflow", true);
+            var definition = definitions[slot];
+            if (backup && level instanceof ServerLevel server) {
+                var saved = CitizenPopulationManager.get(server).data().gauge(ids[slot]);
+                if (saved != null && saved.pos().equals(worldPosition) && saved.slot() == slot) definition = saved;
+            }
+            if (backup && definition != null) entry.put("Definition", definition.save());
             entries.add(entry);
         }
-        tag.put("Panels", entries);
+        return entries;
     }
     @Override public void load(CompoundTag tag) {
         super.load(tag);
+        if (tag.getBoolean("StatusOnly")) {
+            for (var raw : tag.getList("Panels", Tag.TAG_COMPOUND)) {
+                var entry = (CompoundTag) raw; int slot = entry.getInt("Slot");
+                if (hasPanel(slot) && entry.hasUUID("GaugeId") && entry.getUUID("GaugeId").equals(ids[slot])
+                        && entry.hasUUID("District") && entry.contains("DistrictName", Tag.TAG_STRING))
+                    districtStatuses[slot] = new DistrictStatus(entry.getUUID("District"), entry.getString("DistrictName"), entry.getInt("Population"), entry.getInt("Target"));
+            }
+            return;
+        }
         var edges = new java.util.ArrayList<Connection>();
         for (var raw : tag.getList("Connections", Tag.TAG_COMPOUND)) {
             var entry = (CompoundTag) raw; int from = entry.getInt("Slot"), to = entry.getInt("TargetSlot");
@@ -118,6 +155,7 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
         java.util.Arrays.fill(panels, false); java.util.Arrays.fill(ids, null); java.util.Arrays.fill(centers, null);
         java.util.Arrays.fill(districtStatuses, null);
         java.util.Arrays.fill(outflows, false);
+        java.util.Arrays.fill(definitions, null); java.util.Arrays.fill(registrationIssues, null);
         if (!tag.contains("Panels", Tag.TAG_LIST)) {
             if (tag.hasUUID("GaugeId") || tag.contains("GaugeCenter", Tag.TAG_LONG)) readPanel(tag, 0);
             return;
@@ -126,16 +164,22 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
             var entry = (CompoundTag) raw; int slot = entry.getInt("Slot");
             if (slot >= 0 && slot < 4) readPanel(entry, slot);
         }
+        if (level instanceof ServerLevel server && level.getBlockEntity(worldPosition) == this)
+            for (int slot = 0; slot < 4; slot++) if (panels[slot]) CitizenPopulationManager.get(server).register(this, slot);
     }
     private void readPanel(CompoundTag entry, int slot) {
         panels[slot] = true; ids[slot] = entry.hasUUID("GaugeId") ? entry.getUUID("GaugeId") : null;
         centers[slot] = entry.contains("GaugeCenter", Tag.TAG_LONG) ? BlockPos.of(entry.getLong("GaugeCenter")) : null;
         outflows[slot] = centers[slot] == null && entry.getBoolean("GaugeOutflow");
+        if (entry.contains("Definition", Tag.TAG_COMPOUND)) try {
+            var definition = com.rexhub.createapparel.citizen.population.CitizenGauge.load(entry.getCompound("Definition"));
+            if (definition.id().equals(ids[slot])) definitions[slot] = definition;
+        } catch (IllegalArgumentException exception) { registrationIssue(slot, "INVALID_DEFINITION"); }
         if (centers[slot] != null && entry.hasUUID("District") && entry.contains("DistrictName", Tag.TAG_STRING))
             districtStatuses[slot] = new DistrictStatus(entry.getUUID("District"), entry.getString("DistrictName"), entry.getInt("Population"), entry.getInt("Target"));
     }
     @Override public CompoundTag getUpdateTag() {
-        var tag = saveWithoutMetadata(); var edges = new ListTag();
+        var tag = new CompoundTag(); tag.put("Panels", writePanels(false)); var edges = new ListTag();
         if (level instanceof ServerLevel server) {
             var data = CitizenPopulationManager.get(server).data();
             for (var raw : tag.getList("Panels", Tag.TAG_COMPOUND)) {
@@ -154,5 +198,16 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
         }
         tag.put("Connections", edges); return tag;
     }
-    @Override public ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
+    @Override public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        var tag = getUpdateTag(); var structure = tag.copy();
+        for (var raw : structure.getList("Panels", Tag.TAG_COMPOUND)) {
+            var panel = (CompoundTag) raw; panel.remove("Population"); panel.remove("Target"); panel.remove("DistrictName");
+        }
+        if (structure.equals(lastUpdateStructure)) {
+            var status = new CompoundTag(); status.putBoolean("StatusOnly", true); status.put("Panels", tag.getList("Panels", Tag.TAG_COMPOUND));
+            return ClientboundBlockEntityDataPacket.create(this, ignored -> status);
+        }
+        lastUpdateStructure = structure;
+        return ClientboundBlockEntityDataPacket.create(this, ignored -> tag);
+    }
 }

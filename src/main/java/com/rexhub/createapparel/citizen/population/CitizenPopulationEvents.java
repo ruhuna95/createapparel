@@ -6,8 +6,6 @@ import com.rexhub.createapparel.entity.Citizen;
 import com.rexhub.createapparel.item.CitizenGaugeItem;
 import com.rexhub.createapparel.network.*;
 import com.rexhub.createapparel.recipe.GaugeResetRecipe;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -28,10 +26,19 @@ import java.util.Map;
 public final class CitizenPopulationEvents {
     private static final Map<ItemEntity, ItemExpireEvent> EXPIRING_GAUGES = new IdentityHashMap<>();
     private CitizenPopulationEvents() { }
+    @SubscribeEvent public static void serverTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) CitizenPopulationManager.beginServerTick();
+        else CitizenPopulationManager.endServerTick();
+    }
     @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void join(EntityJoinLevelEvent event) {
+        if (!event.isCanceled() && event.getLevel() instanceof ServerLevel level
+                && event.getEntity() instanceof com.simibubi.create.content.contraptions.AbstractContraptionEntity contraption)
+            CitizenPopulationManager.get(level).contraptionJoined(contraption);
         if (!event.isCanceled() && event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof Citizen citizen) CitizenPopulationManager.get(level).join(citizen);
     }
     @SubscribeEvent public static void leave(EntityLeaveLevelEvent event) {
+        if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof com.simibubi.create.content.contraptions.AbstractContraptionEntity contraption)
+            CitizenPopulationManager.get(level).contraptionRemoved(contraption);
         if (event.getLevel() instanceof ServerLevel && event.getEntity() instanceof ItemEntity item) {
             var expiry = EXPIRING_GAUGES.remove(item); var reason = item.getRemovalReason();
             if (reason == Entity.RemovalReason.KILLED
@@ -82,23 +89,15 @@ public final class CitizenPopulationEvents {
     @SubscribeEvent public static void playerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
         GaugeInteractions.tick(player);
-        if (!GaugeInteractions.observingDistricts(player) || Math.floorMod(player.level().getGameTime() + player.getId(), 40) != 0) return;
-        var manager = CitizenPopulationManager.get(player.serverLevel()); var tag = new CompoundTag(); var gauges = new ListTag();
-        if (GaugeInteractions.holding(player)) manager.data().gauges().stream().filter(gauge -> player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(gauge.pos())) <= 512 * 512
-                || gauge.contains(player.position())).limit(256).forEach(gauge -> gauges.add(gauge.save()));
-        tag.put("Gauges", gauges); tag.putString("Dimension", player.level().dimension().location().toString());
-        var bounds = new DistrictTerritory.Bounds(player.getBlockX() - 144, player.getBlockZ() - 144, player.getBlockX() + 144, player.getBlockZ() + 144);
-        var seeds = manager.data().territory().candidates(bounds); var entries = new ListTag();
-        for (var seed : seeds.stream().limit(1024).toList()) entries.add(manager.data().district(seed.districtId()).save());
-        tag.put("TerritoryGauges", entries); tag.putBoolean("TerritoryComplete", seeds.size() <= 1024);
-        ModNetwork.sendGaugeInfo(player, new CitizenGaugeInfoPacket(-1, new java.util.UUID(0, 0), tag));
+        if (!GaugeInteractions.observingDistricts(player)) { GaugeViewSynchronization.stopObserving(player.getUUID()); return; }
+        if (Math.floorMod(player.level().getGameTime() + player.getId(), 40) == 0) GaugeViewSynchronization.send(player);
     }
     @SubscribeEvent public static void chunk(ChunkEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel level && event.getChunk() instanceof net.minecraft.world.level.chunk.LevelChunk chunk)
-            level.getServer().execute(() -> { if (level.getChunkSource().hasChunk(chunk.getPos().x, chunk.getPos().z)) CitizenPopulationManager.get(level).reconcile(chunk); });
+            level.getServer().execute(() -> { if (level.getChunkSource().hasChunk(chunk.getPos().x, chunk.getPos().z)) CitizenPopulationManager.get(level).queueReconciliation(chunk.getPos().toLong()); });
     }
     @SubscribeEvent public static void unload(LevelEvent.Unload event) { if (event.getLevel() instanceof ServerLevel level) CitizenPopulationManager.unload(level); }
-    @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) { GaugeInteractions.clear(event.getEntity().getUUID()); }
-    @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent event) { GaugeInteractions.clear(event.getEntity().getUUID()); }
-    @SubscribeEvent public static void stop(ServerStoppedEvent event) { EXPIRING_GAUGES.clear(); CitizenPopulationManager.clear(); GaugeInteractions.clear(); }
+    @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) { GaugeInteractions.clear(event.getEntity().getUUID()); GaugeViewSynchronization.clear(event.getEntity().getUUID()); }
+    @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent event) { GaugeInteractions.clear(event.getEntity().getUUID()); GaugeViewSynchronization.clear(event.getEntity().getUUID()); }
+    @SubscribeEvent public static void stop(ServerStoppedEvent event) { EXPIRING_GAUGES.clear(); CitizenPopulationManager.clear(); GaugeInteractions.clear(); GaugeViewSynchronization.clear(); }
 }

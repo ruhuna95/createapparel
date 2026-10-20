@@ -16,6 +16,20 @@ import javax.annotation.Nullable;
 public final class CitizenGaugeItem extends BlockItem {
     private static final String CENTER_RESERVATION = "GaugeCenterReservation";
     public CitizenGaugeItem(Block block, Properties properties) { super(block, properties); }
+    @Override public int getMaxStackSize(ItemStack stack) {
+        return stack.hasTag() && stack.getTag().contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG) ? 1 : super.getMaxStackSize(stack);
+    }
+    @Override public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity, int slot, boolean selected) {
+        super.inventoryTick(stack, level, entity, slot, selected);
+        if (!(level instanceof net.minecraft.server.level.ServerLevel server) || !(entity instanceof net.minecraft.world.entity.player.Player player)
+                || Math.floorMod(level.getGameTime() + entity.getId(), 200) != 0) return;
+        var id = reservation(stack); var center = center(stack, level); if (id == null || center == null) return;
+        int observed = 0;
+        for (int index = 0; index < player.getInventory().getContainerSize(); index++) {
+            var candidate = player.getInventory().getItem(index); if (id.equals(reservation(candidate))) observed += candidate.getCount();
+        }
+        CitizenPopulationManager.get(server).data().verifyCenter(id, level.dimension().location().toString(), observed, level.getGameTime());
+    }
     @Override public boolean isFoil(ItemStack stack) {
         return stack.hasTag() && stack.getTag().contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG) || super.isFoil(stack);
     }
@@ -34,14 +48,29 @@ public final class CitizenGaugeItem extends BlockItem {
             if (context.getLevel() instanceof net.minecraft.server.level.ServerLevel server) {
                 var stack = context.getItemInHand();
                 var previous = reservation(stack);
-                var id = CitizenPopulationManager.get(server).data().reserveCenter(context.getClickedPos(), previous, stack.getCount());
+                var data = CitizenPopulationManager.get(server).data();
+                var id = data.reserveCenter(context.getClickedPos(), previous, 1, server.dimension().location().toString(), server.getGameTime());
                 if (id == null) { reportCenterUsed(player); return InteractionResult.FAIL; }
                 if (!id.equals(previous)) releasePreviousCenter(server, stack, previous, false);
+                else if (stack.getCount() > 1) {
+                    data.verifyCenter(previous, server.dimension().location().toString(), stack.getCount(), server.getGameTime());
+                    data.releaseCenter(previous, stack.getCount() - 1);
+                }
+                var remainder = stack.split(stack.getCount() - 1);
+                if (remainder.hasTag()) {
+                    var remainderTag = remainder.getTag();
+                    remainderTag.remove("GaugeCenter"); remainderTag.remove("GaugeDimension"); remainderTag.remove(CENTER_RESERVATION);
+                    if (remainderTag.isEmpty()) remainder.setTag(null);
+                }
                 var tag = stack.getOrCreateTag();
                 tag.putLong("GaugeCenter", context.getClickedPos().asLong());
                 tag.putString("GaugeDimension", context.getLevel().dimension().location().toString());
                 tag.putUUID(CENTER_RESERVATION, id);
                 tag.remove("GaugeOutflow");
+                if (player.isCreative()) player.setItemInHand(context.getHand(), stack.copy());
+                player.getInventory().placeItemBackInInventory(remainder);
+                player.getInventory().setChanged();
+                player.containerMenu.broadcastChanges();
                 player.displayClientMessage(Component.translatable("message.createapparel.gauge.center", context.getClickedPos().toShortString()), true);
             }
             return InteractionResult.sidedSuccess(context.getLevel().isClientSide);
@@ -88,7 +117,10 @@ public final class CitizenGaugeItem extends BlockItem {
         if (previous != null) {
             var data = CitizenPopulationManager.get(previous).data();
             if (destroyed) data.releaseCenter(reservation, stack.getCount());
-            else data.releaseCenterForRerecord(reservation, stack.getCount());
+            else {
+                data.verifyCenter(reservation, previous.dimension().location().toString(), stack.getCount(), previous.getGameTime());
+                data.releaseCenterForRerecord(reservation, stack.getCount());
+            }
         }
     }
     public static void releaseDestroyedReservation(net.minecraft.world.entity.item.ItemEntity entity) {

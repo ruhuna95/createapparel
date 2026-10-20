@@ -194,6 +194,10 @@ public final class CreateApparelClient {
         event.registerReloadListener(com.rexhub.createapparel.client.citizen.ClientCitizenAssets.INSTANCE);
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener)
                 resourceManager -> com.rexhub.createapparel.client.renderer.SilkwormRearingTrayContentsRenderer.resetModel());
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) resourceManager -> {
+            com.rexhub.createapparel.client.renderer.GaugeWireRouter.resetCaches();
+            com.rexhub.createapparel.client.citizen.ClientGaugeView.resetRendering();
+        });
     }
 
     @SubscribeEvent

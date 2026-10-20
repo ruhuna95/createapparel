@@ -430,7 +430,8 @@ class CitizenPopulationTest {
         var id = UUID.randomUUID(); var chain = UUID.randomUUID(); data.register(id, new CitizenPopulationState(gauge.districtId(), false, false, 0));
         data.reserve(id, chain); assertEquals(chain, data.reservation(id));
         var tag = data.save(new CompoundTag());
-        assertEquals(chain, tag.getList("Citizens", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).getUUID("TransferReservation"));
+        assertFalse(tag.getList("Citizens", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).contains("TransferReservation"));
+        tag.getList("Citizens", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).putUUID("TransferReservation", chain);
         var restored = CitizenPopulationSavedData.load(tag);
         assertNull(restored.reservation(id)); assertEquals(1, restored.population(gauge.districtId()));
         data.release(id); assertNull(data.reservation(id));

@@ -21,6 +21,8 @@ public final class CitizenGaugeMenu extends AbstractContainerMenu {
     private final net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension;
     private CompoundTag info = new CompoundTag();
     private long nextInfo;
+    private long infoRevision, nextResync;
+    @javax.annotation.Nullable private CompoundTag lastSent;
     public CitizenGaugeMenu(int id, Inventory inventory, FriendlyByteBuf buffer) {
         this(id, inventory, buffer.readUUID(), buffer.readBlockPos());
         var openingInfo = buffer.readNbt();
@@ -31,7 +33,17 @@ public final class CitizenGaugeMenu extends AbstractContainerMenu {
     }
     public UUID gaugeId() { return gaugeId; }
     public CompoundTag info() { return info; }
-    public void accept(CompoundTag info) { this.info = info.copy(); }
+    public void accept(CompoundTag info) {
+        var merged = GaugeViewDelta.applyFields(this.info, infoRevision, info);
+        if (merged == null) {
+            if (owner.level().getGameTime() >= nextResync) {
+                nextResync = owner.level().getGameTime() + 20;
+                ModNetwork.updateGauge(new CitizenGaugeActionPacket(containerId, gaugeId, 0, CitizenGaugeActionPacket.Action.RESYNC, 0, 0, null));
+            }
+            return;
+        }
+        this.info = merged; infoRevision = info.getLong("MenuRevision");
+    }
     @Override public ItemStack quickMoveStack(Player player, int index) { return ItemStack.EMPTY; }
     @Override public boolean stillValid(Player player) {
         return player == owner && dimension.equals(player.level().dimension()) && !player.isSpectator() && player.mayBuild()
@@ -49,6 +61,7 @@ public final class CitizenGaugeMenu extends AbstractContainerMenu {
         tag.putLong("Version", manager.data().version());
         tag.putInt("Population", gauge.source() ? 0 : manager.data().population(gauge.districtId()));
         tag.putInt("Incoming", manager.incoming(gaugeId)); tag.putInt("Outgoing", manager.outgoing(gaugeId));
+        tag.merge(manager.diagnostics(gauge));
         tag.putInt("LoadedCitizens", manager.loadedCount()); tag.putLong("Now", player.level().getGameTime());
         var overlap = manager.data().overlap(gaugeId);
         tag.putInt("Overlaps", overlap.count());
@@ -59,7 +72,15 @@ public final class CitizenGaugeMenu extends AbstractContainerMenu {
             var entry = linked.save(); entry.putBoolean("Loaded", manager.loaded(linked)); links.add(entry);
         }
         tag.put("Links", links); info = tag; nextInfo = player.level().getGameTime() + 20;
-        ModNetwork.sendGaugeInfo(player, new CitizenGaugeInfoPacket(containerId, gaugeId, tag));
+        var delta = GaugeViewDelta.fieldsBetween(lastSent, tag, infoRevision, infoRevision + 1);
+        if (!delta.isEmpty()) {
+            infoRevision++; lastSent = tag.copy();
+            ModNetwork.sendGaugeInfo(player, new CitizenGaugeInfoPacket(containerId, gaugeId, delta));
+        }
+    }
+    public void resync(ServerPlayer player) {
+        if (!stillValid(player) || player.level().getGameTime() < nextResync) return;
+        nextResync = player.level().getGameTime() + 20; lastSent = null; sendInfo(player);
     }
     public void apply(ServerPlayer player, CitizenGaugeActionPacket packet) {
         if (player.containerMenu != this || packet.containerId() != containerId || !gaugeId.equals(packet.gaugeId()) || !stillValid(player)) return;

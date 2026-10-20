@@ -67,6 +67,7 @@ public final class CitizenIntentController {
         if (intent.source() == CitizenIntent.Source.PLAYER) manager.interrupt(citizen.getUUID());
         clear(false);
         active = intent; destination = point; gatewayPassed = false; lastProgress = level.getGameTime(); lastDistance = Double.POSITIVE_INFINITY;
+        manager.intentChanged(citizen, null, intent);
         selectGateway(level);
         move(); return true;
     }
@@ -78,6 +79,7 @@ public final class CitizenIntentController {
     public void cancel() { clear(true); }
     private void clear(boolean notify) {
         var previous = active;
+        if (previous != null && citizen.level() instanceof ServerLevel server) CitizenPopulationManager.get(server).intentChanged(citizen, previous, null);
         active = null; destination = null; departure = null; progressMarker = null; stucked = false; gatewayFallbackAllowed = false;
         resetAutonomy();
         citizen.routeMovement().reset();
@@ -87,6 +89,8 @@ public final class CitizenIntentController {
     private CitizenPathfindingScheduler.Priority priority() {
         return active != null && active.source() == CitizenIntent.Source.PLAYER ? CitizenPathfindingScheduler.Priority.PLAYER
                 : active != null && active.source() == CitizenIntent.Source.RETURN_HOME ? CitizenPathfindingScheduler.Priority.SAFETY
+                : active != null && active.source() == CitizenIntent.Source.FASHION ? CitizenPathfindingScheduler.Priority.SAFETY
+                : active != null && active.source() == CitizenIntent.Source.GAUGE_TRANSFER ? CitizenPathfindingScheduler.Priority.TRANSFER
                 : active != null && active.source() == CitizenIntent.Source.IMPULSE_VISIT ? CitizenPathfindingScheduler.Priority.AUTONOMY : CitizenPathfindingScheduler.Priority.ROUTE;
     }
     private void selectGateway(ServerLevel level) {
@@ -128,7 +132,10 @@ public final class CitizenIntentController {
         manager.update(citizen);
         trackAway(manager, now);
         if (citizen.isNoAi()) { if (active != null) cancel(); resetAutonomy(); return; }
-        if (active == null) { tickAutonomyRecovery(level, manager, now); autonomy(level, now); return; }
+        if (active == null) {
+            if (CitizenActivityScheduler.get(level).state(citizen) == CitizenActivityScheduler.State.THROTTLED) { resetAutonomy(); return; }
+            tickAutonomyRecovery(level, manager, now); autonomy(level, now); return;
+        }
         if (now >= active.expiresAt() || active.district() != null && !manager.enabled(active.district())) { cancel(); return; }
         var reason = active.source() == CitizenIntent.Source.GAUGE_TRANSFER ? CitizenActivityScheduler.Reason.GAUGE_TRANSFER
                 : active.source() == CitizenIntent.Source.RETURN_HOME ? CitizenActivityScheduler.Reason.RETURN_HOME : CitizenActivityScheduler.Reason.PLAYER;

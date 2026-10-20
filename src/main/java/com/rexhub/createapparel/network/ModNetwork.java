@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "33";
+    private static final String PROTOCOL_VERSION = "34";
 
     private static SimpleChannel channel;
 
@@ -197,7 +197,14 @@ public final class ModNetwork {
     public static void updateGauge(CitizenGaugeActionPacket packet) { channel().sendToServer(packet); }
     public static void discardGaugeReservation(GaugeReservationDiscardPacket packet) { channel().sendToServer(packet); }
     public static void sendGaugeInfo(ServerPlayer player, CitizenGaugeInfoPacket packet) {
-        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+        if (channel != null && player.connection != null) {
+            var metrics = com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get(player.serverLevel()).metrics();
+            if (metrics.enabled()) {
+                var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+                try { packet.encode(buffer); metrics.packet(buffer.readableBytes()); } finally { buffer.release(); }
+            }
+            channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+        }
     }
 
     public static void sendCitizenBehaviorInfo(ServerPlayer player, CitizenBehaviorInfoPacket packet) {

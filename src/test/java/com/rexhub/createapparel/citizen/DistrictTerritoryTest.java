@@ -87,4 +87,20 @@ class DistrictTerritoryTest {
         while (sync.pending()) { assertTrue(sync.tick() <= MarkerDistrictSynchronizer.MARKER_BUDGET); assertTrue(++ticks < 30); }
         assertTrue(routes.markers().stream().anyMatch(marker -> B.equals(marker.districtId())));
     }
+    @Test void largeGeometryChangesAlsoBudgetChunkDiscoveryInsteadOfScanningEveryRegionAtOnce() {
+        var territory = new DistrictTerritory(); var routes = new CitizenRouteSavedData();
+        var sync = new MarkerDistrictSynchronizer(territory, routes);
+        for (int i = 0; i < 20; i++) {
+            var id = new UUID(40, i); territory.put(new DistrictTerritory.Seed(id, i * 1024, 0, 256));
+            routes.put(RouteMarker.create(new UUID(41, i), new BlockPos(i * 1024, 64, 0), RouteMarkerType.NORMAL));
+        }
+        int ticks = 0;
+        while (sync.pending()) {
+            assertTrue(sync.tick() <= MarkerDistrictSynchronizer.MARKER_BUDGET);
+            assertTrue(sync.lastGeometryChunks() <= MarkerDistrictSynchronizer.GEOMETRY_CHUNK_BUDGET);
+            assertTrue(++ticks < 150);
+        }
+        assertTrue(ticks > 1); assertTrue(routes.markers().stream().allMatch(marker -> marker.districtId() != null));
+        assertEquals(territory.revision(), routes.territoryRevision());
+    }
 }
