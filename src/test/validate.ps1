@@ -5,7 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$projectDirectory = Split-Path -Parent $PSScriptRoot
+$projectDirectory = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $gradleArguments = @('--console=plain', '-PjeiEnabled=false')
 if ($Offline) { $gradleArguments += '--offline' }
 

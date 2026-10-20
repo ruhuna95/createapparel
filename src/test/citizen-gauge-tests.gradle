@@ -7,6 +7,17 @@ sourceSets {
     }
 }
 
+if (providers.gradleProperty('gaugeTrash').getOrElse('false').toBoolean()) {
+    repositories {
+        flatDir { dirs project.file('run/gauge-tests/dependencies'); content { includeGroup 'local.gauge' } }
+    }
+    dependencies {
+        gaugeTestRuntimeOnly fg.deobf('local.gauge:trashcans:1.1.1a-forge-mc1.20.4')
+        gaugeTestRuntimeOnly fg.deobf('local.gauge:supermartijn642configlib:1.1.8-forge-mc1.20')
+        gaugeTestRuntimeOnly fg.deobf('local.gauge:supermartijn642corelib:1.1.25a-forge-mc1.20.1')
+    }
+}
+
 def gaugeTestServerDirectory = file("run/gauge-tests/server-${System.currentTimeMillis()}")
 def gaugeTestClientDirectory = file('run/gauge-tests/client')
 minecraft.runs {
@@ -14,6 +25,8 @@ minecraft.runs {
         parent minecraft.runs.gameTestServer
         workingDirectory gaugeTestServerDirectory
         property 'apparel.gaugeTest.server', 'true'
+        property 'apparel.gaugeTest.scale', providers.gradleProperty('gaugeScale').getOrElse('false')
+        property 'apparel.gaugeTest.trash', providers.gradleProperty('gaugeTrash').getOrElse('false')
         property 'forge.logging.console.level', 'info'
         mods { "${mod_id}" { source sourceSets.gaugeTest } }
     }

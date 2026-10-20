@@ -14,8 +14,11 @@ public final class GaugeTestSelection {
         if (!Boolean.getBoolean("apparel.gaugeTest.server")) return;
         event.enqueueWork(() -> {
             ForgeGameTestHooks.registerGametests();
-            GameTestRegistry.getAllTestFunctions().removeIf(test -> !test.getBatchName().equals("citizen_population")
-                    && !test.getBatchName().equals("citizen_population_recovery"));
+            boolean scale = Boolean.getBoolean("apparel.gaugeTest.scale");
+            boolean trash = Boolean.getBoolean("apparel.gaugeTest.trash");
+            GameTestRegistry.getAllTestFunctions().removeIf(test -> scale ? !test.getBatchName().equals("citizen_scale")
+                    : trash ? !test.getBatchName().equals("citizen_trash_compat")
+                    : !test.getBatchName().equals("citizen_population") && !test.getBatchName().equals("citizen_population_recovery"));
             if (GameTestRegistry.getAllTestFunctions().isEmpty()) throw new AssertionError("No Citizen Gauge tests selected");
             LogUtils.getLogger().info("GAUGE_TESTS_SELECTED {}", GameTestRegistry.getAllTestFunctions().size());
         });

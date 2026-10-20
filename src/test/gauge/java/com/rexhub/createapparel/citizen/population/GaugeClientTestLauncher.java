@@ -115,6 +115,9 @@ public final class GaugeClientTestLauncher {
                     checkChildWalking(); com.rexhub.createapparel.client.guide.GaugeTooltipClientChecks.check();
                     server(() -> {
                         var player = serverPlayer();
+                        checkResyncThrottle(player);
+                        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.CITIZEN_GAUGE.get(), 8));
+                        player.inventoryMenu.broadcastChanges();
                         player.connection.teleport(-4.5, 71, -2.5, 0, 60);
                     }); advance(140);
                 } }
@@ -126,13 +129,17 @@ public final class GaugeClientTestLauncher {
                 } }
                 case 142 -> { if (ticks > 5) {
                     check(CENTER_CHECK_GROUND.equals(com.rexhub.createapparel.item.CitizenGaugeItem.center(mc.player.getMainHandItem(), mc.level)), "Actual client receives the first recorded center");
+                    check(mc.player.getMainHandItem().getCount() == 1 && mc.player.getMainHandItem().getMaxStackSize() == 1
+                            && mc.player.getInventory().countItem(ModItems.CITIZEN_GAUGE.get()) == 8, "Actual client receives one unstackable recorded Gauge and all seven unrecorded remainder items");
                     server(() -> {
                         var player = serverPlayer();
                         check(player.isShiftKeyDown(), "Real server receives sneak input");
                         var tag = player.getMainHandItem().getTag();
                         check(tag != null && tag.hasUUID("GaugeCenterReservation"), "Actual item-use packet reserves the unplaced center");
                         centerReservation = tag.getUUID("GaugeCenterReservation");
-                        player.getInventory().setItem(1, player.getMainHandItem());
+                        check(CitizenPopulationManager.get(player.serverLevel()).data().centerClaim(centerReservation).reservedItemCount() == 1,
+                                "The actual item-use packet creates a singleton claim, not a claim for the original stack");
+                        player.getInventory().setItem(2, player.getMainHandItem());
                         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.CITIZEN_GAUGE.get()));
                         player.inventoryMenu.broadcastChanges();
                     }); advance(147);
@@ -255,6 +262,8 @@ public final class GaugeClientTestLauncher {
                 case 144 -> { if (ticks > 15 && mc.player.getX() > 0) { use(DISTRICT); advance(3); } }
                 case 3 -> { if (ticks > 5 && mc.screen instanceof CitizenGaugeScreen && mc.player.containerMenu instanceof CitizenGaugeMenu menu && menu.info().hasUUID("District")) {
                     check(menu.info().getInt("Range") == 5, "District menu receives authoritative data");
+                    check(menu.info().contains("Effective") && menu.info().contains("ActiveChains") && menu.info().contains("BlockedReason")
+                            && menu.info().contains("RequestStatus") && menu.info().contains("LastSuccessfulAction"), "District diagnostic snapshot arrives with population, request and transfer state");
                     check(menu.info().getString("Name").equals(menu.info().getUUID("District").toString()), "Initial District name is the District UUID");
                     checkDistrictIcon(menu, DISTRICT);
                     check(com.rexhub.createapparel.client.citizen.DistrictBoundarySurface.read(mc.level, -6, -6, 71) == 70.5,
@@ -739,6 +748,15 @@ public final class GaugeClientTestLauncher {
             }
         } catch (Throwable error) { stage = 99; LogUtils.getLogger().error("CITIZEN_GAUGE_CLIENT_FAILED", error); mc.stop(); }
     }
+    private static void checkResyncThrottle(net.minecraft.server.level.ServerPlayer player) {
+        var metrics = CitizenPopulationManager.get(player.serverLevel()).metrics();
+        GaugeViewSynchronization.clear(player.getUUID()); metrics.start();
+        try {
+            GaugeViewSynchronization.resync(player); check(metrics.packetCount() == 1, "First resync sends one measured snapshot");
+            GaugeViewSynchronization.stopObserving(player.getUUID()); GaugeViewSynchronization.resync(player);
+            check(metrics.packetCount() == 1, "Holding-item toggles cannot bypass the resync rate limit");
+        } finally { metrics.stop(); }
+    }
     private static void advance(int next) { stage = next; ticks = 0; }
     private static void checkFlowContentLayout(CitizenGaugeScreen screen) throws ReflectiveOperationException {
         var contentX = CitizenGaugeScreen.class.getDeclaredMethod("flowContentX", net.minecraft.network.chat.Component.class);
@@ -810,6 +828,13 @@ public final class GaugeClientTestLauncher {
                 event.getGuiGraphics().flush();
                 try (var image = Screenshot.takeScreenshot(Minecraft.getInstance().getMainRenderTarget())) {
                     image.writeToFile(Path.of(System.getProperty("apparel.gaugeTest.projectDir"), "build/gauge-client-copy-tooltip.png"));
+                }
+            }
+            if (capture.equals("gauge-client-district.png") && event.getScreen() instanceof CitizenGaugeScreen screen) {
+                screen.render(event.getGuiGraphics(), screen.getGuiLeft() + 26, screen.getGuiTop() + 102, 0);
+                event.getGuiGraphics().flush();
+                try (var image = Screenshot.takeScreenshot(Minecraft.getInstance().getMainRenderTarget())) {
+                    image.writeToFile(Path.of(System.getProperty("apparel.gaugeTest.projectDir"), "build/gauge-client-diagnostics.png"));
                 }
             }
             capture = null;

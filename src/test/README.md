@@ -2,6 +2,10 @@
 
 ## 配置と実行区分
 
+テスト関連のソース・リソース・専用ビルド設定・実行スクリプト・手順書を`src/test/`配下に集約する。Gradle Wrapper本体は`gradle/wrapper/`を維持する。
+
+- `src/test/validate.ps1`：共通の一括検証スクリプト。
+- `src/test/citizen-gauge-tests.gradle`：Citizen Gauge専用のsource set・起動設定・検証タスク。
 - `src/test/java/`：JUnitテスト。
 - `src/test/gametest/java/`：共通GameTestとFixture（`gameTest` source set）。
 - `src/test/resources/`：JUnitとGameTestの検証用リソース。
@@ -23,10 +27,10 @@ Minecraft 1.20.1 / Forge 47.4.10 / Java 17を使用する。PowerShellでは事�
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Java\jdk-17'
-.\gradle\validate.ps1
+.\src\test\validate.ps1
 ```
 
-依存関係がキャッシュ済みなら`.\gradle\validate.ps1 -Offline`を使用できる。
+依存関係がキャッシュ済みなら`.\src\test\validate.ps1 -Offline`を使用できる。
 スクリプトはプロジェクトルートでGradle Wrapperを次の順に実行し、失敗した段階で停止する。
 JEIなしのDedicated Serverを標準条件とする。
 
@@ -44,6 +48,36 @@ ForgeのGameTest起動は、設定を省略するとランダムseedの通常地
 通常Client／Dedicated Serverや既存Worldの設定には適用しない。
 
 ## 対象を絞る場合
+
+### Citizen Systemの最適化・診断・負荷確認
+
+`CitizenOptimizationTest`／`PopulationRequestQueueTest`はRevision分離、独立Networkの保持、共通64ノード予算、Chain逆引き、予約の診断／回復、Snapshot／Delta、2,000要求の公平性と連続更新時のHeap上限を確認する。`DistrictTerritoryTest`は64 Marker・16 Marker Chunkに加え、幾何変更の探索も256 Chunkセル／tick以内とする。`CitizenScaleTest`はA/B/Cの保存レコードとNBTを比較し、従来の全件ソートと優先キューを同じ2,400試行で比較する。時間にはJIT・GCの変動があるため、機能・件数・予算をassertし、速度比はassertしない。
+
+`CitizenGaugeConsistencyGameTests`はBEとSavedDataの不一致、複製NBTの隔離、実Bearingのcapture／NBT／復元、移動元住所の再利用、Contraption複製と本体破棄、人口だけのBE差分、管理者権限、明示移動による自主Navigation要求の置換を検証する。
+
+保存定義だけが欠けてもLinkと所属UUIDを再保存後まで保持し、復旧前にOutflowを許可しないこと、重複Gauge行が先行記録を上書きしないこともJUnitで確認する。Consistency GameTestはオフハンドの予約複製を含む数量衝突も検証する。Client QAは表示用アイテムの持替えでも再同期要求の20tick制限を迂回できないことを実Packet数で確認し、診断hoverを`build/gauge-client-diagnostics.png`へ記録する。
+
+中心登録時の1個分離はConsistency GameTestで両手×Survival／Creative、通常スタックへの合流、無関係NBT・元モード維持、満杯時の未登録分Drop、拒否時の無変更、旧スタックの同地点／別地点再記録、設置・地区撤去後に残スタックが予約を持たないことを確認する。Client QAは実USE Packetから8個を1個の記録済みGauge＋7個の未登録Gaugeへ分け、Server予約数量とClientインベントリ同期を照合する。従来の複数個破棄／Craft試験は明示的に旧形式の予約Fixtureを使い、互換性として維持する。
+
+```powershell
+.\gradlew.bat -PjeiEnabled=false test --tests '*CitizenOptimizationTest' --tests '*PopulationRequestQueueTest' --tests '*CitizenScaleTest'
+.\gradlew.bat -PjeiEnabled=false runGaugeTestServer
+.\gradlew.bat -PjeiEnabled=false -PgaugeScale=true runGaugeTestServer
+```
+
+最後の専用試験は新規の隔離Worldで、Gauge 200／1,000／2,000、保存Citizen 1,000／5,000／10,000、Marker 2,000／10,000／20,000を順に作る。各規模の実ロードCitizenは100人、実壁パネル16枚、実Marker32個とし、それ以外を未ロード記録として扱う。100tickウォームアップ後に約600tickを測る。`CITIZEN_LIVE_SCALE`へMSPT平均／p95／p99、END maintenance時間、Heap、GC、Network完成tick、Navigation待機、SavedDataのSave／Load／NBTサイズを出力する。MSPTはServer全体、maintenanceはLevel ENDの人口／経路処理であり、Citizen本体tick全体の単独計測ではない。パーセンタイルはこの試験区間のみ。通信・多数Client・全10,000体の同時ロード性能を代用する結果ではない。
+
+通常の実WorldではOP権限で`/createapparel gauge stats`、`/createapparel gauge profile start`／`stop`を使える。詳細計測は明示開始時だけ有効で、MSPTパーセンタイルは直近4,096tick、平均は計測開始後の全tick。通信カウンタは専用Gauge Info Packetのpayloadで、TCPヘッダーやMinecraft全体のEntity同期は含まない。
+
+未通知のVoid消去の回復は`/createapparel gauge reservations list [page]`／`inspect <UUID>`／`release <UUID>`。現在Dimensionが対象なので他Dimensionは`/execute in <dimension> run ...`を使う。経過時間や未ロードだけでは自動解除しない。`OBSERVED`は所持の完全な証明ではなく、オフライン／未ロード保管品やTrash Cansの復元履歴も考慮して明示解除する。
+
+Trash Cans実MODのQAは`run/gauge-tests/dependencies/`へ公式配布の次の3 JARを置き、`.\gradlew.bat -PjeiEnabled=false -PgaugeTrash=true runGaugeTestServer`を使う。通常のruntime・配布依存には追加しない。
+
+- `trashcans-1.1.1a-forge-mc1.20.4.jar`（配布メタデータおよび実起動で1.20.1対応を確認）
+- `supermartijn642corelib-1.1.25a-forge-mc1.20.1.jar`
+- `supermartijn642configlib-1.1.8-forge-mc1.20.jar`
+
+Capabilityのsimulate／実投入、空Gauge／記録済み1個・3個、実Hopper、ドロップItemEntity→Hopper、Create Funnelを通して検証する。復元履歴中は予約を維持し、履歴をネイティブAPIで完全削除してからOPコマンドで中心を再利用する。FunnelはSmartBlockEntityの初期化を20tick待ってから実APIを呼ぶ。直接ItemEntityをTrash Canの上へ置くだけで削除する機能はこのMODの入口ではない。
 
 Gaugeの人口・予約・操作・永続化、壁4方向の4パネル設置・個別回収・支持壁撤去時のDropは共通GameTestにも含まれる。GaugeだけのDedicated検証と専用Client検証は次で実行する。
 
@@ -63,7 +97,7 @@ Gaugeの人口・予約・操作・永続化、壁4方向の4パネル設置・�
 
 `GaugeWireOccupancyTest`は配線の重複・交差・逆向き区間、共通端点、他配線途中の端点化拒否、並走と閉塞時の保留を検証する。全4壁方向のGameTestでも既存配線の迂回を確認する。実ClientはChunkをまたぐCitizen配線同士、およびFactory Gaugeの既存配線との交差を用意し、描画順によらず経路が重ならないことと同一キャッシュ再利用を確認する。画像は`build/gauge-client-wire-crossing.png`と`build/gauge-client-wire-factory.png`。
 
-起動設定は`gradle/citizen-gauge-tests.gradle`、専用Worldは`run/gauge-tests/`へ保存する。
+起動設定は`src/test/citizen-gauge-tests.gradle`、専用Worldは`run/gauge-tests/`へ保存する。
 
 ```powershell
 .\gradlew.bat -PjeiEnabled=false runGaugeTestServer
@@ -189,7 +223,7 @@ Destroyまたは共通銀Tagがなければ亜鉛製法を自動で使用する�
 .\gradlew.bat -PdestroyEnabled=true runJeiTestClient
 .\gradlew.bat -PdestroyEnabled=true -PjeiMirrorFallback=true runJeiTestClient
 .\gradlew.bat -PjeiEnabled=false -PdestroyEnabled=true runJeiTestClient
-.\gradle\validate.ps1 -OptionalRecipes -Destroy
+.\src\test\validate.ps1 -OptionalRecipes -Destroy
 ```
 
 Destroyを使うruntime検証では、`run/phase25/dependencies/`へ以下の3 JARを配置する。
