@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 public final class ModItems {
+    public static final RegistryObject<Item> CITIZEN_GAUGE = ModRegistries.ITEMS.register("citizen_gauge",
+            () -> new com.rexhub.createapparel.item.CitizenGaugeItem(ModBlocks.CITIZEN_GAUGE.get(), new Item.Properties()));
     private static final Map<FabricMaterial, RegistryObject<Item>> UNDYED_FABRICS =
             new EnumMap<>(FabricMaterial.class);
     private static final Map<RegistryObject<Item>, FabricAttribute> FABRIC_ITEMS = new LinkedHashMap<>();
@@ -524,6 +526,7 @@ public final class ModItems {
         items.add(ModFluids.MIRROR_COATING_BUCKET);
         items.add(SEWING_PATTERN);
         items.add(SMART_PHONE);
+        items.add(CITIZEN_GAUGE);
         items.add(CITIZEN_SPAWN_EGG);
         addMaterialGroup(
                 items,

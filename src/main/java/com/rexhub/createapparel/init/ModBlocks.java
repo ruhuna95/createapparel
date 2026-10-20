@@ -14,6 +14,8 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Supplier;
 
 public final class ModBlocks {
+    public static final RegistryObject<Block> CITIZEN_GAUGE = ModRegistries.BLOCKS.register("citizen_gauge",
+            () -> new com.rexhub.createapparel.block.CitizenGaugeBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).strength(3).noOcclusion()));
     public static final RegistryObject<Block> CITIZEN_ROUTE_MARKER = routeMarker("citizen_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.NORMAL);
     public static final RegistryObject<Block> GATEWAY_ROUTE_MARKER = routeMarker("gateway_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.GATEWAY);
     public static final RegistryObject<Block> CROSSING_ROUTE_MARKER = routeMarker("crossing_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.CROSSING);

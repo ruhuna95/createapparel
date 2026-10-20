@@ -43,6 +43,7 @@ sourceSets {
     }
 }
 
+
 configurations {
     destroyClientMods {
         canBeConsumed = false
@@ -481,3 +482,5 @@ tasks.matching { it.name == 'runJeiTestClient' }.configureEach {
         }
     }
 }
+
+apply from: 'gradle/citizen-gauge-tests.gradle'

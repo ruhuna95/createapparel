@@ -82,7 +82,10 @@ public final class CitizenRouteManager {
         }
         return conditionRevision;
     }
-    public void setGatewayAccess(CitizenGatewayAccess access) { gateways = Objects.requireNonNull(access); loadChanged(); }
+    public void setGatewayAccess(CitizenGatewayAccess access) {
+        Objects.requireNonNull(access);
+        if (gateways != access) { gateways = access; loadChanged(); }
+    }
 
     private void refresh() {
         if (observedVersion != data.version()) {
@@ -102,9 +105,11 @@ public final class CitizenRouteManager {
         UUID id = entity.markerId();
         if (existing == null) {
             if (id == null || data.marker(id) != null) id = UUID.randomUUID();
-            existing = RouteMarker.create(id, entity.getBlockPos(), type);
+            existing = RouteMarker.create(id, entity.getBlockPos(), type).withDistrict(
+                    com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get(level).data().territory().districtAt(entity.getBlockPos()));
             data.put(existing);
         } else if (existing.type() != type) { existing = existing.withType(type); data.put(existing); }
+        if (!created) com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get(level).queueMarkerChunk(new net.minecraft.world.level.ChunkPos(existing.pos()).toLong());
         if (!existing.id().equals(entity.markerId())) {
             entity.setMarkerId(existing.id());
             if (!created) loadChanged();
@@ -185,7 +190,9 @@ public final class CitizenRouteManager {
     }
 
     public boolean gatewayEnabled(RouteMarker marker) {
-        return marker.type() == RouteMarkerType.GATEWAY && marker.districtId() != null && loaded(marker) && gateways.enabled(marker.districtId());
+        return marker.type() == RouteMarkerType.GATEWAY && marker.districtId() != null && loaded(marker) && gateways.enabled(marker.districtId())
+                && (!(gateways instanceof com.rexhub.createapparel.citizen.population.CitizenPopulationManager population)
+                || marker.districtId().equals(population.data().territory().districtAt(marker.pos())));
     }
 
     public boolean transitGateway(Citizen citizen, UUID source, UUID nextDistrict) {
@@ -193,7 +200,7 @@ public final class CitizenRouteManager {
         if (!gatewayEnabledSafe(departure) || !departure.contains(citizen.position())
                 || citizen.level() != level || !citizen.routeMovement().gatewayReady(level.getGameTime())
                 || !gateways.linkedDistricts(departure.districtId()).contains(nextDistrict) || !gateways.enabled(nextDistrict)) return false;
-        var arrivals = new ArrayList<>(data.markers().stream().filter(marker -> nextDistrict.equals(marker.districtId()))
+        var arrivals = new ArrayList<>(data.gateways(nextDistrict).stream()
                 .filter(this::gatewayEnabled).toList());
         Collections.shuffle(arrivals, new Random(citizen.getRandom().nextLong()));
         for (var arrival : arrivals) {

@@ -15,8 +15,12 @@ public final class CitizenRouteSavedData extends SavedData {
     private final Map<UUID, RouteMarker> markers = new LinkedHashMap<>();
     private final Map<UUID, RouteEdge> edges = new LinkedHashMap<>();
     private final Map<BlockPos, UUID> positions = new HashMap<>();
-    private final Map<Long, Set<UUID>> spatialIndex = new HashMap<>();
+    private final Map<Long, NavigableSet<UUID>> spatialIndex = new HashMap<>();
+    private final NavigableSet<Long> markerChunks = new TreeSet<>();
+    private long territoryRevision = -1;
     private final Map<UUID, Set<UUID>> adjacency = new HashMap<>();
+    private final Map<UUID, Set<UUID>> districtGateways = new HashMap<>();
+    private final Map<UUID, List<RouteMarker>> gatewayCache = new HashMap<>();
     private final Set<UUID> conditionalEdges = new LinkedHashSet<>();
     private final Map<BlockPos, Set<UUID>> controls = new HashMap<>();
     private long routeGraphVersion;
@@ -44,6 +48,21 @@ public final class CitizenRouteSavedData extends SavedData {
     @Nullable public RouteMarker at(BlockPos pos) { var id = positions.get(pos); return id == null ? null : markers.get(id); }
     @Nullable public RouteEdge edge(UUID id) { return edges.get(id); }
 
+    public List<RouteMarker> gateways(UUID district) {
+        if (!districtGateways.containsKey(district)) return List.of();
+        return gatewayCache.computeIfAbsent(district, ignored -> districtGateways.get(district).stream().map(markers::get).toList());
+    }
+
+    private void unindexGateway(@Nullable RouteMarker marker) {
+        if (marker == null || marker.type() != RouteMarkerType.GATEWAY || marker.districtId() == null) return;
+        gatewayCache.remove(marker.districtId());
+        var entries = districtGateways.get(marker.districtId());
+        if (entries != null) {
+            entries.remove(marker.id());
+            if (entries.isEmpty()) districtGateways.remove(marker.districtId());
+        }
+    }
+
     public List<RouteEdge> connected(UUID id) {
         return adjacency.getOrDefault(id, Set.of()).stream().map(edges::get).filter(Objects::nonNull).toList();
     }
@@ -53,7 +72,15 @@ public final class CitizenRouteSavedData extends SavedData {
     }
 
     public List<RouteMarker> inChunk(long chunk) {
-        return spatialIndex.getOrDefault(chunk, Set.of()).stream().map(markers::get).filter(Objects::nonNull).toList();
+        var members = spatialIndex.get(chunk); return members == null ? List.of() : members.stream().map(markers::get).toList();
+    }
+    public long territoryRevision() { return territoryRevision; }
+    public boolean hasMarkerChunk(long chunk) { return spatialIndex.containsKey(chunk); }
+    public void territoryRevision(long revision) { if (territoryRevision != revision) { territoryRevision = revision; setDirty(); } }
+    @Nullable public Long nextMarkerChunk(@Nullable Long after) { return markerChunks.isEmpty() ? null : after == null ? markerChunks.first() : markerChunks.higher(after); }
+    public List<RouteMarker> markersInChunkAfter(long chunk, @Nullable UUID after, int limit) {
+        var members = spatialIndex.get(chunk); if (members == null) return List.of();
+        return (after == null ? members : members.tailSet(after, false)).stream().limit(limit).map(markers::get).toList();
     }
 
     public List<RouteMarker> nearby(BlockPos pos, int radius) {
@@ -76,7 +103,12 @@ public final class CitizenRouteSavedData extends SavedData {
         if (marker.equals(existing)) return false;
         touch(marker.pos());
         unindexControl(existing);
+        unindexGateway(existing);
         markers.put(marker.id(), marker);
+        if (marker.type() == RouteMarkerType.GATEWAY && marker.districtId() != null) {
+            districtGateways.computeIfAbsent(marker.districtId(), ignored -> new LinkedHashSet<>()).add(marker.id());
+            gatewayCache.remove(marker.districtId());
+        }
         if (marker.condition().configured()) controls.computeIfAbsent(marker.condition().pos(), ignored -> new HashSet<>()).add(marker.id());
         for (var edge : connected(marker.id())) {
             touch(Objects.requireNonNull(markers.get(edge.other(marker.id()))).pos());
@@ -87,7 +119,8 @@ public final class CitizenRouteSavedData extends SavedData {
             }
         }
         positions.put(marker.pos(), marker.id());
-        spatialIndex.computeIfAbsent(new ChunkPos(marker.pos()).toLong(), ignored -> new LinkedHashSet<>()).add(marker.id());
+        long chunk = new ChunkPos(marker.pos()).toLong();
+        spatialIndex.computeIfAbsent(chunk, ignored -> new TreeSet<>()).add(marker.id()); markerChunks.add(chunk);
         changed();
         return true;
     }
@@ -122,6 +155,7 @@ public final class CitizenRouteSavedData extends SavedData {
         if (marker == null) return false;
         touch(marker.pos());
         unindexControl(marker);
+        unindexGateway(marker);
         var referencing = controls.remove(marker.pos());
         if (referencing != null) for (var reference : referencing) {
             var node = markers.get(reference);
@@ -132,7 +166,7 @@ public final class CitizenRouteSavedData extends SavedData {
         positions.remove(marker.pos());
         var chunk = new ChunkPos(marker.pos()).toLong();
         var members = spatialIndex.get(chunk);
-        if (members != null) { members.remove(id); if (members.isEmpty()) spatialIndex.remove(chunk); }
+        if (members != null) { members.remove(id); if (members.isEmpty()) { spatialIndex.remove(chunk); markerChunks.remove(chunk); } }
         changed();
         return true;
     }
@@ -178,6 +212,7 @@ public final class CitizenRouteSavedData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag) {
+        tag.putLong("TerritoryRevision", territoryRevision);
         tag.putInt("SchemaVersion", 1);
         tag.putLong("RouteGraphVersion", routeGraphVersion);
         var nodes = new ListTag();
@@ -215,6 +250,7 @@ public final class CitizenRouteSavedData extends SavedData {
         result.routeGraphVersion = Math.max(0, tag.getLong("RouteGraphVersion")) + (repaired ? 1 : 0);
         result.viewRevisions.clear(); result.viewEpoch = result.routeGraphVersion;
         result.setDirty(repaired);
+        result.territoryRevision = tag.contains("TerritoryRevision", Tag.TAG_LONG) ? tag.getLong("TerritoryRevision") : -1;
         return result;
     }
 }

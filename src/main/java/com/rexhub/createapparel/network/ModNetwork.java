@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "22";
+    private static final String PROTOCOL_VERSION = "33";
 
     private static SimpleChannel channel;
 
@@ -104,6 +104,15 @@ public final class ModNetwork {
         channel.messageBuilder(RouteEdgeActionPacket.class, 12, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(RouteEdgeActionPacket::encode).decoder(RouteEdgeActionPacket::decode)
                 .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
+        channel.messageBuilder(CitizenGaugeActionPacket.class, 13, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(CitizenGaugeActionPacket::encode).decoder(CitizenGaugeActionPacket::decode)
+                .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
+        channel.messageBuilder(CitizenGaugeInfoPacket.class, 14, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(CitizenGaugeInfoPacket::encode).decoder(CitizenGaugeInfoPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient()).add();
+        channel.messageBuilder(GaugeReservationDiscardPacket.class, 15, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(GaugeReservationDiscardPacket::encode).decoder(GaugeReservationDiscardPacket::decode)
+                .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
     }
 
     private static SimpleChannel channel() {
@@ -184,6 +193,11 @@ public final class ModNetwork {
 
     public static void updateCitizen(CitizenActionPacket packet) {
         channel().sendToServer(packet);
+    }
+    public static void updateGauge(CitizenGaugeActionPacket packet) { channel().sendToServer(packet); }
+    public static void discardGaugeReservation(GaugeReservationDiscardPacket packet) { channel().sendToServer(packet); }
+    public static void sendGaugeInfo(ServerPlayer player, CitizenGaugeInfoPacket packet) {
+        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 
     public static void sendCitizenBehaviorInfo(ServerPlayer player, CitizenBehaviorInfoPacket packet) {

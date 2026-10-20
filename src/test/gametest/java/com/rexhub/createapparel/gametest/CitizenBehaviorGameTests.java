@@ -123,10 +123,12 @@ public final class CitizenBehaviorGameTests {
         var dispatcher = source.getServer().getCommands().getDispatcher();
         String prefix = "createapparel behavior " + citizen.getUUID() + " ";
         dispatcher.execute(prefix + "wander", source);
-        helper.assertTrue(citizen.citizenState().behavior().wanderRadius() == 8
+        helper.assertTrue(citizen.citizenState().behavior().unlimitedWander()
                 && citizen.citizenState().behavior().anchor().equals(citizen.blockPosition()), "Default radius and Citizen anchor");
         dispatcher.execute(prefix + "wander 12", source);
         helper.assertTrue(citizen.citizenState().behavior().wanderRadius() == 12, "Explicit radius");
+        dispatcher.execute(prefix + "wander -", source);
+        helper.assertTrue(citizen.citizenState().behavior().unlimitedWander(), "Dash selects unlimited wander");
         var armor = new ArmorStand(helper.getLevel(), citizen.getX() + 1, citizen.getY(), citizen.getZ());
         armor.setNoGravity(true);
         helper.getLevel().addFreshEntity(armor);
@@ -158,7 +160,7 @@ public final class CitizenBehaviorGameTests {
         var citizen = citizen(helper);
         var source = source(helper, citizen);
         String prefix = "createapparel behavior " + citizen.getUUID() + " ";
-        for (String suffix : List.of("unknown", "wander 0", "wander 65", "pose left_30", "pose invalid", "follow " + citizen.getUUID(),
+        for (String suffix : List.of("unknown", "wander -1", "wander 65", "pose left_30", "pose invalid", "follow " + citizen.getUUID(),
                 "follow " + UUID.randomUUID(), "follow @e", "stand trailing")) rejected(helper, source, citizen, prefix + suffix);
         rejected(helper, source.withPermission(1), citizen, prefix + "wander");
         rejected(helper, source, citizen, prefix + "POSE casual");
@@ -195,11 +197,17 @@ public final class CitizenBehaviorGameTests {
                 new CitizenActionPacket(menu.containerId, -1, CitizenActionPacket.Action.BEHAVIOR_MODE, 0, "", "stand"))) packet.handle(player);
         helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Invalid action keeps behavior");
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "wander").handle(player);
-        helper.assertTrue(citizen.citizenState().behavior().wanderRadius() == 8, "GUI initializes radius eight");
+        helper.assertTrue(citizen.citizenState().behavior().unlimitedWander(), "GUI initializes unlimited radius");
         for (int index = 0; index < 3; index++) CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, 1).handle(player);
-        helper.assertTrue(citizen.citizenState().behavior().wanderRadius() == 11, "Fast radius wheel accumulates from server state");
+        helper.assertTrue(citizen.citizenState().behavior().wanderRadius() == 3, "Fast radius wheel accumulates from server state");
+        CitizenActionPacket.select(menu, CitizenActionPacket.Action.WANDER_RADIUS, "-").handle(player);
+        CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, -1).handle(player);
+        helper.assertTrue(citizen.citizenState().behavior().unlimitedWander(), "Dash and the lower wheel limit select unlimited");
+        CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, 1).handle(player);
+        CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, -1).handle(player);
+        helper.assertTrue(citizen.citizenState().behavior().unlimitedWander(), "Radius one scrolls down to unlimited");
         before = citizen.citizenState().serializeNBT();
-        for (String value : List.of("0", "65", "-1", "bad")) CitizenActionPacket.select(menu, CitizenActionPacket.Action.WANDER_RADIUS, value).handle(player);
+        for (String value : List.of("65", "-1", "bad")) CitizenActionPacket.select(menu, CitizenActionPacket.Action.WANDER_RADIUS, value).handle(player);
         helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Radius range is validated");
         menu.setTab(CitizenMenu.Tab.APPEARANCE);
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "stand").handle(player);
@@ -439,6 +447,20 @@ public final class CitizenBehaviorGameTests {
 
     private static void floor(GameTestHelper helper) {
         for (int x = 0; x < 40; x++) for (int z = 0; z < 40; z++) helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+    }
+
+    @GameTest(template = "apparel_state", batch = "citizen_behavior")
+    public static void citizenAndVillagerUseDifferentVanillaFirePenaltiesAndSearchRanges(GameTestHelper helper) {
+        var citizen = citizen(helper);
+        var villager = net.minecraft.world.entity.EntityType.VILLAGER.create(helper.getLevel());
+        if (villager == null) throw new IllegalStateException("Villager factory failed");
+        var danger = net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_FIRE;
+        var damage = net.minecraft.world.level.pathfinder.BlockPathTypes.DAMAGE_FIRE;
+        helper.assertTrue(citizen.getPathfindingMalus(danger) == 8 && villager.getPathfindingMalus(danger) == 16, "Villager penalizes nearby fire more");
+        helper.assertTrue(citizen.getPathfindingMalus(damage) == 16 && villager.getPathfindingMalus(damage) == -1, "Villager blocks direct fire while citizen retains the standard mob cost");
+        helper.assertTrue(citizen.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE) == 16
+                && villager.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE) == 48, "Path search ranges are not identical");
+        helper.succeed();
     }
 
     @GameTest(template = "citizen_behavior", batch = "citizen_behavior_navigation", timeoutTicks = 220)

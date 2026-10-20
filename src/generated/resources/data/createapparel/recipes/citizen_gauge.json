@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_casing"
+    },
+    "C": {
+      "item": "minecraft:comparator"
+    },
+    "M": {
+      "item": "create:precision_mechanism"
+    },
+    "T": {
+      "item": "create:electron_tube"
+    }
+  },
+  "pattern": [
+    " T ",
+    "CMC",
+    " B "
+  ],
+  "result": {
+    "count": 2,
+    "item": "createapparel:citizen_gauge"
+  },
+  "show_notification": true
+}

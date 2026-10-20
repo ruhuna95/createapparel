@@ -24,6 +24,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
         add("createapparel.reaction.silver_dissolution", "銀の溶解");
         add("createapparel.reaction.silver_ammonia_complexation", "銀のアンモニア錯体化");
         RouteLanguage.add(this::add, true);
+        GaugeLanguage.add(this::add, true);
         ItemGuideLanguage.add(this::add, true);
         PonderLanguage.add(this::add, true);
         JeiLanguage.add(this::add, true);

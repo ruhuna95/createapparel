@@ -8,7 +8,8 @@
     "GameRendererMixin",
     "MirrorGameRendererMixin",
     "MirrorLevelRendererMixin",
-    "MirrorMinecraftMixin"
+    "MirrorMinecraftMixin",
+    "CreativeInventoryGaugeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

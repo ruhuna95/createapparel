@@ -9,7 +9,7 @@ import java.util.Locale;
 
 public enum ItemGuide {
     SPINNING, LOOM, SEWING, PATTERN, PHONE, WARDROBE, HANGER, CLIP_HANGER, RACK, CLIP_RACK,
-    REARING, MANNEQUIN, GARMENT, FABRIC, THREAD, FIBER, CROP, SEEDS, COCOON, DYE,
+    REARING, MANNEQUIN, GARMENT, FABRIC, THREAD, FIBER, CROP, SEEDS, COCOON, DYE, GAUGE,
     CITIZEN_EGG, SILKWORM_EGG, JEWELRY_BASE, MIRROR, COATING;
 
     public String translationBase() {
@@ -19,7 +19,7 @@ public enum ItemGuide {
 
     public boolean hasDetails() {
         return switch (this) {
-            case PATTERN, PHONE, WARDROBE, HANGER, CLIP_HANGER, RACK, CLIP_RACK, MANNEQUIN -> true;
+            case PATTERN, PHONE, WARDROBE, HANGER, CLIP_HANGER, RACK, CLIP_RACK, MANNEQUIN, GAUGE -> true;
             default -> false;
         };
     }
@@ -61,6 +61,7 @@ public enum ItemGuide {
             case "sewing_machine" -> SEWING;
             case "sewing_pattern" -> PATTERN;
             case "smart_phone" -> PHONE;
+            case "citizen_gauge" -> GAUGE;
             case "wardrobe" -> WARDROBE;
             case "wall_hanger" -> HANGER;
             case "clip_wall_hanger" -> CLIP_HANGER;

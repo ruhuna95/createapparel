@@ -20,6 +20,8 @@ public final class CreateApparelDataGenerators {
     public static void gatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
+        generator.addProvider(event.includeClient(), new com.rexhub.createapparel.data.client.CitizenGaugeTextureProvider(output, event.getExistingFileHelper()));
+        generator.addProvider(event.includeClient(), new com.rexhub.createapparel.data.client.CitizenGaugeModelProvider(output, event.getExistingFileHelper()));
         generator.addProvider(event.includeClient(), new com.rexhub.createapparel.data.client.PonderStructureProvider(output));
         generator.addProvider(event.includeClient(), new com.rexhub.createapparel.data.client.RouteMarkerModelProvider(output, event.getExistingFileHelper()));
         generator.addProvider(event.includeClient(),

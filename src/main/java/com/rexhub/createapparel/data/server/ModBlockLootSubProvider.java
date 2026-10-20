@@ -21,6 +21,10 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
+        add(ModBlocks.CITIZEN_GAUGE.get(), net.minecraft.world.level.storage.loot.LootTable.lootTable().withPool(
+                net.minecraft.world.level.storage.loot.LootPool.lootPool().setRolls(net.minecraft.world.level.storage.loot.providers.number.ConstantValue.exactly(1))
+                        .add(net.minecraft.world.level.storage.loot.entries.DynamicLoot.dynamicEntry(
+                                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("createapparel", "gauge_panels")))));
         for (var mirror : com.rexhub.createapparel.init.ModMirrors.BLOCKS) {
             var block = mirror.get();
             if (block instanceof com.rexhub.createapparel.block.MirroredDoorBlock

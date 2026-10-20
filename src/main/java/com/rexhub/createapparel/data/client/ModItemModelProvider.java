@@ -45,7 +45,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
         var dyeModel = withExistingParent("apparel_dye", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/apparel_dye_base"));
         for (RegistryObject<Item> item : ModRegistries.ITEMS.getEntries()) {
-            if (com.rexhub.createapparel.init.ModMirrors.ITEMS.containsValue(item)
+            if (item == ModItems.CITIZEN_GAUGE || com.rexhub.createapparel.init.ModMirrors.ITEMS.containsValue(item)
                     || item == com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_BUCKET) continue;
             FabricAttribute attribute = ModItems.fabricItems().get(item);
             if (attribute != null && attribute.isDyed()) {

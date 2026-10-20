@@ -8,6 +8,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModBlockEntities {
+    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.CitizenGaugeBlockEntity>> CITIZEN_GAUGE =
+            ModRegistries.BLOCK_ENTITY_TYPES.register("citizen_gauge", () -> BlockEntityType.Builder.of(
+                    com.rexhub.createapparel.block.entity.CitizenGaugeBlockEntity::new, ModBlocks.CITIZEN_GAUGE.get()).build(null));
     public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity>> CITIZEN_ROUTE_MARKER =
             ModRegistries.BLOCK_ENTITY_TYPES.register("citizen_route_marker", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity::new, ModBlocks.CITIZEN_ROUTE_MARKER.get(),

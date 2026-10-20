@@ -6,6 +6,8 @@ import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModMenuTypes {
+    public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.CitizenGaugeMenu>> CITIZEN_GAUGE =
+            ModRegistries.MENU_TYPES.register("citizen_gauge", () -> IForgeMenuType.create(com.rexhub.createapparel.menu.CitizenGaugeMenu::new));
     public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.RouteMarkerMenu>> ROUTE_MARKER =
             ModRegistries.MENU_TYPES.register("route_marker", () -> IForgeMenuType.create(com.rexhub.createapparel.menu.RouteMarkerMenu::new));
     public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.CitizenMenu>> CITIZEN =

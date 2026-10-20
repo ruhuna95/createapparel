@@ -50,6 +50,7 @@ public final class CitizenBehaviorCommand {
                                         CitizenBehaviorState.DEFAULT_RADIUS).withLookMode(look), look.id());
                             }));
             case WANDER -> branch.executes(context -> anchored(context, mode, CitizenBehaviorState.DEFAULT_RADIUS))
+                    .then(Commands.literal("-").executes(context -> anchored(context, mode, CitizenBehaviorState.UNLIMITED_RADIUS)))
                     .then(Commands.argument("radius", IntegerArgumentType.integer(CitizenBehaviorState.MIN_RADIUS, CitizenBehaviorState.MAX_RADIUS))
                             .executes(context -> anchored(context, mode, IntegerArgumentType.getInteger(context, "radius"))));
             case FOLLOW -> branch.then(Commands.argument("target", EntityArgument.entity()).executes(context -> {

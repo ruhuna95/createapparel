@@ -49,7 +49,7 @@ public final class CitizenCommandGameTests {
         helper.assertTrue(child.isBaby() && child.getScale() == 0.5F, "Child category and render scale");
         helper.assertTrue(Math.abs(child.getBbHeight() - 0.9375F) < 0.00001 && Math.abs(child.getBbWidth() - 0.3F) < 0.00001,
                 "Child dimensions scale with body");
-        helper.assertTrue(child.getAttributeValue(Attributes.MOVEMENT_SPEED) == 0.125, "Child movement speed scales with body");
+        helper.assertTrue(child.getAttributeValue(Attributes.MOVEMENT_SPEED) == 0.3, "Child movement matches a playing baby villager instead of scaling with body size");
         var appearance = child.citizenState().appearance();
         helper.assertTrue(appearance.armProfile() == ArmProfile.SLIM && appearance.chestProfile() == ChestProfile.FLAT,
                 "Explicit non-default body pairing remains selectable");

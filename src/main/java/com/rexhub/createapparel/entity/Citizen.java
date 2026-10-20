@@ -26,6 +26,7 @@ public final class Citizen extends PathfinderMob {
     private float ageScale = 1;
     private CitizenBehaviorState observedBehavior = CitizenBehaviorState.DEFAULT;
     private final CitizenLookController lookController = new CitizenLookController(this);
+    private final com.rexhub.createapparel.citizen.population.CitizenIntentController intents = new com.rexhub.createapparel.citizen.population.CitizenIntentController(this);
     private final com.rexhub.createapparel.citizen.route.CitizenRouteMovement routeMovement =
             new com.rexhub.createapparel.citizen.route.CitizenRouteMovement(this);
 
@@ -45,6 +46,7 @@ public final class Citizen extends PathfinderMob {
     }
 
     public CitizenState citizenState() { return citizenState; }
+    public com.rexhub.createapparel.citizen.population.CitizenIntentController intents() { return intents; }
     public com.rexhub.createapparel.citizen.route.CitizenRouteMovement routeMovement() { return routeMovement; }
 
     @Override
@@ -67,6 +69,7 @@ public final class Citizen extends PathfinderMob {
                 setZza(0);
                 setXxa(0);
                 observedBehavior = citizenState.behavior();
+                com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get((net.minecraft.server.level.ServerLevel) level()).modeChanged(this);
             }
             entityData.set(DATA_STATE, citizenState.serializeNBT());
         }
@@ -74,6 +77,7 @@ public final class Citizen extends PathfinderMob {
 
     public boolean setBehavior(CitizenBehaviorState behavior) {
         if (level().isClientSide || getUUID().equals(behavior.followTargetUuid())) return false;
+        intents.playerOverride();
         getNavigation().stop();
         citizenState.setBehavior(behavior);
         return true;
@@ -101,7 +105,7 @@ public final class Citizen extends PathfinderMob {
             refreshDimensions();
             if (!level().isClientSide) {
                 var speed = getAttribute(Attributes.MOVEMENT_SPEED);
-                if (speed != null) speed.setBaseValue(0.25 * scale);
+                if (speed != null) speed.setBaseValue(isBaby() ? 0.3 : 0.25);
             }
         }
     }
@@ -151,7 +155,7 @@ public final class Citizen extends PathfinderMob {
 
     @Override
     protected float tickHeadTurn(float yaw, float step) {
-        if (citizenState != null && (citizenState.behavior().mode().moves()
+        if (citizenState != null && (citizenState.behavior().mode().moves() || routeMovement != null && routeMovement.hasDestination()
                 || citizenState.behavior().mode() == CitizenBehaviorMode.STAND && citizenState.behavior().lookMode() == CitizenLookMode.BODY)) {
             return super.tickHeadTurn(yaw, step);
         }
@@ -162,7 +166,9 @@ public final class Citizen extends PathfinderMob {
     @Override
     public void tick() {
         super.tick();
+        if (!level().isClientSide) intents.tick();
         var behavior = citizenState.behavior();
+        if (routeMovement.hasDestination()) return;
         if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.BODY) {
             if (!level().isClientSide && !isNoAi()) setYRot(yBodyRot);
         } else if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.HEAD) {

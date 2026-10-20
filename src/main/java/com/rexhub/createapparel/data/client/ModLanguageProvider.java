@@ -26,6 +26,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         add("createapparel.reaction.silver_dissolution", "Silver Dissolution");
         add("createapparel.reaction.silver_ammonia_complexation", "Silver Ammonia Complexation");
         RouteLanguage.add(this::add, false);
+        GaugeLanguage.add(this::add, false);
         ItemGuideLanguage.add(this::add, false);
         PonderLanguage.add(this::add, false);
         JeiLanguage.add(this::add, false);

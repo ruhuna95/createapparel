@@ -13,6 +13,8 @@ import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.lwjgl.glfw.GLFW;
@@ -26,7 +28,7 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     private final Map<RouteMarkerActionPacket.Action, Long> draftVersions = new EnumMap<>(RouteMarkerActionPacket.Action.class);
     private final SelectionMenu selection = new SelectionMenu();
     private final ButtonValueScroll buttonScroll = new ButtonValueScroll();
-    private EditBox radius, tolerance, district, threshold;
+    private EditBox radius, tolerance, threshold;
     private Button typeButton, invertButton;
     private RouteMarkerType markerType = RouteMarkerType.NORMAL;
     private CrossingCondition condition = CrossingCondition.UNSET;
@@ -35,6 +37,8 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     private long inFlightVersion;
     @Nullable private RouteMarkerActionPacket.Action inFlight;
     private Tab tab = Tab.SETTINGS;
+    private int destinationScroll;
+    private static final int VISIBLE_DESTINATIONS = 7;
 
     public RouteMarkerScreen(RouteMarkerMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -44,27 +48,26 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     private static net.minecraft.network.chat.MutableComponent label(String key) { return Component.translatable("screen.createapparel.route." + key); }
 
     @Override protected void init() {
-        var drafts = radius == null ? List.<String>of() : List.of(radius.getValue(), tolerance.getValue(), district.getValue(), threshold.getValue());
+        var drafts = radius == null ? List.<String>of() : List.of(radius.getValue(), tolerance.getValue(), threshold.getValue());
         boolean wasInitialized = initialized;
         super.init();
         topPos += 12;
         groups.clear(); buttonScroll.clear(); initialized = false; updating = true; selection.close();
         for (var value : Tab.values()) addRenderableWidget(new TabWidget(leftPos + 8 + value.ordinal() * 122, topPos - 23, value));
-        radius = field(Tab.SETTINGS, 112, 58, 74, 16, RouteMarkerActionPacket.Action.REGION);
-        tolerance = field(Tab.SETTINGS, 112, 88, 74, 16, RouteMarkerActionPacket.Action.REGION);
-        typeButton = button(Tab.SETTINGS, 112, 126, 216, Component.empty(), () -> selection.open(typeButton, width, height,
+        radius = field(Tab.SETTINGS, 112, 64, 74, 16, RouteMarkerActionPacket.Action.REGION);
+        tolerance = field(Tab.SETTINGS, 112, 94, 74, 16, RouteMarkerActionPacket.Action.REGION);
+        typeButton = button(Tab.SETTINGS, 112, 32, 216, Component.empty(), () -> selection.open(typeButton, width, height,
                 Arrays.stream(RouteMarkerType.values()).map(type -> (Component) label("type." + type.id())).toList(),
                 List.of(), markerType.ordinal(), this::selectType));
         buttonScroll.bind(typeButton, direction -> selectType(Math.floorMod(markerType.ordinal() + direction, RouteMarkerType.values().length)));
         button(Tab.SETTINGS, 10, 184, 152, label("delete_marker").withStyle(ChatFormatting.RED),
                 () -> changed(RouteMarkerActionPacket.Action.DELETE));
-        district = field(Tab.TYPE, 10, 78, 318, 36, RouteMarkerActionPacket.Action.DISTRICT);
         threshold = field(Tab.TYPE, 122, 82, 64, 2, RouteMarkerActionPacket.Action.CONDITION);
         invertButton = button(Tab.TYPE, 10, 114, 154, Component.empty(), () -> {
             inverted = !inverted; changed(RouteMarkerActionPacket.Action.CONDITION); updateControls();
         });
         if (!drafts.isEmpty()) {
-            var fields = List.of(radius, tolerance, district, threshold);
+            var fields = List.of(radius, tolerance, threshold);
             for (int i = 0; i < fields.size(); i++) fields.get(i).setValue(drafts.get(i));
             initialized = wasInitialized;
         }
@@ -89,7 +92,7 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     private void selectType(int index) {
         var next = RouteMarkerType.values()[index];
         if (markerType == next) return;
-        markerType = next; pending.remove(RouteMarkerActionPacket.Action.DISTRICT); pending.remove(RouteMarkerActionPacket.Action.CONDITION);
+        markerType = next; pending.remove(RouteMarkerActionPacket.Action.CONDITION);
         condition = CrossingCondition.UNSET; inverted = false;
         boolean wasUpdating = updating; updating = true; threshold.setValue(Integer.toString(RouteSettings.DEFAULT_SIGNAL_THRESHOLD)); updating = wasUpdating;
         changed(RouteMarkerActionPacket.Action.TYPE); updateControls();
@@ -113,7 +116,6 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
             set(radius, Double.toString(node.horizontalRadius())); set(tolerance, Double.toString(node.verticalTolerance()));
         }
         if (!pending.contains(RouteMarkerActionPacket.Action.TYPE) && inFlight != RouteMarkerActionPacket.Action.TYPE) markerType = node.type();
-        if (!pending.contains(RouteMarkerActionPacket.Action.DISTRICT) && inFlight != RouteMarkerActionPacket.Action.DISTRICT) set(district, node.districtId() == null ? "" : node.districtId().toString());
         if (!pending.contains(RouteMarkerActionPacket.Action.CONDITION) && inFlight != RouteMarkerActionPacket.Action.CONDITION) {
             condition = node.condition(); inverted = condition.inverted();
             set(threshold, Integer.toString(condition.threshold()));
@@ -160,11 +162,8 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
                 r = Double.parseDouble(radius.getValue()); t = Double.parseDouble(tolerance.getValue());
                 if (!RouteSettings.validRegion(r, t)) return null;
             } else if (action == RouteMarkerActionPacket.Action.TYPE) value = markerType.name();
-            else if (action == RouteMarkerActionPacket.Action.DISTRICT) {
-                if (markerType != RouteMarkerType.GATEWAY) return null;
-                value = district.getValue().trim();
-                if (!value.isEmpty()) UUID.fromString(value);
-            } else if (action == RouteMarkerActionPacket.Action.CONDITION) {
+            else if (action == RouteMarkerActionPacket.Action.DISTRICT) return null;
+            else if (action == RouteMarkerActionPacket.Action.CONDITION) {
                 if (markerType != RouteMarkerType.CROSSING) return null;
                 pos = condition.pos(); value = condition.mode().name();
                 signalThreshold = Integer.parseInt(threshold.getValue());
@@ -180,12 +179,11 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
         invertButton.setMessage(label("inverted." + inverted));
         groups.forEach((widget, group) -> {
             boolean show = group == tab;
-            if (group == Tab.TYPE) show &= widget == district ? markerType == RouteMarkerType.GATEWAY : markerType == RouteMarkerType.CROSSING;
+            if (group == Tab.TYPE) show &= markerType == RouteMarkerType.CROSSING;
             widget.visible = show; widget.active = show && initialized && !closeRequested;
         });
         int regionColor = pending.contains(RouteMarkerActionPacket.Action.REGION) && packet(RouteMarkerActionPacket.Action.REGION) == null ? 0xFF5555 : 0xE0E0E0;
         radius.setTextColor(regionColor); tolerance.setTextColor(regionColor);
-        district.setTextColor(pending.contains(RouteMarkerActionPacket.Action.DISTRICT) && packet(RouteMarkerActionPacket.Action.DISTRICT) == null ? 0xFF5555 : 0xE0E0E0);
         threshold.setTextColor(pending.contains(RouteMarkerActionPacket.Action.CONDITION) && packet(RouteMarkerActionPacket.Action.CONDITION) == null ? 0xFF5555 : 0xE0E0E0);
     }
 
@@ -202,10 +200,20 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     }
     @Override public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         return selection.mouseScrolled(delta) || buttonScroll.mouseScrolled(mouseX, mouseY, delta)
+                || scrollDestinations(mouseX, mouseY, delta)
                 || scrollNumber(radius, mouseX, mouseY, delta, RouteSettings.MIN_RADIUS, RouteSettings.MAX_RADIUS)
                 || scrollNumber(tolerance, mouseX, mouseY, delta, RouteSettings.MIN_VERTICAL_TOLERANCE, RouteSettings.MAX_VERTICAL_TOLERANCE)
                 || scrollThreshold(mouseX, mouseY, delta)
                 || super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
+    private ListTag destinations() { return menu.info().getList("Destinations", Tag.TAG_COMPOUND); }
+
+    private boolean scrollDestinations(double mouseX, double mouseY, double delta) {
+        if (tab != Tab.TYPE || markerType != RouteMarkerType.GATEWAY || delta == 0 || mouseX < leftPos + 10
+                || mouseX >= leftPos + 328 || mouseY < topPos + 56 || mouseY >= topPos + 182) return false;
+        destinationScroll = Math.max(0, Math.min(Math.max(0, destinations().size() - VISIBLE_DESTINATIONS), destinationScroll + (delta > 0 ? -1 : 1)));
+        return true;
     }
 
     private boolean scrollThreshold(double mouseX, double mouseY, double delta) {
@@ -233,6 +241,21 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics); super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY); selection.render(graphics, mouseX, mouseY);
+        String districtName = menu.info().getString("DistrictName");
+        if (!selection.isOpen() && tab == Tab.SETTINGS && !districtName.isEmpty() && mouseX >= leftPos + 10 && mouseX < leftPos + 328
+                && mouseY >= topPos + 129 && mouseY < topPos + 129 + font.lineHeight) {
+            graphics.renderTooltip(font, font.split(Component.translatable("screen.createapparel.gauge.membership", districtName),
+                    Math.min(280, width - 24)), mouseX, mouseY);
+        }
+        if (!selection.isOpen() && tab == Tab.TYPE && markerType == RouteMarkerType.GATEWAY && mouseX >= leftPos + 10 && mouseX < leftPos + 328
+                && mouseY >= topPos + 56 && mouseY < topPos + 182) {
+            int row = (mouseY - topPos - 56) / 18 + destinationScroll;
+            if (row < destinations().size()) {
+                var entry = destinations().getCompound(row);
+                graphics.renderTooltip(font, font.split(Component.literal(entry.getString("Name") + "\n" + entry.getUUID("Id")),
+                        Math.min(280, width - 24)), mouseX, mouseY);
+            }
+        }
     }
 
     @Override protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
@@ -247,12 +270,32 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
 
     @Override protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         graphics.drawString(font, title, 10, 8, 0x404040, false);
+        String districtName = menu.info().getString("DistrictName");
         if (tab == Tab.SETTINGS) {
-            draw(graphics, "radius", 10, 63); draw(graphics, "tolerance", 10, 93); draw(graphics, "marker_type", 10, 132);
-            graphics.drawString(font, Component.translatable("screen.createapparel.route.allowed_values", "0.5–16"), 202, 63, 0x606060, false);
-            graphics.drawString(font, Component.translatable("screen.createapparel.route.allowed_values", "0–8"), 202, 93, 0x606060, false);
+            String text = districtName.isEmpty() ? label("unassigned").getString() : districtName;
+            graphics.drawString(font, font.width(text) > 216 ? font.plainSubstrByWidth(text, 216 - font.width("…")) + "…" : text,
+                    112, 129, 0x404040, false);
+        }
+        if (tab == Tab.SETTINGS) {
+            draw(graphics, "marker_type", 10, 38); draw(graphics, "radius", 10, 69); draw(graphics, "tolerance", 10, 99); draw(graphics, "affiliation", 10, 129);
+            graphics.drawString(font, Component.translatable("screen.createapparel.route.allowed_values", "0.5–16"), 202, 69, 0x606060, false);
+            graphics.drawString(font, Component.translatable("screen.createapparel.route.allowed_values", "0–8"), 202, 99, 0x606060, false);
         } else if (markerType == RouteMarkerType.GATEWAY) {
-            draw(graphics, "district", 10, 56); draw(graphics, menu.info().getBoolean("GatewayEnabled") ? "enabled" : "gateway_disabled", 10, 110);
+            draw(graphics, "destinations", 10, 34);
+            var entries = destinations();
+            destinationScroll = Math.min(destinationScroll, Math.max(0, entries.size() - VISIBLE_DESTINATIONS));
+            if (entries.isEmpty()) graphics.drawWordWrap(font, label("no_destinations"), 10, 56, 318, 0x606060);
+            for (int index = destinationScroll; index < Math.min(entries.size(), destinationScroll + VISIBLE_DESTINATIONS); index++) {
+                var entry = entries.getCompound(index);
+                int y = 56 + (index - destinationScroll) * 18;
+                String name = entry.getString("Name");
+                graphics.drawString(font, font.width(name) > 210 ? font.plainSubstrByWidth(name, 210 - font.width("…")) + "…" : name, 10, y, 0x404040, false);
+                boolean available = entry.getBoolean("Available");
+                Component status = label(!entry.getBoolean("Loaded") ? "unloaded" : available ? "available" : "unavailable");
+                graphics.drawString(font, status, 328 - font.width(status), y, available ? 0x267D32 : 0x806060, false);
+            }
+            if (entries.size() > VISIBLE_DESTINATIONS) graphics.drawString(font, Component.translatable("screen.createapparel.route.destination_page",
+                    destinationScroll + 1, Math.min(entries.size(), destinationScroll + VISIBLE_DESTINATIONS), entries.size()), 10, 190, 0x606060, false);
         } else if (markerType == RouteMarkerType.CROSSING) {
             boolean on = menu.info().getBoolean("NodeOn");
             graphics.drawString(font, label("node_state").append(" ").append(label(on ? "state.on" : "state.off")), 10, 56, on ? 0xCC2222 : 0x404040, false);

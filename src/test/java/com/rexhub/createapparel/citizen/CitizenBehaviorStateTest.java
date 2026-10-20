@@ -41,7 +41,7 @@ class CitizenBehaviorStateTest {
     }
 
     @Test
-    void oldSavesAndUnknownModesUseStandWithEightBlockRadius() {
+    void oldSavesAndUnknownModesUseStandWithUnlimitedRadius() {
         assertEquals(CitizenBehaviorState.DEFAULT, CitizenBehaviorState.read(new CompoundTag()));
         var tag = new CompoundTag();
         tag.putString("BaseMode", "stand");
@@ -62,14 +62,14 @@ class CitizenBehaviorStateTest {
         assertEquals(CitizenBehaviorMode.FOLLOW, state.mode());
         assertEquals(uuid, state.followTargetUuid());
         assertNull(state.followTargetDimension());
-        assertEquals(8, state.wanderRadius());
+        assertEquals(CitizenBehaviorState.UNLIMITED_RADIUS, state.wanderRadius());
         tag.putString("FollowTargetUUID", "broken");
         assertNull(CitizenBehaviorState.read(tag).followTargetUuid());
         tag.putString("BaseMode", "pose");
         tag.putString("PosePreset", "left_30");
         assertEquals(PosePreset.STANDING, CitizenBehaviorState.read(tag).pose());
         tag.putString("WanderRadius", "8");
-        assertEquals(8, CitizenBehaviorState.read(tag).wanderRadius());
+        assertEquals(CitizenBehaviorState.UNLIMITED_RADIUS, CitizenBehaviorState.read(tag).wanderRadius());
     }
 
     @Test
@@ -79,9 +79,22 @@ class CitizenBehaviorStateTest {
             if (MannequinForm.FULL.poses().contains(pose)) assertEquals(pose, CitizenBehaviorState.posed(pose).pose());
             else assertThrows(IllegalArgumentException.class, () -> CitizenBehaviorState.posed(pose));
         }
-        for (int radius : new int[]{1, 8, 64}) assertEquals(radius, CitizenBehaviorState.DEFAULT.withRadius(radius).wanderRadius());
-        for (int radius : new int[]{Integer.MIN_VALUE, 0, 65, Integer.MAX_VALUE}) {
+        for (int radius : new int[]{0, 1, 8, 64}) assertEquals(radius, CitizenBehaviorState.DEFAULT.withRadius(radius).wanderRadius());
+        for (int radius : new int[]{Integer.MIN_VALUE, -1, 65, Integer.MAX_VALUE}) {
             assertThrows(IllegalArgumentException.class, () -> CitizenBehaviorState.DEFAULT.withRadius(radius));
+        }
+    }
+
+    @Test
+    void unlimitedAndExistingFiniteRadiiRoundTripWithoutMigrationLoss() {
+        var tag = new CompoundTag(); tag.putString("BaseMode", "wander");
+        assertTrue(CitizenBehaviorState.read(tag).unlimitedWander());
+        for (int radius : new int[]{0, 1, 8, 64}) {
+            tag.putInt("WanderRadius", radius);
+            var state = CitizenBehaviorState.read(tag);
+            assertEquals(radius, state.wanderRadius());
+            var saved = new CompoundTag(); state.write(saved);
+            assertEquals(state, CitizenBehaviorState.read(saved));
         }
     }
 

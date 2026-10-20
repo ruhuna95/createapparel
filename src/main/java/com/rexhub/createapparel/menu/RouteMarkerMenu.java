@@ -1,6 +1,7 @@
 package com.rexhub.createapparel.menu;
 
 import com.rexhub.createapparel.citizen.route.*;
+import com.rexhub.createapparel.citizen.population.CitizenPopulationManager;
 import com.rexhub.createapparel.init.ModMenuTypes;
 import com.rexhub.createapparel.network.ModNetwork;
 import com.rexhub.createapparel.network.RouteMarkerActionPacket;
@@ -29,6 +30,9 @@ public final class RouteMarkerMenu extends AbstractContainerMenu {
     private long nextInfo;
     private int acknowledgedEdit;
     private boolean editAccepted;
+    private long destinationsVersion = -1;
+    @javax.annotation.Nullable private UUID destinationsDistrict;
+    private ListTag cachedDestinations = new ListTag();
 
     public RouteMarkerMenu(int id, Inventory inventory, FriendlyByteBuf buffer) { this(id, inventory, buffer.readUUID(), buffer.readBlockPos()); }
     public RouteMarkerMenu(int id, Inventory inventory, UUID markerId, BlockPos pos) {
@@ -63,6 +67,7 @@ public final class RouteMarkerMenu extends AbstractContainerMenu {
         var manager = CitizenRouteManager.get(player.serverLevel());
         var node = manager.data().marker(markerId);
         if (node == null) return;
+        node = CitizenPopulationManager.get(player.serverLevel()).refreshMarkerDistrict(node);
         var result = new CompoundTag();
         result.put("Marker", node.save());
         result.putString("Dimension", player.level().dimension().location().toString());
@@ -71,6 +76,9 @@ public final class RouteMarkerMenu extends AbstractContainerMenu {
         result.putBoolean("EditAccepted", editAccepted);
         result.putBoolean("GatewayEnabled", manager.gatewayEnabled(node));
         result.putBoolean("NodeOn", node.type() == RouteMarkerType.CROSSING && node.condition().open(player.serverLevel()));
+        var district = CitizenPopulationManager.get(player.serverLevel()).data().district(node.districtId());
+        if (district != null) result.putString("DistrictName", district.name());
+        if (node.type() == RouteMarkerType.GATEWAY) result.put("Destinations", destinations(player, manager, node));
         var connected = manager.data().connected(markerId).stream().sorted(Comparator.comparing(RouteEdge::id)).toList();
         int pages = Math.max(1, (connected.size() + RouteSettings.MENU_PAGE_SIZE - 1) / RouteSettings.MENU_PAGE_SIZE);
         page = Math.min(page, pages - 1);
@@ -92,10 +100,32 @@ public final class RouteMarkerMenu extends AbstractContainerMenu {
         result.putBoolean("CrossingConfigured", !crossings.isEmpty() && node.condition().configured()
                 && crossings.stream().allMatch(edge -> manager.data().marker(edge.other(markerId)).condition().configured()));
         result.putBoolean("CrossingOpen", connected.stream().filter(RouteEdge::conditional).anyMatch(manager::crossingOpen));
-        info = result;
         sentVersion = manager.data().version();
         nextInfo = player.level().getGameTime() + 10;
+        if (info.equals(result)) return;
+        info = result;
         ModNetwork.sendRouteMarkerInfo(player, new RouteMarkerInfoPacket(containerId, markerId, result));
+    }
+
+    private ListTag destinations(ServerPlayer player, CitizenRouteManager routes, RouteMarker node) {
+        var population = CitizenPopulationManager.get(player.serverLevel());
+        if (destinationsVersion != population.data().version() || !Objects.equals(destinationsDistrict, node.districtId())) {
+            cachedDestinations = new ListTag();
+            if (node.districtId() != null) for (var id : population.linkedDistricts(node.districtId()).stream().sorted().toList()) {
+                var district = population.data().district(id);
+                if (district == null) continue;
+                var entry = new CompoundTag(); entry.putUUID("Id", id); entry.putString("Name", district.name()); cachedDestinations.add(entry);
+            }
+            destinationsVersion = population.data().version(); destinationsDistrict = node.districtId();
+        }
+        var result = cachedDestinations.copy();
+        boolean departureEnabled = routes.gatewayEnabled(node);
+        for (var raw : result) {
+            var entry = (CompoundTag) raw; var id = entry.getUUID("Id");
+            entry.putBoolean("Loaded", population.enabled(id));
+            entry.putBoolean("Available", departureEnabled && routes.data().gateways(id).stream().anyMatch(routes::gatewayEnabled));
+        }
+        return result;
     }
 
     public void apply(ServerPlayer player, RouteMarkerActionPacket packet) {
@@ -119,9 +149,7 @@ public final class RouteMarkerMenu extends AbstractContainerMenu {
                     if (RouteSettings.validRegion(packet.radius(), packet.tolerance())) { manager.data().put(node.withRegion(packet.radius(), packet.tolerance())); accepted = true; }
                 }
                 case TYPE -> { var type = RouteMarkerType.valueOf(packet.value()); accepted = node.type() == type || manager.changeType(markerId, type); }
-                case DISTRICT -> {
-                    if (node.type() == RouteMarkerType.GATEWAY) { manager.data().put(node.withDistrict(packet.value().isEmpty() ? null : UUID.fromString(packet.value()))); accepted = true; }
-                }
+                case DISTRICT -> { }
                 case CONDITION -> {
                     if (node.type() == RouteMarkerType.CROSSING) {
                         var condition = new CrossingCondition(CrossingCondition.Mode.valueOf(packet.value()), packet.conditionPos(),

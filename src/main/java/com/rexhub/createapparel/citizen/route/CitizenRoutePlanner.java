@@ -304,7 +304,7 @@ public final class CitizenRoutePlanner {
     }
 
     private double edgeCost(RouteEdge edge, RouteMarker a, RouteMarker b) {
-        return Math.max(0.5, a.center().distanceTo(b.center()))
+        return RouteEdgeCost.distance(a, b)
                 + (edge.conditional() ? ModConfigs.COMMON.crossingPenalty.get() * (manager.crossingOpen(edge) ? 1 : 2) : 0);
     }
 }

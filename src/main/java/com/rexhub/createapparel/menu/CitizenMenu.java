@@ -4,6 +4,7 @@ import com.rexhub.createapparel.apparel.ApparelLoadout;
 import com.rexhub.createapparel.entity.Citizen;
 import com.rexhub.createapparel.entity.CitizenBehaviorMode;
 import com.rexhub.createapparel.citizen.CitizenFollowTarget;
+import com.rexhub.createapparel.citizen.population.CitizenPopulationManager;
 import com.rexhub.createapparel.network.CitizenBehaviorInfoPacket;
 import com.rexhub.createapparel.network.ModNetwork;
 import net.minecraft.network.chat.Component;
@@ -36,6 +37,8 @@ public final class CitizenMenu extends ApparelMenu {
     private int poseRotationStep;
     private int behaviorInfoDelay;
     private Component followDisplay = Component.empty();
+    private String districtName = "";
+    @Nullable private java.util.UUID displayedDistrict;
     @Nullable private java.util.UUID displayedTarget;
     @Nullable private CitizenBehaviorInfoPacket lastBehaviorInfo;
     @Nullable private net.minecraft.core.BlockPos destination;
@@ -86,6 +89,16 @@ public final class CitizenMenu extends ApparelMenu {
     @Nullable public net.minecraft.core.BlockPos destination() { return destination; }
     public void acceptDestination(@Nullable net.minecraft.core.BlockPos destination) { this.destination = destination; }
 
+    public String districtName() {
+        return citizen != null && !citizen.citizenState().population().independent()
+                && displayedDistrict != null && displayedDistrict.equals(citizen.citizenState().population().districtId()) ? districtName : "";
+    }
+
+    public void acceptDistrict(@Nullable java.util.UUID districtId, String name) {
+        displayedDistrict = districtId;
+        districtName = name;
+    }
+
     public boolean rotatePose(int step) {
         if (owner.level().isClientSide || citizen == null || !stillValid(owner) || owner.containerMenu != this
                 || tab() != Tab.BEHAVIOR || citizen.citizenState().behavior().mode() != CitizenBehaviorMode.POSE
@@ -122,7 +135,12 @@ public final class CitizenMenu extends ApparelMenu {
                 .append(String.valueOf(ForgeRegistries.ENTITY_TYPES.getKey(target.getType()))).append(")");
         var position = citizen.routeMovement().currentDestination();
         destination = position == null ? null : net.minecraft.core.BlockPos.containing(position);
-        var packet = new CitizenBehaviorInfoPacket(containerId, citizen.getId(), citizen.citizenState().behavior().followTargetUuid(), display, destination);
+        var population = citizen.citizenState().population();
+        var district = CitizenPopulationManager.get(player.serverLevel()).data()
+                .district(population.independent() ? null : population.districtId());
+        acceptDistrict(district == null ? null : district.districtId(), district == null ? "" : district.name());
+        var packet = new CitizenBehaviorInfoPacket(containerId, citizen.getId(), citizen.citizenState().behavior().followTargetUuid(), display, destination,
+                displayedDistrict, districtName);
         if (!packet.equals(lastBehaviorInfo)) {
             lastBehaviorInfo = packet;
             ModNetwork.sendCitizenBehaviorInfo(player, packet);

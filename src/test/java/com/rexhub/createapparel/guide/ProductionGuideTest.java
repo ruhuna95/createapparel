@@ -13,6 +13,19 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProductionGuideTest {
+    @Test void gaugeDetailsDescribeCurrentRolesAndNoLegacyAlwaysVisibleHelpRemains() throws IOException {
+        for (String locale : List.of("en_us", "ja_jp")) {
+            var lang = language(locale); String prefix = ItemGuide.GAUGE.translationBase() + ".tooltip.";
+            assertFalse(lang.has("tooltip.createapparel.gauge.use"));
+            assertTrue(lang.has(prefix + "condition4")); assertFalse(lang.has(prefix + "condition5"));
+            assertTrue(lang.get(prefix + "behaviour1").getAsString().contains(locale.equals("ja_jp") ? "記録・予約" : "reserve a center"));
+            String connections = lang.get(prefix + "behaviour3").getAsString();
+            assertFalse(connections.contains("right-click a connection")); assertFalse(connections.contains("ゲートウェイへ設定"));
+            String flow = lang.get(prefix + "behaviour4").getAsString();
+            assertTrue(flow.contains(locale.equals("ja_jp") ? "流出" : "outflow"));
+            assertTrue(flow.contains(locale.equals("ja_jp") ? "目標以上" : "meets its target"));
+        }
+    }
     private static JsonObject language(String language) throws IOException {
         return JsonParser.parseString(Files.readString(Path.of(
                 "src/generated/resources/assets/createapparel/lang/" + language + ".json"))).getAsJsonObject();

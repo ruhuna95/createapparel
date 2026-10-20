@@ -34,6 +34,7 @@ public final class ModBlockTagProvider extends BlockTagsProvider {
                 com.rexhub.createapparel.init.ModMirrors.IRON_FULL_LENGTH_MIRROR.get(), com.rexhub.createapparel.init.ModMirrors.IRON_TABLE_MIRROR.get());
         tag(BlockTags.DOORS).add(com.rexhub.createapparel.init.ModMirrors.MIRRORED_DOOR.get());
         tag(ModTags.Blocks.CITIZEN_WALK_SURFACES);
+        tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.CITIZEN_GAUGE.get());
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 ModBlocks.SPINNING_MACHINE.get(),
                 ModBlocks.SILKWORM_REARING_TRAY.get(),

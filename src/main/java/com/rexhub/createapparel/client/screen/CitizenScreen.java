@@ -40,6 +40,8 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
     private final Map<CitizenActionPacket.Action, Button> behaviorButtons = new EnumMap<>(CitizenActionPacket.Action.class);
     private Button radiusButton;
     private Button worldRotationButton;
+    private Button populationForceButton;
+    private Button populationIndependentButton;
     private CitizenBehaviorMode observedMode;
 
     private CitizenBehaviorState behavior() {
@@ -103,15 +105,23 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
                 () -> behavior().pose().id(), "pose.createapparel.");
         radiusButton = addRenderableWidget(Button.builder(Component.empty(), button -> {
             var radii = java.util.stream.IntStream.rangeClosed(CitizenBehaviorState.MIN_RADIUS, CitizenBehaviorState.MAX_RADIUS)
-                    .mapToObj(Integer::toString).toList();
+                    .mapToObj(radius -> radius == CitizenBehaviorState.UNLIMITED_RADIUS ? "-" : Integer.toString(radius)).toList();
             selectionMenu.open(button, width, height, radii.stream().map(value -> (Component) Component.literal(value)).toList(),
-                    List.of(), behavior().wanderRadius() - 1, index -> ModNetwork.updateCitizen(
+                    List.of(), behavior().wanderRadius(), index -> ModNetwork.updateCitizen(
                             CitizenActionPacket.select(menu, CitizenActionPacket.Action.WANDER_RADIUS, radii.get(index))));
         }).bounds(leftPos + 204, topPos + 52, 92, 18).build());
         buttonScroll.bind(radiusButton, direction -> ModNetwork.updateCitizen(CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, direction)));
         worldRotationButton = addRenderableWidget(Button.builder(Component.empty(), button -> rotateWorld(1))
                 .bounds(leftPos + 204, topPos + 86, 92, 18).build());
         buttonScroll.bind(worldRotationButton, this::rotateWorld);
+        populationForceButton = addRenderableWidget(Button.builder(Component.empty(), button -> {
+            if (menu.citizen() != null) ModNetwork.updateCitizen(CitizenActionPacket.select(menu, CitizenActionPacket.Action.POPULATION_FORCE,
+                    Boolean.toString(!menu.citizen().citizenState().population().force())));
+        }).bounds(leftPos + 8, topPos + 207, 139, 16).build());
+        populationIndependentButton = addRenderableWidget(Button.builder(Component.empty(), button -> {
+            if (menu.citizen() != null) ModNetwork.updateCitizen(CitizenActionPacket.select(menu, CitizenActionPacket.Action.POPULATION_INDEPENDENT,
+                    Boolean.toString(!menu.citizen().citizenState().population().independent())));
+        }).bounds(leftPos + 151, topPos + 207, 141, 16).build());
         updateControls();
         return true;
     }
@@ -188,6 +198,11 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
         appearanceButtons.get(CitizenActionPacket.Action.EYE_COLOR).setMessage(label("", colorName(appearance.eyeColorRgb())));
         rotationButton.setMessage(Component.translatable("screen.createapparel.citizen.preview_rotation", Math.round(previewRotation)));
         boolean behaviorTab = menu.tab() == CitizenMenu.Tab.BEHAVIOR;
+        populationForceButton.visible = populationForceButton.active = behaviorTab;
+        populationIndependentButton.visible = populationIndependentButton.active = behaviorTab;
+        var population = menu.citizen() == null ? com.rexhub.createapparel.citizen.population.CitizenPopulationState.DEFAULT : menu.citizen().citizenState().population();
+        populationForceButton.setMessage(Component.translatable("screen.createapparel.gauge.force", Component.translatable("screen.createapparel.gauge." + (population.force() ? "on" : "off"))));
+        populationIndependentButton.setMessage(Component.translatable("screen.createapparel.gauge.independent", Component.translatable("screen.createapparel.gauge." + (population.independent() ? "on" : "off"))));
         behaviorButtons.forEach((action, button) -> {
             button.visible = behaviorTab && (action == CitizenActionPacket.Action.BEHAVIOR_MODE
                     || action == CitizenActionPacket.Action.STAND_LOOK_MODE && behavior().mode() == CitizenBehaviorMode.STAND
@@ -198,7 +213,7 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
         behaviorButtons.get(CitizenActionPacket.Action.STAND_LOOK_MODE).setMessage(label("look_mode.createapparel.", behavior().lookMode().id()));
         behaviorButtons.get(CitizenActionPacket.Action.POSE_PRESET).setMessage(label("pose.createapparel.", behavior().pose().id()));
         radiusButton.visible = radiusButton.active = behaviorTab && behavior().mode() == CitizenBehaviorMode.WANDER;
-        radiusButton.setMessage(Component.literal(Integer.toString(behavior().wanderRadius())));
+        radiusButton.setMessage(Component.literal(behavior().unlimitedWander() ? "-" : Integer.toString(behavior().wanderRadius())));
         worldRotationButton.visible = worldRotationButton.active = behaviorTab && behavior().mode() == CitizenBehaviorMode.POSE;
         worldRotationButton.setMessage(Component.translatable("screen.createapparel.citizen.world_rotation", menu.poseRotationStep() * 22.5F));
         updateGarmentControls();
@@ -212,6 +227,29 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
 
     @Override
     protected void renderTitle(GuiGraphics graphics) { }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.render(graphics, mouseX, mouseY, partialTick);
+        if (!selectionMenu.isOpen() && menu.tab() == CitizenMenu.Tab.BEHAVIOR
+                && mouseX >= leftPos + 8 && mouseX < leftPos + 292
+                && mouseY >= topPos + 177 && mouseY < topPos + 177 + font.lineHeight) {
+            graphics.renderTooltip(font, font.split(destinationText(), Math.min(280, width - 24)), mouseX, mouseY);
+        }
+        if (!selectionMenu.isOpen() && menu.tab() == CitizenMenu.Tab.BEHAVIOR && !menu.districtName().isEmpty()
+                && mouseX >= leftPos + 8 && mouseX < leftPos + 292
+                && mouseY >= topPos + 192 && mouseY < topPos + 192 + font.lineHeight) {
+            graphics.renderTooltip(font, font.split(Component.translatable("screen.createapparel.gauge.membership", menu.districtName()),
+                    Math.min(280, width - 24)), mouseX, mouseY);
+        }
+    }
+
+    private Component destinationText() {
+        var destination = menu.destination();
+        return Component.translatable("screen.createapparel.citizen.destination",
+                destination == null ? Component.translatable("screen.createapparel.citizen.destination.none")
+                        : Component.literal(destination.toShortString()));
+    }
 
     @Override
     protected void containerTick() {
@@ -256,11 +294,15 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
             return;
         }
         if (menu.tab() == CitizenMenu.Tab.BEHAVIOR) {
+            var name = menu.districtName().isEmpty() ? Component.translatable("screen.createapparel.route.unassigned")
+                    : Component.literal(menu.districtName());
+            String districtText = Component.translatable("screen.createapparel.gauge.membership", name).getString();
+            graphics.drawString(font, font.width(districtText) > 284 ? font.plainSubstrByWidth(districtText, 284 - font.width("…")) + "…" : districtText,
+                    8, 192, 0x404040, false);
             var state = behavior();
-            var destination = menu.destination();
-            graphics.drawWordWrap(font, Component.translatable("screen.createapparel.citizen.destination",
-                    destination == null ? Component.translatable("screen.createapparel.citizen.destination.none")
-                            : Component.literal(destination.toShortString())), 8, 194, 284, 0x404040);
+            String destination = destinationText().getString();
+            graphics.drawString(font, font.width(destination) > 284 ? font.plainSubstrByWidth(destination, 284 - font.width("…")) + "…" : destination,
+                    8, 177, 0x404040, false);
             graphics.drawString(font, Component.translatable("screen.createapparel.citizen.behavior"), 4, 38, 0x404040, false);
             if (state.mode() == CitizenBehaviorMode.STAND) {
                 graphics.drawString(font, Component.translatable("screen.createapparel.citizen.look_at"), 4, 72, 0x404040, false);

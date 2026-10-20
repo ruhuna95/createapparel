@@ -169,6 +169,14 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
         register(OptionalIntegrationRecipes::build);
+        register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.CITIZEN_GAUGE.get(), 2)
+                .pattern(" T ").pattern("CMC").pattern(" B ")
+                .define('T', AllItems.ELECTRON_TUBE.get()).define('C', Items.COMPARATOR)
+                .define('M', AllItems.PRECISION_MECHANISM.get()).define('B', AllBlocks.BRASS_CASING.get())
+                .unlockedBy("has_precision_mechanism", InventoryChangeTrigger.TriggerInstance.hasItems(AllItems.PRECISION_MECHANISM.get()))
+                .save(consumer, asResource("citizen_gauge")));
+        register(consumer -> net.minecraft.data.recipes.SpecialRecipeBuilder.special(ModRecipeTypes.GAUGE_RESET.get())
+                .save(consumer, asResource("citizen_gauge_reset_manual_only").toString()));
         register(consumer -> MechanicalCraftingRecipeBuilder.shapedRecipe(ModItems.SMART_PHONE.get())
                 .patternLine("GGG").patternLine("TRT").patternLine("CPC").patternLine("TRT").patternLine("BBB")
                 .key('G', Items.GLASS_PANE).key('T', AllItems.ELECTRON_TUBE.get()).key('R', Items.REDSTONE)

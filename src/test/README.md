@@ -8,6 +8,7 @@
 - `src/test/jei/java/`：専用のJEIあり／なしClient・Server起動検証（`jeiTest` source set）。
 - `src/test/recipe/java/`：任意レシピ・銀MODの専用Server起動検証（`recipeTest` source set）。
 - `src/test/route/java/`：Citizen経路の選択実行と斜め移動・短絡安全性の専用GameTest（`routeTest` source set）。
+- `src/test/gauge/java/`：Citizen Gauge限定GameTestの選択と専用Client起動検証（`gaugeTest` source set）。
 
 専用source setは対応する検証起動にだけ追加し、通常起動と配布JARには含めない。
 共通の`gameTest`は`runGameTestServer`と、それを継承する経路／レシピ／JEIの検証Serverで読み込む。
@@ -43,6 +44,67 @@ ForgeのGameTest起動は、設定を省略するとランダムseedの通常地
 通常Client／Dedicated Serverや既存Worldの設定には適用しない。
 
 ## 対象を絞る場合
+
+Gaugeの人口・予約・操作・永続化、壁4方向の4パネル設置・個別回収・支持壁撤去時のDropは共通GameTestにも含まれる。GaugeだけのDedicated検証と専用Client検証は次で実行する。
+
+`CitizenPopulationRecoveryGameTests`は平坦な石／ガラス床の成人、下付きハーフ床の子どもを1250tick追跡し、実際に歩き続けてSTUCKEDや瞬間移動を起こさないことも確認する。任意の徘徊先なし／到着済み候補だけの場合は休止し、実経路が閉じ込められた場合は従来の復旧を維持する。再現ログは`build/citizen-wander-stuck-reproduction.log`。
+
+流入／流出GUIは16pxアイコン＋4px間隔＋名称を一組として中央配置する。専用Client QAでは流入／流出の両画面と日英ラベルの実文字幅を確認し、`gauge-client-source.png`／`gauge-client-outflow.png`へ記録する。
+
+単体初期化は実2×2／3×3メニューで、プレビューの副作用なし、1個取得ごとの予約減算、Shift全個クラフト、無関係NBT保持、設置済み地区の保持、流出設定の初期化、空ゲージ／追加材料の不一致を確認する。Forgeの`onPlayerDestroyItem`経路も分割残数・全個消去・既存地区保護を検証する。Client QAはゴミ箱に加え、Creativeアイテム一覧へ右クリックで1個／左クリックで残りを破棄し、サーバーの残数と最終解除を確認する。タブ切替だけでは解除しない。レシピ生成物は`CitizenGaugeAssetTest`で確認する。
+
+`CitizenPopulationRecoveryGameTests`もGauge専用選択と全GameTestへ含む。通常WALK／WANDERの段階STUCKED復旧、FORCE／INDEPENDENTの非テレポート、孤立Marker／STAND／信号待ちの誤判定防止、供給不能な古い要求の背後の実供給、Gateway優先生成と安全Fallbackを検証する。独立batchのConfig短縮は終了時に復元する。`CitizenPopulationTest`では96件の古い供給不能要求と若い要求に対し、再試行20／200tick・4要求／20tickの予算で飢餓しないことも確認する。
+
+`DistrictRouteCapacityTest`は同じ地区内のEdge長の重複なし集計、地区間／片端無所属Edgeの除外、立体／逆向きEdge、Revisionによる無効化、64 Edgeずつの段階処理と部分合計非公開、所属WALK人数の差分更新・保存復元を確認する。Recovery専用GameTestは最終Marker削除後のWANDER復帰、6mに2人の自動切替と定員ちょうどの維持、内部Edge削除後の余剰WALKの降格・保護フラグ、流入時のWALK優先／飽和時WANDER、Gatewayがあっても接続経路を辿る人口移動と到着後の飽和切替、子ども村人の遊び速度相当の属性・実歩行を検証する。子どもの歩行周期は実移動量に追従する1.5倍補正とし、以前の3倍から半速へ調整する。移動速度属性0.3は維持する。
+
+`RouteEdgeCostTest`は地区間の1.5倍費用と、通常分岐で地区内60%／地区間40%となる2択の重みを決定的に検証する。既存Planner GameTestには幾何学的には少し長い地区内経路が、地区間の近道より優先される検査も含める。
+
+`GaugeWirePathTest`は半ブロック格子の迂回、負座標、端点の許可、閉塞時の非描画、4096訪問上限を検証する。専用GameTestは全4壁方向でCitizen／Factory Gaugeの中間パネルを避け、端点が一致することと撤去後の衝突解除を確認する。実Clientは追加の中間パネルを置き、移動後のRendererキャッシュから経路を取得して迂回と描画範囲を確認する。
+
+`GaugeWireOccupancyTest`は配線の重複・交差・逆向き区間、共通端点、他配線途中の端点化拒否、並走と閉塞時の保留を検証する。全4壁方向のGameTestでも既存配線の迂回を確認する。実ClientはChunkをまたぐCitizen配線同士、およびFactory Gaugeの既存配線との交差を用意し、描画順によらず経路が重ならないことと同一キャッシュ再利用を確認する。画像は`build/gauge-client-wire-crossing.png`と`build/gauge-client-wire-factory.png`。
+
+起動設定は`gradle/citizen-gauge-tests.gradle`、専用Worldは`run/gauge-tests/`へ保存する。
+
+```powershell
+.\gradlew.bat -PjeiEnabled=false runGaugeTestServer
+.\gradlew.bat -PjeiEnabled=false runGaugeTestClient
+.\gradlew.bat runGaugeTestClient
+.\gradlew.bat -PjeiEnabled=false -PgaugeResume=true runGaugeTestClient
+```
+
+Client検証はFactory Gauge風GUIの＋から壁面ゲージ間を配線し、移動ボタンから1枚を移す。ダイヤモンド縁・Sourceスポーンエッグ・District空表示・記録済みItem光沢を表示し、`build/gauge-client-move-preview.png`と`build/gauge-client-wall.png`も記録する。最後のコマンドは直前のGauge専用Clientが作ったWorldを別プロセスで再起動し、移動後の1枚＋元の3枚・Gauge／District UUID・Link・設定・Citizen Registryと予約解除を確認する。先に通常の`runGaugeTestClient`を成功させる。
+
+`CitizenGaugeAssetTest`はFactory Gauge親モデルの直接継承と、Create本体の16×16テクスチャに対して縁44画素だけが色違いであることを確認する。モデル・テクスチャ変更時は`runData`後に実行する。
+
+ゲージの指定素材は`textures/item/gauge_district_icon.png`（UUID色）と`gauge_influx_icon.png`／`gauge_outflow_icon.png`（無着色）を使う。Client QAは流入→流出保存→再表示→流入復帰を行い、`build/gauge-client-source.png`／`gauge-client-outflow.png`へ記録する。最後に隣接地区を専用Worldへ一時追加して`build/gauge-client-dual-boundaries.png`を撮影し、両色の内側境界を確認して撤去する。`DistrictBoundaryMeshTest`はChunkをまたぐ共有境界・1/16blockオフセット・負座標・同地区内部の線なしを検証する。
+
+District専用画面は統計・名前編集・半径編集・地区IDコピー・保存を検証し、移動と別プロセス再起動で地区名保持を確認する。`build/gauge-client-district-edited.png`、`build/gauge-client-district-hover-{green,red}.png`は新GUI・壁面HUD・実人口変化によるランプ同期の確認用。Source画面は200×160の外枠を維持し、接続・移動・保存だけのレイアウトを確認する。
+
+`build/gauge-client-district-reset.png`は地区名を空欄保存してUUID表示へ戻した画面。UUIDは編集値へ入れず、フォーカス時に空欄から入力できることと、全文の表示幅を検証する。Dedicatedではパネル消失・BEだけの消失の登録削除と、未ロード地区・市民・兄弟パネルの保持を確認する。
+
+JEIありの`runGaugeTestClient`は地区／供給ゲージ・市民・ワードローブ・マネキンでJEIが非表示になり、通常インベントリへ戻ると表示されることを検証する。JEIなしでも同じ実メニューを起動する。`build/gauge-client-copy-tooltip.png`は保存ボタンより前面のコピー説明、地区GUI画像は48pxの帯の上下余白と右下のゲージプレビューを確認する。
+
+Sourceは接続・移動・保存の可視ボタンが3個だけで、旧接続領域がスクロールを受けないことを確認する。地区アイコンのUUID／RGBはGUI・壁面・リネーム・移動で一致する。`CitizenGaugeAssetTest`はDatagen後の白ベース・透明背景・濃い縁・グラデーション、`DistrictGaugeIconTest`はRGBの安定性を検証する。Client QAは実CitizenModelに対しChildの歩行位相1.5倍とAdult／振幅不変も確認する。
+
+Sourceは高さ104pxと2ボタンの縦中央配置、壁面アイコンはFactoryと同じ合成倍率0.2578125を確認する。`DistrictGaugeIconTest`はUUID.hashCodeの下位24bit、色相・彩度を維持した明度90%補正（最大成分230）、黒から無彩色への補正も検証する。
+
+流出の検証は`CitizenPopulationGameTests`で余剰1人の削除・目標割れ防止・Registry除去・cooldown、未ロード地区の不足・強制ロード防止・FORCE保護、既存Citizenの地区間移動優先を確認する。JUnitはネットワークの64ノード段階構築・人口差分更新・設定変更による破棄、流入より既存Donorを優先するBFS、目標人口≦半径と旧値の保存互換性を確認する。Clientは初回init時のOUTFLOW情報とグレー帯の切替を検証し、範囲外入力は`build/gauge-client-{radius,target}-warning.png`へ撮影する。境界メッシュはワールド端でも1/256の精度を保つことを確認する。
+
+中心の重複登録は`CitizenPopulationTest`で座標索引のロード・設定・移動・旧重複データの段階削除、`CitizenPopulationGameTests`で地面記録拒否時のItem不変、範囲内別地点の許可、記録済みItemの重複設置拒否、未ロード地区の判定と削除後の再利用を検証する。
+
+未設置Gaugeの地点予約は、JUnitで予約所有者・永続化・旧形式互換・不正／重複予約除外・地区化・削除・キャッシュversion維持を検証する。GameTestでは、壁設置前に別の空Gaugeで同地点を記録して拒否されること、所有者だけが設置可能なこと、失敗時のItem／予約保持、再記録成功後の旧予約解放を確認する。Client QAでも実際のスニーク入力と2回の使用Packetで再現し、`build/gauge-client-unplaced-center-rejected.png`へ撮影する。消失時の解除は実ItemEntityの寿命切れ・溶岩ダメージ・奈落・killを検証する。分割の一部損失・消滅通知の重複・後からキャンセルされた寿命切れ・拾得・Chunkアンロード・チェスト保管・再読込で誤解除しないことを確認する。Client QAでは実際のCreative画面から記録済みItemをカーソルへ取り、ゴミ箱へ削除して予約解放を確認する。Shift一括削除のネイティブ操作経路も呼び、複数予約を解放する。専用PacketはJUnitで往復と不正個数、GameTestでCreative権限・分割個数・既存地区の非削除を確認する。保管品の期限解除は対象外。
+
+Client QAの重複記録確認は上記の未設置予約を使う。登録済み地区の中心拒否は共通GameTestでも維持する。通常Tooltipは名前・Shift案内・記録済み中心座標を表示し、操作説明はShift詳細内に限る。詳細は現行の地区設定・接続追加・移動・流入／流出を説明し、座標は重複させない。`GaugeTooltipClientChecks`が実TooltipModifierとCreateのShift説明データ、動的モード・中心座標を検証し、`build/gauge-client-tooltip-{normal,shift}.png`へ撮影する。詳細画像はOSキー注入ではなくCreateのShift用Component列を描く。
+
+全タイプのMarker地区保存は`CitizenRouteGraphTest`と`CitizenPopulationGameTests`でタイプ変更・NBT再読込・地区新設／拡縮／分割／削除による自動所属を検証する。Gateway移動先は直接Gauge Link先だけを列挙し、未登録／通常Marker・改名・Link切断・削除のキャッシュ無効化も確認する。`CitizenPopulationTest`は空間索引と線形探索の一致、負座標・範囲境界・接続先キャッシュ・各hop／中止時の予約集計を確認する。`DistrictTerritoryTest`は半径1の3×3区分、中心間境界とUUID同距離判定、Palette＋RLE保存、遅延復元、局所無効化、512枚LRU、密な400マーカーの64件／tick予算と中断再開・適用済みロードの走査省略を検証する。Client QAは範囲変更による自動所属／解除・タイプ変更での維持、読み取り専用所属欄と設定行の順序、8地区の一覧と7行スクロールを検証し、`build/gauge-client-marker-gateway-{destinations,scrolled}.png`へ撮影する。大規模Worldの実TPS/FPS計測とは区別する。
+
+所属地区名表示は`RoutePacketsTest`で未所属・UUID初期名・日本語・64文字名の通信往復を確認する。Gauge Dedicatedでは市民／経路マーカーの地区名、改名・独立・地区削除時の表示解除を検証する。Clientは`build/gauge-client-citizen-district.png`と`build/gauge-client-marker-district.png`を撮影し、翻訳読み込み・画面を開いたままの改名・未所属化も検証する。それぞれの`-district-long.png`／`-district-long-tooltip.png`は64文字名の省略・全文ホバーの確認用。マーカーのJEI表示設定は変更しない。
+
+`DistrictBoundarySurfaceTest`は境界線の足元上限・Slab・頭上の屋根除外・支持面なし・高さキャッシュの20tick更新・64列／tick予算・8192上限・待機FIFOを検証する。Client QAは実ChunkのSlab＋屋根と未ロード列の除外を確認し、境界／プレビューの地面固定をワールド画像へ撮影する。市民の行動タブは目的地y177、所属地区y192、既存2ボタンy207の順を確認し、長い地区名Tooltipはy196で撮影する。マーカーの自動登録説明文は表示しない。
+
+無制限徘徊は`CitizenBehaviorStateTest`で保存値0・既定「-」と既存有限半径の保持、`CitizenWanderAreaTest`で地区所有区分・近隣32blockの接近・独立・範囲変更の無効化を確認する。`CitizenPopulationGameTests`は実際に歩かせて加入・地区内徘徊・範囲変更後の帰還・独立維持を確認する。`CitizenBehaviorGameTests`は無制限のコマンド／GUI Packetと村人との差（火のMalus・FOLLOW_RANGE）を検証する。Client QAは実ホイールで`-→1→-`を確認し、`build/gauge-client-citizen-unlimited.png`と`build/gauge-client-citizen-unlimited-options.png`へ撮影する。既存GUIのホイールは上回しが減少、下回しが増加。
+
+`CitizenWalkHomeGameTests`は隔離batchで帰還Configを200tickへ短縮し、終了時に復元する。実Marker上のWALKによる地区越境・自然帰還と、地区外だけのGraphからRETURN_HOME／到着／WALK継続を確認する。Phoneの両手観測は`CitizenPopulationGameTests`で編集権限と分離して検証し、Client QAで125tick待って古いGauge同期の期限後に撮影する。画像は`build/gauge-client-phone-boundaries.png`／`build/gauge-client-offhand-phone-boundaries.png`。Phoneをしまった後の非表示条件も確認する。
 
 ```powershell
 .\gradlew.bat test --tests '*ResourceIntegrityTest' --tests '*GarmentResourceValidationTest'

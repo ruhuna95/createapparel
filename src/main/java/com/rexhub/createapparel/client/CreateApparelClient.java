@@ -100,11 +100,13 @@ public final class CreateApparelClient {
                     register(ModMenuTypes.MANNEQUIN.get(), WardrobeScreen::new);
             MenuScreens.register(ModMenuTypes.CITIZEN.get(), com.rexhub.createapparel.client.screen.CitizenScreen::new);
             MenuScreens.register(ModMenuTypes.ROUTE_MARKER.get(), com.rexhub.createapparel.client.screen.RouteMarkerScreen::new);
+            MenuScreens.register(ModMenuTypes.CITIZEN_GAUGE.get(), com.rexhub.createapparel.client.screen.CitizenGaugeScreen::new);
         });
     }
 
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
+        event.register(ModPartialModels.CITIZEN_GAUGE_PANEL.modelLocation());
         event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.MODEL);
         event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.CLIP_MODEL);
         event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
@@ -135,6 +137,7 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ModBlockEntities.CITIZEN_GAUGE.get(), com.rexhub.createapparel.client.renderer.CitizenGaugeRenderer::new);
         event.registerEntityRenderer(ModEntities.CITIZEN.get(), com.rexhub.createapparel.client.renderer.CitizenRenderer::new);
         event.registerBlockEntityRenderer(com.rexhub.createapparel.init.ModMirrors.BLOCK_ENTITY.get(),
                 com.rexhub.createapparel.client.mirror.MirrorBlockEntityRenderer::new);

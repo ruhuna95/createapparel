@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:dynamic",
+          "name": "createapparel:gauge_panels"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "createapparel:blocks/citizen_gauge"
+}

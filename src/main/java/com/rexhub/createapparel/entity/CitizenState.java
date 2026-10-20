@@ -10,6 +10,7 @@ public final class CitizenState {
     private CitizenAppearance appearance = CitizenAppearance.DEFAULT;
     private CitizenAge age = CitizenAge.ADULT;
     private CitizenBehaviorState behavior = CitizenBehaviorState.DEFAULT;
+    private com.rexhub.createapparel.citizen.population.CitizenPopulationState population = com.rexhub.createapparel.citizen.population.CitizenPopulationState.DEFAULT;
     private Runnable changeListener = () -> { };
     private long revision;
 
@@ -19,6 +20,10 @@ public final class CitizenState {
     public CitizenAppearance appearance() { return appearance; }
     public CitizenAge age() { return age; }
     public CitizenBehaviorState behavior() { return behavior; }
+    public com.rexhub.createapparel.citizen.population.CitizenPopulationState population() { return population; }
+    public void setPopulation(com.rexhub.createapparel.citizen.population.CitizenPopulationState next) {
+        if (!population.equals(Objects.requireNonNull(next))) { population = next; changed(); }
+    }
     public long revision() { return revision; }
     public void setChangeListener(Runnable listener) { changeListener = Objects.requireNonNull(listener); }
 
@@ -54,6 +59,7 @@ public final class CitizenState {
         tag.putString("Age", age.getSerializedName());
         tag.put("ApparelSlots", loadout.serializeNBT());
         behavior.write(tag);
+        tag.put("Population", population.save());
         return tag;
     }
 
@@ -61,6 +67,7 @@ public final class CitizenState {
         appearance = CitizenAppearance.read(tag);
         age = CitizenAge.read(tag.getString("Age"));
         behavior = CitizenBehaviorState.read(tag);
+        population = com.rexhub.createapparel.citizen.population.CitizenPopulationState.load(tag.getCompound("Population"));
         if (tag.contains("ApparelSlots", CompoundTag.TAG_COMPOUND)) {
             loadout.deserializeNBT(tag.getCompound("ApparelSlots"));
         }

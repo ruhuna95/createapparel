@@ -17,8 +17,9 @@ public record CitizenBehaviorState(CitizenBehaviorMode mode, @Nullable BlockPos 
                                    @Nullable ResourceKey<Level> anchorDimension, int wanderRadius,
                                    @Nullable UUID followTargetUuid, @Nullable ResourceKey<Level> followTargetDimension,
                                    PosePreset pose, CitizenLookMode lookMode) {
-    public static final int DEFAULT_RADIUS = 8;
-    public static final int MIN_RADIUS = 1;
+    public static final int UNLIMITED_RADIUS = 0;
+    public static final int DEFAULT_RADIUS = UNLIMITED_RADIUS;
+    public static final int MIN_RADIUS = UNLIMITED_RADIUS;
     public static final int MAX_RADIUS = 64;
     public static final CitizenBehaviorState DEFAULT = new CitizenBehaviorState(CitizenBehaviorMode.STAND,
             null, null, DEFAULT_RADIUS, null, null, PosePreset.STANDING, CitizenLookMode.IDLE);
@@ -40,6 +41,7 @@ public record CitizenBehaviorState(CitizenBehaviorMode mode, @Nullable BlockPos 
     }
 
     public static boolean validRadius(int radius) { return radius >= MIN_RADIUS && radius <= MAX_RADIUS; }
+    public boolean unlimitedWander() { return wanderRadius == UNLIMITED_RADIUS; }
 
     public static CitizenBehaviorState anchored(CitizenBehaviorMode mode, BlockPos pos, ResourceKey<Level> dimension, int radius) {
         if (mode != CitizenBehaviorMode.STAND && mode != CitizenBehaviorMode.WANDER) throw new IllegalArgumentException("Not anchored mode");

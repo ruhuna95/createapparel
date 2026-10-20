@@ -22,6 +22,9 @@ public enum ModRecipeTypes implements IRecipeTypeInfo {
     WEAVING(WeavingRecipe::new),
     SEWING(() -> new SewingRecipe.Serializer());
 
+    public static final RegistryObject<RecipeSerializer<GaugeResetRecipe>> GAUGE_RESET = ModRegistries.RECIPE_SERIALIZERS.register(
+            "citizen_gauge_reset", () -> new net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<>(GaugeResetRecipe::new));
+
     private final ResourceLocation id;
     private final RegistryObject<RecipeSerializer<?>> serializer;
     private final RegistryObject<RecipeType<?>> type;

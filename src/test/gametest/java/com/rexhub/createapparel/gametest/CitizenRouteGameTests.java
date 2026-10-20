@@ -578,7 +578,17 @@ public final class CitizenRouteGameTests {
         helper.assertTrue(alternative.nodes().equals(List.of(a.id(), c.id(), b.id())), "Local failure recalculates alternative graph path");
         helper.assertTrue(data.version() == version && data.connected(a.id()).size() == 2, "Path failure never deletes persistent edge");
         manager.runtime().update(version, helper.getLevel().getGameTime() + RouteSettings.TEMPORARY_BLOCK_TICKS + 1);
-        helper.assertTrue(manager.planner().between(citizen, a.id(), b.id()).nodes().equals(List.of(a.id(), b.id())), "Expiration restores direct route"); helper.succeed();
+        helper.assertTrue(manager.planner().between(citizen, a.id(), b.id()).nodes().equals(List.of(a.id(), b.id())), "Expiration restores direct route");
+        var home = UUID.randomUUID(); var other = UUID.randomUUID();
+        data.put(a.withDistrict(home)); data.put(b.withDistrict(home)); data.put(c.withDistrict(other));
+        var local = marker(helper, 10, 25, RouteMarkerType.NORMAL).withDistrict(home); data.put(local);
+        data.link(a.id(), local.id(), false); data.link(local.id(), b.id(), false);
+        manager.runtime().failed(citizen.getUUID(), direct.edges().get(0), helper.getLevel().getGameTime(), data.version());
+        var preferred = manager.planner().between(citizen, a.id(), b.id());
+        helper.assertTrue(preferred.nodes().equals(List.of(a.id(), local.id(), b.id())), "District surcharge prefers a slightly longer local path");
+        helper.assertTrue(a.center().distanceTo(local.center()) + local.center().distanceTo(b.center())
+                > a.center().distanceTo(c.center()) + c.center().distanceTo(b.center()), "Local preference is not merely geometric shortest distance");
+        helper.succeed();
     }
 
     @GameTest(template = "citizen_behavior", batch = "citizen_routes")

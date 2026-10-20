@@ -26,7 +26,7 @@ import java.util.List;
 public record CitizenActionPacket(int containerId, int entityId, @Nullable Action action,
                                   int index, String category, String value) {
     public enum Action { TAB, STYLE, ARM_PROFILE, CHEST_PROFILE, SKIN_TONE, HAIR_STYLE, HAIR_COLOR, EYE_COLOR,
-        BEHAVIOR_MODE, WANDER_RADIUS, POSE_ROTATION_STEP, STAND_LOOK_MODE, POSE_PRESET }
+        BEHAVIOR_MODE, WANDER_RADIUS, POSE_ROTATION_STEP, STAND_LOOK_MODE, POSE_PRESET, POPULATION_FORCE, POPULATION_INDEPENDENT }
 
     public static CitizenActionPacket select(CitizenMenu menu, Action action, String value) {
         return new CitizenActionPacket(menu.containerId, menu.citizen() == null ? -1 : menu.citizen().getId(),
@@ -80,6 +80,14 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
             }
             return;
         }
+        if (action == Action.POPULATION_FORCE || action == Action.POPULATION_INDEPENDENT) {
+            if (menu.tab() != CitizenMenu.Tab.BEHAVIOR || index != 0 || !category.isEmpty() || !value.equals("true") && !value.equals("false")) return;
+            var citizen = menu.citizen(); var population = citizen.citizenState().population();
+            com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get(player.serverLevel()).flags(citizen,
+                    action == Action.POPULATION_INDEPENDENT ? Boolean.parseBoolean(value) : population.independent(),
+                    action == Action.POPULATION_FORCE ? Boolean.parseBoolean(value) : population.force());
+            return;
+        }
         if (action == Action.BEHAVIOR_MODE || action == Action.WANDER_RADIUS || action == Action.POSE_ROTATION_STEP
                 || action == Action.STAND_LOOK_MODE || action == Action.POSE_PRESET) {
             if (menu.tab() != CitizenMenu.Tab.BEHAVIOR || !category.isEmpty()) return;
@@ -101,7 +109,7 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
                 if (behavior.mode() != CitizenBehaviorMode.WANDER) return;
                 int radius;
                 try {
-                    if (index == 0) radius = Integer.parseInt(value);
+                    if (index == 0) radius = value.equals("-") ? CitizenBehaviorState.UNLIMITED_RADIUS : Integer.parseInt(value);
                     else if ((index == -1 || index == 1) && value.isEmpty()) radius = behavior.wanderRadius() + index;
                     else return;
                 } catch (NumberFormatException ignored) { return; }

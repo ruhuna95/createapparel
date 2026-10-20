@@ -13,6 +13,7 @@ public final class ClientCitizenBehaviorInfo {
                 && menu.citizen() != null && menu.citizen().getId() == packet.entityId()) {
             menu.acceptFollowDisplay(packet.targetUuid(), packet.display());
             menu.acceptDestination(packet.destination());
+            menu.acceptDistrict(packet.districtId(), packet.districtName());
         }
     }
 }

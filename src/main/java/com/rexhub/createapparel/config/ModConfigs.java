@@ -40,6 +40,21 @@ public final class ModConfigs {
         public final ForgeConfigSpec.IntValue crossingWaitTimeout;
         public final ForgeConfigSpec.DoubleValue crossingPenalty;
         public final ForgeConfigSpec.IntValue gatewayTransitCooldown;
+        public final ForgeConfigSpec.IntValue populationGaugeCooldown;
+        public final ForgeConfigSpec.IntValue populationCitizenCooldown;
+        public final ForgeConfigSpec.IntValue populationRetryTicks;
+        public final ForgeConfigSpec.IntValue populationHopTimeout;
+        public final ForgeConfigSpec.IntValue populationMaxHops;
+        public final ForgeConfigSpec.IntValue populationQueryBudget;
+        public final ForgeConfigSpec.IntValue maxLoadedCitizensPerDimension;
+        public final ForgeConfigSpec.IntValue populationSpawnBudget;
+        public final ForgeConfigSpec.IntValue populationMaxChains;
+        public final ForgeConfigSpec.IntValue populationIntentTimeout;
+        public final ForgeConfigSpec.IntValue populationStuckTicks;
+        public final ForgeConfigSpec.IntValue populationStuckRetries;
+        public final ForgeConfigSpec.IntValue populationReturnHomeTicks;
+        public final ForgeConfigSpec.IntValue populationAutonomyTicks;
+        public final ForgeConfigSpec.DoubleValue populationVisitChance;
         private Common(ForgeConfigSpec.Builder builder) {
             builder.push("citizenRoutes");
             maxNewPathRequestsPerTick = builder.defineInRange("maxNewPathRequestsPerTick", 4, 1, 64);
@@ -48,6 +63,23 @@ public final class ModConfigs {
             crossingWaitTimeout = builder.defineInRange("crossingWaitTimeout", 600, 20, 12000);
             crossingPenalty = builder.defineInRange("crossingPenalty", 16.0, 0, 1024);
             gatewayTransitCooldown = builder.defineInRange("gatewayTransitCooldown", 100, 20, 12000);
+            builder.pop();
+            builder.push("citizenPopulation");
+            populationGaugeCooldown = builder.defineInRange("gaugeActionCooldownTicks", 600, 20, 72000);
+            populationCitizenCooldown = builder.defineInRange("citizenTransferCooldownTicks", 2400, 40, 144000);
+            populationRetryTicks = builder.defineInRange("resolveRetryTicks", 200, 20, 12000);
+            populationHopTimeout = builder.defineInRange("hopTimeoutTicks", 12000, 200, 144000);
+            populationMaxHops = builder.defineInRange("maxQueryHops", 16, 1, 128);
+            populationQueryBudget = builder.defineInRange("maxQueryNodes", 256, 8, 4096);
+            maxLoadedCitizensPerDimension = builder.defineInRange("maxLoadedCitizensPerDimension", 300, 1, 16384);
+            populationSpawnBudget = builder.defineInRange("maxSourceSpawnsPerTick", 1, 1, 16);
+            populationMaxChains = builder.defineInRange("maxConcurrentPopulationChains", 128, 1, 1024);
+            populationIntentTimeout = builder.defineInRange("intentTimeoutTicks", 12000, 200, 144000);
+            populationStuckTicks = builder.defineInRange("stuckProgressTimeoutTicks", 600, 100, 12000);
+            populationStuckRetries = builder.defineInRange("stuckRetries", 3, 2, 16);
+            populationReturnHomeTicks = builder.defineInRange("returnHomeAfterTicks", 6000, 200, 144000);
+            populationAutonomyTicks = builder.defineInRange("autonomyCheckTicks", 400, 20, 12000);
+            populationVisitChance = builder.defineInRange("impulseVisitChance", 0.05, 0, 1);
             builder.pop();
         }
     }

@@ -1,0 +1,50 @@
+sourceSets {
+    gaugeTest {
+        java.setSrcDirs(['src/test/gauge/java'])
+        resources.setSrcDirs(['src/test/gauge/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+def gaugeTestServerDirectory = file("run/gauge-tests/server-${System.currentTimeMillis()}")
+def gaugeTestClientDirectory = file('run/gauge-tests/client')
+minecraft.runs {
+    gaugeTestServer {
+        parent minecraft.runs.gameTestServer
+        workingDirectory gaugeTestServerDirectory
+        property 'apparel.gaugeTest.server', 'true'
+        property 'forge.logging.console.level', 'info'
+        mods { "${mod_id}" { source sourceSets.gaugeTest } }
+    }
+    gaugeTestClient {
+        parent minecraft.runs.client
+        workingDirectory gaugeTestClientDirectory
+        property 'forge.logging.console.level', 'info'
+        property 'apparel.gaugeTest.projectDir', projectDir.absolutePath
+        property 'apparel.gaugeTest.resume', providers.gradleProperty('gaugeResume').getOrElse('false')
+        mods { "${mod_id}" { source sourceSets.gaugeTest } }
+    }
+}
+tasks.register('prepareGaugeTestWorld', Copy) {
+    from('src/test/resources/gameteststructures') { into 'gameteststructures' }
+    from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
+    into gaugeTestServerDirectory
+}
+tasks.matching { it.name == 'prepareRunGaugeTestServer' }.configureEach { dependsOn 'prepareGaugeTestWorld' }
+tasks.matching { it.name == 'runGaugeTestServer' }.configureEach {
+    doFirst { ext.gaugeTestStartedAt = System.currentTimeMillis() }
+    doLast {
+        def log = new File(gaugeTestServerDirectory, 'logs/latest.log')
+        if (!log.isFile() || log.lastModified() < gaugeTestStartedAt || !(log.getText('UTF-8') =~ /All \d+ required tests passed/).find())
+            throw new GradleException("Citizen Gauge GameTests did not pass; see ${log}")
+    }
+}
+tasks.matching { it.name == 'runGaugeTestClient' }.configureEach {
+    doFirst { ext.gaugeClientStartedAt = System.currentTimeMillis() }
+    doLast {
+        def log = new File(gaugeTestClientDirectory, 'logs/latest.log')
+        if (!log.isFile() || log.lastModified() < gaugeClientStartedAt || !log.getText('UTF-8').contains('CITIZEN_GAUGE_CLIENT_PASSED'))
+            throw new GradleException("Citizen Gauge Client checks did not pass; see ${log}")
+    }
+}

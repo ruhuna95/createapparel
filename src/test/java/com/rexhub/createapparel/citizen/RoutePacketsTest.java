@@ -26,13 +26,16 @@ class RoutePacketsTest {
     @Test void citizenBehaviorInfoPreservesOptionalDestinationAndFollowTarget() {
         for (UUID target : Arrays.asList(null, UUID.randomUUID())) {
             for (BlockPos destination : Arrays.asList(null, new BlockPos(-123, 72, 456))) {
-                var packet = new CitizenBehaviorInfoPacket(5, 21, target, net.minecraft.network.chat.Component.literal("Target"), destination);
-                var buffer = new FriendlyByteBuf(Unpooled.buffer());
-                try {
-                    packet.encode(buffer);
-                    assertEquals(packet, CitizenBehaviorInfoPacket.decode(buffer));
-                    assertEquals(0, buffer.readableBytes());
-                } finally { buffer.release(); }
+                for (String name : List.of("", UUID.randomUUID().toString(), "中央地区", "W".repeat(64))) {
+                    var packet = new CitizenBehaviorInfoPacket(5, 21, target, net.minecraft.network.chat.Component.literal("Target"), destination,
+                            name.isEmpty() ? null : UUID.randomUUID(), name);
+                    var buffer = new FriendlyByteBuf(Unpooled.buffer());
+                    try {
+                        packet.encode(buffer);
+                        assertEquals(packet, CitizenBehaviorInfoPacket.decode(buffer));
+                        assertEquals(0, buffer.readableBytes());
+                    } finally { buffer.release(); }
+                }
             }
         }
     }

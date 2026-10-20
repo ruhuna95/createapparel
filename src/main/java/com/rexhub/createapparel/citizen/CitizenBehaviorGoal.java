@@ -26,6 +26,7 @@ public final class CitizenBehaviorGoal extends Goal {
     public static final int TELEPORT_INTERVAL = 10;
     public static final double START_DISTANCE_SQUARED = 16;
     public static final double STOP_DISTANCE_SQUARED = 6.25;
+    private static final int[] WANDER_HEIGHT_OFFSETS = {0, 1, -1, 2, -2, 3, -3, 4, -4};
     private final Citizen citizen;
     private CitizenBehaviorState observed = CitizenBehaviorState.DEFAULT;
     @Nullable private Entity target;
@@ -34,6 +35,8 @@ public final class CitizenBehaviorGoal extends Goal {
     private int pathDelay;
     private int teleportDelay;
     private boolean following;
+    @Nullable private CitizenWanderArea wanderArea;
+    @Nullable private BlockPos wanderTarget;
 
     public CitizenBehaviorGoal(Citizen citizen) {
         this.citizen = citizen;
@@ -57,6 +60,8 @@ public final class CitizenBehaviorGoal extends Goal {
         target = null;
         lastTargetPosition = null;
         following = false;
+        wanderArea = null;
+        wanderTarget = null;
         pathDelay = resolveDelay = teleportDelay = 0;
     }
 
@@ -164,9 +169,20 @@ public final class CitizenBehaviorGoal extends Goal {
     }
 
     private void wander(CitizenBehaviorState state) {
-        if (state.anchor() == null || !citizen.level().dimension().equals(state.anchorDimension())) {
+        if (citizen.intents().consumeWanderRetry()) { pathDelay = 0; wanderArea = null; wanderTarget = null; }
+        if (!state.unlimitedWander() && (state.anchor() == null || !citizen.level().dimension().equals(state.anchorDimension()))) {
             citizen.getNavigation().stop();
             return;
+        }
+        if (state.unlimitedWander() && wanderArea != null && !wanderArea.valid(state, citizen.citizenState().population())) {
+            CitizenPathfindingScheduler.get((ServerLevel) citizen.level()).cancel(citizen);
+            citizen.getNavigation().stop(); wanderArea = null; pathDelay = 0;
+            wanderTarget = null;
+        }
+        if (wanderTarget != null && citizen.getNavigation().isDone()) {
+            if (citizen.position().distanceToSqr(Vec3.atBottomCenterOf(wanderTarget)) > 1) citizen.intents().wanderFailed();
+            else citizen.intents().wanderSucceeded();
+            wanderTarget = null;
         }
         if (pathDelay > 0 || !citizen.getNavigation().isDone()
                 || CitizenActivityScheduler.get((ServerLevel) citizen.level()).state(citizen) == CitizenActivityScheduler.State.THROTTLED
@@ -174,21 +190,19 @@ public final class CitizenBehaviorGoal extends Goal {
         pathDelay = FAILURE_BACKOFF;
         if (!loadedSearchRegion()) return;
         var random = citizen.getRandom();
-        int radius = state.wanderRadius();
-        int stepRadius = Math.min(radius, 12);
+        var population = com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get((ServerLevel) citizen.level());
+        if (state.unlimitedWander()) population.update(citizen);
+        var area = new CitizenWanderArea(state, citizen.citizenState().population(), population.data(), citizen.blockPosition());
+        wanderArea = area;
+        var routes = com.rexhub.createapparel.citizen.route.CitizenRouteManager.get((ServerLevel) citizen.level());
         var destinations = new java.util.ArrayList<BlockPos>();
         for (int attempt = 0; attempt < 8; attempt++) {
-            int x = citizen.blockPosition().getX() + random.nextInt(stepRadius * 2 + 1) - stepRadius;
-            int z = citizen.blockPosition().getZ() + random.nextInt(stepRadius * 2 + 1) - stepRadius;
-            var candidate = new BlockPos(x, citizen.blockPosition().getY(), z);
-            if (!inside(state, candidate) || !CitizenNavigation.hasLoadedRegion(citizen.level(), candidate, 0)) continue;
+            var candidate = area.candidate(random, attempt);
+            if (!area.allowsDestination(candidate) || !CitizenNavigation.hasLoadedRegion(citizen.level(), candidate, 0)) continue;
             BlockPos walkable = null;
-            for (int offset = 4; offset >= -4; offset--) {
+            for (int offset : WANDER_HEIGHT_OFFSETS) {
                 var pos = candidate.offset(0, offset, 0);
-                if (citizen.level().isInWorldBounds(pos) && citizen.level().getBlockState(pos.below()).isSolidRender(citizen.level(), pos.below())
-                        && citizen.level().getBlockState(pos).getCollisionShape(citizen.level(), pos).isEmpty()
-                        && citizen.level().getBlockState(pos.above()).getCollisionShape(citizen.level(), pos.above()).isEmpty()
-                        && citizen.level().getFluidState(pos).isEmpty()) {
+                if (routes.safeEndpoint(citizen, pos)) {
                     walkable = pos;
                     break;
                 }
@@ -196,28 +210,31 @@ public final class CitizenBehaviorGoal extends Goal {
             if (walkable == null) continue;
             destinations.add(walkable);
         }
-        requestWanderPath(state, destinations, 0);
+        requestWanderPath(area, destinations, 0, false);
     }
 
-    private void requestWanderPath(CitizenBehaviorState state, java.util.List<BlockPos> destinations, int index) {
-        if (index >= destinations.size()) { pathDelay = FAILURE_BACKOFF; return; }
+    private void requestWanderPath(CitizenWanderArea area, java.util.List<BlockPos> destinations, int index, boolean failed) {
+        if (index >= destinations.size()) {
+            pathDelay = FAILURE_BACKOFF;
+            if (failed) citizen.intents().wanderFailed(); else citizen.intents().wanderIdle();
+            return;
+        }
         CitizenPathfindingScheduler.get((ServerLevel) citizen.level()).submit(citizen, CitizenPathfindingScheduler.Priority.AUTONOMY,
-                () -> state.equals(citizen.citizenState().behavior()) && citizen.getNavigation().isDone(), () -> {
+                () -> area.valid(citizen.citizenState().behavior(), citizen.citizenState().population()) && citizen.getNavigation().isDone(), () -> {
                     Path path = citizen.getNavigation().createPath(destinations.get(index), 0);
+                    if (path != null && path.canReach() && path.getNodeCount() < 2
+                            && citizen.position().distanceToSqr(Vec3.atBottomCenterOf(destinations.get(index))) <= 1) {
+                        requestWanderPath(area, destinations, index + 1, failed); return;
+                    }
                     boolean contained = path != null && path.canReach() && path.getNodeCount() >= 2;
                     if (contained) for (int node = 0; node < path.getNodeCount(); node++) {
-                        if (!inside(state, path.getNodePos(node))) { contained = false; break; }
+                        if (!area.allowsPath(path.getNodePos(node))) { contained = false; break; }
                     }
-                    if (contained && citizen.getNavigation().moveTo(path, 1)) pathDelay = 60 + citizen.getRandom().nextInt(81);
-                    else requestWanderPath(state, destinations, index + 1);
+                    if (contained && citizen.getNavigation().moveTo(path, 1)) {
+                        wanderTarget = destinations.get(index); pathDelay = 60 + citizen.getRandom().nextInt(81);
+                    }
+                    else requestWanderPath(area, destinations, index + 1, true);
                 });
-    }
-
-    private static boolean inside(CitizenBehaviorState state, BlockPos pos) {
-        if (state.anchor() == null) return false;
-        long x = (long) pos.getX() - state.anchor().getX();
-        long z = (long) pos.getZ() - state.anchor().getZ();
-        return x * x + z * z <= (long) state.wanderRadius() * state.wanderRadius();
     }
 
     private boolean loadedSearchRegion() {

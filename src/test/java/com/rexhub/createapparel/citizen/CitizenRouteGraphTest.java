@@ -65,11 +65,40 @@ class CitizenRouteGraphTest {
         assertTrue(graph.connected(a.id()).stream().noneMatch(RouteEdge::conditional));
         assertTrue(graph.connected(b.id()).stream().filter(edge -> edge.other(b.id()).equals(c.id())).allMatch(RouteEdge::conditional));
         assertEquals(a.id(), graph.at(a.pos()).id());
+        var district = graph.marker(a.id()).districtId();
         assertTrue(graph.put(graph.marker(a.id()).withType(RouteMarkerType.CROSSING)));
-        assertNull(graph.marker(a.id()).districtId()); assertFalse(graph.marker(a.id()).condition().configured());
+        assertEquals(district, graph.marker(a.id()).districtId()); assertFalse(graph.marker(a.id()).condition().configured());
         assertEquals(original, java.util.List.copyOf(graph.edges()));
         assertFalse(graph.link(a.id(), b.id(), true)); assertTrue(graph.removePair(a.id())); assertTrue(graph.connected(a.id()).isEmpty());
         assertTrue(graph.remove(a.id())); assertEquals(1, graph.connected(b.id()).size());
+    }
+
+    @Test void everyMarkerTypeKeepsDistrictAcrossTypeChangesAndReload() {
+        var district = UUID.randomUUID();
+        for (var type : RouteMarkerType.values()) {
+            var node = marker(0, type).withDistrict(district);
+            assertEquals(district, RouteMarker.load(node.save()).districtId());
+            for (var next : RouteMarkerType.values()) {
+                var changed = node.withType(next).withRegion(4, 2);
+                assertEquals(district, changed.districtId());
+                assertEquals(changed, RouteMarker.load(changed.save()));
+            }
+        }
+    }
+
+    @Test void gatewayCandidateCacheTracksTypeDistrictRegionDeletionAndReload() {
+        var graph = new CitizenRouteSavedData(); var a = UUID.randomUUID(); var b = UUID.randomUUID();
+        var node = marker(0, RouteMarkerType.NORMAL).withDistrict(a); graph.put(node);
+        assertTrue(graph.gateways(a).isEmpty());
+        node = node.withType(RouteMarkerType.GATEWAY); graph.put(node);
+        var cached = graph.gateways(a); assertSame(cached, graph.gateways(a)); assertEquals(java.util.List.of(node), cached);
+        node = node.withRegion(8, 3); graph.put(node);
+        assertNotSame(cached, graph.gateways(a)); assertEquals(node, graph.gateways(a).get(0));
+        graph.put(node.withDistrict(b)); assertTrue(graph.gateways(a).isEmpty()); assertEquals(1, graph.gateways(b).size());
+        graph = CitizenRouteSavedData.load(graph.save(new CompoundTag())); assertEquals(1, graph.gateways(b).size());
+        graph.put(graph.marker(node.id()).withType(RouteMarkerType.CROSSING)); assertTrue(graph.gateways(b).isEmpty());
+        graph.put(graph.marker(node.id()).withType(RouteMarkerType.GATEWAY)); assertEquals(1, graph.gateways(b).size());
+        graph.remove(node.id()); assertTrue(graph.gateways(b).isEmpty());
     }
 
     @Test void crossingIsDerivedForEveryEndpointTypeCombinationAndEitherLinkOrder() {

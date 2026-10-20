@@ -27,6 +27,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CitizenAgeScaleTest {
+    @Test
+    void childWalkingUsesSlowerCycleWithoutChangingAdultPhase() {
+        for (float position : new float[]{0, 0.125F, 0.75F, 2.5F, 100}) {
+            assertEquals(position, CitizenModel.walkCyclePosition(CitizenAge.ADULT, position));
+            assertEquals(position * 1.5F, CitizenModel.walkCyclePosition(CitizenAge.CHILD, position));
+        }
+    }
+
     private static CitizenModel model(CitizenAge age) {
         var model = new CitizenModel(CitizenModel.createBodyLayer().bakeRoot());
         model.applyAge(age);

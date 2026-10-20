@@ -46,7 +46,7 @@ public final class CitizenLookController {
     public void tick() {
         if (!(citizen.level() instanceof ServerLevel level)) return;
         var state = citizen.citizenState().behavior();
-        var mode = state.mode() == CitizenBehaviorMode.STAND ? state.lookMode() : CitizenLookMode.IDLE;
+        var mode = state.mode() == CitizenBehaviorMode.STAND && !citizen.routeMovement().hasDestination() ? state.lookMode() : CitizenLookMode.IDLE;
         var brain = citizen.getBrain();
         if (mode != observed) {
             observed = mode;

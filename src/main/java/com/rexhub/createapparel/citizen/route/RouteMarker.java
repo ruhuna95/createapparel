@@ -11,7 +11,6 @@ public record RouteMarker(UUID id, BlockPos pos, RouteMarkerType type, double ho
     public RouteMarker {
         pos = pos.immutable();
         if (!RouteSettings.validRegion(horizontalRadius, verticalTolerance)) throw new IllegalArgumentException("Invalid marker region");
-        if (type != RouteMarkerType.GATEWAY) districtId = null;
         if (type != RouteMarkerType.CROSSING) condition = CrossingCondition.UNSET;
     }
 
@@ -29,7 +28,7 @@ public record RouteMarker(UUID id, BlockPos pos, RouteMarkerType type, double ho
     }
 
     public RouteMarker withType(RouteMarkerType next) {
-        return new RouteMarker(id, pos, next, horizontalRadius, verticalTolerance, null, CrossingCondition.UNSET);
+        return new RouteMarker(id, pos, next, horizontalRadius, verticalTolerance, districtId, CrossingCondition.UNSET);
     }
 
     public RouteMarker withRegion(double radius, double tolerance) {

@@ -13,6 +13,7 @@ final class ItemGuideLanguage {
                 {ItemGuide.SEWING, "Sews fabric and thread using a configured pattern.", "型紙に合わせて生地と糸から衣服を縫う。"},
                 {ItemGuide.PATTERN, "Sets the garment, design and additional colors for sewing.", "縫う衣服・デザイン・追加色を指定する型紙。"},
                 {ItemGuide.PHONE, "Manages Citizens and edits the Route Graph.", "市民の管理と経路グラフの編集に使用。"},
+                {ItemGuide.GAUGE, "Manages District population, transfers, influx and outflow through linked Gauges.", "接続したゲージで地区の人口・移動・流入・流出を管理する。"},
                 {ItemGuide.WARDROBE, "Opens your apparel equipment and appearance settings.", "衣服の装備と見た目を管理する。"},
                 {ItemGuide.HANGER, "Displays tops and outerwear on a wall.", "トップス・アウターを壁に掛けて展示する。"},
                 {ItemGuide.CLIP_HANGER, "Displays bottoms on a wall.", "ボトムスを壁に掛けて展示する。"},
@@ -38,6 +39,11 @@ final class ItemGuideLanguage {
                 {"Route display", "経路の表示", "Dashed: slate = unloaded, purple = failed, orange = removed (10s). Gateway/Crossing: Marker settings.", "破線：灰青＝未ロード、紫＝失敗、橙＝切断跡（10秒）。ゲートウェイ・横断の条件はマーカー画面。"}});
         details(add, japanese, ItemGuide.WARDROBE, new String[][]{
                 {"When right-clicked", "右クリックしたとき", "Open the apparel screen. Move clothes between inventory and equipment slots, then adjust appearance.", "衣服画面を開く。持ち物と装備スロットの間で衣服を移動し、見た目を調整する。"}});
+        details(add, japanese, ItemGuide.GAUGE, new String[][]{
+                {"When recording a District", "地区を登録するとき", "Sneak-use the top of the ground to reserve a center, then place on a wall. Recorded or used centers cannot be recorded by another Gauge. Craft one Gauge alone to clear its recording and reservation. Up to four Gauges fit one wall block.", "地面上面をスニーク使用して中心を記録・予約し、壁に設置する。別ゲージが記録済み・使用中の地点は記録できない。ゲージ単体をクラフトすると記録と予約を解除する。壁1マスに最大4個設置できる。"},
+                {"District settings", "地区ゲージの設定", "Edit the District name, radius (1-256), and target (0-radius), then save. Radius 1 covers 3x3 blocks.", "地区名・半径（1～256）・目標人口（0～半径）を編集して保存する。半径1は3×3ブロック。"},
+                {"Connections and relocation", "接続と移動", "Choose Add new connection, then use another wall Gauge. Relocate this gauge keeps its District and links.", "「新しい接続を追加」から別の壁面ゲージを使用して接続する。「このゲージを移動」は地区と接続を保持する。"},
+                {"Influx and outflow", "流入と流出", "Without a center, select influx or outflow in the footer and save. Influx supplies missing Citizens. Outflow prioritizes transfers and removes surplus residents only when every linked District meets its target.", "中心未設定ならグレー帯で流入／流出を切り替えて保存する。流入は不足を補充。流出は地区間移動を優先し、ネットワーク全地区が目標以上のとき余剰市民を削除する。"}});
         for (var guide : new ItemGuide[]{ItemGuide.HANGER, ItemGuide.CLIP_HANGER, ItemGuide.RACK, ItemGuide.CLIP_RACK}) {
             boolean rack = guide == ItemGuide.RACK || guide == ItemGuide.CLIP_RACK;
             details(add, japanese, guide, rack ? new String[][]{

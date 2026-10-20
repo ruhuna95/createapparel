@@ -46,19 +46,23 @@ public final class CitizenModel extends HumanoidModel<Citizen> {
         var behavior = entity.citizenState().behavior();
         if (behavior.mode() == CitizenBehaviorMode.POSE) {
             applyPose(behavior.pose());
-        } else if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() != CitizenLookMode.IDLE) {
+        } else if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() != CitizenLookMode.IDLE && entity.walkAnimation.speed(partialTick) < 0.01F) {
             head.yRot = Mth.wrapDegrees(Mth.rotLerp(partialTick, entity.yHeadRotO, entity.yHeadRot)
                     - Mth.rotLerp(partialTick, entity.yBodyRotO, entity.yBodyRot)) * Mth.DEG_TO_RAD;
             head.xRot = Mth.lerp(partialTick, entity.xRotO, entity.getXRot()) * Mth.DEG_TO_RAD;
             hat.copyFrom(head);
-        } else if (behavior.mode().moves()) {
-            float swing = entity.walkAnimation.position(partialTick);
+        } else if (behavior.mode().moves() || entity.walkAnimation.speed(partialTick) >= 0.01F) {
+            float swing = walkCyclePosition(entity.citizenState().age(), entity.walkAnimation.position(partialTick));
             float amount = entity.walkAnimation.speed(partialTick);
             rightArm.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F + (float) Math.PI) * amount;
             leftArm.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F) * amount;
             rightLeg.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F) * 1.4F * amount;
             leftLeg.xRot = net.minecraft.util.Mth.cos(swing * 0.6662F + (float) Math.PI) * 1.4F * amount;
         }
+    }
+
+    public static float walkCyclePosition(CitizenAge age, float position) {
+        return position * (age == CitizenAge.CHILD ? 1.5F : 1);
     }
 
     public void applyPose(PosePreset preset) {

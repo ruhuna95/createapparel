@@ -3,6 +3,9 @@ package com.rexhub.createapparel.compat.jei;
 import com.mojang.logging.LogUtils;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
+import com.rexhub.createapparel.client.screen.CitizenGaugeScreen;
+import com.rexhub.createapparel.client.screen.CitizenScreen;
+import com.rexhub.createapparel.client.screen.WardrobeScreen;
 import com.rexhub.createapparel.init.ModBlocks;
 import com.rexhub.createapparel.recipe.ModRecipeTypes;
 import com.rexhub.createapparel.recipe.SewingRecipe;
@@ -11,6 +14,7 @@ import com.rexhub.createapparel.recipe.SpinningRecipe;
 import com.rexhub.createapparel.recipe.WeavingRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
@@ -35,6 +39,13 @@ public final class ApparelJeiPlugin implements IModPlugin {
     @Override
     public ResourceLocation getPluginUid() {
         return ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "jei");
+    }
+
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGuiScreenHandler(CitizenGaugeScreen.class, screen -> null);
+        registration.addGuiScreenHandler(CitizenScreen.class, screen -> null);
+        registration.addGuiScreenHandler(WardrobeScreen.class, screen -> null);
     }
 
     @Override
