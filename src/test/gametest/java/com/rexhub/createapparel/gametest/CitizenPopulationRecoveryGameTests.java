@@ -405,7 +405,9 @@ public final class CitizenPopulationRecoveryGameTests {
         helper.runAtTickTime(650, () -> {
             helper.assertTrue(!walker.intents().stucked() && !standing.intents().stucked()
                     && walker.position().distanceToSqr(walkerStart) < 1 && standing.position().distanceToSqr(standStart) < 1,
-                    "Waiting at an isolated marker and STAND are intentional inactivity"); helper.succeed();
+                    "Waiting at an isolated marker and STAND are intentional inactivity: walker=" + walker.position() + " start=" + walkerStart
+                            + " mode=" + walker.citizenState().behavior().mode() + " stucked=" + walker.intents().stucked() + " intent=" + walker.intents().active()
+                            + " standing=" + standing.position() + " start=" + standStart + " stucked=" + standing.intents().stucked()); helper.succeed();
         });
     }
 

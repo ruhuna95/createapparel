@@ -164,7 +164,9 @@ public final class CitizenGaugeConsistencyGameTests {
         helper.getLevel().setBlock(pos.south(), Blocks.STONE.defaultBlockState(), 3);
         helper.getLevel().setBlock(pos, ModBlocks.CITIZEN_GAUGE.get().defaultBlockState(), 3);
         var entity = (CitizenGaugeBlockEntity) helper.getLevel().getBlockEntity(pos);
-        entity.initialize(district ? pos.south(4) : null); return entity;
+        entity.initialize(district ? pos.south(4) : null);
+        if (district) CitizenPopulationManager.get(helper.getLevel()).settings(entity.gaugeId(), 2, 0);
+        return entity;
     }
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
     public static void savedIdentityRepairsMismatchedBlockEntityAndBackupRestoresMissingRecord(GameTestHelper helper) {
@@ -212,6 +214,9 @@ public final class CitizenGaugeConsistencyGameTests {
     public static void reservationRecoveryCommandsRequirePermissionAndNeverDeleteActiveDistricts(GameTestHelper helper) {
         var manager = CitizenPopulationManager.get(helper.getLevel()); var entity = panel(helper, 8, true); var district = manager.data().at(entity.getBlockPos());
         var center = helper.absolutePos(new BlockPos(20, 1, 20)); var id = manager.data().reserveCenter(center, null, 3, helper.getLevel().dimension().location().toString(), helper.getLevel().getGameTime());
+        manager.data().verifyCenter(id, helper.getLevel().dimension().location().toString(), 4, helper.getLevel().getGameTime());
+        manager.data().releaseCenter(id, 4);
+        helper.assertTrue(manager.data().centerClaim(id).conflicted(), "A diagnosed Conflict cannot be released by ordinary item destruction");
         var server = helper.getLevel().getServer(); var source = server.createCommandSourceStack().withLevel(helper.getLevel());
         String command = "createapparel gauge reservations release " + id;
         helper.assertTrue(server.getCommands().performPrefixedCommand(source.withPermission(0), command) == 0 && manager.data().centerClaim(id) != null, "Non-operators cannot release reservations");
@@ -245,11 +250,132 @@ public final class CitizenGaugeConsistencyGameTests {
         var owner = com.simibubi.create.content.contraptions.OrientedContraptionEntity.create(level, contraption, net.minecraft.core.Direction.NORTH);
         owner.setPos(support.getX(), support.getY(), support.getZ()); level.addFreshEntity(owner);
         helper.assertTrue(manager.data().ownedByContraption(district.id(), owner.getUUID()), "Moving Gauge binds to its real contraption entity");
+        var sameIdentityData = com.simibubi.create.content.contraptions.Contraption.fromNBT(level, contraption.writeNBT(false), false);
+        var sameIdentity = com.simibubi.create.content.contraptions.OrientedContraptionEntity.create(level, sameIdentityData, net.minecraft.core.Direction.NORTH);
+        sameIdentity.setUUID(owner.getUUID()); sameIdentity.setPos(owner.position().add(64, 0, 0)); var ownerChunk = manager.data().movingChunk(district.id());
+        helper.assertTrue(!level.addFreshEntity(sameIdentity) && java.util.Objects.equals(ownerChunk, manager.data().movingChunk(district.id())), "Rejected duplicate entity UUID cannot poison the accepted owner's last chunk");
         var duplicateData = com.simibubi.create.content.contraptions.Contraption.fromNBT(level, contraption.writeNBT(false), false);
         var duplicate = com.simibubi.create.content.contraptions.OrientedContraptionEntity.create(level, duplicateData, net.minecraft.core.Direction.NORTH);
         duplicate.setPos(owner.position()); level.addFreshEntity(duplicate); duplicate.kill();
         helper.assertTrue(manager.data().gauge(district.id()) != null, "Deleting duplicated contraption NBT cannot delete the original moving Gauge");
         owner.kill(); helper.assertTrue(manager.data().gauge(district.id()) == null && manager.data().centerAvailable(district.center(), null), "Permanent destruction leaves no moving ghost Gauge or occupied center"); helper.succeed();
+    }
+    @GameTest(template = "citizen_behavior", batch = "citizen_gauge_lifecycle", timeoutTicks = 80)
+    public static void boundContraptionRejectsCopiedBlockEntitiesAndNativeReassemblyPreservesResidents(GameTestHelper helper) throws Exception {
+        var level = helper.getLevel(); var manager = CitizenPopulationManager.get(level); var entity = panel(helper, 8, true); var peer = panel(helper, 12, false);
+        var district = manager.data().at(entity.getBlockPos()); var resident = UUID.randomUUID();
+        manager.data().register(resident, new CitizenPopulationState(district.districtId(), false, false, 0)); manager.link(district.id(), peer.gaugeId());
+        var backup = entity.saveWithoutMetadata(); var support = entity.getBlockPos().south();
+        var contraption = new com.simibubi.create.content.contraptions.bearing.BearingContraption(false, net.minecraft.core.Direction.UP);
+        helper.assertTrue(contraption.assemble(level, support.below()), "Native Bearing captures the District panel");
+        contraption.removeBlocksFromWorld(level, BlockPos.ZERO); contraption.getStorage().initialize();
+        var owner = com.simibubi.create.content.contraptions.OrientedContraptionEntity.create(level, contraption, net.minecraft.core.Direction.NORTH);
+        owner.setPos(support.getX(), support.getY(), support.getZ()); helper.assertTrue(level.addFreshEntity(owner), "Native owner joins");
+        var pos = district.pos().east(6); level.setBlock(pos.south(), Blocks.STONE.defaultBlockState(), 3); level.setBlock(pos, entity.getBlockState(), 3);
+        var copy = (CitizenGaugeBlockEntity) level.getBlockEntity(pos); copy.load(backup);
+        helper.assertTrue(copy.registrationIssue(0) != null && manager.data().at(pos) == null && manager.data().ownedByContraption(district.id(), owner.getUUID()), "Ordinary registration cannot steal a live moving identity");
+        level.removeBlock(pos, false); helper.assertTrue(!manager.releaseMoving(district.id()), "Explicit recovery refuses a loaded owner");
+        var saved = CitizenPopulationSavedData.load(manager.data().save(new net.minecraft.nbt.CompoundTag()));
+        helper.assertTrue(saved.ownedByContraption(district.id(), owner.getUUID()) && saved.movingChunk(district.id()) != null
+                && saved.linked(district.id()).contains(peer.gaugeId()) && district.districtId().equals(saved.citizen(resident).districtId()), "Moving metadata round trip retains links and residents");
+        owner.setPos(support.getX() + 16, support.getY(), support.getZ());
+        helper.assertTrue(java.util.Objects.equals(manager.data().movingChunk(district.id()), owner.chunkPosition().toLong()), "Native chunk-crossing updates the persisted owner location");
+        owner.disassemble();
+        helper.assertTrue(manager.data().gauge(district.id()) != null && !manager.data().moving(district.id())
+                && manager.loaded(manager.data().gauge(district.id())) && manager.data().linked(district.id()).contains(peer.gaugeId())
+                && district.districtId().equals(manager.data().citizen(resident).districtId()), "Native owner reassembly wins without reallocating identity, links or membership");
+        manager.data().removeCitizen(resident); helper.succeed();
+    }
+    @GameTest(template = "citizen_behavior", batch = "citizen_gauge_lifecycle")
+    public static void deletingCarrierWithUnreadableContraptionStillReleasesItsOwnedGauges(GameTestHelper helper) throws Exception {
+        var level = helper.getLevel(); var manager = CitizenPopulationManager.get(level); var entity = panel(helper, 8, true); var gauge = manager.data().at(entity.getBlockPos());
+        var support = entity.getBlockPos().south(); var contraption = new com.simibubi.create.content.contraptions.bearing.BearingContraption(false, net.minecraft.core.Direction.UP);
+        helper.assertTrue(contraption.assemble(level, support.below()), "Native capture succeeds before the corruption fixture");
+        contraption.removeBlocksFromWorld(level, BlockPos.ZERO); contraption.getStorage().initialize();
+        var owner = com.simibubi.create.content.contraptions.OrientedContraptionEntity.create(level, contraption, net.minecraft.core.Direction.NORTH);
+        owner.setPos(support.getX(), support.getY(), support.getZ()); level.addFreshEntity(owner);
+        var field = com.simibubi.create.content.contraptions.AbstractContraptionEntity.class.getDeclaredField("contraption"); field.setAccessible(true); field.set(owner, null);
+        helper.assertTrue(manager.data().moving(gauge.id()), "Ownership survives loss of the carrier's readable block NBT"); owner.kill();
+        helper.assertTrue(manager.data().gauge(gauge.id()) == null && manager.data().ownedMovingGauges(owner.getUUID()).isEmpty()
+                && manager.data().centerAvailable(gauge.center(), null), "Reverse ownership cleanup does not require readable Contraption NBT"); helper.succeed();
+    }
+    @GameTest(template = "citizen_behavior", batch = "citizen_gauge_lifecycle")
+    public static void nativeMechanicalBearingControllerRotatesAndReassemblesTheSameGauge(GameTestHelper helper) {
+        var level = helper.getLevel(); var manager = CitizenPopulationManager.get(level); var entity = panel(helper, 8, true); var gauge = manager.data().at(entity.getBlockPos());
+        var bearingPos = entity.getBlockPos().south().below();
+        level.setBlock(bearingPos, com.simibubi.create.AllBlocks.MECHANICAL_BEARING.getDefaultState()
+                .setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING, net.minecraft.core.Direction.UP), 3);
+        var bearing = (com.simibubi.create.content.contraptions.bearing.MechanicalBearingBlockEntity) level.getBlockEntity(bearingPos); bearing.assemble();
+        var owner = bearing.getMovedContraption();
+        helper.assertTrue(owner != null && manager.data().ownedByContraption(gauge.id(), owner.getUUID()), "The native Bearing controller binds a ControlledContraptionEntity");
+        owner.getContraption().getStorage().initialize(); owner.setAngle(90); bearing.disassemble();
+        var restored = manager.data().gauge(gauge.id());
+        helper.assertTrue(restored != null && restored.districtId().equals(gauge.districtId()) && !restored.pos().equals(gauge.pos())
+                && manager.loaded(restored) && !manager.data().moving(gauge.id()), "Native ninety-degree controller reassembly keeps Gauge and District identities"); helper.succeed();
+    }
+    @GameTest(template = "citizen_behavior", batch = "citizen_gauge_lifecycle", timeoutTicks = 120)
+    public static void missingMovingOwnersAreReconciledOnlyAfterEntityChunkLoading(GameTestHelper helper) {
+        var level = helper.getLevel(); var manager = CitizenPopulationManager.get(level); var entity = panel(helper, 8, true); var gauge = manager.data().at(entity.getBlockPos());
+        var resident = UUID.randomUUID(); manager.data().register(resident, new CitizenPopulationState(gauge.districtId(), false, false, 0));
+        level.setBlock(gauge.pos(), Blocks.AIR.defaultBlockState(), Block.UPDATE_MOVE_BY_PISTON | Block.UPDATE_ALL);
+        manager.data().bindMoving(gauge.id(), UUID.randomUUID()); manager.data().movingLocation(manager.data().movingOwner(gauge.id()), new net.minecraft.world.level.ChunkPos(gauge.pos()).toLong());
+        helper.succeedWhen(() -> {
+            helper.assertTrue(manager.data().gauge(gauge.id()) == null && manager.data().centerAvailable(gauge.center(), null), "A missing owner in a fully entity-ticking chunk leaves no permanent ghost");
+            helper.assertTrue(manager.data().citizen(resident) != null && manager.data().citizen(resident).districtId() == null, "Lost transport releases membership, never deletes Citizens");
+            manager.data().removeCitizen(resident);
+        });
+    }
+    @GameTest(template = "citizen_behavior", batch = "citizen_gauge_lifecycle", timeoutTicks = 80)
+    public static void unknownAndUnloadedMovingOwnerLocationsNeverExpireAndOperatorRecoveryIsExplicit(GameTestHelper helper) {
+        var level = helper.getLevel(); var manager = CitizenPopulationManager.get(level); var legacy = panel(helper, 8, true); var remote = panel(helper, 12, true);
+        var a = manager.data().at(legacy.getBlockPos()); var b = manager.data().at(remote.getBlockPos());
+        for (var gauge : java.util.List.of(a, b)) { level.setBlock(gauge.pos(), Blocks.AIR.defaultBlockState(), Block.UPDATE_MOVE_BY_PISTON | Block.UPDATE_ALL); manager.data().bindMoving(gauge.id(), UUID.randomUUID()); }
+        manager.data().movingLocation(manager.data().movingOwner(b.id()), net.minecraft.world.level.ChunkPos.asLong(1000000, 1000000));
+        helper.runAfterDelay(40, () -> {
+            helper.assertTrue(manager.data().moving(a.id()) && manager.data().moving(b.id()), "Unknown legacy and unloaded entity chunks are not evidence of loss");
+            var source = level.getServer().createCommandSourceStack().withLevel(level); String prefix = "createapparel gauge moving release ";
+            helper.assertTrue(level.getServer().getCommands().performPrefixedCommand(source.withPermission(0), prefix + a.id()) == 0 && manager.data().moving(a.id()), "Only an operator may recover unknown legacy ownership");
+            helper.assertTrue(level.getServer().getCommands().performPrefixedCommand(source.withPermission(2), prefix + a.id()) == 1
+                    && level.getServer().getCommands().performPrefixedCommand(source.withPermission(2), prefix + b.id()) == 1, "Explicit recovery releases diagnosed missing owners"); helper.succeed();
+        });
+    }
+    private static java.util.Map<?, ?> viewCache(String name) throws ReflectiveOperationException {
+        var field = GaugeViewSynchronization.class.getDeclaredField(name); field.setAccessible(true); return (java.util.Map<?, ?>) field.get(null);
+    }
+    private static Object viewField(Object view, String name) throws ReflectiveOperationException {
+        var method = view.getClass().getDeclaredMethod(name); method.setAccessible(true); return method.invoke(view);
+    }
+    @GameTest(template = "citizen_behavior", batch = "citizen_gauge_lifecycle")
+    public static void gaugeViewSharingIsBoundedAndKeepsIndependentPlayerRevisions(GameTestHelper helper) throws ReflectiveOperationException {
+        var level = helper.getLevel(); var manager = CitizenPopulationManager.get(level); var entity = panel(helper, 8, true); var gauge = manager.data().at(entity.getBlockPos());
+        var players = new java.util.ArrayList<net.minecraft.server.level.ServerPlayer>(); var packets = new int[1];
+        for (int i = 0; i < 3; i++) {
+            var player = registeringPlayer(helper, gauge.center(), GameType.CREATIVE);
+            var connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
+                @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { if (packet instanceof net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket) packets[0]++; }
+                @Override public void send(net.minecraft.network.protocol.Packet<?> packet, net.minecraft.network.PacketSendListener listener) { send(packet); }
+            };
+            player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(level.getServer(), connection, player);
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.CITIZEN_GAUGE.get())); players.add(player);
+        }
+        GaugeViewSynchronization.clear();
+        try {
+            var a = players.get(0); var b = players.get(1); var c = players.get(2);
+            GaugeViewSynchronization.send(a); GaugeViewSynchronization.send(b);
+            var views = viewCache("VIEWS"); var snapshots = viewCache("SNAPSHOTS"); var deltas = viewCache("DELTAS");
+            helper.assertTrue(snapshots.size() == 1 && deltas.size() == 1 && viewField(views.get(a.getUUID()), "snapshot") == viewField(views.get(b.getUUID()), "snapshot"), "Same-chunk observers share the exact immutable Snapshot and encoded Delta input");
+            int sent = packets[0]; GaugeViewSynchronization.send(a); GaugeViewSynchronization.send(b);
+            helper.assertTrue(packets[0] == sent, "Unchanged Revision sends no packet");
+            manager.data().put(gauge.settings(gauge.range(), gauge.target(), "First change")); GaugeViewSynchronization.send(a); GaugeViewSynchronization.send(c);
+            manager.data().put(gauge.settings(gauge.range(), gauge.target(), "Second change")); players.forEach(GaugeViewSynchronization::send);
+            helper.assertTrue((long) viewField(views.get(a.getUUID()), "revision") == 3 && (long) viewField(views.get(b.getUUID()), "revision") == 2
+                    && (long) viewField(views.get(c.getUUID()), "revision") == 2, "Shared payloads never merge independent player revisions");
+            helper.assertTrue(deltas.values().stream().map(net.minecraft.nbt.CompoundTag.class::cast).anyMatch(tag -> !tag.getBoolean("Snapshot") && tag.getLong("BaseRevision") == 2 && tag.getLong("Revision") == 3), "Delta cache includes the player's actual base Revision");
+            for (int i = 0; i < 48; i++) { a.setPos(gauge.center().getX() + i * 16, 64, gauge.center().getZ()); GaugeViewSynchronization.send(a); }
+            helper.assertTrue(snapshots.size() <= 32 && deltas.size() <= 32, "Movement cannot grow shared caches without bound");
+            GaugeViewSynchronization.clear(level); helper.assertTrue(snapshots.isEmpty() && deltas.isEmpty() && views.isEmpty(), "Level unload releases all shared and per-player references");
+        } finally { GaugeViewSynchronization.clear(); }
+        helper.succeed();
     }
     @GameTest(template = "citizen_behavior", batch = "citizen_population", timeoutTicks = 80)
     public static void explicitPlayerNavigationReplacesPendingAutonomyWithoutExecutingIt(GameTestHelper helper) {

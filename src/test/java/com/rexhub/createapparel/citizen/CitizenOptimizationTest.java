@@ -10,6 +10,42 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CitizenOptimizationTest {
+    @Test void reservationDimensionsAreImmutableAndPartialObservationsNeverChangeReservedQuantities() {
+        var data = new CitizenPopulationSavedData(); var center = new BlockPos(1, 70, 2);
+        var id = data.reserveCenter(center, null, 8, "minecraft:overworld", 50);
+        data.verifyCenter(id, "minecraft:overworld", 2, 100);
+        assertEquals(8, data.centerClaim(id).reservedItemCount()); assertEquals(2, data.centerClaim(id).lastObservedItems());
+        data.verifyCenter(id, "minecraft:the_nether", 1, 150);
+        var claim = data.centerClaim(id); assertEquals("minecraft:overworld", claim.dimension());
+        assertEquals("minecraft:the_nether", claim.lastObservedDimension()); assertEquals(1, claim.lastObservedItems());
+        assertEquals(GaugeCenterReservation.State.DIMENSION_MISMATCH, claim.state());
+        data.releaseCenter(id, 8); assertNotNull(data.centerClaim(id));
+        data.verifyCenter(id, "minecraft:overworld", 0, Long.MAX_VALUE - 1);
+        assertEquals(GaugeCenterReservation.State.DIMENSION_MISMATCH, data.centerClaim(id).state());
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        assertEquals(data.centerClaim(id), restored.centerClaim(id)); assertFalse(restored.centerAvailable(center, null));
+        assertTrue(restored.releaseOrphanCenter(id)); assertTrue(restored.centerAvailable(center, null));
+    }
+    @Test void observationsNeverUpgradeUnknownDimensionsOrUnknownLegacyItemCounts() {
+        var id = UUID.randomUUID(); var legacy = new GaugeCenterReservation(id, "", BlockPos.ZERO, -1, 0, 0, GaugeCenterReservation.State.UNVERIFIED);
+        var observed = legacy.verified("minecraft:the_end", 3, 100);
+        assertEquals("", observed.dimension()); assertEquals(-1, observed.reservedItemCount()); assertEquals(3, observed.lastObservedItems());
+        assertEquals(observed, GaugeCenterReservation.load(observed.save()));
+        var oldTag = legacy.save(); oldTag.remove("LastObservedItems"); oldTag.remove("LastObservedDimension");
+        assertEquals(-1, GaugeCenterReservation.load(oldTag).lastObservedItems());
+        assertThrows(IllegalArgumentException.class, () -> legacy.verified("minecraft:overworld", -1, 1));
+    }
+    @Test void exactOrZeroLocalObservationsAreNotGlobalOwnershipProofAndNeverExpireOtherStorage() {
+        var data = new CitizenPopulationSavedData(); var center = BlockPos.ZERO;
+        var id = data.reserveCenter(center, null, 3, "minecraft:overworld", 0);
+        data.verifyCenter(id, "minecraft:overworld", 3, 10); data.verifyCenter(id, "minecraft:overworld", 0, Long.MAX_VALUE - 1);
+        assertEquals(3, data.centerClaim(id).reservedItemCount()); assertEquals(0, data.centerClaim(id).lastObservedItems()); assertFalse(data.centerAvailable(center, null));
+        data.releaseCenter(id, 1); assertEquals(2, data.centerClaim(id).reservedItemCount());
+        assertEquals(0, data.centerClaim(id).lastObservedItems());
+        data.verifyCenter(id, "minecraft:overworld", 4, 100); assertEquals(GaugeCenterReservation.State.CONFLICT, data.centerClaim(id).state());
+        data.verifyCenter(id, "minecraft:overworld", 1, 200); assertTrue(data.centerClaim(id).conflicted());
+        assertTrue(data.releaseOrphanCenter(id));
+    }
     @BeforeAll static void bootstrap() throws ReflectiveOperationException { CitizenColorTestBootstrap.initializeTags(); }
     private static CitizenGauge district(int x) { return CitizenGauge.create(new BlockPos(x, 70, 0), new BlockPos(x, 64, 0)); }
 
@@ -100,6 +136,25 @@ class CitizenOptimizationTest {
         var moved = original.relocate(original.pos().east(8), 0); restored.put(moved); restored.moving(original.id(), false);
         assertEquals(moved.id(), restored.at(moved.pos()).id()); assertEquals(replacement.id(), restored.at(original.pos()).id());
         restored.remove(original.id()); assertEquals(replacement.id(), restored.at(original.pos()).id());
+    }
+    @Test void movingOwnerLocationsPersistOncePerEntityAndInverseOwnershipShrinksAfterRestorationAndRemoval() {
+        var data = new CitizenPopulationSavedData(); var first = district(0); var second = district(80); var third = district(160);
+        for (var gauge : List.of(first, second, third)) { data.put(gauge); data.moving(gauge.id(), true); }
+        var owner = UUID.randomUUID(); var other = UUID.randomUUID();
+        assertTrue(data.bindMoving(first.id(), owner)); assertTrue(data.bindMoving(second.id(), owner)); assertTrue(data.bindMoving(third.id(), other));
+        assertFalse(data.bindMoving(first.id(), other)); data.movingLocation(owner, 1234L); data.movingLocation(other, 5678L);
+        data.movingLocation(UUID.randomUUID(), 9999L);
+        var saved = data.save(new CompoundTag()); assertEquals(2, saved.getList("MovingOwners", 10).size());
+        var restored = CitizenPopulationSavedData.load(saved);
+        assertEquals(Set.of(first.id(), second.id()), new HashSet<>(restored.ownedMovingGauges(owner)));
+        assertEquals(1234L, restored.movingChunk(first.id())); assertEquals(1234L, restored.movingChunk(second.id())); assertEquals(5678L, restored.movingChunk(third.id()));
+        assertTrue(restored.bindMoving(first.id(), owner)); restored.movingLocation(owner, 42L); assertEquals(42L, restored.movingChunk(second.id()));
+        restored.moving(first.id(), false); assertNull(restored.movingOwner(first.id())); assertNull(restored.movingChunk(first.id()));
+        assertEquals(List.of(second.id()), restored.ownedMovingGauges(owner)); restored.remove(second.id());
+        assertTrue(restored.ownedMovingGauges(owner).isEmpty()); assertEquals(1, restored.save(new CompoundTag()).getList("MovingOwners", 10).size());
+        var legacy = data.save(new CompoundTag()); legacy.remove("MovingOwners"); legacy.putInt("SchemaVersion", 6);
+        var migrated = CitizenPopulationSavedData.load(legacy); assertTrue(migrated.ownedByContraption(first.id(), owner));
+        assertNull(migrated.movingChunk(first.id())); assertEquals(2, migrated.ownedMovingGauges(owner).size());
     }
     @Test void missingGaugeMetadataKeepsLinksAndMembershipUntilTheBlockEntityCanRecoverIt() {
         var data = new CitizenPopulationSavedData(); var home = district(0).settings(32, 1); var peer = district(80).settings(32, 0);

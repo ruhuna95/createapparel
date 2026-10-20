@@ -37,7 +37,7 @@ public final class PopulationRequestQueue {
             var id = dirty.iterator().next(); var entry = current.get(id);
             if (entry == null) dirty.remove(id); else enqueue(entry);
         }
-        if (oldReady.isEmpty() && oldDelayed.isEmpty() && entryCount() > current.size() * 3 + 64) {
+        if (oldReady.isEmpty() && oldDelayed.isEmpty() && entryCount() > (current.isEmpty() ? 0 : current.size() * 3 + 64)) {
             oldReady = ready; oldDelayed = delayed;
             ready = new PriorityQueue<>(READY); delayed = new PriorityQueue<>(DELAYED);
         }

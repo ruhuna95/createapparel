@@ -18,7 +18,9 @@ if (providers.gradleProperty('gaugeTrash').getOrElse('false').toBoolean()) {
     }
 }
 
-def gaugeTestServerDirectory = file("run/gauge-tests/server-${System.currentTimeMillis()}")
+def gaugeTestRunId = providers.gradleProperty('gaugeTestRunId').getOrElse("${System.currentTimeMillis()}")
+if (!(gaugeTestRunId ==~ /[A-Za-z0-9_-]+/)) throw new GradleException('Invalid gaugeTestRunId')
+def gaugeTestServerDirectory = file("run/gauge-tests/server-${gaugeTestRunId}")
 def gaugeTestClientDirectory = file('run/gauge-tests/client')
 minecraft.runs {
     gaugeTestServer {
@@ -26,6 +28,10 @@ minecraft.runs {
         workingDirectory gaugeTestServerDirectory
         property 'apparel.gaugeTest.server', 'true'
         property 'apparel.gaugeTest.scale', providers.gradleProperty('gaugeScale').getOrElse('false')
+        property 'apparel.gaugeTest.scaleCase', providers.gradleProperty('gaugeScaleCase').getOrElse('0')
+        property 'apparel.gaugeTest.scaleResume', providers.gradleProperty('gaugeScaleResume').getOrElse('false')
+        property 'apparel.gaugeTest.moving', providers.gradleProperty('gaugeMoving').getOrElse('false')
+        property 'apparel.gaugeTest.movingResume', providers.gradleProperty('gaugeMovingResume').getOrElse('false')
         property 'apparel.gaugeTest.trash', providers.gradleProperty('gaugeTrash').getOrElse('false')
         property 'forge.logging.console.level', 'info'
         mods { "${mod_id}" { source sourceSets.gaugeTest } }

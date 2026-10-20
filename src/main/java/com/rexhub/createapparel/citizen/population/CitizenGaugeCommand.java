@@ -21,6 +21,11 @@ public final class CitizenGaugeCommand {
                                 .executes(context -> inspect(context.getSource(), UuidArgument.getUuid(context, "reservationId"), false))))
                         .then(Commands.literal("release").then(Commands.argument("reservationId", UuidArgument.uuid())
                                 .executes(context -> inspect(context.getSource(), UuidArgument.getUuid(context, "reservationId"), true)))))
+                .then(Commands.literal("moving")
+                        .then(Commands.literal("list").executes(context -> movingList(context.getSource(), 1))
+                                .then(Commands.argument("page", IntegerArgumentType.integer(1)).executes(context -> movingList(context.getSource(), IntegerArgumentType.getInteger(context, "page")))))
+                        .then(Commands.literal("inspect").then(Commands.argument("gaugeId", UuidArgument.uuid()).executes(context -> moving(context.getSource(), UuidArgument.getUuid(context, "gaugeId"), false))))
+                        .then(Commands.literal("release").then(Commands.argument("gaugeId", UuidArgument.uuid()).executes(context -> moving(context.getSource(), UuidArgument.getUuid(context, "gaugeId"), true)))))
                 .then(Commands.literal("stats").executes(context -> stats(context.getSource())))
                 .then(Commands.literal("profile")
                         .then(Commands.literal("start").executes(context -> { manager(context.getSource()).metrics().start(); return stats(context.getSource()); }))
@@ -43,9 +48,10 @@ public final class CitizenGaugeCommand {
         say(source, "Explicitly released reservation " + id + "; an existing District was not removed"); return 1;
     }
     private static void describe(CommandSourceStack source, GaugeCenterReservation claim) {
-        say(source, claim.id() + " dimension=" + source.getLevel().dimension().location() + " center=" + claim.center().toShortString()
-                + " reservedItems=" + claim.reservedItemCount() + " state=" + claim.state() + " createdAt=" + claim.createdAt() + " lastVerifiedAt=" + claim.lastVerifiedAt()
-                + " diagnosis=UNPROVEN_OWNERSHIP (offline/unloaded storage or unnotified void possible)");
+        say(source, claim.id() + " registryDimension=" + source.getLevel().dimension().location() + " reservedDimension=" + claim.dimension() + " center=" + claim.center().toShortString()
+                + " reservedItems=" + claim.reservedItemCount() + " state=" + claim.state() + " createdAt=" + claim.createdAt() + " lastObservedAt=" + claim.lastVerifiedAt()
+                + " lastObservedDimension=" + claim.lastObservedDimension() + " lastObservedItems=" + claim.lastObservedItems()
+                + " diagnosis=PARTIAL_OBSERVATION_ONLY (not a global ownership count; offline/unloaded storage or unnotified void possible)");
     }
     private static int stats(CommandSourceStack source) {
         var manager = manager(source); var data = manager.data(); var activity = CitizenActivityScheduler.get(source.getLevel());
@@ -57,5 +63,19 @@ public final class CitizenGaugeCommand {
                 + " networkNodesLastTick=" + data.networks().lastVisited() + " movingGauges=" + data.movingCount() + " pathLastNanos=" + paths.lastNanos());
         say(source, "unresolvedGaugeReferences=" + data.unresolvedGaugeReferences() + " unresolvedDistricts=" + data.unresolvedDistricts());
         say(source, manager.metrics().summary()); return 1;
+    }
+    private static int movingList(CommandSourceStack source, int page) {
+        var data = manager(source).data();
+        say(source, "Moving Gauges: " + data.movingCount() + ", page=" + page + "; unknown/unloaded owners are never expired by age");
+        data.movingIds().stream().skip((page - 1L) * 20).limit(20).forEach(gauge -> moving(source, gauge, false)); return data.movingCount();
+    }
+    private static int moving(CommandSourceStack source, UUID id, boolean release) {
+        var manager = manager(source); var data = manager.data();
+        if (!data.moving(id)) { source.sendFailure(Component.literal("Gauge is not moving")); return 0; }
+        say(source, "gauge=" + id + " district=" + data.gauge(id).districtId() + " owner=" + data.movingOwner(id) + " lastChunk=" + data.movingChunk(id)
+                + " diagnosis=CHECK_ENTITY_CHUNK_OR_EXPLICIT_RECOVERY (unloaded does not mean lost)");
+        if (!release) return 1;
+        if (!manager.releaseMoving(id)) { source.sendFailure(Component.literal("Cannot release a moving Gauge with a loaded owner")); return 0; }
+        say(source, "Explicitly released lost moving Gauge " + id + "; Citizens were retained with District membership cleared"); return 1;
     }
 }

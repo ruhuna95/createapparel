@@ -31,20 +31,53 @@ public final class GaugeScaleGameTests {
     private static final int LOADED_CITIZENS = 100, SAMPLE_TICKS = 600;
     private static final java.lang.reflect.Method PATH_WAIT = pathWaitMethod();
     private static Run active;
+    private static long restartStarted;
+    private static CompoundTag restoredExpected;
+    private static Throwable restartFailure;
     private GaugeScaleGameTests() { }
+    @SubscribeEvent public static void serverStarting(net.minecraftforge.event.server.ServerAboutToStartEvent event) {
+        restartStarted = System.nanoTime(); restoredExpected = null; restartFailure = null;
+    }
+    @SubscribeEvent public static void serverStarted(net.minecraftforge.event.server.ServerStartedEvent event) {
+        if (!Boolean.getBoolean("apparel.gaugeTest.scaleResume")) return;
+        try {
+            var level = event.getServer().overworld(); long started = System.nanoTime();
+            var expected = NbtIo.readCompressed(expectedFile(level));
+            var data = CitizenPopulationManager.get(level).data(); var routes = CitizenRouteManager.get(level).data();
+            for (var raw : expected.getList("Gauges", 10)) { var tag = (CompoundTag) raw; var gauge = data.gauge(tag.getUUID("Id"));
+                if (gauge == null || !gauge.districtId().equals(tag.getUUID("District"))) throw new AssertionError("Gauge identity did not survive restart"); }
+            for (var raw : expected.getList("Citizens", 10)) { var tag = (CompoundTag) raw; var citizen = data.citizen(tag.getUUID("Id"));
+                if (citizen == null || !Objects.equals(citizen.districtId(), tag.hasUUID("District") ? tag.getUUID("District") : null)) throw new AssertionError("Citizen membership did not survive restart"); }
+            var actualLinks = data.save(new CompoundTag()).getList("Links", 10);
+            if (actualLinks.size() != expected.getList("Links", 10).size() || routes.markers().size() != expected.getInt("Markers")) throw new AssertionError("Links or Route registry did not survive restart");
+            restoredExpected = expected;
+            LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_SCALE_RESTART gauges=%d savedCitizens=%d markers=%d startupReadyMs=%.3f registryValidationMs=%.3f",
+                    expected.getList("Gauges", 10).size(), expected.getList("Citizens", 10).size(), routes.markers().size(), (System.nanoTime() - restartStarted) / 1e6, (System.nanoTime() - started) / 1e6));
+        } catch (Throwable exception) { restartFailure = exception; }
+    }
+    private static java.io.File expectedFile(ServerLevel level) {
+        return level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("gauge-scale-expected.dat").toFile();
+    }
     @GameTest(template = "citizen_behavior", batch = "citizen_scale", timeoutTicks = 2400)
     public static void fixedLoadedDistributionAtAllThreeSavedScales(GameTestHelper helper) {
+        if (Boolean.getBoolean("apparel.gaugeTest.scaleResume")) {
+            if (restartFailure != null) throw new AssertionError("Process restart recovery failed", restartFailure);
+            helper.assertTrue(restoredExpected != null, "Persisted registries were validated before the GameTest fixture can replace blocks");
+            helper.succeed(); return;
+        }
         for (int x = 0; x < 36; x++) for (int z = 0; z < 36; z++) {
             helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
             for (int y = 1; y < 5; y++) helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
         }
-        begin(helper, 0);
+        int selected = Integer.getInteger("apparel.gaugeTest.scaleCase", 0);
+        begin(helper, selected == 0 ? 0 : selected - 1);
     }
     private static void begin(GameTestHelper helper, int phase) {
         active = new Run(helper, new int[]{200, 1000, 2000}[phase]); active.prepare();
         helper.runAfterDelay(SAMPLE_TICKS + 100, () -> {
-            var run = active; active = null; run.finish(); run.cleanup();
-            if (phase < 2) begin(helper, phase + 1); else helper.succeed();
+            var run = active; active = null; run.finish();
+            if (Integer.getInteger("apparel.gaugeTest.scaleCase", 0) != 0) { run.persist(); helper.succeed(); return; }
+            run.cleanup(); if (phase < 2) begin(helper, phase + 1); else helper.succeed();
         });
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -68,7 +101,10 @@ public final class GaugeScaleGameTests {
     public static void maintenanceEnd(TickEvent.LevelTickEvent event) {
         if (active == null || event.level != active.level || event.phase != TickEvent.Phase.END) return;
         var run = active;
-        if (run.elapsed >= 100 && run.samples < SAMPLE_TICKS) run.maintenance += System.nanoTime() - run.maintenanceStarted;
+        if (run.elapsed >= 100 && run.samples < SAMPLE_TICKS) {
+            run.maintenance += System.nanoTime() - run.maintenanceStarted;
+            run.pathNanos += CitizenPathfindingScheduler.get(run.level).lastNanos();
+        }
         var data = CitizenPopulationManager.get(run.level).data();
         if (run.networkReadyAt < 0 && data.networks().cached(run.nodes.get(run.nodes.size() - 1).id()) != null) run.networkReadyAt = run.elapsed;
         run.maxPathWait = Math.max(run.maxPathWait, oldestPathWait(CitizenPathfindingScheduler.get(run.level)));
@@ -93,7 +129,7 @@ public final class GaugeScaleGameTests {
         private final List<Citizen> citizens = new ArrayList<>();
         private final long[] ticks = new long[SAMPLE_TICKS];
         private int samples, elapsed;
-        private long tickStarted, maintenanceStarted, maintenance, total, peakHeap, gcCount, gcMillis, maxPathWait = -1, networkReadyAt = -1;
+        private long tickStarted, maintenanceStarted, maintenance, total, peakHeap, gcCount, gcMillis, pathNanos, maxPathWait = -1, networkReadyAt = -1;
         private Run(GameTestHelper helper, int gauges) { this.helper = helper; level = helper.getLevel(); gaugeCount = gauges; }
         private void prepare() {
             var manager = CitizenPopulationManager.get(level); var data = manager.data(); var routes = CitizenRouteManager.get(level).data();
@@ -155,6 +191,51 @@ public final class GaugeScaleGameTests {
                     gaugeCount, gaugeCount * 5, manager.loadedCount(), gaugeCount * 10, samples, total / 1e6 / samples, sorted[(int) Math.ceil(samples * .95) - 1] / 1e6,
                     sorted[(int) Math.ceil(samples * .99) - 1] / 1e6, maintenance / 1e6 / samples, peakHeap, gcCount() - gcCount, gcMillis() - gcMillis,
                     networkReadyAt, maxPathWait, saveNanos / 1e6, loadNanos / 1e6, bytes));
+            LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_SCALE_PATH gauges=%d pathMsPerTick=%.6f", gaugeCount, pathNanos / 1e6 / samples));
+            measureViews();
+        }
+        private void measureViews() {
+            var data = CitizenPopulationManager.get(level).data(); var originals = new ArrayList<>(data.gauges());
+            int index = 0;
+            for (var gauge : originals) {
+                var center = new BlockPos(-64 + index % 64 * 2, 64, -64 + index / 64 * 2); index++;
+                data.put(new CitizenGauge(gauge.id(), gauge.pos(), gauge.districtId(), center, 1, 1, 0, false, gauge.slot(), gauge.name()));
+            }
+            try {
+                for (boolean spread : new boolean[]{false, true}) for (int count : new int[]{1, 4, 16}) {
+                    GaugeViewSynchronization.clear(); var players = new ArrayList<net.minecraft.server.level.ServerPlayer>(); var packets = new long[2];
+                    for (int i = 0; i < count; i++) {
+                        var player = new net.minecraft.server.level.ServerPlayer(level.getServer(), level, new com.mojang.authlib.GameProfile(new UUID(90, i), "GaugeView" + i));
+                        var connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
+                            private void capture(net.minecraft.network.protocol.Packet<?> packet) {
+                                if (packet instanceof net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket payload) { packets[0]++; packets[1] += payload.getData().readableBytes(); }
+                            }
+                            @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { capture(packet); }
+                            @Override public void send(net.minecraft.network.protocol.Packet<?> packet, net.minecraft.network.PacketSendListener listener) { capture(packet); }
+                        };
+                        player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(level.getServer(), connection, player);
+                        player.setPos(.5 + (spread ? i % 4 * 16 : 0), 64, .5 + (spread ? i / 4 * 16 : 0)); player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(ModItems.CITIZEN_GAUGE.get())); players.add(player);
+                    }
+                    long started = System.nanoTime(); players.forEach(GaugeViewSynchronization::send); long initial = System.nanoTime() - started;
+                    long initialPackets = packets[0], initialBytes = packets[1]; packets[0] = packets[1] = 0;
+                    var changed = data.gauge(originals.stream().min(Comparator.comparing(CitizenGauge::districtId)).orElseThrow().id()); data.put(changed.settings(changed.range(), changed.target(), "View-" + spread + count));
+                    started = System.nanoTime(); players.forEach(GaugeViewSynchronization::send); long delta = System.nanoTime() - started;
+                    long deltaPackets = packets[0], deltaBytes = packets[1]; packets[0] = packets[1] = 0;
+                    started = System.nanoTime(); players.forEach(GaugeViewSynchronization::send); long unchanged = System.nanoTime() - started;
+                    helper.assertTrue(packets[0] == 0 && initialPackets == count && deltaPackets == count, "Initial and single-edit views send once per independent player; unchanged views send nothing: initial=" + initialPackets + " delta=" + deltaPackets + " unchanged=" + packets[0]);
+                    LogUtils.getLogger().info(String.format(Locale.ROOT,
+                            "CITIZEN_GAUGE_VIEW gauges=%d players=%d spread=%s candidateDistricts=%d snapshotMs=%.3f deltaMs=%.3f unchangedMs=%.3f snapshotPackets=%d snapshotPayloadBytes=%d deltaPackets=%d deltaPayloadBytes=%d",
+                            gaugeCount, count, spread, originals.size(), initial / 1e6, delta / 1e6, unchanged / 1e6, initialPackets, initialBytes, deltaPackets, deltaBytes));
+                }
+            } finally { GaugeViewSynchronization.clear(); originals.forEach(data::put); }
+        }
+        private void persist() {
+            var data = CitizenPopulationManager.get(level).data(); var expected = data.save(new CompoundTag());
+            expected.putInt("Markers", CitizenRouteManager.get(level).data().markers().size());
+            try { NbtIo.writeCompressed(expected, expectedFile(level)); }
+            catch (java.io.IOException exception) { throw new IllegalStateException(exception); }
+            long started = System.nanoTime(); level.getServer().saveEverything(true, true, true);
+            LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_SCALE_WORLD_SAVE gauges=%d savedCitizens=%d worldSaveMs=%.3f", gaugeCount, gaugeCount * 5, (System.nanoTime() - started) / 1e6));
         }
         private void cleanup() {
             var manager = CitizenPopulationManager.get(level); var data = manager.data(); var routes = CitizenRouteManager.get(level).data();

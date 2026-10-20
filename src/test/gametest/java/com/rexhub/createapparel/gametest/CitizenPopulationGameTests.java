@@ -147,7 +147,8 @@ public final class CitizenPopulationGameTests {
         CitizenActivityScheduler.get(helper.getLevel()).forceActive(wanderer, CitizenActivityScheduler.Reason.INTERACTION, 500);
         helper.succeedWhen(() -> {
             helper.assertTrue(home.districtId().equals(wanderer.citizenState().population().districtId())
-                    && population.data().owns(home, wanderer.position()), "Unassigned wanderer enters a full district and joins it");
+                      && population.data().owns(home, wanderer.position()), "Unassigned wanderer enters a full district and joins it: pos=" + wanderer.position()
+                      + " expected=" + home.districtId() + " actual=" + wanderer.citizenState().population().districtId());
             helper.assertTrue(population.data().population(home.districtId()) == 2, "Target is not an admission cap");
         });
     }
@@ -179,7 +180,8 @@ public final class CitizenPopulationGameTests {
         for (int tick = 10; tick <= 300; tick += 10) helper.runAtTickTime(tick, () -> {
             if (citizen.citizenState().population().districtId() != null) {
                 joined[0] = true;
-                helper.assertTrue(home.districtId().equals(citizen.citizenState().population().districtId()), "Nearby district becomes home");
+                helper.assertTrue(home.districtId().equals(citizen.citizenState().population().districtId()), "Nearby district becomes home: pos=" + citizen.position()
+                        + " expected=" + home.districtId() + " actual=" + citizen.citizenState().population().districtId());
                 helper.assertTrue(population.data().owns(home, citizen.position()), "Ordinary unlimited wander stays in the newly owned district");
             }
         });
@@ -342,7 +344,7 @@ public final class CitizenPopulationGameTests {
                 helper.runAfterDelay(10, () -> {
                     helper.assertTrue(other.districtId().equals(routes.data().marker(ids.get(2)).districtId()), "Midpoint partition gives overlap block to the closer District");
                     var saved = population.data().save(new CompoundTag());
-                    helper.assertTrue(saved.getInt("SchemaVersion") == 6 && saved.getCompound("Territory").contains("Seeds"), "Territory policy and seeds are persisted for maps");
+                    helper.assertTrue(saved.getInt("SchemaVersion") == 7 && saved.getCompound("Territory").contains("Seeds"), "Territory policy and seeds are persisted for maps");
                     var restored = CitizenPopulationSavedData.load(saved);
                     helper.assertTrue(other.districtId().equals(restored.territory().districtAt(positions.get(2))), "Exact block ownership survives reload without terrain access");
                     population.remove(other.id());

@@ -14,6 +14,11 @@ public final class CitizenPopulationSavedData extends SavedData {
     public static final String NAME = "createapparel_citizen_population";
     private final Map<UUID, CitizenGauge> gauges = new LinkedHashMap<>();
     private final Map<UUID, UUID> movingGauges = new HashMap<>();
+    private final Map<UUID, MovingOwner> movingOwners = new HashMap<>();
+    private static final class MovingOwner {
+        private final Set<UUID> gauges = new LinkedHashSet<>();
+        @Nullable private Long chunk;
+    }
     private record Address(BlockPos pos, int slot) { }
     private final Map<Address, UUID> positions = new HashMap<>();
     private final Map<UUID, UUID> districts = new HashMap<>();
@@ -42,6 +47,19 @@ public final class CitizenPopulationSavedData extends SavedData {
     @Nullable public CitizenGauge gauge(UUID id) { return gauges.get(id); }
     public boolean moving(UUID id) { return movingGauges.containsKey(id); }
     public int movingCount() { return movingGauges.size(); }
+    public boolean hasMovingOwner(UUID entity) { return movingOwners.containsKey(entity); }
+    public Collection<UUID> movingIds() { return Collections.unmodifiableSet(movingGauges.keySet()); }
+    @Nullable public UUID movingOwner(UUID id) { return movingGauges.get(id); }
+    @Nullable public Long movingChunk(UUID id) { var owner = movingOwners.get(movingGauges.get(id)); return owner == null ? null : owner.chunk; }
+    public List<UUID> ownedMovingGauges(UUID entity) { var owner = movingOwners.get(entity); return owner == null ? List.of() : List.copyOf(owner.gauges); }
+    public void movingLocation(UUID entity, long chunk) {
+        var owner = movingOwners.get(entity); if (owner == null || Objects.equals(owner.chunk, chunk)) return;
+        owner.chunk = chunk; setDirty();
+    }
+    private void forgetMoving(UUID id) {
+        var entity = movingGauges.remove(id); var owner = movingOwners.get(entity); if (owner == null) return;
+        owner.gauges.remove(id); if (owner.gauges.isEmpty()) movingOwners.remove(entity);
+    }
     public void moving(UUID id, boolean moving) {
         var gauge = gauges.get(id); if (gauge == null || moving == moving(id)) return;
         var address = new Address(gauge.pos(), gauge.slot());
@@ -49,14 +67,14 @@ public final class CitizenPopulationSavedData extends SavedData {
         else {
             var occupied = positions.get(address);
             if (occupied != null && !occupied.equals(id)) throw new IllegalArgumentException("Moving Gauge address is occupied");
-            movingGauges.remove(id); positions.put(address, id);
+            forgetMoving(id); positions.put(address, id);
         }
         setDirty();
     }
     public boolean bindMoving(UUID id, UUID entity) {
         if (!moving(id)) return false;
         var owner = movingGauges.get(id); if (owner != null) return owner.equals(entity);
-        movingGauges.put(id, entity); setDirty(); return true;
+        movingGauges.put(id, entity); movingOwners.computeIfAbsent(entity, ignored -> new MovingOwner()).gauges.add(id); setDirty(); return true;
     }
     public boolean ownedByContraption(UUID id, UUID entity) { return moving(id) && entity.equals(movingGauges.get(id)); }
     @Nullable public CitizenGauge at(BlockPos pos) { return at(pos, 0); }
@@ -88,13 +106,13 @@ public final class CitizenPopulationSavedData extends SavedData {
         if (existing != null) centerClaims.remove(existing);
         var id = UUID.randomUUID();
         centerReservations.put(center.asLong(), id);
-        centerClaims.put(id, new GaugeCenterReservation(id, dimension, center.immutable(), items, now, now, GaugeCenterReservation.State.OBSERVED));
+        centerClaims.put(id, new GaugeCenterReservation(id, dimension, center.immutable(), items, now, now, GaugeCenterReservation.State.OBSERVED, dimension, items));
         setDirty(); return id;
     }
     public void releaseCenter(@Nullable UUID reservation, int items) {
         if (items <= 0) return;
         var claim = centerClaims.get(reservation);
-        if (claim == null || claim.reservedItemCount() == UNKNOWN_RESERVED_ITEMS || claim.state() == GaugeCenterReservation.State.CONFLICT) return;
+        if (claim == null || claim.reservedItemCount() == UNKNOWN_RESERVED_ITEMS || claim.conflicted()) return;
         int remaining = claim.reservedItemCount() - items;
         if (remaining <= 0) { releaseCenter(reservation); return; }
         centerClaims.put(reservation, claim.remaining(remaining)); setDirty();
@@ -114,7 +132,7 @@ public final class CitizenPopulationSavedData extends SavedData {
     public void verifyCenter(UUID id, String dimension, int items, long now) {
         var claim = centerClaims.get(id);
         if (claim == null) return;
-        var verified = claim.verified(dimension.isEmpty() ? claim.dimension() : dimension, items, now);
+        var verified = claim.verified(dimension, items, now);
         if (!claim.equals(verified)) { centerClaims.put(id, verified); setDirty(); }
     }
     public boolean releaseOrphanCenter(UUID id) {
@@ -261,7 +279,7 @@ public final class CitizenPopulationSavedData extends SavedData {
         networks.removed(id);
         for (var other : Set.copyOf(linked(id))) unlink(id, other);
         links.remove(id); gauges.remove(id); positions.remove(new Address(gauge.pos(), gauge.slot()), id);
-        movingGauges.remove(id);
+        forgetMoving(id);
         if (gauge.center() != null) removeIndex(centers, gauge.center().asLong(), id);
         if (gauge.districtId() != null) territory.remove(gauge.districtId());
         removeIndex(gaugeChunks, new ChunkPos(gauge.pos()).toLong(), id);
@@ -306,7 +324,7 @@ public final class CitizenPopulationSavedData extends SavedData {
         entries.remove(citizen); if (entries.isEmpty()) residents.remove(district);
     }
     @Override public CompoundTag save(CompoundTag tag) {
-        tag.putInt("SchemaVersion", 6);
+        tag.putInt("SchemaVersion", 7);
         tag.put("Territory", territory.save());
         var pendingCenters = new ListTag();
         centerClaims.values().forEach(claim -> pendingCenters.add(claim.save()));
@@ -320,6 +338,9 @@ public final class CitizenPopulationSavedData extends SavedData {
         var moving = new ListTag();
         movingGauges.forEach((id, entity) -> { var entry = new CompoundTag(); entry.putUUID("Id", id); if (entity != null) entry.putUUID("Entity", entity); moving.add(entry); });
         tag.put("MovingGauges", moving);
+        var owners = new ListTag();
+        movingOwners.forEach((id, owner) -> { if (owner.chunk != null) { var entry = new CompoundTag(); entry.putUUID("Entity", id); entry.putLong("Chunk", owner.chunk); owners.add(entry); } });
+        tag.put("MovingOwners", owners);
         var entries = new ListTag(); citizens.forEach((id, state) -> {
             var entry = state.save(); entry.putUUID("Id", id);
             if (walkers.contains(id)) entry.putBoolean("Walking", true);
@@ -356,6 +377,11 @@ public final class CitizenPopulationSavedData extends SavedData {
             data.register(entry.getUUID("Id"), state, entry.getBoolean("Walking"));
         }
         data.movingGauges.keySet().removeIf(id -> !data.gauges.containsKey(id));
+        data.movingGauges.forEach((id, entity) -> { if (entity != null) data.movingOwners.computeIfAbsent(entity, ignored -> new MovingOwner()).gauges.add(id); });
+        for (var raw : tag.getList("MovingOwners", Tag.TAG_COMPOUND)) {
+            var entry = (CompoundTag) raw; var owner = entry.hasUUID("Entity") ? data.movingOwners.get(entry.getUUID("Entity")) : null;
+            if (owner != null && entry.contains("Chunk", Tag.TAG_LONG)) owner.chunk = entry.getLong("Chunk");
+        }
         long missingGauges = data.unresolvedGaugeReferences(), missingDistricts = data.unresolvedDistricts();
         if (missingGauges > 0 || missingDistricts > 0) com.mojang.logging.LogUtils.getLogger().warn(
                 "Preserving unresolved Citizen population references for recovery: {} Gauge endpoints, {} District memberships", missingGauges, missingDistricts);

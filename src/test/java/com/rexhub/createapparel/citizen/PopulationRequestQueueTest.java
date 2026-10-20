@@ -6,6 +6,33 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PopulationRequestQueueTest {
+    @Test void cancelledFarFutureEntriesConvergeToZeroWithoutWaitingForTheirRetryTime() {
+        for (int count : new int[]{16, 2000}) {
+            var queue = new PopulationRequestQueue();
+            for (int i = 0; i < count; i++) { var request = new PopulationRequest(new UUID(70, i), i); request.retryAt(Long.MAX_VALUE); queue.put(request, 0); }
+            for (int tick = 0; tick < 40; tick++) queue.tick(tick);
+            for (int i = 0; i < count; i++) queue.remove(new UUID(70, i));
+            for (int tick = 40; tick < 100; tick++) { queue.tick(tick); assertNull(queue.poll()); }
+            assertEquals(0, queue.size()); assertEquals(0, queue.entryCount());
+        }
+    }
+    @Test void massUpdatesCancellationsAndIdenticalRetryTimesExecuteOnlyCurrentGenerationsWithoutStarvation() {
+        var queue = new PopulationRequestQueue(); var live = new HashMap<UUID, PopulationRequest>();
+        for (int i = 0; i < 2500; i++) { var request = new PopulationRequest(new UUID(71, i), i); request.retryAt(300); queue.put(request, 0); live.put(request.requester(), request); }
+        for (int tick = 0; tick < 150; tick++) {
+            for (var request : live.values()) { request.retryAt(300); queue.put(request, tick % 7); }
+            queue.tick(tick); assertNull(queue.poll()); assertTrue(queue.entryCount() < 16000);
+        }
+        for (int i = 0; i < 2500; i += 3) { var id = new UUID(71, i); queue.remove(id); live.remove(id); }
+        var served = new HashSet<UUID>(); int lastServed = -1;
+        for (int tick = 150; tick < 800; tick++) {
+            queue.tick(tick);
+            for (int i = 0; i < 4; i++) { var request = queue.poll(); if (request == null) break;
+                assertTrue(tick >= 300); assertSame(live.get(request.requester()), request); assertTrue(served.add(request.requester())); lastServed = tick; }
+        }
+        assertEquals(live.keySet(), served); assertTrue(lastServed <= 720); assertEquals(0, queue.size());
+        for (int tick = 800; tick < 900; tick++) queue.tick(tick); assertEquals(0, queue.entryCount());
+    }
     @Test void delayedRequestsDoNotHideReadyRequestsAndOldEntriesNeverRunTwice() {
         var queue = new PopulationRequestQueue();
         var delayed = new PopulationRequest(UUID.randomUUID(), 0); delayed.retryAt(200);

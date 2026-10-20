@@ -55,6 +55,8 @@ ForgeのGameTest起動は、設定を省略するとランダムseedの通常地
 
 `CitizenGaugeConsistencyGameTests`はBEとSavedDataの不一致、複製NBTの隔離、実Bearingのcapture／NBT／復元、移動元住所の再利用、Contraption複製と本体破棄、人口だけのBE差分、管理者権限、明示移動による自主Navigation要求の置換を検証する。
 
+追加検証では、予約Dimensionを不変にして局所観測と予約数量を区別し、Conflict／Dimension不一致を通常観測で解消しないことを確認する。Queueは2,500件の大量更新・取消・同時刻再試行、空になった後の古い遠未来Entryの0件収束を確認する。移動中Gaugeは通常BEからのID奪取拒否・ネイティブ再配置・所有NBTが読めない破壊・最終Entityチャンクのロード後回復・旧形式／未ロードの保持を検証する。表示同期は同一Snapshot共有、独立Revision、各32Entryの上限、Level unload時の解放を確認する。
+
 保存定義だけが欠けてもLinkと所属UUIDを再保存後まで保持し、復旧前にOutflowを許可しないこと、重複Gauge行が先行記録を上書きしないこともJUnitで確認する。Consistency GameTestはオフハンドの予約複製を含む数量衝突も検証する。Client QAは表示用アイテムの持替えでも再同期要求の20tick制限を迂回できないことを実Packet数で確認し、診断hoverを`build/gauge-client-diagnostics.png`へ記録する。
 
 中心登録時の1個分離はConsistency GameTestで両手×Survival／Creative、通常スタックへの合流、無関係NBT・元モード維持、満杯時の未登録分Drop、拒否時の無変更、旧スタックの同地点／別地点再記録、設置・地区撤去後に残スタックが予約を持たないことを確認する。Client QAは実USE Packetから8個を1個の記録済みGauge＋7個の未登録Gaugeへ分け、Server予約数量とClientインベントリ同期を照合する。従来の複数個破棄／Craft試験は明示的に旧形式の予約Fixtureを使い、互換性として維持する。
@@ -66,6 +68,19 @@ ForgeのGameTest起動は、設定を省略するとランダムseedの通常地
 ```
 
 最後の専用試験は新規の隔離Worldで、Gauge 200／1,000／2,000、保存Citizen 1,000／5,000／10,000、Marker 2,000／10,000／20,000を順に作る。各規模の実ロードCitizenは100人、実壁パネル16枚、実Marker32個とし、それ以外を未ロード記録として扱う。100tickウォームアップ後に約600tickを測る。`CITIZEN_LIVE_SCALE`へMSPT平均／p95／p99、END maintenance時間、Heap、GC、Network完成tick、Navigation待機、SavedDataのSave／Load／NBTサイズを出力する。MSPTはServer全体、maintenanceはLevel ENDの人口／経路処理であり、Citizen本体tick全体の単独計測ではない。パーセンタイルはこの試験区間のみ。通信・多数Client・全10,000体の同時ロード性能を代用する結果ではない。
+
+単一規模を別JVMで保存・再起動する場合は次を使う。`gaugeScaleCase=1/2/3`が上記の各規模で、run IDを規模ごとに変える。resumeは直前に正常終了した同一Worldを使う。
+
+```powershell
+.\gradlew.bat -PjeiEnabled=false -PgaugeScale=true -PgaugeScaleCase=1 -PgaugeTestRunId=scale-a runGaugeTestServer
+.\gradlew.bat -PjeiEnabled=false -PgaugeScale=true -PgaugeScaleCase=1 -PgaugeTestRunId=scale-a -PgaugeScaleResume=true runGaugeTestServer
+.\gradlew.bat -PjeiEnabled=false -PgaugeMoving=true -PgaugeTestRunId=moving-restart runGaugeTestServer
+.\gradlew.bat -PjeiEnabled=false -PgaugeMoving=true -PgaugeTestRunId=moving-restart -PgaugeMovingResume=true runGaugeTestServer
+```
+
+`CITIZEN_SCALE_PATH`はPathfinding Schedulerの実行時間、`CITIZEN_GAUGE_VIEW`は同一チャンク／分散した1・4・16人相当のSnapshot／単一編集Deltaのサーバー生成・実Packetエンコード時間とpayload量、`CITIZEN_SCALE_WORLD_SAVE`は全Worldの実Save、`CITIZEN_SCALE_RESTART`は別JVMでのSavedData復元・ID／所属／件数の照合を記録する。Gauge表示は合成ServerPlayerを使い、独立TCP Clientの通信・描画性能ではない。表示上限1024件を維持する。Contraption再起動試験は隔離Worldの離れたforced chunkへネイティブBearing由来の実Entityを保存し、同じEntity UUIDとGauge／District／Link／所属の復元、再配置、Entityが失われた別Gaugeの回復を確認する。VS2 Shipは別機構であり、この互換試験には含まない。
+
+保存Citizen数は人口Registryの件数で、未ロード分の実Entity NBTは作成しない。World Save／再起動も大量Registry＋実Entity100人・実Gauge16枚・実Marker32個が対象となる。全数の実Entity／Blockを配置・保存・ロードしたWorldの性能は未検証として別評価する。
 
 通常の実WorldではOP権限で`/createapparel gauge stats`、`/createapparel gauge profile start`／`stop`を使える。詳細計測は明示開始時だけ有効で、MSPTパーセンタイルは直近4,096tick、平均は計測開始後の全tick。通信カウンタは専用Gauge Info Packetのpayloadで、TCPヘッダーやMinecraft全体のEntity同期は含まない。
 

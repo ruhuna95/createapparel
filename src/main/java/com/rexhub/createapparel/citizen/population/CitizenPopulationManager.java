@@ -56,7 +56,7 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
         routeCapacity = new DistrictRouteCapacity(routes.data(), data.territory(), routes::loaded, routes::loadRevision);
     }
     public static CitizenPopulationManager get(ServerLevel level) { return LEVELS.computeIfAbsent(level, CitizenPopulationManager::new); }
-    public static void unload(ServerLevel level) { LEVELS.remove(level); }
+    public static void unload(ServerLevel level) { LEVELS.remove(level); GaugeViewSynchronization.clear(level); }
     public static void clear() { LEVELS.clear(); }
     public CitizenPopulationSavedData data() { return data; }
     public DistrictRouteCapacity routeCapacity() { return routeCapacity; }
@@ -113,6 +113,11 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
         boolean moved = false;
         if (identified != null && (gauge == null || !identified.id().equals(gauge.id()))) {
             if (!data.moving(identified.id()) || gauge != null) { entity.registrationIssue(slot, "DUPLICATE_GAUGE_ID"); return null; }
+            var owner = data.movingOwner(identified.id());
+            if (owner != null && (!(level.getEntity(owner) instanceof com.simibubi.create.content.contraptions.AbstractContraptionEntity carrier)
+                    || carrier.getContraption() == null || !carrier.getContraption().disassembled)) {
+                entity.registrationIssue(slot, "MOVING_OWNER_NOT_REASSEMBLING"); return null;
+            }
             gauge = identified.relocate(entity.getBlockPos(), slot); data.put(gauge);
             moved = true;
         }
@@ -168,12 +173,35 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
         }
     }
     public void contraptionJoined(com.simibubi.create.content.contraptions.AbstractContraptionEntity entity) {
+        var existing = level.getEntity(entity.getUUID());
+        if (existing != null && existing != entity) {
+            com.mojang.logging.LogUtils.getLogger().warn("Ignoring duplicate Citizen Gauge contraption entity UUID {}", entity.getUUID()); return;
+        }
+        if (existing == null && data.hasMovingOwner(entity.getUUID())) {
+            level.getServer().tell(new net.minecraft.server.TickTask(level.getServer().getTickCount(), () -> {
+                if (level.getEntity(entity.getUUID()) == entity) contraptionJoined(entity);
+            })); return;
+        }
         for (var id : contraptionGauges(entity)) if (data.moving(id) && !data.bindMoving(id, entity.getUUID()))
             com.mojang.logging.LogUtils.getLogger().warn("Ignoring duplicate moving Citizen Gauge {} in contraption {}", id, entity.getUUID());
+        data.movingLocation(entity.getUUID(), entity.chunkPosition().toLong());
     }
     public void contraptionRemoved(com.simibubi.create.content.contraptions.AbstractContraptionEntity entity) {
         var reason = entity.getRemovalReason(); if (reason == null || !reason.shouldDestroy()) return;
-        for (var id : contraptionGauges(entity)) if (data.ownedByContraption(id, entity.getUUID())) remove(id);
+        for (var id : data.ownedMovingGauges(entity.getUUID())) remove(id);
+    }
+    private boolean reconcileMoving(UUID id) {
+        var owner = data.movingOwner(id); var chunk = data.movingChunk(id);
+        if (owner == null || chunk == null || level.getEntity(owner) != null || !level.areEntitiesLoaded(chunk)) return false;
+        var position = new BlockPos(net.minecraft.world.level.ChunkPos.getX(chunk) << 4, level.getMinBuildHeight(), net.minecraft.world.level.ChunkPos.getZ(chunk) << 4);
+        if (!level.isPositionEntityTicking(position)) return false;
+        com.mojang.logging.LogUtils.getLogger().warn("Removing orphaned moving Citizen Gauge {}: owner {} missing from loaded entity chunk {}", id, owner, new net.minecraft.world.level.ChunkPos(chunk));
+        remove(id); return true;
+    }
+    public boolean releaseMoving(UUID id) {
+        if (!data.moving(id)) return false;
+        var owner = data.movingOwner(id); if (owner != null && level.getEntity(owner) != null) return false;
+        remove(id); return true;
     }
     private static Set<UUID> contraptionGauges(com.simibubi.create.content.contraptions.AbstractContraptionEntity entity) {
         var contraption = entity.getContraption(); if (contraption == null) return Set.of();
@@ -378,6 +406,7 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
         for (int index = 0, size = Math.min(4, gauges.size()); index < size; index++) {
             var id = gauges.removeFirst(); var gauge = data.gauge(id);
             if (gauge == null) { queuedGauges.remove(id); continue; }
+            if (data.moving(id) && reconcileMoving(id)) { queuedGauges.remove(id); continue; }
             boolean gaugeLoaded = loaded(gauge);
             if (!data.moving(id) && CitizenNavigation.hasLoadedRegion(level, gauge.pos(), 0) && !gaugeLoaded) {
                 if (level.getBlockEntity(gauge.pos()) instanceof CitizenGaugeBlockEntity entity && entity.hasPanel(gauge.slot())) { register(entity, gauge.slot()); gauges.addLast(id); }

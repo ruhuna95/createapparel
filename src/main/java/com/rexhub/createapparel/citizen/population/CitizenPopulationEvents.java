@@ -51,6 +51,11 @@ public final class CitizenPopulationEvents {
             CitizenPopulationManager.get(level).leave(citizen, !citizen.isAlive() || reason != null && (reason.shouldDestroy() || reason == net.minecraft.world.entity.Entity.RemovalReason.CHANGED_DIMENSION));
         }
     }
+    @SubscribeEvent public static void section(EntityEvent.EnteringSection event) {
+        if (event.didChunkChange() && event.getEntity().level() instanceof ServerLevel level
+                && event.getEntity() instanceof com.simibubi.create.content.contraptions.AbstractContraptionEntity)
+            CitizenPopulationManager.get(level).data().movingLocation(event.getEntity().getUUID(), net.minecraft.world.level.ChunkPos.asLong(event.getNewPos().x(), event.getNewPos().z()));
+    }
     @SubscribeEvent public static void expire(ItemExpireEvent event) {
         if (event.getEntity().level() instanceof ServerLevel && event.getEntity().getItem().getItem() instanceof CitizenGaugeItem)
             EXPIRING_GAUGES.put(event.getEntity(), event);
