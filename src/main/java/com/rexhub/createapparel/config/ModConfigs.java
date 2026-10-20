@@ -101,6 +101,7 @@ public final class ModConfigs {
     public enum MirrorQuality { OFF, LOW, MEDIUM, HIGH }
 
     public static final class Client {
+        public final ForgeConfigSpec.DoubleValue citizenLod0Distance, citizenLod1Distance, citizenLod2Distance, citizenLodHysteresis;
         public final ForgeConfigSpec.IntValue routeMarkerRenderDistance;
         public final ForgeConfigSpec.BooleanValue enabled;
         public final ForgeConfigSpec.EnumValue<MirrorQuality> quality;
@@ -115,6 +116,12 @@ public final class ModConfigs {
         public final ForgeConfigSpec.IntValue nearbyReflectionFps;
         public final ForgeConfigSpec.DoubleValue updateBudgetMillis;
         private Client(ForgeConfigSpec.Builder builder) {
+            builder.push("citizenRendering");
+            citizenLod0Distance = builder.defineInRange("lod0Distance", 12.0, 1.0, 512.0);
+            citizenLod1Distance = builder.defineInRange("lod1Distance", 32.0, 1.0, 512.0);
+            citizenLod2Distance = builder.defineInRange("lod2Distance", 64.0, 1.0, 512.0);
+            citizenLodHysteresis = builder.defineInRange("hysteresis", 1.0, 0.0, 8.0);
+            builder.pop();
             builder.push("citizenRoutes");
             routeMarkerRenderDistance = builder.defineInRange("renderDistance", 64, 8, 128);
             builder.pop();

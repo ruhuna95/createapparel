@@ -57,7 +57,9 @@ public final class Citizen extends PathfinderMob {
     public Brain<Citizen> getBrain() { return (Brain<Citizen>) super.getBrain(); }
 
     @Override
-    protected void customServerAiStep() { lookController.tick(); }
+    protected void customServerAiStep() {
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("lookBrain")) { lookController.tick(); }
+    }
 
     public void syncState() {
         refreshAgeDimensions();
@@ -165,15 +167,33 @@ public final class Citizen extends PathfinderMob {
 
     @Override
     public void tick() {
-        super.tick();
-        if (!level().isClientSide) intents.tick();
-        var behavior = citizenState.behavior();
-        if (routeMovement.hasDestination()) return;
-        if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.BODY) {
-            if (!level().isClientSide && !isNoAi()) setYRot(yBodyRot);
-        } else if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.HEAD) {
-            yBodyRot = getYRot();
-            yHeadRot = net.minecraft.util.Mth.rotateIfNecessary(yHeadRot, yBodyRot, getMaxHeadYRot());
-        } else if (!behavior.mode().moves()) yBodyRot = yHeadRot = getYRot();
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(level(), "entityTick")) {
+            if (!level().isClientSide) com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.citizen(getUUID());
+            super.tick();
+            if (!level().isClientSide) intents.tick();
+            var behavior = citizenState.behavior();
+            if (routeMovement.hasDestination()) return;
+            if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.BODY) {
+                if (!level().isClientSide && !isNoAi()) setYRot(yBodyRot);
+            } else if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.HEAD) {
+                yBodyRot = getYRot();
+                yHeadRot = net.minecraft.util.Mth.rotateIfNecessary(yHeadRot, yBodyRot, getMaxHeadYRot());
+            } else if (!behavior.mode().moves()) yBodyRot = yHeadRot = getYRot();
+        }
+    }
+
+    @Override
+    public void aiStep() {
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("mobAiStep")) { super.aiStep(); }
+    }
+
+    @Override
+    public void travel(net.minecraft.world.phys.Vec3 movement) {
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("mobTravel")) { super.travel(movement); }
+    }
+
+    @Override
+    protected void pushEntities() {
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("mobPushEntities")) { super.pushEntities(); }
     }
 }

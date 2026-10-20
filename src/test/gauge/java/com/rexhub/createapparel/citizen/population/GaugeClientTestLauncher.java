@@ -58,6 +58,7 @@ public final class GaugeClientTestLauncher {
         } catch (Throwable exception) { failure = exception; }
     }
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
+        if (Boolean.getBoolean("apparel.gaugeTest.performanceClient")) return;
         if (event.phase != TickEvent.Phase.END || stage == 99) return;
         var mc = Minecraft.getInstance(); if (mc.getOverlay() != null) return;
         try {

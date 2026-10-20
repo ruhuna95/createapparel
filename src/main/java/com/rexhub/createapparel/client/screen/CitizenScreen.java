@@ -278,7 +278,8 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
             citizen.yHeadRot = citizen.yHeadRotO = citizen.yBodyRot + relativeHead;
             var camera = new Quaternionf().rotateX(pitch);
             var pose = new Quaternionf().rotateZ((float) Math.PI).mul(camera);
-            InventoryScreen.renderEntityInInventory(graphics, leftPos + 150, topPos + 108, 35, pose, camera, citizen);
+            com.rexhub.createapparel.client.renderer.CitizenRenderer.withPreview(() ->
+                    InventoryScreen.renderEntityInInventory(graphics, leftPos + 150, topPos + 108, 35, pose, camera, citizen));
         } finally {
             citizen.yBodyRotO = previousBody;
             citizen.yBodyRot = previousBodyNow;

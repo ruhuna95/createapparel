@@ -30,9 +30,20 @@ minecraft.runs {
         property 'apparel.gaugeTest.scale', providers.gradleProperty('gaugeScale').getOrElse('false')
         property 'apparel.gaugeTest.scaleCase', providers.gradleProperty('gaugeScaleCase').getOrElse('0')
         property 'apparel.gaugeTest.scaleResume', providers.gradleProperty('gaugeScaleResume').getOrElse('false')
+        property 'apparel.gaugeTest.scaleProfile', providers.gradleProperty('gaugeScaleProfile').getOrElse('false')
         property 'apparel.gaugeTest.moving', providers.gradleProperty('gaugeMoving').getOrElse('false')
         property 'apparel.gaugeTest.movingResume', providers.gradleProperty('gaugeMovingResume').getOrElse('false')
         property 'apparel.gaugeTest.trash', providers.gradleProperty('gaugeTrash').getOrElse('false')
+        property 'apparel.gaugeTest.performance', providers.gradleProperty('gaugePerformance').getOrElse('false')
+        property 'apparel.gaugeTest.performanceCount', providers.gradleProperty('gaugePerformanceCount').getOrElse('100')
+        property 'apparel.gaugeTest.performanceProfile', providers.gradleProperty('gaugePerformanceProfile').getOrElse('true')
+        property 'apparel.gaugeTest.performanceSteady', providers.gradleProperty('gaugePerformanceSteady').getOrElse('false')
+        property 'apparel.gaugeTest.performanceSampleTicks', providers.gradleProperty('gaugePerformanceSampleTicks').getOrElse('400')
+        property 'apparel.diagnostics.testWorld', providers.gradleProperty('gaugePerformance').getOrElse('false')
+        property 'apparel.gaugeTest.performanceJfr', providers.gradleProperty('gaugePerformanceJfr').getOrElse('false')
+        ['debugDisableCitizenAutonomy', 'debugDisableCitizenBehaviorGoal', 'debugDisableCitizenPopulationTick', 'debugDisableCitizenRoutePlanning'].each { diagnostic ->
+            property "apparel.diagnostics.${diagnostic}", providers.gradleProperty(diagnostic).getOrElse('false')
+        }
         property 'forge.logging.console.level', 'info'
         mods { "${mod_id}" { source sourceSets.gaugeTest } }
     }
@@ -42,6 +53,18 @@ minecraft.runs {
         property 'forge.logging.console.level', 'info'
         property 'apparel.gaugeTest.projectDir', projectDir.absolutePath
         property 'apparel.gaugeTest.resume', providers.gradleProperty('gaugeResume').getOrElse('false')
+        property 'apparel.gaugeTest.performanceClient', providers.gradleProperty('gaugePerformanceClient').getOrElse('false')
+        property 'apparel.gaugeTest.performanceFrameOnly', providers.gradleProperty('gaugePerformanceFrameOnly').getOrElse('false')
+        property 'apparel.gaugeTest.envelopeComparison', providers.gradleProperty('gaugeEnvelopeComparison').getOrElse('false')
+        property 'apparel.gaugeTest.envelopeReverse', providers.gradleProperty('gaugeEnvelopeReverse').getOrElse('false')
+        property 'apparel.gaugeTest.envelopeImages', providers.gradleProperty('gaugeEnvelopeImages').getOrElse('false')
+        property 'apparel.gaugeTest.lodComparison', providers.gradleProperty('gaugeLodComparison').getOrElse('false')
+        property 'apparel.gaugeTest.lodImages', providers.gradleProperty('gaugeLodImages').getOrElse('false')
+        property 'apparel.gaugeTest.lodReverse', providers.gradleProperty('gaugeLodReverse').getOrElse('false')
+        property 'apparel.gaugeTest.resourceReload', providers.gradleProperty('gaugeResourceReload').getOrElse('false')
+        property 'apparel.diagnostics.renderAllocation', (providers.gradleProperty('gaugeEnvelopeComparison').getOrElse('false').toBoolean() || providers.gradleProperty('gaugeLodComparison').getOrElse('false').toBoolean()).toString()
+        property 'apparel.gaugeTest.performanceCaseCount', providers.gradleProperty('gaugePerformanceCaseCount').getOrElse(providers.gradleProperty('gaugeLodComparison').getOrElse('false').toBoolean() ? '9' : '8')
+        property 'apparel.gaugeTest.performanceCount', providers.gradleProperty('gaugePerformanceCount').getOrElse('100')
         mods { "${mod_id}" { source sourceSets.gaugeTest } }
     }
 }
@@ -63,7 +86,8 @@ tasks.matching { it.name == 'runGaugeTestClient' }.configureEach {
     doFirst { ext.gaugeClientStartedAt = System.currentTimeMillis() }
     doLast {
         def log = new File(gaugeTestClientDirectory, 'logs/latest.log')
-        if (!log.isFile() || log.lastModified() < gaugeClientStartedAt || !log.getText('UTF-8').contains('CITIZEN_GAUGE_CLIENT_PASSED'))
+        def marker = providers.gradleProperty('gaugePerformanceClient').getOrElse('false').toBoolean() ? 'CITIZEN_PERFORMANCE_CLIENT_PASSED' : 'CITIZEN_GAUGE_CLIENT_PASSED'
+        if (!log.isFile() || log.lastModified() < gaugeClientStartedAt || !log.getText('UTF-8').contains(marker))
             throw new GradleException("Citizen Gauge Client checks did not pass; see ${log}")
     }
 }

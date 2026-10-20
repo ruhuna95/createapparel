@@ -110,10 +110,12 @@ public final class DistrictTerritory {
     @Nullable public UUID districtAt(Vec3 point) { return districtAt(Mth.floor(point.x), Mth.floor(point.z)); }
     @Nullable public UUID districtAt(BlockPos pos) { return districtAt(pos.getX(), pos.getZ()); }
     @Nullable public UUID districtAt(int x, int z) {
-        long chunk = ChunkPos.asLong(x >> 4, z >> 4);
-        var tile = tiles.get(chunk);
-        if (tile != null) return tile.districtAt(x & 15, z & 15);
-        return resolve(x, z);
+        try (var diagnosticScope = CitizenSystemMetrics.measure("territoryLookup")) {
+            long chunk = ChunkPos.asLong(x >> 4, z >> 4);
+            var tile = tiles.get(chunk);
+            if (tile != null) return tile.districtAt(x & 15, z & 15);
+            return resolve(x, z);
+        }
     }
     @Nullable private UUID resolve(int x, int z) {
         UUID owner = null; long nearest = Long.MAX_VALUE;
@@ -125,36 +127,38 @@ public final class DistrictTerritory {
         return owner;
     }
     public Tile tile(int chunkX, int chunkZ) {
-        long chunk = ChunkPos.asLong(chunkX, chunkZ);
-        var cached = tiles.get(chunk); if (cached != null) return cached;
-        var palette = new ArrayList<UUID>(); var values = new int[256];
-        for (int index = 0; index < 256; index++) {
-            var id = resolve((chunkX << 4) + (index & 15), (chunkZ << 4) + (index >> 4));
-            if (id == null) continue;
-            int paletteIndex = palette.indexOf(id); if (paletteIndex < 0) { paletteIndex = palette.size(); palette.add(id); }
-            values[index] = paletteIndex + 1;
+        try (var diagnosticScope = CitizenSystemMetrics.measure("territoryTile")) {
+            long chunk = ChunkPos.asLong(chunkX, chunkZ);
+            var cached = tiles.get(chunk); if (cached != null) return cached;
+            var palette = new ArrayList<UUID>(); var values = new int[256];
+            for (int index = 0; index < 256; index++) {
+                var id = resolve((chunkX << 4) + (index & 15), (chunkZ << 4) + (index >> 4));
+                if (id == null) continue;
+                int paletteIndex = palette.indexOf(id); if (paletteIndex < 0) { paletteIndex = palette.size(); palette.add(id); }
+                values[index] = paletteIndex + 1;
+            }
+            var runs = new ArrayList<Integer>();
+            for (int start = 0; start < 256;) {
+                int end = start + 1; while (end < 256 && values[end] == values[start]) end++;
+                runs.add(values[start] << 16 | end - start); start = end;
+            }
+            var result = new Tile(chunk, palette, runs.stream().mapToInt(Integer::intValue).toArray());
+            var restored = restoredTiles.remove(chunk);
+            if (restored != null) {
+                try {
+                    var ids = restored.getList("Palette", Tag.TAG_COMPOUND).stream().map(raw -> ((CompoundTag) raw).getUUID("District")).toList();
+                    var candidate = new Tile(chunk, ids, restored.getIntArray("Runs"));
+                    if (result.save().equals(candidate.save())) result = candidate;
+                } catch (IllegalArgumentException ignored) { }
+            }
+            tiles.put(chunk, result);
+            markDirty.run();
+            while (cachedTileCount() > MAX_CACHED_TILES) {
+                if (!restoredTiles.isEmpty()) restoredTiles.remove(restoredTiles.keySet().iterator().next());
+                else tiles.remove(tiles.keySet().iterator().next());
+            }
+            return result;
         }
-        var runs = new ArrayList<Integer>();
-        for (int start = 0; start < 256;) {
-            int end = start + 1; while (end < 256 && values[end] == values[start]) end++;
-            runs.add(values[start] << 16 | end - start); start = end;
-        }
-        var result = new Tile(chunk, palette, runs.stream().mapToInt(Integer::intValue).toArray());
-        var restored = restoredTiles.remove(chunk);
-        if (restored != null) {
-            try {
-                var ids = restored.getList("Palette", Tag.TAG_COMPOUND).stream().map(raw -> ((CompoundTag) raw).getUUID("District")).toList();
-                var candidate = new Tile(chunk, ids, restored.getIntArray("Runs"));
-                if (result.save().equals(candidate.save())) result = candidate;
-            } catch (IllegalArgumentException ignored) { }
-        }
-        tiles.put(chunk, result);
-        markDirty.run();
-        while (cachedTileCount() > MAX_CACHED_TILES) {
-            if (!restoredTiles.isEmpty()) restoredTiles.remove(restoredTiles.keySet().iterator().next());
-            else tiles.remove(tiles.keySet().iterator().next());
-        }
-        return result;
     }
     private ListTag savedSeeds() {
         var entries = new ListTag(); seeds.values().stream().sorted(Comparator.comparing(Seed::districtId)).forEach(seed -> entries.add(seed.save())); return entries;

@@ -69,12 +69,15 @@ public final class CitizenRoutePlanner {
     }
 
     public Plan plan(Citizen citizen, Vec3 destination, Set<UUID> excludedMarkers, @Nullable UUID avoided) {
-        var starts = candidates(citizen.position(), excludedMarkers).stream()
-                .map(node -> new Endpoint(node.id(), node.center().distanceTo(citizen.position()))).toList();
-        var targets = candidates(destination, excludedMarkers).stream()
-                .map(node -> new Endpoint(node.id(), node.center().distanceTo(destination))).toList();
-        if (starts.isEmpty() || targets.isEmpty()) { cancel(citizen); return Plan.vanilla(); }
-        return query(citizen, starts, targets, avoided, false);
+        if (com.rexhub.createapparel.citizen.population.CitizenDiagnostics.debugDisableCitizenRoutePlanning) return Plan.pending();
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(manager.level(), "routePlan")) {
+            var starts = candidates(citizen.position(), excludedMarkers).stream()
+                    .map(node -> new Endpoint(node.id(), node.center().distanceTo(citizen.position()))).toList();
+            var targets = candidates(destination, excludedMarkers).stream()
+                    .map(node -> new Endpoint(node.id(), node.center().distanceTo(destination))).toList();
+            if (starts.isEmpty() || targets.isEmpty()) { cancel(citizen); return Plan.vanilla(); }
+            return query(citizen, starts, targets, avoided, false);
+        }
     }
 
     private List<RouteMarker> candidates(Vec3 point, Set<UUID> excluded) {
@@ -93,36 +96,39 @@ public final class CitizenRoutePlanner {
     }
 
     private Plan query(Citizen citizen, List<Endpoint> starts, List<Endpoint> targets, @Nullable UUID avoided, boolean openOnly) {
-        refreshBudget();
-        var key = new Key(citizen.getUUID(), starts, targets, manager.data().version(), manager.loadRevision(), avoided, openOnly);
-        var previous = requests.get(citizen.getUUID());
-        if (previous != null && equivalent(previous, key)) key = previous;
-        else if (previous != null) cancel(citizen);
-        var result = takeCached(key);
-        if (result != null) return result;
-        if (!pending.containsKey(key)) {
-            if (pending.size() >= RouteSettings.MAX_PENDING_PLANS) return Plan.pending();
-            var search = new Search(citizen, key);
-            var cached = cache.remove(key);
-            if (cached != null && !cached.delivered && cached.expires > manager.level().getGameTime()) {
-                search.validating = cached;
-                search.validationRuntime = manager.runtime().revision(key.citizen);
+        if (com.rexhub.createapparel.citizen.population.CitizenDiagnostics.debugDisableCitizenRoutePlanning) return Plan.pending();
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(manager.level(), "routeQuery")) {
+            refreshBudget();
+            var key = new Key(citizen.getUUID(), starts, targets, manager.data().version(), manager.loadRevision(), avoided, openOnly);
+            var previous = requests.get(citizen.getUUID());
+            if (previous != null && equivalent(previous, key)) key = previous;
+            else if (previous != null) cancel(citizen);
+            var result = takeCached(key);
+            if (result != null) return result;
+            if (!pending.containsKey(key)) {
+                if (pending.size() >= RouteSettings.MAX_PENDING_PLANS) return Plan.pending();
+                var search = new Search(citizen, key);
+                var cached = cache.remove(key);
+                if (cached != null && !cached.delivered && cached.expires > manager.level().getGameTime()) {
+                    search.validating = cached;
+                    search.validationRuntime = manager.runtime().revision(key.citizen);
+                }
+                pending.put(key, search);
+                requests.put(citizen.getUUID(), key);
             }
-            pending.put(key, search);
-            requests.put(citizen.getUUID(), key);
+            tick();
+            result = takeCached(key);
+            var completed = cache.get(key);
+            if (result == null && completed != null && !completed.validated && !pending.containsKey(key)) {
+                cache.remove(key);
+                var validation = new Search(citizen, key);
+                validation.validating = completed;
+                validation.validationRuntime = manager.runtime().revision(key.citizen);
+                pending.put(key, validation); requests.put(key.citizen, key);
+                tick(); result = takeCached(key);
+            }
+            return result == null ? Plan.pending() : result;
         }
-        tick();
-        result = takeCached(key);
-        var completed = cache.get(key);
-        if (result == null && completed != null && !completed.validated && !pending.containsKey(key)) {
-            cache.remove(key);
-            var validation = new Search(citizen, key);
-            validation.validating = completed;
-            validation.validationRuntime = manager.runtime().revision(key.citizen);
-            pending.put(key, validation); requests.put(key.citizen, key);
-            tick(); result = takeCached(key);
-        }
-        return result == null ? Plan.pending() : result;
     }
 
     @Nullable private Plan takeCached(Key key) {
@@ -164,31 +170,34 @@ public final class CitizenRoutePlanner {
     }
 
     public void tick() {
-        refreshBudget();
-        long started = System.nanoTime();
-        int slices = Math.min(64, Math.max(1, pending.size()) * 2);
-        while (slices-- > 0 && !pending.isEmpty() && visitedNodes < RouteSettings.PLANNER_NODES_PER_TICK
-                && scannedEdges < RouteSettings.PLANNER_EDGES_PER_TICK) {
-            var entry = pending.entrySet().iterator().next();
-            var key = entry.getKey(); var search = entry.getValue();
-            pending.remove(key);
-            boolean stale = key.version != manager.data().version() || key.loaded != manager.loadRevision()
-                    || search.citizen.isRemoved() || !search.citizen.isAlive() || search.citizen.level() != manager.level();
-            var result = stale ? Plan.vanilla() : advance(search);
-            if (stale) {
-                if (search.initialized) active--;
-                requests.remove(key.citizen, key);
-            } else if (result == null) pending.put(key, search);
-            else {
-                if (search.initialized) active--;
-                requests.remove(key.citizen, key);
-                if (cache.size() >= RouteSettings.MAX_CACHED_ROUTES) cache.remove(cache.keySet().iterator().next());
-                cache.put(key, new Cached(result, manager.level().getGameTime() + RouteSettings.RETRY_INTERVAL * 2,
-                        manager.runtime().revision(key.citizen), manager.conditionRevision(), false, search.validating != null,
-                        search.validating == null ? List.copyOf(search.resultCrossings) : search.validating.crossings, 0));
+        if (com.rexhub.createapparel.citizen.population.CitizenDiagnostics.debugDisableCitizenRoutePlanning) return;
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(manager.level(), "routePlanner")) {
+            refreshBudget();
+            long started = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.profiling() ? System.nanoTime() : 0;
+            int slices = Math.min(64, Math.max(1, pending.size()) * 2);
+            while (slices-- > 0 && !pending.isEmpty() && visitedNodes < RouteSettings.PLANNER_NODES_PER_TICK
+                    && scannedEdges < RouteSettings.PLANNER_EDGES_PER_TICK) {
+                var entry = pending.entrySet().iterator().next();
+                var key = entry.getKey(); var search = entry.getValue();
+                pending.remove(key);
+                boolean stale = key.version != manager.data().version() || key.loaded != manager.loadRevision()
+                        || search.citizen.isRemoved() || !search.citizen.isAlive() || search.citizen.level() != manager.level();
+                var result = stale ? Plan.vanilla() : advance(search);
+                if (stale) {
+                    if (search.initialized) active--;
+                    requests.remove(key.citizen, key);
+                } else if (result == null) pending.put(key, search);
+                else {
+                    if (search.initialized) active--;
+                    requests.remove(key.citizen, key);
+                    if (cache.size() >= RouteSettings.MAX_CACHED_ROUTES) cache.remove(cache.keySet().iterator().next());
+                    cache.put(key, new Cached(result, manager.level().getGameTime() + RouteSettings.RETRY_INTERVAL * 2,
+                            manager.runtime().revision(key.citizen), manager.conditionRevision(), false, search.validating != null,
+                            search.validating == null ? List.copyOf(search.resultCrossings) : search.validating.crossings, 0));
+                }
             }
+            if (started != 0) nanos += System.nanoTime() - started;
         }
-        nanos += System.nanoTime() - started;
     }
 
     @Nullable private Plan advance(Search search) {

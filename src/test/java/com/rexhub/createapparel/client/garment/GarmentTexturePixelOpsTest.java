@@ -10,6 +10,27 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GarmentTexturePixelOpsTest {
+    @Test void lazyOpacityMatchesComposedPixelAtEveryAlphaPair() {
+        for (int destination = 0; destination <= 255; destination++) for (int source = 0; source <= 255; source++) {
+            assertEquals(GarmentTexturePixelOps.applyOverlay(destination << 24 | 0xA06030, source << 24 | 0x20E080) >>> 24,
+                    GarmentTexturePixelOps.overlayAlpha(destination, source));
+        }
+        for (int channel = 0; channel < 256; channel++) assertEquals(channel, (int) (channel / 255F * 255));
+    }
+    @Test
+    void fastTintMatchesReferenceAtEveryMaskCombination() {
+        var random = new java.util.Random(618);
+        for (int sample = 0; sample < 8; sample++) {
+            int primary = random.nextInt();
+            var secondary = sample % 2 == 0 ? OptionalInt.of(random.nextInt()) : OptionalInt.empty();
+            var accent = sample % 3 == 0 ? OptionalInt.of(random.nextInt()) : OptionalInt.empty();
+            for (int s = -1; s <= 256; s++) for (int a = -1; a <= 256; a++) {
+                assertEquals(GarmentTexturePixelOps.composeTint(primary, secondary, accent, s, a),
+                        GarmentTexturePixelOps.composeTintFast(primary, secondary, accent, s, a));
+            }
+        }
+    }
+
     private static final int PRIMARY = 0x000000;
     private static final int SECONDARY = 0xFFFFFF;
     private static final int ACCENT = 0xFF0000;

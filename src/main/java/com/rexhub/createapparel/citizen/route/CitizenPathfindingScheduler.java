@@ -49,33 +49,35 @@ public final class CitizenPathfindingScheduler {
     }
 
     public void tick() {
-        if (lastTick == level.getGameTime()) return;
-        lastTick = level.getGameTime();
-        CitizenRouteManager.get(level).planner().tick();
-        long started = System.nanoTime();
-        lastExecuted = 0;
-        var oldest = pending.isEmpty() ? null : pending.values().iterator().next();
-        boolean aged = oldest != null && level.getGameTime() - oldest.submittedAt >= 40;
-        for (int checked = 0, inspections = Math.min(64, pending.size()); checked < inspections; checked++) {
-            if (lastExecuted >= ModConfigs.COMMON.maxNewPathRequestsPerTick.get()) break;
-            var request = next(checked == 0 && (aged && ModConfigs.COMMON.maxNewPathRequestsPerTick.get() > 1 || level.getGameTime() % 4 == 0));
-            if (request == null) break;
-            var citizen = request.citizen;
-            if (pending.get(citizen.getUUID()) != request) continue;
-            if (citizen.isRemoved() || !citizen.isAlive() || citizen.isNoAi() || citizen.level() != level || !request.valid.getAsBoolean()) {
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(level, "pathfindingScheduler")) {
+            if (lastTick == level.getGameTime()) return;
+            lastTick = level.getGameTime();
+            CitizenRouteManager.get(level).planner().tick();
+            long started = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.profiling() ? System.nanoTime() : 0;
+            lastExecuted = 0;
+            var oldest = pending.isEmpty() ? null : pending.values().iterator().next();
+            boolean aged = oldest != null && level.getGameTime() - oldest.submittedAt >= 40;
+            for (int checked = 0, inspections = Math.min(64, pending.size()); checked < inspections; checked++) {
+                if (lastExecuted >= ModConfigs.COMMON.maxNewPathRequestsPerTick.get()) break;
+                var request = next(checked == 0 && (aged && ModConfigs.COMMON.maxNewPathRequestsPerTick.get() > 1 || level.getGameTime() % 4 == 0));
+                if (request == null) break;
+                var citizen = request.citizen;
+                if (pending.get(citizen.getUUID()) != request) continue;
+                if (citizen.isRemoved() || !citizen.isAlive() || citizen.isNoAi() || citizen.level() != level || !request.valid.getAsBoolean()) {
+                    cancel(citizen);
+                    continue;
+                }
+                if (request.priority == Priority.AUTONOMY
+                        && CitizenActivityScheduler.get(level).state(citizen) == CitizenActivityScheduler.State.THROTTLED
+                        && !(aged && request == oldest)) {
+                    var queue = queues.get(request.priority); queue.remove(citizen.getUUID()); queue.put(citizen.getUUID(), request); continue;
+                }
                 cancel(citizen);
-                continue;
+                lastExecuted++;
+                try (var requestScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("pathfindingRequest")) { request.action.run(); }
             }
-            if (request.priority == Priority.AUTONOMY
-                    && CitizenActivityScheduler.get(level).state(citizen) == CitizenActivityScheduler.State.THROTTLED
-                    && !(aged && request == oldest)) {
-                var queue = queues.get(request.priority); queue.remove(citizen.getUUID()); queue.put(citizen.getUUID(), request); continue;
-            }
-            cancel(citizen);
-            lastExecuted++;
-            request.action.run();
+            CitizenRouteManager.get(level).planner().finishTick();
+            lastNanos = started == 0 ? 0 : System.nanoTime() - started + CitizenRouteManager.get(level).planner().lastStatistics().nanos();
         }
-        CitizenRouteManager.get(level).planner().finishTick();
-        lastNanos = System.nanoTime() - started + CitizenRouteManager.get(level).planner().lastStatistics().nanos();
     }
 }

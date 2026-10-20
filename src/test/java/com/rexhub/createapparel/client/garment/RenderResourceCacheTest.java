@@ -9,6 +9,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RenderResourceCacheTest {
+    @Test void observerIncludesDirectReferenceHitsAndDistinguishesEvictionFromClear() {
+        var events = new ArrayList<RenderResourceCache.Event>();
+        var cache = new RenderResourceCache<String, String>(1, ignored -> { }, events::add);
+        var reference = cache.reference("a", () -> "a"); reference.get(); reference.get(); cache.get("b", () -> "b");
+        cache.endFrame(); cache.get("b", () -> "b"); cache.endFrame(); cache.clear();
+        assertEquals(List.of(RenderResourceCache.Event.MISS, RenderResourceCache.Event.HIT, RenderResourceCache.Event.MISS,
+                RenderResourceCache.Event.HIT, RenderResourceCache.Event.EVICTION, RenderResourceCache.Event.RELEASE), events);
+    }
     @Test
     void cachedReferencesAvoidKeyLookupsAndShareResources() {
         AtomicInteger hashes = new AtomicInteger();

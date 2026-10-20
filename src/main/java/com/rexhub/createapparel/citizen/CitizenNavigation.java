@@ -18,6 +18,13 @@ public final class CitizenNavigation extends GroundPathNavigation {
     public CitizenNavigation(Mob mob, Level level) { super(mob, level); }
 
     @Override
+    public void tick() {
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("navigation")) {
+            super.tick();
+        }
+    }
+
+    @Override
     public void recomputePath() {
         if (!(mob instanceof com.rexhub.createapparel.entity.Citizen citizen)
                 || !(level instanceof net.minecraft.server.level.ServerLevel server)) { super.recomputePath(); return; }
@@ -83,10 +90,12 @@ public final class CitizenNavigation extends GroundPathNavigation {
     @Nullable
     @Override
     protected Path createPath(Set<BlockPos> targets, int regionOffset, boolean offsetUpward, int accuracy, float followRange) {
-        var center = offsetUpward ? mob.blockPosition().above() : mob.blockPosition();
-        int extent = (int) (followRange + regionOffset);
-        if (!hasLoadedRegion(level, center, extent)) return null;
-        return super.createPath(targets, regionOffset, offsetUpward, accuracy, followRange);
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("vanillaPathSearch")) {
+            var center = offsetUpward ? mob.blockPosition().above() : mob.blockPosition();
+            int extent = (int) (followRange + regionOffset);
+            if (!hasLoadedRegion(level, center, extent)) return null;
+            return super.createPath(targets, regionOffset, offsetUpward, accuracy, followRange);
+        }
     }
 
     public static boolean hasLoadedRegion(Level level, BlockPos center, int extent) {

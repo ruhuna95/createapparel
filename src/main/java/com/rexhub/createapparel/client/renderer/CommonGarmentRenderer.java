@@ -43,18 +43,38 @@ public final class CommonGarmentRenderer {
     private static final float BODY_HEIGHT = 24.0F;
     private static final Matrix4f ITEM_X_REFLECTION = new Matrix4f().scaling(-1.0F, 1.0F, 1.0F);
     private static final int WHITE = 0xFFFFFF;
+    private static final ThreadLocal<EnvelopeBuffers> ENVELOPE_BUFFERS = ThreadLocal.withInitial(EnvelopeBuffers::new);
+
+    private static final class EnvelopeBuffers {
+        private float[] points = new float[0], normals = new float[0];
+        private final Vector3f scratch = new Vector3f();
+        private final org.joml.Vector4f vertex = new org.joml.Vector4f();
+        private boolean inUse;
+
+        private void capacity(int positions, int faces) {
+            if (points.length < positions * 3) points = new float[positions * 3];
+            if (normals.length < faces * 4) normals = new float[faces * 4];
+        }
+    }
 
     private CommonGarmentRenderer() {
     }
 
     public static void renderHumanoid(GarmentRenderContext context,
                                       PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        var source = context.apparel();
-        var frame = new ApparelRenderFrame(source::garment, context.bodyPose());
-        for (GarmentSlot slot : ResolvedApparelState.RENDER_ORDER) {
-            frame.garment(slot).ifPresent(garment -> renderHumanoidGarment(
-                    garment, slot, frame, source, context.bodyPose(), source.armProfile(),
-                    poseStack, buffer, light, overlay));
+        try (var diagnosticScope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure(context.targetType() == GarmentRenderContext.TargetType.CITIZEN ? "citizenGarment" : "otherHumanoidGarment")) {
+            try (var lodScope = context.targetType() == GarmentRenderContext.TargetType.CITIZEN
+                    ? com.rexhub.createapparel.client.garment.GarmentDiagnostics.measureLod(context.lod())
+                    : com.rexhub.createapparel.citizen.population.DiagnosticTiming.NONE) {
+            var source = context.apparel();
+            var frame = context.preparedFrame() != null ? context.preparedFrame()
+                    : new ApparelRenderFrame(source::garment, context.bodyPose(), context.lod());
+            for (GarmentSlot slot : ResolvedApparelState.RENDER_ORDER) {
+                frame.garment(slot).ifPresent(garment -> renderHumanoidGarment(
+                        garment, slot, frame, source, context.bodyPose(), source.armProfile(),
+                        poseStack, buffer, light, overlay));
+            }
+            }
         }
     }
 
@@ -220,6 +240,7 @@ public final class CommonGarmentRenderer {
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
         for (ResolvedPart part : garment.parts()) {
             PartMapping mapping = PartMapping.humanoidGarment();
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.garmentPart();
             ResourceLocation texture = snapshot.texture(part);
             if (frame.envelope(part.model()).isPresent()) {
                 renderEnvelopePart(part.model(), texture, frame.envelope(part.model()).orElseThrow(),
@@ -251,11 +272,82 @@ public final class CommonGarmentRenderer {
                                           com.rexhub.createapparel.client.garment.DualEnvelopeDeformer.Pose envelope,
                                           HumanoidPartPose humanoidPose, PoseStack poseStack, MultiBufferSource buffer,
                                           int packedLight, int packedOverlay) {
-        VertexConsumer vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
-        poseStack.pushPose();
-        humanoidPose.apply(poseStack);
+        try (var diagnosticScope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("envelopeGeometrySubmission")) {
+            var type = RenderType.entityCutoutNoCull(texture);
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("envelopeRenderTypeGets", 1);
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.part(type, texture);
+            VertexConsumer vertices = buffer.getBuffer(type);
+            poseStack.pushPose();
+            humanoidPose.apply(poseStack);
+            try {
+                if (com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugUseLegacyEnvelopeRendering) {
+                    renderLegacyEnvelope(part, envelope, poseStack.last(), vertices, packedLight, packedOverlay);
+                } else {
+                    renderIndexedEnvelope(part, envelope, poseStack.last(), vertices, packedLight, packedOverlay);
+                }
+            } finally {
+                poseStack.popPose();
+            }
+        }
+    }
+
+    private static void renderIndexedEnvelope(GarmentPartModel part,
+            com.rexhub.createapparel.client.garment.DualEnvelopeDeformer.Pose envelope,
+            PoseStack.Pose pose, VertexConsumer vertices, int packedLight, int packedOverlay) {
+        var buffers = ENVELOPE_BUFFERS.get();
+        if (buffers.inUse) buffers = new EnvelopeBuffers();
+        buffers.inUse = true;
+        try {
+            var mesh = envelope.mesh();
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.geometry(mesh);
+            buffers.capacity(mesh.positionCount(), mesh.quadCount());
+            try (var scope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("envelopeVertexTransform")) {
+                envelope.positions(buffers.points, buffers.scratch);
+            }
+            try (var scope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("envelopeFaceNormals")) {
+                mesh.normals(buffers.points, buffers.normals);
+            }
+            try (var scope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("envelopeRenderTransform")) {
+                for (int i = 0; i < mesh.positionCount(); i++) {
+                    int p = i * 3;
+                    pose.pose().transform(buffers.vertex.set(buffers.points[p], BODY_HEIGHT - buffers.points[p + 1], buffers.points[p + 2], 1));
+                    buffers.points[p] = buffers.vertex.x; buffers.points[p + 1] = buffers.vertex.y; buffers.points[p + 2] = buffers.vertex.z;
+                }
+                for (int i = 0; i < mesh.quadCount(); i++) {
+                    int n = i * 4;
+                    if (buffers.normals[n + 3] == 0) continue;
+                    pose.normal().transform(buffers.scratch.set(buffers.normals[n], buffers.normals[n + 1], buffers.normals[n + 2]));
+                    buffers.normals[n] = buffers.scratch.x; buffers.normals[n + 1] = buffers.scratch.y; buffers.normals[n + 2] = buffers.scratch.z;
+                }
+            }
+            int submitted = 0;
+            try (var scope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("envelopeVertexWrite")) {
+                for (int face = 0; face < mesh.quadCount(); face++) {
+                    int n = face * 4;
+                    if (buffers.normals[n + 3] == 0) continue;
+                    for (int i = 0; i < 4; i++) {
+                        int corner = face * 4 + i, p = mesh.positionIndex(corner) * 3;
+                        vertices.vertex(buffers.points[p], buffers.points[p + 1], buffers.points[p + 2],
+                                1, 1, 1, 1, mesh.u(corner) / part.textureWidth(), mesh.v(corner) / part.textureHeight(),
+                                packedOverlay, packedLight, buffers.normals[n], buffers.normals[n + 1], buffers.normals[n + 2]);
+                    }
+                    submitted += 4;
+                }
+            }
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("envelopeUniquePositions", mesh.positionCount());
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("envelopeCornerReferences", mesh.cornerCount());
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("envelopeSubmittedVertices", submitted);
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("submittedVertices", submitted);
+        } finally {
+            buffers.inUse = false;
+        }
+    }
+
+    private static void renderLegacyEnvelope(GarmentPartModel part,
+            com.rexhub.createapparel.client.garment.DualEnvelopeDeformer.Pose envelope,
+            PoseStack.Pose pose, VertexConsumer vertices, int packedLight, int packedOverlay) {
         Vector3f[] points = {new Vector3f(), new Vector3f(), new Vector3f(), new Vector3f()};
-        PoseStack.Pose pose = poseStack.last();
+        int submittedVertices = 0;
         for (var quad : envelope.quads()) {
             for (int i = 0; i < 4; i++) envelope.shift(quad.points().get(i), points[i]);
             float ux = points[1].x - points[0].x, uy = points[1].y - points[0].y, uz = points[1].z - points[0].z;
@@ -263,6 +355,7 @@ public final class CommonGarmentRenderer {
             float nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
             float length = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
             if (length < 0.000001F) continue;
+            submittedVertices += 4;
             for (int i = 0; i < 4; i++) {
                 var point = points[i];
                 var uv = quad.uv().get(i);
@@ -272,36 +365,44 @@ public final class CommonGarmentRenderer {
                         .normal(pose.normal(), nx / length, -ny / length, nz / length).endVertex();
             }
         }
-        poseStack.popPose();
+        com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("submittedVertices", submittedVertices);
+        com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("envelopeSubmittedVertices", submittedVertices);
     }
 
     private static void renderHemPart(GarmentPartModel part, ResourceLocation texture, GarmentHemGeometry.Slope slope,
                                       HumanoidPartPose humanoidPose, PoseStack poseStack, MultiBufferSource buffer,
                                       int packedLight, int packedOverlay) {
-        VertexConsumer vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
-        poseStack.pushPose();
-        humanoidPose.apply(poseStack);
-        Vector3f[] points = {new Vector3f(), new Vector3f(), new Vector3f(), new Vector3f()};
-        PoseStack.Pose pose = poseStack.last();
-        for (var quad : part.hemGeometry().quads(slope)) {
-            for (int i = 0; i < 4; i++) {
-                slope.shift(quad.points().get(i), quad.depths().get(i), points[i]);
+        try (var diagnosticScope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("hemGeometrySubmission")) {
+            var type = RenderType.entityCutoutNoCull(texture);
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.part(type, texture);
+            VertexConsumer vertices = buffer.getBuffer(type);
+            poseStack.pushPose();
+            humanoidPose.apply(poseStack);
+            Vector3f[] points = {new Vector3f(), new Vector3f(), new Vector3f(), new Vector3f()};
+            PoseStack.Pose pose = poseStack.last();
+            int submittedVertices = 0;
+            for (var quad : part.hemGeometry().quads(slope)) {
+                submittedVertices += 4;
+                for (int i = 0; i < 4; i++) {
+                    slope.shift(quad.points().get(i), quad.depths().get(i), points[i]);
+                }
+                float ux = points[1].x - points[0].x, uy = points[1].y - points[0].y, uz = points[1].z - points[0].z;
+                float vx = points[2].x - points[0].x, vy = points[2].y - points[0].y, vz = points[2].z - points[0].z;
+                float nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+                float length = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+                for (int i = 0; i < 4; i++) {
+                    var point = points[i];
+                    var uv = quad.uv().get(i);
+                    vertices.vertex(pose.pose(), point.x, BODY_HEIGHT - point.y, point.z)
+                            .color(255, 255, 255, 255)
+                            .uv(uv.u() / part.textureWidth(), uv.v() / part.textureHeight())
+                            .overlayCoords(packedOverlay).uv2(packedLight)
+                            .normal(pose.normal(), nx / length, -ny / length, nz / length).endVertex();
+                }
             }
-            float ux = points[1].x - points[0].x, uy = points[1].y - points[0].y, uz = points[1].z - points[0].z;
-            float vx = points[2].x - points[0].x, vy = points[2].y - points[0].y, vz = points[2].z - points[0].z;
-            float nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
-            float length = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
-            for (int i = 0; i < 4; i++) {
-                var point = points[i];
-                var uv = quad.uv().get(i);
-                vertices.vertex(pose.pose(), point.x, BODY_HEIGHT - point.y, point.z)
-                        .color(255, 255, 255, 255)
-                        .uv(uv.u() / part.textureWidth(), uv.v() / part.textureHeight())
-                        .overlayCoords(packedOverlay).uv2(packedLight)
-                        .normal(pose.normal(), nx / length, -ny / length, nz / length).endVertex();
-            }
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("submittedVertices", submittedVertices);
+            poseStack.popPose();
         }
-        poseStack.popPose();
     }
 
     public static void renderHumanoidSupport(
@@ -314,15 +415,30 @@ public final class CommonGarmentRenderer {
             int packedLight,
             int packedOverlay
     ) {
+        renderHumanoidSupport(parts, playerModel, armProfile, tintRgb, poseStack, buffer, packedLight, packedOverlay, null, null, false);
+    }
+
+    public static void renderHumanoidSupport(List<ResolvedSupportPart> parts, HumanoidModel<?> playerModel,
+            ArmProfile armProfile, int tintRgb, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay,
+            @javax.annotation.Nullable SupportOcclusion occlusion, @javax.annotation.Nullable ApparelRenderFrame frame, boolean underwear) {
         poseStack.pushPose();
         poseStack.scale(MODEL_UNIT, MODEL_UNIT, MODEL_UNIT);
         for (ResolvedSupportPart part : parts) {
+            var supportPose = humanoidSupportPose(playerModel, armProfile, part.model());
+            if (occlusion != null && frame != null) {
+                try (var scope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("supportOcclusion")) {
+                    if (occlusion.hidden(part.model(), supportPose, frame)) {
+                        com.rexhub.createapparel.client.garment.GarmentDiagnostics.count(underwear ? "underwearOmittedParts" : "bodyOmittedParts", 1);
+                        continue;
+                    }
+                }
+            }
             PartMapping mapping = PartMapping.humanoidSupport();
             renderPart(
                     part.model(),
                     part.textureFile(),
                     mapping,
-                    humanoidSupportPose(playerModel, armProfile, part.model()),
+                    supportPose,
                     poseStack,
                     buffer,
                     packedLight,
@@ -331,6 +447,71 @@ public final class CommonGarmentRenderer {
             );
         }
         poseStack.popPose();
+    }
+
+    public static final class SupportOcclusion {
+        private final GarmentRenderSource source;
+        private final List<Occluder> candidates;
+
+        public SupportOcclusion(GarmentRenderSource source, HumanoidModel<?> model) {
+            this.source = source;
+            var result = new java.util.ArrayList<Occluder>();
+            var support = new java.util.ArrayList<ResolvedSupportPart>();
+            ClientGarmentAssets.INSTANCE.resolveBody(source.armProfile(), source.chestProfile()).ifPresent(support::addAll);
+            ClientGarmentAssets.INSTANCE.resolveDefaultUnderwear(source.chestProfile(),
+                    source.garment(GarmentSlot.TOP).isEmpty() && source.garment(GarmentSlot.INNER_TOP).isEmpty(),
+                    source.garment(GarmentSlot.INNER_BOTTOM).isEmpty()).ifPresent(support::addAll);
+            for (var slot : ResolvedApparelState.RENDER_ORDER) source.garment(slot).ifPresent(garment -> {
+                for (var part : garment.parts()) {
+                    if (part.model().translucent() || part.model().legEnvelope().isPresent()) continue;
+                    var pose = humanoidGarmentPose(model, source.armProfile(), part);
+                    for (var element : part.model().elements()) if (closedBox(element) && support.stream().anyMatch(target ->
+                            pose.equals(humanoidSupportPose(model, source.armProfile(), target.model())) && contains(element, target.model().elements())))
+                        result.add(new Occluder(slot, part, element, pose));
+                }
+            });
+            candidates = result.size() <= 64 ? List.copyOf(result) : List.of();
+        }
+
+        public boolean applicable() { return !candidates.isEmpty(); }
+
+        private boolean hidden(GarmentPartModel support, HumanoidPartPose pose, ApparelRenderFrame frame) {
+            for (var candidate : candidates) {
+                var other = candidate.pose();
+                if (pose.part() != other.part() || pose.restX() != other.restX() || pose.restY() != other.restY() || pose.restZ() != other.restZ()) continue;
+                if (frame.skirtSlope().isPresent() && candidate.part().model().hemGeometry().applies(
+                        candidate.part().semanticName(), candidate.slot(), frame.skirtSlope().get())) continue;
+                if (contains(candidate.element(), support.elements())
+                        && RuntimeGarmentTextureCache.opaque(source.texture(candidate.part()), candidate.part(), candidate.element())) return true;
+            }
+            return false;
+        }
+
+        public static boolean closedBox(Element element) {
+            if (element.rotation() != null || element.faces().size() != 6) return false;
+            var a = element.from(); var b = element.to();
+            if (a.x() >= b.x() || a.y() >= b.y() || a.z() >= b.z()) return false;
+            if (element.corners().size() != 8) return false;
+            for (int i = 0; i < 8; i++) {
+                var p = element.corners().get(i);
+                float x = i % 4 == 1 || i % 4 == 2 ? b.x() : a.x();
+                if (p.x() != x || p.y() != (i >= 4 ? b.y() : a.y()) || p.z() != (i % 4 >= 2 ? b.z() : a.z())) return false;
+            }
+            return true;
+        }
+
+        public static boolean contains(Element box, List<Element> elements) {
+            for (var element : elements) {
+                if (element.rotation() != null) return false;
+                for (var point : element.corners()) {
+                    if (!(point.x() > box.from().x() + .0001F && point.x() < box.to().x() - .0001F
+                            && point.y() > box.from().y() + .0001F && point.y() < box.to().y() - .0001F
+                            && point.z() > box.from().z() + .0001F && point.z() < box.to().z() - .0001F)) return false;
+                }
+            }
+            return !elements.isEmpty();
+        }
+        private record Occluder(GarmentSlot slot, ResolvedPart part, Element element, HumanoidPartPose pose) { }
     }
 
     private static void renderPart(
@@ -353,7 +534,9 @@ public final class CommonGarmentRenderer {
             PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay, int tintRgb,
             Function<ResourceLocation, RenderType> renderType
     ) {
-        VertexConsumer vertices = buffer.getBuffer(renderType.apply(texture));
+        var type = renderType.apply(texture);
+        com.rexhub.createapparel.client.garment.GarmentDiagnostics.part(type, texture);
+        VertexConsumer vertices = buffer.getBuffer(type);
         poseStack.pushPose();
         if (humanoidPose != null) {
             humanoidPose.apply(poseStack);
@@ -479,11 +662,46 @@ public final class CommonGarmentRenderer {
     private static void renderFaces(List<BakedFace> faces, int textureWidth, int textureHeight, PartMapping mapping,
                                     PoseStack poseStack, VertexConsumer vertices, int packedLight, int packedOverlay,
                                     int tintRgb) {
+        if (com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugUseLegacyRigidRendering) {
+            renderLegacyFaces(faces, textureWidth, textureHeight, mapping, poseStack, vertices, packedLight, packedOverlay, tintRgb);
+            return;
+        }
+        var buffers = ENVELOPE_BUFFERS.get();
+        if (buffers.inUse) buffers = new EnvelopeBuffers();
+        buffers.inUse = true;
+        try {
+            var pose = poseStack.last();
+            float red = (tintRgb >> 16 & 255) / 255F, green = (tintRgb >> 8 & 255) / 255F, blue = (tintRgb & 255) / 255F;
+            int submitted = 0;
+            for (int faceIndex = 0; faceIndex < faces.size(); faceIndex++) {
+                var face = faces.get(faceIndex);
+                var normal = face.normal();
+                pose.normal().transform(buffers.scratch.set(normal.x(), mapping.humanoid() ? -normal.y() : normal.y(), normal.z()));
+                float nx = buffers.scratch.x, ny = buffers.scratch.y, nz = buffers.scratch.z;
+                for (int vertexIndex = 0; vertexIndex < face.vertices().size(); vertexIndex++) {
+                    var vertex = face.vertices().get(vertexIndex);
+                    pose.pose().transform(buffers.vertex.set(vertex.x(), mapping.humanoid() ? BODY_HEIGHT - vertex.y() : vertex.y(), vertex.z(), 1));
+                    vertices.vertex(buffers.vertex.x, buffers.vertex.y, buffers.vertex.z, red, green, blue, 1,
+                            vertex.u() / textureWidth, vertex.v() / textureHeight, packedOverlay, packedLight, nx, ny, nz);
+                    submitted++;
+                }
+            }
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("submittedVertices", submitted);
+        } finally {
+            buffers.inUse = false;
+        }
+    }
+
+    private static void renderLegacyFaces(List<BakedFace> faces, int textureWidth, int textureHeight, PartMapping mapping,
+                                          PoseStack poseStack, VertexConsumer vertices, int packedLight, int packedOverlay,
+                                          int tintRgb) {
         PoseStack.Pose pose = poseStack.last();
         int red = tintRgb >> 16 & 255;
         int green = tintRgb >> 8 & 255;
         int blue = tintRgb & 255;
+        int submittedVertices = 0;
         for (var face : faces) {
+            submittedVertices += face.vertices().size();
             Vec3 normal = face.normal();
             float normalY = mapping.humanoid() ? -normal.y() : normal.y();
             for (var vertex : face.vertices()) {
@@ -495,6 +713,7 @@ public final class CommonGarmentRenderer {
                         .normal(pose.normal(), normal.x(), normalY, normal.z()).endVertex();
             }
         }
+        com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("submittedVertices", submittedVertices);
     }
 
     private record HumanoidPartPose(ModelPart part, float restX, float restY, float restZ) {

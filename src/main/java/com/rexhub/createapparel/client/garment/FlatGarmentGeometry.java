@@ -41,13 +41,15 @@ public record FlatGarmentGeometry(Bounds originalBounds, Bounds flattenedBounds,
     }
 
     private static FlatGarmentGeometry cached(List<GarmentPartModel> parts, List<GarmentPartModel> depthParts) {
-        GeometryKey key = new GeometryKey(new PartKey(parts), new PartKey(depthParts));
-        FlatGarmentGeometry found = CACHE.get(key);
-        if (found != null) return found;
-        FlatGarmentGeometry geometry = fromParts(parts, depthParts);
-        if (CACHE.size() >= 256) CACHE.remove(CACHE.keySet().iterator().next());
-        CACHE.put(key, geometry);
-        return geometry;
+        try (var diagnosticScope = GarmentDiagnostics.measure("flatGeometryCache")) {
+            GeometryKey key = new GeometryKey(new PartKey(parts), new PartKey(depthParts));
+            FlatGarmentGeometry found = CACHE.get(key);
+            if (found != null) return found;
+            FlatGarmentGeometry geometry = fromParts(parts, depthParts);
+            if (CACHE.size() >= 256) CACHE.remove(CACHE.keySet().iterator().next());
+            CACHE.put(key, geometry);
+            return geometry;
+        }
     }
 
     public static void clearCache() {

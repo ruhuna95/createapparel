@@ -49,20 +49,22 @@ public final class CitizenActivityScheduler {
     }
 
     public void tick() {
-        int budget = ModConfigs.COMMON.maxActiveCitizensPerDimension.get();
-        for (int index = 0; index < 64 && !expirations.isEmpty() && expirations.firstKey() <= level.getGameTime(); index++) {
-            var ids = expirations.firstEntry().getValue(); removeForced(ids.iterator().next());
-        }
-        while (active.size() > budget) active.remove(active.iterator().next());
-        if (level.getGameTime() < nextRotation) return;
-        nextRotation = level.getGameTime() + Math.max(1, ModConfigs.COMMON.activityRotationTicks.get() / budget);
-        if (citizens.size() <= budget) { active.addAll(citizens.keySet()); return; }
-        UUID outgoing = null;
-        for (var id : rotation) if (active.contains(id)) { outgoing = id; break; }
-        if (outgoing != null) { active.remove(outgoing); rotation.remove(outgoing); rotation.add(outgoing); }
-        for (var id : rotation) {
-            if (active.size() >= budget) break;
-            active.add(id);
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(level, "activityScheduler")) {
+            int budget = ModConfigs.COMMON.maxActiveCitizensPerDimension.get();
+            for (int index = 0; index < 64 && !expirations.isEmpty() && expirations.firstKey() <= level.getGameTime(); index++) {
+                var ids = expirations.firstEntry().getValue(); removeForced(ids.iterator().next());
+            }
+            while (active.size() > budget) active.remove(active.iterator().next());
+            if (level.getGameTime() < nextRotation) return;
+            nextRotation = level.getGameTime() + Math.max(1, ModConfigs.COMMON.activityRotationTicks.get() / budget);
+            if (citizens.size() <= budget) { active.addAll(citizens.keySet()); return; }
+            UUID outgoing = null;
+            for (var id : rotation) if (active.contains(id)) { outgoing = id; break; }
+            if (outgoing != null) { active.remove(outgoing); rotation.remove(outgoing); rotation.add(outgoing); }
+            for (var id : rotation) {
+                if (active.size() >= budget) break;
+                active.add(id);
+            }
         }
     }
 }

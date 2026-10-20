@@ -54,15 +54,17 @@ public final class CitizenRouteManager {
     public long maintenanceRevision() { return maintenanceRevision; }
     public List<com.rexhub.createapparel.network.RouteViewPacket.Edge> removedEdges() { return removedEdges.values().stream().map(Removed::edge).toList(); }
     public void tickMaintenance() {
-        if (removedEdges.values().removeIf(entry -> entry.expires <= level.getGameTime())) maintenanceRevision++;
-        for (var player : level.players()) {
-            var notice = notices.get(player);
-            if (notice == null) continue;
-            if (notice.expires <= level.getGameTime() || !RouteMarkerPermissions.holdingPhone(player)) { notices.remove(player); continue; }
-            if (noticeTimes.getOrDefault(player, Long.MIN_VALUE / 2) + 20 > level.getGameTime()) continue;
-            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.createapparel.route."
-                    + (notice.support ? "support_removed" : "marker_removed"), notice.pos.toShortString(), notice.edges), true);
-            noticeTimes.put(player, level.getGameTime()); notices.remove(player);
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(level, "routeMaintenance")) {
+            if (removedEdges.values().removeIf(entry -> entry.expires <= level.getGameTime())) maintenanceRevision++;
+            for (var player : level.players()) {
+                var notice = notices.get(player);
+                if (notice == null) continue;
+                if (notice.expires <= level.getGameTime() || !RouteMarkerPermissions.holdingPhone(player)) { notices.remove(player); continue; }
+                if (noticeTimes.getOrDefault(player, Long.MIN_VALUE / 2) + 20 > level.getGameTime()) continue;
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.createapparel.route."
+                        + (notice.support ? "support_removed" : "marker_removed"), notice.pos.toShortString(), notice.edges), true);
+                noticeTimes.put(player, level.getGameTime()); notices.remove(player);
+            }
         }
     }
     public long conditionRevision() {

@@ -67,16 +67,21 @@ public final class CitizenBehaviorGoal extends Goal {
 
     @Override
     public void tick() {
-        var state = citizen.citizenState().behavior();
-        if (!state.equals(observed)) {
-            stop();
-            observed = state;
+        if (com.rexhub.createapparel.citizen.population.CitizenDiagnostics.debugDisableCitizenBehaviorGoal) return;
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("behaviorGoal")) {
+            var state = citizen.citizenState().behavior();
+            if (com.rexhub.createapparel.citizen.population.CitizenDiagnostics.debugDisableCitizenAutonomy
+                    && citizen.intents().active() == null && state.mode() != CitizenBehaviorMode.FOLLOW) return;
+            if (!state.equals(observed)) {
+                stop();
+                observed = state;
+            }
+            if (pathDelay > 0) pathDelay--;
+            if (teleportDelay > 0) teleportDelay--;
+            if (state.mode() == CitizenBehaviorMode.WALK || citizen.routeMovement().hasDestination()) citizen.routeMovement().tick();
+            else if (state.mode() == CitizenBehaviorMode.FOLLOW) follow(state);
+            else if (state.mode() == CitizenBehaviorMode.WANDER) wander(state);
         }
-        if (pathDelay > 0) pathDelay--;
-        if (teleportDelay > 0) teleportDelay--;
-        if (state.mode() == CitizenBehaviorMode.WALK || citizen.routeMovement().hasDestination()) citizen.routeMovement().tick();
-        else if (state.mode() == CitizenBehaviorMode.FOLLOW) follow(state);
-        else if (state.mode() == CitizenBehaviorMode.WANDER) wander(state);
     }
 
     private void follow(CitizenBehaviorState state) {

@@ -17,7 +17,9 @@ public final class GaugeTestSelection {
             boolean scale = Boolean.getBoolean("apparel.gaugeTest.scale");
             boolean trash = Boolean.getBoolean("apparel.gaugeTest.trash");
             boolean moving = Boolean.getBoolean("apparel.gaugeTest.moving");
-            GameTestRegistry.getAllTestFunctions().removeIf(test -> moving ? !test.getBatchName().equals("citizen_moving_restart")
+            boolean performance = Boolean.getBoolean("apparel.gaugeTest.performance");
+            GameTestRegistry.getAllTestFunctions().removeIf(test -> performance ? !test.getBatchName().equals("citizen_performance")
+                    : moving ? !test.getBatchName().equals("citizen_moving_restart")
                     : scale ? !test.getBatchName().equals("citizen_scale")
                     : trash ? !test.getBatchName().equals("citizen_trash_compat")
                     : !test.getBatchName().equals("citizen_population") && !test.getBatchName().equals("citizen_population_recovery") && !test.getBatchName().equals("citizen_gauge_lifecycle"));

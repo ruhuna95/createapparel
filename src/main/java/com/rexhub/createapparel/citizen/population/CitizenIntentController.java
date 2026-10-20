@@ -124,63 +124,66 @@ public final class CitizenIntentController {
     }
     private double arrivalRadius() { return active != null && active.destinationType() == CitizenIntent.DestinationType.DISTRICT ? 0.25 : 1; }
     public void tick() {
-        if (!(citizen.level() instanceof ServerLevel level) || !citizen.isAlive()) return;
-        long now = level.getGameTime();
-        if (now < nextCheck) return;
-        nextCheck = now + 20;
-        var manager = CitizenPopulationManager.get(level);
-        manager.update(citizen);
-        trackAway(manager, now);
-        if (citizen.isNoAi()) { if (active != null) cancel(); resetAutonomy(); return; }
-        if (active == null) {
-            if (CitizenActivityScheduler.get(level).state(citizen) == CitizenActivityScheduler.State.THROTTLED) { resetAutonomy(); return; }
-            tickAutonomyRecovery(level, manager, now); autonomy(level, now); return;
-        }
-        if (now >= active.expiresAt() || active.district() != null && !manager.enabled(active.district())) { cancel(); return; }
-        var reason = active.source() == CitizenIntent.Source.GAUGE_TRANSFER ? CitizenActivityScheduler.Reason.GAUGE_TRANSFER
-                : active.source() == CitizenIntent.Source.RETURN_HOME ? CitizenActivityScheduler.Reason.RETURN_HOME : CitizenActivityScheduler.Reason.PLAYER;
-        if (active.source() != CitizenIntent.Source.IMPULSE_VISIT && active.source() != CitizenIntent.Source.FASHION)
-            CitizenActivityScheduler.get(level).forceActive(citizen, reason, 40);
-        var routes = CitizenRouteManager.get(level);
-        if (departure != null) {
-            var marker = routes.data().marker(departure);
-            if (marker == null || !routes.gatewayEnabled(marker) || !manager.linkedDistricts(marker.districtId()).contains(active.district())) { departure = null; move(); }
-            else if (marker.contains(citizen.position())) {
-                if (routes.transitGateway(citizen, departure, active.district())) { gatewayPassed = true; departure = null; lastProgress = now; move(); }
-                else if (citizen.routeMovement().gatewayReady(now)) { departure = null; move(); }
+        try (var diagnosticScope = CitizenSystemMetrics.measure("intent")) {
+            if (!(citizen.level() instanceof ServerLevel level) || !citizen.isAlive()) return;
+            long now = level.getGameTime();
+            if (now < nextCheck) return;
+            nextCheck = now + 20;
+            var manager = CitizenPopulationManager.get(level);
+            manager.update(citizen);
+            trackAway(manager, now);
+            if (citizen.isNoAi()) { if (active != null) cancel(); resetAutonomy(); return; }
+            if (active == null) {
+                if (CitizenDiagnostics.debugDisableCitizenAutonomy) return;
+                if (CitizenActivityScheduler.get(level).state(citizen) == CitizenActivityScheduler.State.THROTTLED) { resetAutonomy(); return; }
+                tickAutonomyRecovery(level, manager, now); autonomy(level, now); return;
             }
-        }
-        if (destination == null) { cancel(); return; }
-        if (departure == null && citizen.position().distanceToSqr(destination) <= arrivalRadius() * arrivalRadius()) { complete(manager); return; }
-        if (citizen.routeMovement().state() == CitizenRouteMovement.State.WAIT_CROSSING) { lastProgress = now; return; }
-        var reachedMarker = citizen.routeMovement().currentMarker();
-        if (reachedMarker != null && !reachedMarker.equals(progressMarker)) {
-            progressMarker = reachedMarker; lastProgress = now; lastDistance = Double.POSITIVE_INFINITY;
-        }
-        double distance = citizen.position().distanceTo(citizen.routeMovement().currentDestination() == null ? destination : citizen.routeMovement().currentDestination());
-        if (distance < lastDistance - 0.25) { lastDistance = distance; lastProgress = now; }
-        if (now - lastProgress >= ModConfigs.COMMON.populationStuckTicks.get()
-                || citizen.routeMovement().consecutiveFailures() >= ModConfigs.COMMON.populationStuckRetries.get()) {
-            if (active.retryCount() < ModConfigs.COMMON.populationStuckRetries.get()) {
-                active = active.retried(); lastProgress = now; lastDistance = Double.POSITIVE_INFINITY;
-                if (active.district() != null) {
-                    var point = DistrictDestinations.choose(level, citizen, manager.data().district(active.district()));
-                    if (point != null) destination = point;
+            if (now >= active.expiresAt() || active.district() != null && !manager.enabled(active.district())) { cancel(); return; }
+            var reason = active.source() == CitizenIntent.Source.GAUGE_TRANSFER ? CitizenActivityScheduler.Reason.GAUGE_TRANSFER
+                    : active.source() == CitizenIntent.Source.RETURN_HOME ? CitizenActivityScheduler.Reason.RETURN_HOME : CitizenActivityScheduler.Reason.PLAYER;
+            if (active.source() != CitizenIntent.Source.IMPULSE_VISIT && active.source() != CitizenIntent.Source.FASHION)
+                CitizenActivityScheduler.get(level).forceActive(citizen, reason, 40);
+            var routes = CitizenRouteManager.get(level);
+            if (departure != null) {
+                var marker = routes.data().marker(departure);
+                if (marker == null || !routes.gatewayEnabled(marker) || !manager.linkedDistricts(marker.districtId()).contains(active.district())) { departure = null; move(); }
+                else if (marker.contains(citizen.position())) {
+                    if (routes.transitGateway(citizen, departure, active.district())) { gatewayPassed = true; departure = null; lastProgress = now; move(); }
+                    else if (citizen.routeMovement().gatewayReady(now)) { departure = null; move(); }
                 }
-                departure = null; move();
-            } else {
-                stucked = true;
-                var state = citizen.citizenState().population();
-                var district = manager.data().district(active.district() == null ? state.districtId() : active.district());
-                if (!state.force() && !state.independent() && district != null && manager.loaded(district)) {
-                    var point = DistrictDestinations.choose(level, citizen, district);
-                    if (point != null) {
-                        citizen.moveTo(point.x, point.y, point.z, citizen.getYRot(), citizen.getXRot());
-                        complete(manager);
+            }
+            if (destination == null) { cancel(); return; }
+            if (departure == null && citizen.position().distanceToSqr(destination) <= arrivalRadius() * arrivalRadius()) { complete(manager); return; }
+            if (citizen.routeMovement().state() == CitizenRouteMovement.State.WAIT_CROSSING) { lastProgress = now; return; }
+            var reachedMarker = citizen.routeMovement().currentMarker();
+            if (reachedMarker != null && !reachedMarker.equals(progressMarker)) {
+                progressMarker = reachedMarker; lastProgress = now; lastDistance = Double.POSITIVE_INFINITY;
+            }
+            double distance = citizen.position().distanceTo(citizen.routeMovement().currentDestination() == null ? destination : citizen.routeMovement().currentDestination());
+            if (distance < lastDistance - 0.25) { lastDistance = distance; lastProgress = now; }
+            if (now - lastProgress >= ModConfigs.COMMON.populationStuckTicks.get()
+                    || citizen.routeMovement().consecutiveFailures() >= ModConfigs.COMMON.populationStuckRetries.get()) {
+                if (active.retryCount() < ModConfigs.COMMON.populationStuckRetries.get()) {
+                    active = active.retried(); lastProgress = now; lastDistance = Double.POSITIVE_INFINITY;
+                    if (active.district() != null) {
+                        var point = DistrictDestinations.choose(level, citizen, manager.data().district(active.district()));
+                        if (point != null) destination = point;
+                    }
+                    departure = null; move();
+                } else {
+                    stucked = true;
+                    var state = citizen.citizenState().population();
+                    var district = manager.data().district(active.district() == null ? state.districtId() : active.district());
+                    if (!state.force() && !state.independent() && district != null && manager.loaded(district)) {
+                        var point = DistrictDestinations.choose(level, citizen, district);
+                        if (point != null) {
+                            citizen.moveTo(point.x, point.y, point.z, citizen.getYRot(), citizen.getXRot());
+                            complete(manager);
+                        }
                     }
                 }
-            }
-        } else if (!citizen.routeMovement().hasDestination()) move();
+            } else if (!citizen.routeMovement().hasDestination()) move();
+        }
     }
     private void complete(CitizenPopulationManager manager) {
         var previous = active;

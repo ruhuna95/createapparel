@@ -56,8 +56,8 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
         routeCapacity = new DistrictRouteCapacity(routes.data(), data.territory(), routes::loaded, routes::loadRevision);
     }
     public static CitizenPopulationManager get(ServerLevel level) { return LEVELS.computeIfAbsent(level, CitizenPopulationManager::new); }
-    public static void unload(ServerLevel level) { LEVELS.remove(level); GaugeViewSynchronization.clear(level); }
-    public static void clear() { LEVELS.clear(); }
+    public static void unload(ServerLevel level) { var manager = LEVELS.remove(level); if (manager != null) manager.metrics.stop(); GaugeViewSynchronization.clear(level); }
+    public static void clear() { LEVELS.values().forEach(manager -> manager.metrics.stop()); LEVELS.clear(); }
     public CitizenPopulationSavedData data() { return data; }
     public DistrictRouteCapacity routeCapacity() { return routeCapacity; }
     public void modeChanged(Citizen citizen) { data.walking(citizen.getUUID(), citizen.citizenState().behavior().mode() == CitizenBehaviorMode.WALK); }
@@ -391,8 +391,9 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
         return null;
     }
     public void tick() {
+        if (CitizenDiagnostics.debugDisableCitizenPopulationTick) return;
         long started = metrics.enabled() ? System.nanoTime() : 0;
-        try { tickPopulation(); } finally { if (started != 0) metrics.population(System.nanoTime() - started); }
+        try (var diagnosticScope = CitizenSystemMetrics.measure(level, "population")) { tickPopulation(); } finally { if (started != 0) metrics.population(System.nanoTime() - started); }
     }
     private void tickPopulation() {
         long now = level.getGameTime();

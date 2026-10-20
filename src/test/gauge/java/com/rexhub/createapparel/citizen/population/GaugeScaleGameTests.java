@@ -89,6 +89,7 @@ public final class GaugeScaleGameTests {
         if (active == null || event.phase != TickEvent.Phase.END || active.tickStarted == 0) return;
         var run = active; long elapsed = System.nanoTime() - run.tickStarted; run.tickStarted = 0;
         run.elapsed++;
+        if (run.elapsed == 100 && Boolean.getBoolean("apparel.gaugeTest.scaleProfile")) CitizenPopulationManager.get(run.level).metrics().start();
         if (run.elapsed <= 100) return;
         if (run.samples < run.ticks.length) { run.ticks[run.samples++] = elapsed; run.total += elapsed; }
         if (run.elapsed % 20 == 0) run.peakHeap = Math.max(run.peakHeap, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
@@ -167,6 +168,7 @@ public final class GaugeScaleGameTests {
                 citizen.moveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 0, 0);
                 citizen.citizenState().setPopulation(new CitizenPopulationState(nodes.get(i % 16).districtId(), false, false, 0));
                 citizen.setBehavior(CitizenBehaviorState.anchored(CitizenBehaviorMode.WANDER, pos, level.dimension(), 0));
+                if (Boolean.getBoolean("apparel.gaugeTest.scaleProfile") && i % 2 == 0) citizen.setBehavior(CitizenBehaviorState.walking());
                 if (!level.addFreshEntity(citizen)) throw new AssertionError("Could not spawn scale Citizen"); citizens.add(citizen);
             }
             for (int i = LOADED_CITIZENS; i < gaugeCount * 5; i++) {
@@ -177,6 +179,7 @@ public final class GaugeScaleGameTests {
         }
         private void finish() {
             var manager = CitizenPopulationManager.get(level); var data = manager.data(); var routes = CitizenRouteManager.get(level).data();
+            if (Boolean.getBoolean("apparel.gaugeTest.scaleProfile")) { manager.metrics().stop(); LogUtils.getLogger().info("CITIZEN_MIXED_CPU_PROFILE {}", manager.metrics().summary()); }
             helper.assertTrue(samples >= SAMPLE_TICKS - 2 && manager.loadedCount() == LOADED_CITIZENS, "Stable real loaded population is maintained");
             helper.assertTrue(nodes.stream().allMatch(gauge -> data.gauge(gauge.id()) != null), "Unloaded Gauge records remain registered");
             long start = System.nanoTime(); var nbt = data.save(new CompoundTag()); var routeNbt = routes.save(new CompoundTag()); long saveNanos = System.nanoTime() - start;
@@ -191,7 +194,8 @@ public final class GaugeScaleGameTests {
                     gaugeCount, gaugeCount * 5, manager.loadedCount(), gaugeCount * 10, samples, total / 1e6 / samples, sorted[(int) Math.ceil(samples * .95) - 1] / 1e6,
                     sorted[(int) Math.ceil(samples * .99) - 1] / 1e6, maintenance / 1e6 / samples, peakHeap, gcCount() - gcCount, gcMillis() - gcMillis,
                     networkReadyAt, maxPathWait, saveNanos / 1e6, loadNanos / 1e6, bytes));
-            LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_SCALE_PATH gauges=%d pathMsPerTick=%.6f", gaugeCount, pathNanos / 1e6 / samples));
+            LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_SCALE_PATH gauges=%d measured=%s pathMsPerTick=%.6f", gaugeCount,
+                    manager.metrics().timing().result("pathfindingScheduler").calls() > 0, manager.metrics().timing().result("pathfindingScheduler").calls() > 0 ? pathNanos / 1e6 / samples : Double.NaN));
             measureViews();
         }
         private void measureViews() {

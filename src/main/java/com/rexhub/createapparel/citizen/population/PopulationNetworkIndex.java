@@ -54,25 +54,27 @@ public final class PopulationNetworkIndex {
         return cached(gauge);
     }
     public void tick(int budget) {
-        lastVisited = 0;
-        while (budget > 0) {
-            if (building == null) {
-                if (roots.isEmpty()) return;
-                var iterator = roots.iterator(); var root = iterator.next(); iterator.remove();
-                if (data.gauge(root) == null || networks.containsKey(root) && !networks.get(root).invalid) { budget--; continue; }
-                building = new Network(); components.add(building); building.members.add(root); networks.put(root, building); frontier.add(root);
-            }
-            var id = frontier.removeFirst(); budget--; lastVisited++;
-            var gauge = data.gauge(id);
-            if (gauge != null) {
-                if (gauge.outflow()) building.outflow = true;
-                if (!gauge.source()) { building.districts.add(id); refresh(building, gauge); }
-                for (var linked : data.linked(id)) if (building.members.add(linked)) {
-                    roots.remove(linked);
-                    networks.put(linked, building); frontier.addLast(linked);
+        try (var diagnosticScope = CitizenSystemMetrics.measure("networkRebuild")) {
+            lastVisited = 0;
+            while (budget > 0) {
+                if (building == null) {
+                    if (roots.isEmpty()) return;
+                    var iterator = roots.iterator(); var root = iterator.next(); iterator.remove();
+                    if (data.gauge(root) == null || networks.containsKey(root) && !networks.get(root).invalid) { budget--; continue; }
+                    building = new Network(); components.add(building); building.members.add(root); networks.put(root, building); frontier.add(root);
                 }
-            } else building.unresolved = true;
-            if (frontier.isEmpty()) { building.complete = true; building = null; }
+                var id = frontier.removeFirst(); budget--; lastVisited++;
+                var gauge = data.gauge(id);
+                if (gauge != null) {
+                    if (gauge.outflow()) building.outflow = true;
+                    if (!gauge.source()) { building.districts.add(id); refresh(building, gauge); }
+                    for (var linked : data.linked(id)) if (building.members.add(linked)) {
+                        roots.remove(linked);
+                        networks.put(linked, building); frontier.addLast(linked);
+                    }
+                } else building.unresolved = true;
+                if (frontier.isEmpty()) { building.complete = true; building = null; }
+            }
         }
     }
     public void populationChanged(@Nullable UUID district) {

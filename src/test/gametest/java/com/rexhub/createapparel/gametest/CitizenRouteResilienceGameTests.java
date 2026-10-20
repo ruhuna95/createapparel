@@ -493,6 +493,7 @@ public final class CitizenRouteResilienceGameTests {
 
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_load", timeoutTicks = 340)
     public static void twoHundredWalkingCitizensExposeBoundedWorkAndTiming(GameTestHelper helper) {
+        var metrics = com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get(helper.getLevel()).metrics(); metrics.start();
         floor(helper); var a = marker(helper, 8, 1, 10).withRegion(8, 1); manager(helper).data().put(a); var b = marker(helper, 24, 1, 10); manager(helper).data().link(a.id(), b.id(), false);
         var citizens = new ArrayList<Citizen>(); var moved = new HashSet<UUID>(); var samples = new long[]{0, 0, 0, 0};
         for (int i = 0; i < 200; i++) {
@@ -510,7 +511,7 @@ public final class CitizenRouteResilienceGameTests {
             helper.assertTrue(moved.size() == 200, "All two hundred walkers receive Navigation service: served=" + moved.size() + ", sample=" + citizens.get(0).position() + ", state=" + citizens.get(0).routeMovement().state() + ", queued=" + CitizenPathfindingScheduler.get(helper.getLevel()).queuedCount());
             LogUtils.getLogger().info("ROUTE_LOAD citizens=200 serviced={} navigationQueueMax={} schedulerMeanMs={} schedulerMaxMs={}",
                     moved.size(), samples[3], samples[1] / (double) samples[0] / 1_000_000, samples[2] / 1_000_000.0);
-            for (var citizen : citizens) citizen.discard(); helper.succeed();
+            metrics.stop(); for (var citizen : citizens) citizen.discard(); helper.succeed();
         });
     }
 }
