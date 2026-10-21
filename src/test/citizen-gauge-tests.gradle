@@ -18,7 +18,7 @@ tasks.register('verifyProductionRendering') {
         def testClasses = fileTree('src/test/gauge/java') { include '**/*.java'; exclude '**/package-info.java' }.files.collect {
             file('src/test/gauge/java').toPath().relativize(it.toPath()).toString().replace('\\', '/').replaceAll(/\.java$/, '')
         }.toSet()
-        def retired = ['CitizenAnimationPose', 'debugCitizenAnimationMode', 'copyCachedDeformation', 'enableDeformationCache']
+        def retired = ['GarmentDiagnostics', 'CitizenAnimationPose', 'debugCitizenAnimationMode', 'copyCachedDeformation', 'enableDeformationCache', 'debugUseLegacyEnvelopeRendering', 'debugUseIndexedRigidRendering', 'debugDisableCitizenGarmentRendering', 'composeTintFast', 'SupportOcclusion', 'renderLegacyEnvelope', 'renderLegacyFaces']
         new java.util.zip.ZipFile(productionRenderingJar.get().asFile).withCloseable { archive ->
             def rejected = []
             archive.entries().each { entry ->
@@ -55,9 +55,6 @@ def gaugeTestRunId = providers.gradleProperty('gaugeTestRunId').getOrElse("${Sys
 if (!(gaugeTestRunId ==~ /[A-Za-z0-9_-]+/)) throw new GradleException('Invalid gaugeTestRunId')
 def gaugeTestServerDirectory = file("run/gauge-tests/server-${gaugeTestRunId}")
 def gaugeTestClientDirectory = file('run/gauge-tests/client')
-if (providers.gradleProperty('gaugePipelineInteractive').getOrElse('false').toBoolean()
-        && (!providers.gradleProperty('gaugePipeline').getOrElse('false').toBoolean() || providers.gradleProperty('gaugePerformanceClient').getOrElse('false').toBoolean()))
-    throw new GradleException('Interactive pipeline diagnostics require gaugePipeline=true and no automatic performance fixture')
 minecraft.runs {
     gaugeTestServer {
         parent minecraft.runs.gameTestServer
@@ -85,50 +82,25 @@ minecraft.runs {
     }
     gaugeTestClient {
         parent minecraft.runs.client
-        if (providers.gradleProperty('gaugePipeline').getOrElse('false').toBoolean()) {
-            args '--mixin', 'createapparel_pipeline_tests_mixins.json'
-        }
-        property 'apparel.gaugeTest.pipeline', providers.gradleProperty('gaugePipeline').getOrElse('false')
-        property 'apparel.gaugeTest.pipelineInteractive', providers.gradleProperty('gaugePipelineInteractive').getOrElse('false')
-        property 'apparel.gaugeTest.pipelineInteractiveSmoke', providers.gradleProperty('gaugePipelineInteractiveSmoke').getOrElse('false')
-        property 'apparel.gaugeTest.pipelineImages', providers.gradleProperty('gaugePipelineImages').getOrElse('false')
-        property 'apparel.gaugeTest.pipelineResourcePack', providers.gradleProperty('gaugePipelineResourcePack').getOrElse('false')
         workingDirectory gaugeTestClientDirectory
         property 'forge.logging.console.level', 'info'
         property 'apparel.gaugeTest.projectDir', projectDir.absolutePath
         property 'apparel.gaugeTest.resume', providers.gradleProperty('gaugeResume').getOrElse('false')
         property 'apparel.gaugeTest.skipClipboard', providers.gradleProperty('gaugeSkipClipboard').getOrElse('false')
-        property 'apparel.gaugeTest.performanceClient', providers.gradleProperty('gaugePerformanceClient').getOrElse('false')
-        property 'apparel.gaugeTest.performanceFrameOnly', providers.gradleProperty('gaugePerformanceFrameOnly').getOrElse('false')
-        property 'apparel.gaugeTest.movement', providers.gradleProperty('gaugeMovementClient').getOrElse('false')
-        property 'apparel.gaugeTest.movementCases', providers.gradleProperty('gaugeMovementCases').getOrElse('fixed-3d,approach-3d,fixed-mesh,approach-mesh,fixed-impostor,approach-impostor')
-        property 'apparel.gaugeTest.movementReload', providers.gradleProperty('gaugeMovementReload').getOrElse('false')
-        property 'apparel.gaugeTest.movementFramesOnly', providers.gradleProperty('gaugeMovementFramesOnly').getOrElse('false')
-        property 'apparel.gaugeTest.movementWarmupTicks', providers.gradleProperty('gaugeMovementWarmupTicks').getOrElse(providers.gradleProperty('gaugePipeline').getOrElse('false').toBoolean() ? '120' : '40')
-        property 'apparel.gaugeTest.movementSampleTicks', providers.gradleProperty('gaugeMovementSampleTicks').getOrElse('200')
-        property 'apparel.gaugeTest.representationImages', providers.gradleProperty('gaugeRepresentationImages').getOrElse('false')
-        property 'apparel.gaugeTest.envelopeComparison', providers.gradleProperty('gaugeEnvelopeComparison').getOrElse('false')
-        property 'apparel.gaugeTest.envelopeReverse', providers.gradleProperty('gaugeEnvelopeReverse').getOrElse('false')
-        property 'apparel.gaugeTest.envelopeImages', providers.gradleProperty('gaugeEnvelopeImages').getOrElse('false')
-        property 'apparel.gaugeTest.lodComparison', providers.gradleProperty('gaugeLodComparison').getOrElse('false')
-        property 'apparel.gaugeTest.submissionComparison', providers.gradleProperty('gaugeSubmissionComparison').getOrElse('false')
-        property 'apparel.gaugeTest.submissionCases', providers.gradleProperty('gaugeSubmissionCases').getOrElse('')
-        property 'apparel.gaugeTest.liveComparison', providers.gradleProperty('gaugeLiveComparison').getOrElse('false')
-        property 'apparel.gaugeTest.lodImages', providers.gradleProperty('gaugeLodImages').getOrElse('false')
-        property 'apparel.gaugeTest.lodReverse', providers.gradleProperty('gaugeLodReverse').getOrElse('false')
-        property 'apparel.gaugeTest.resourceReload', providers.gradleProperty('gaugeResourceReload').getOrElse('false')
-        property 'apparel.diagnostics.renderAllocation', (providers.gradleProperty('gaugeMovementClient').getOrElse('false').toBoolean() || providers.gradleProperty('gaugeEnvelopeComparison').getOrElse('false').toBoolean() || providers.gradleProperty('gaugeLodComparison').getOrElse('false').toBoolean() || providers.gradleProperty('gaugeSubmissionComparison').getOrElse('false').toBoolean()).toString()
-        property 'apparel.gaugeTest.performanceCaseCount', providers.gradleProperty('gaugePerformanceCaseCount').getOrElse(providers.gradleProperty('gaugeLodComparison').getOrElse('false').toBoolean() ? '9' : '8')
-        property 'apparel.gaugeTest.performanceCount', providers.gradleProperty('gaugePerformanceCount').getOrElse('100')
+        property 'apparel.gaugeTest.renderClient', providers.gradleProperty('gaugeRenderClient').getOrElse('false')
+        property 'apparel.gaugeTest.renderReference', providers.gradleProperty('gaugeRenderReference').getOrElse('off')
         mods { "${mod_id}" { source sourceSets.gaugeTest } }
     }
 }
+
 tasks.register('prepareGaugeTestWorld', Copy) {
     from('src/test/resources/gameteststructures') { into 'gameteststructures' }
     from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
     into gaugeTestServerDirectory
 }
+
 tasks.matching { it.name == 'prepareRunGaugeTestServer' }.configureEach { dependsOn 'prepareGaugeTestWorld' }
+
 tasks.matching { it.name == 'runGaugeTestServer' }.configureEach {
     doFirst { ext.gaugeTestStartedAt = System.currentTimeMillis() }
     doLast {
@@ -137,18 +109,15 @@ tasks.matching { it.name == 'runGaugeTestServer' }.configureEach {
             throw new GradleException("Citizen Gauge GameTests did not pass; see ${log}")
     }
 }
+
 tasks.matching { it.name == 'runGaugeTestClient' }.configureEach {
     doFirst { ext.gaugeClientStartedAt = System.currentTimeMillis() }
     doLast {
         def log = new File(gaugeTestClientDirectory, 'logs/latest.log')
-        if (providers.gradleProperty('gaugePipelineInteractive').getOrElse('false').toBoolean()) {
-            if (!log.isFile() || log.lastModified() < gaugeClientStartedAt || !log.getText('UTF-8').contains('CITIZEN_PIPELINE_INTERACTIVE_READY'))
-                throw new GradleException('Interactive diagnostic Client never reached a ready menu')
-            return
-        }
-        def marker = providers.gradleProperty('gaugePerformanceClient').getOrElse('false').toBoolean() ? 'CITIZEN_PERFORMANCE_CLIENT_PASSED'
+        def marker = providers.gradleProperty('gaugeRenderClient').getOrElse('false').toBoolean() ? 'CITIZEN_RENDER_CLIENT_PASSED'
                 : providers.gradleProperty('gaugeSkipClipboard').getOrElse('false').toBoolean() ? 'CITIZEN_GAUGE_CLIENT_PARTIAL_PASSED' : 'CITIZEN_GAUGE_CLIENT_PASSED'
-        if (!log.isFile() || log.lastModified() < gaugeClientStartedAt || !log.getText('UTF-8').contains(marker))
+        if (!log.isFile() || log.lastModified() < gaugeClientStartedAt || !log.getText('UTF-8').contains(marker)
+                || log.getText('UTF-8').contains('CITIZEN_RENDER_CLIENT_FAILED') || log.getText('UTF-8').contains('CITIZEN_GAUGE_CLIENT_FAILED'))
             throw new GradleException("Citizen Gauge Client checks did not pass; see ${log}")
     }
 }

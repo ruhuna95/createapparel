@@ -305,201 +305,31 @@ Destroy未導入なら、両設定がfalseでも自動的にFallback製法を使
 Destroy導入時も共通銀Tagが空なら鏡は自動Fallbackとなる。以前trueでDestroy製法を隠していたWorldも、
 更新後は前提条件が揃えばDestroy＋Fallbackとなる。既存の設定値の変換は不要だが、World／Serverを再起動する。
 
-## Citizen MSPT／FPS原因調査
+## Citizen描画の品質回帰
 
-Client QAは同一GeometryでHeadの髪RGBだけを変える`head-varied`も別caseで測る。各caseを停止して報告した後、Render間で実Native cacheをclearし、解放通知数が所有Entry数と一致し、残数0になることをassertする。`CITIZEN_FPS_PROFILE`のEntry数はclear前、`CITIZEN_CACHE_RELEASE`は検証用clearの結果。定点の保持と、移動によるLRU再生成の頻度は別の試験である。
+通常の描画はEnvelope共有頂点・Indexed Rigid・LOD0～3・鏡Camera別hysteresis・毎フレームアニメーションを使用する。性能調査用のGarmentDiagnostics、/apparelprofile、描画停止／旧経路比較スイッチ、不採用の遮蔽・Texture短絡・Atlas・Mesh／Impostor・固定Buffer・Bulk試作と専用Mixinは撤去した。通常描画へ診断処理を残さない。
 
-正式なCPU比較には`.\src\test\profile-citizens.ps1 -Offline -Steady`を使う。実時間で最低10秒＋120tickのwarmup後、2000tick採取する。ForgeのGameTestServerは通常20TPSの待機を行わないため、120tickだけではJITの立ち上がりを除けない。`-CaseId cpu-100-on-1,cpu-100-off-1`等で対象を限定できる。既存run IDがある場合は上書きせず停止する。nanoTimeはCPU側の経過時間で、ThreadMXBeanの実CPU消費時間ではなく、GCやpreemptionも含み得る。LegacyのScheduler.lastNanosは同tick内のGraph処理を含むため、新しいentityTick等のinclusiveへ単純加算しない。
-
-Clientの`/apparelprofile frames`は詳細CPU／cache counterを止め、フレーム間隔だけを採る。自動試験では`-PgaugePerformanceFrameOnly=true`を指定する。詳細OFFのCPU／画面内数は未計測として扱い、NaNや空counterをゼロ負荷の証拠にしない。詳細ON／OFFを同じ描画条件で比較し、計測器の負荷を確認する。
-
-通常時は計測OFF。ServerはOPの`/createapparel gauge profile start`／`stop`、詳細は`/createapparel gauge stats`。DimensionごとのCitizen処理時間を、Server START～ENDの経過時間で割る。`entityTick`はVanillaの親Tickも含む。`mobAiStep`にはVanillaの移動・衝突と独自Goal／Navigationが入るため、AIだけの時間として扱わない。`exclusive`も計測していないVanilla内部処理を含む。親子のinclusiveを合計しない。per-call分位点とper-server-tick分位点を別記し、履歴上限は各4096。Entityの計測数とprofile内の一意UUID数を併記する。Profiler自体のCPU／一時Scope割当も測定値に含まれる。
-
-専用の新規Worldだけで、ロード0／50／100／300／500／1000体、100体の計測ON／OFF各3回、AI／人口停止、JFRを順次実行する。既存の同名Worldがあれば上書きせず拒否する。再実行時はスクリプト内のrun IDを新しいものへ変える。
+品質QAは診断APIや比較用Rendererに依存しない。
 
 ```powershell
-.\src\test\profile-citizens.ps1 -Offline
-.\gradlew.bat -PjeiEnabled=false -PgaugePerformance=true -PgaugePerformanceCount=100 -PgaugeTestRunId=cpu-custom runGaugeTestServer
-.\gradlew.bat -PjeiEnabled=false -PgaugePerformance=true -PgaugePerformanceCount=100 -PgaugeTestRunId=cpu-ai-custom -PdebugDisableCitizenAutonomy=true -PdebugDisableCitizenBehaviorGoal=true runGaugeTestServer
-.\gradlew.bat -PjeiEnabled=false -PgaugeScale=true -PgaugeScaleCase=2 -PgaugeScaleProfile=true -PgaugeTestRunId=mixed-custom runGaugeTestServer
-.\gradlew.bat -PjeiEnabled=false -PgaugePerformanceClient=true -PgaugePerformanceCount=100 runGaugeTestClient
-.\gradlew.bat -PjeiEnabled=false -PgaugePerformanceClient=true -PgaugePerformanceFrameOnly=true -PgaugePerformanceCount=100 runGaugeTestClient
+.\gradlew.bat build -PjeiEnabled=false --offline
+.\gradlew.bat runGameTestServer runGaugeTestClient -PjeiEnabled=false --offline
+.\gradlew.bat runGaugeTestClient -PjeiEnabled=false -PgaugeRenderClient=true --offline
 ```
 
-CPU専用試験は固定UUID／乱数seed、平坦床、同じforced chunk範囲、120tick warmup＋400tick、半径8のWANDER。全員が実際にTickすることをassertする。Gauge／Markerは置かず、人口・経路Graphの負荷の証明に代用しない。0体は同じ生成条件の無Citizen対照で、ユーザーWorldのCitizenを削除しない。混合試験は既存のScale Fixtureを使い、実ロード100体の初期ModeをWALK／WANDER半数ずつにする。実Gauge16枚・Marker32個と、残りの未ロードRegistryを区別する。`-PgaugePerformanceJfr=true`は採取区間だけJDK17 Flight Recorderを動かし、隔離World内`citizen-cpu.jfr`へ保存する。JFR追加負荷は通常のON／OFF比較へ混ぜない。
+最後のClient QAは新規の専用平坦Worldで実行する。Player用Humanoidの衣服・Body／下着、Citizenの成人／子ども・4 Profile・全身Pose・7衣服、全Mannequin型、LOD0～3、Vanilla culling、接近／離脱、複数鏡の独立LOD、Resource ReloadのGeometry更新・旧NativeImage解放、Chunk離脱時のRenderer cache除去と再ロードを検証する。通常GUI QAではWardrobe／Mannequin／Citizenのプレビューとコピーも検証する。成功markerはCITIZEN_RENDER_CLIENT_PASSEDとCITIZEN_GAUGE_CLIENT_PASSEDで区別する。FPS採取は行わない。
 
-Server診断スイッチはJVMプロパティ`apparel.diagnostics.<name>`。`debugDisableCitizenAutonomy`／`debugDisableCitizenBehaviorGoal`／`debugDisableCitizenPopulationTick`／`debugDisableCitizenRoutePlanning`はいずれも既定false。`-Dapparel.diagnostics.testWorld=true`が無い有効化は拒否する。専用Gradle起動だけこの指定を行う。起動時固定で、通常のConfig／GUIや永続NBTには保存しない。
+変更前後を直接比較する場合は同じマシン・Resource・テストコードで、変更前に `-PgaugeRenderReference=record`、変更後に `-PgaugeRenderReference=compare` を指定する。build/citizen-render-reference.propertiesにシーンごとのRGBAと頂点属性・要求RenderTypeのSHA-256を保存する。生成Textureの数値IDとJVM固有のShader supplier Lambda識別子だけは正規化し、色・UV・法線・光源・overlay・頂点順は正規化しない。基準が無ければcompareは失敗し、比較漏れも失敗する。off（既定）でも描画の空出力・LOD輪郭・Texture再生成・寿命検証は行うが、変更前との一致とは報告しない。画像QAの全シーンが完了する前の失敗では基準を保存しない。
 
-- Autonomy停止：自主WANDER／WALKと新たな自主Intentを停止する。既存の明示Intent／FOLLOW、Vanilla Mob Tick・Navigation、視線Brainは停止しない。
-- BehaviorGoal停止：Goalの本体だけをスキップする。Mob全体のTick・GoalSelector・Navigationや、既にQueueへ入った探索を停止するものではない。
-- PopulationTick停止：人口Managerの定期処理・Gauge巡回・Network／Request／Marker地区同期を止める。Entity参加・退出・Intent側の所属更新や予約消費通知は維持する。
-- RoutePlanning停止：Graph Plan要求はpendingとし、探索sliceを止める。既存経路／Vanilla Pathfindingは残る。待機・期限超過・STUCKED等への副作用があり、長時間の通常プレイには使わない。
+build内のverifyProductionRenderingは再難読化後のjarを検査し、品質QAクラス、廃止した診断API、試作Mixin設定の混入を拒否する。基準画像・過去ログはbuild配下だけで、配布jarやソース管理へ含めない。
 
-Clientは`/apparelprofile start`／`report`／`stop`で`logs/latest.log`に出力する。`/apparelprofile switch <name> <true|false>`で`debugDisableCitizenGarmentRendering`／`debugDisableCitizenBodyRendering`／`debugDisableCitizenCosmeticRendering`を切り替える。Body停止はCitizen renderer本体・名前・shadowをスキップし、Garment停止は装備衣服だけを止める（Body／標準下着は維持）。Cosmetic停止はhat／追加髪Geometryのみで、Head textureへ合成済みの髪pixelは残る。装備・State・Server Entityは変更しない。
+## Server側の性能検証（今回の整理対象外）
 
-FPSはRender START間隔、平均は全採取区間、p95／p99・1% Lowは直近8192間隔。1% Lowは遅い上位1%の平均フレーム時間の逆数。Menu／pause／非WorldのFPS区間は除外する。Renderer計測はCPUでありGPU実行・driver待ち・buffer flush・shadow／dispatcher全体を網羅しない。主視点のRenderer呼出しに到達した一意ID数と描画回数を分け、鏡passは別counter。Texture切替はbuffer要求の変化であり、実GPU bind回数ではない。RenderType数はtexture別instance数で、shader種類数ではない。
-
-Client自動試験は別の新規World・1280×720・描画／simulation距離6・VSync OFF・FPS上限なし（設定260）・FOV70・Entity距離倍率2・view bobbing OFF・固定飛行視点、初期POSEのCitizenを使用する。A／B／Cと種類循環・衣服なし・複数PartのCoat・色柄別を順に測る。各caseのcacheを採取直前に明示clearし、cold初回生成も含む。B／Cは同じServer Entityと装備を保持する。Gの装備変更はQA生成Entityのみ。種類数を超える人数では同じGarment定義を循環するため「全員別定義」と扱わない。Integrated ServerのCPU競合を含み、Dedicated ServerのMSPTや独立Clientの描画性能と混同しない。各ロード数を変えて別JVMで実行する。
-
-Garment Cacheは1024、Citizen head Cacheは256の既存保持目標とframe使用中保護を変更しない。HITは直接Reference再利用も含み、MISSはfactory呼出し、EVICTIONはframe-end LRU、RELEASEはclear（それぞれDynamicTexture解放）。失敗時の生成済みTexture破棄は別counter。Compose inclusiveからUpload子Scopeを差し引くexclusiveは画像読込・合成等のCPUで、GPU upload所要時間そのものではない。生のGPUメモリ・driver内部保持量は未計測。上限引上げの判断にはMISS／再生成／解放頻度と実GPU計測の両方が必要。
-
-頂点counterはPart／face集合単位でまとめて更新する。QuadごとのMap更新による計測負荷を避けるためであり、Geometryや頂点送信順を変えない。FPS比較でも計測ON／OFFの別を記録する。`CITIZEN_LOADOUT_CASE`に使用した衣類IDと定義数、`CITIZEN_CLIENT_DEVICE`にGPU／OpenGL／Javaを出力する。生成したQA Worldと生ログは`run/gauge-tests/`および`build/citizen-performance-*.log`に残す。
-
-QAはwarmup中の40～80tickだけ別の詳細collectorを動かし、`CITIZEN_VISIBILITY_CENSUS`へServerロード数／Clientロード数／主視点描画対象の一意ID最大数を記録する。FPS採取は120tick時点でcollectorをリセットして開始し、census時間を混ぜない。初期POSE・固定位置の試験に限った別窓のcountであり、動く実Worldの同時可視数の代用にはしない。`-PgaugePerformanceCaseCount=1`はAだけの短い再確認（既定8は全case）。
-
-Geometryの頂点数・RenderType・Texture要求切替は`CommonGarmentRenderer`の衣服／support範囲で、VanillaのHead ModelPartやWorld全体を網羅しない。詳細CPUは完了したrender frame、FPSはSTART間隔を数えるため境界に最大1frameの差がある。CPU/frameは詳細collectorの完了frame数で割り、CPU割合は近似として解釈する。ShaderのGPU実行時間や実bind数の代用にはしない。
-
-### Envelope共有頂点描画の比較
+CitizenSystemMetrics、Serverの診断コマンド／停止スイッチ、既存の人口・経路・Entity Tick処理は変更しない。専用Worldだけで使用する。
 
 ```powershell
-.\gradlew.bat test --tests '*EnvelopeMeshTest' --tests '*DualEnvelopeDeformerTest'
-.\src\test\profile-envelope.ps1 -Offline -Images
-.\src\test\profile-envelope.ps1 -Offline -Counts 100 -Reverse
-.\src\test\report-envelope.ps1 | Format-Table Run,Count,Backend,Mode,Case,FPS,EnvelopeMs,AllocBytes
+.\src\test\profile-citizens.ps1 -Offline -Steady
+.\gradlew.bat runGaugeTestServer -PjeiEnabled=false -PgaugePerformance=true -PgaugePerformanceCount=100 -PgaugeTestRunId=cpu-custom --offline
 ```
 
-`profile-envelope.ps1`は50／100／300／500／1000体を別JVMで順番に測定する。既存の`build/envelope-<count>[-reverse].log`または`-client.log`があれば上書きを拒否する。`JAVA_HOME`にはJava 17を指定する。他の高負荷試験は並行実行しない。
-
-1 World内の4段階は旧frame-only→新frame-only→旧detail→新detail、各段階にA／B／Cを含む。`-Reverse`で旧／新の順序を逆転する。視点、装備、個体、距離は同じで、各case120tick warmup・200tick採取、cache clear直後のcold生成も含む。旧経路は診断専用`GarmentDiagnostics.debugUseLegacyEnvelopeRendering`（既定false）。通常のConfigや保存データに含めない。Client commandの同名switchでも比較できる。
-
-`-Images`は通常／slim × flat／bust × 6姿勢 × 7装備を同じoffscreen条件で旧／新描画し、空画像を拒否したうえで全pixelを比較する。画像は`build/envelope-images/`、成功markerは`ENVELOPE_IMAGE_COMPARISON_PASSED`。静止・歩行／走行相当の脚角度、非対称腕、しゃがみ、座り、スカート、コート、帽子、バッグ、重ね着、染色・柄を含む。動画全体の時間変化の画像比較ではない。
-
-CPU内訳は`envelopePoseBuild`、`envelopeVertexTransform`、`envelopeFaceNormals`、`envelopeVertexWrite`、親`envelopeGeometrySubmission`。旧経路は各Quadで処理が交互になるため親合計だけを測る。親子inclusiveを合算しない。`envelopeRenderTypeGets`はCPU側の取得呼出し数で実GPU bind数ではない。共有位置数とcorner参照数、送信頂点数を分ける。Citizen本体はpose／body support／underwear／head／cosmeticのCPUを別記する。
-
-`envelopeRenderTransform`は変形後位置と面法線への描画行列適用。位置は共有位置ごと、法線は面ごとに計算する。最終属性はVertexConsumerの全属性一括APIへ渡す。画像比較は実BufferBuilder経路で行い、別passの記録用Consumerで送信属性列もbit単位比較する。記録wrapperを通してfastFormat経路の画像比較を代用しない。
-
-detailだけで`ThreadMXBean`のRender Thread frame当たりJava heap allocationを採る（JVMが対応し既に有効な場合）。計測器自身やWorld描画も含み、native/GPU allocationではない。未対応／frame-onlyはNaN。細分計測が増やすallocationも含むため、衣服変形だけのallocation削減と断定しない。GPU時間と実VRAMは別途未検証とする。
-
-### Citizen LOD・遮蔽・Rigid頂点送信の比較
-
-```powershell
-.\gradlew.bat test --tests '*CitizenLodTest' --tests '*CitizenSupportOcclusionTest' --tests '*GarmentTexturePixelOpsTest'
-.\src\test\profile-citizen-lod.ps1 -Offline -Images -Run main
-.\src\test\profile-citizen-lod.ps1 -Offline -Counts 100 -Images -Reverse -Reload -Run reverse
-.\src\test\report-envelope.ps1 -Logs (Get-ChildItem build/citizen-lod-*-main-client.log).FullName |
-    Format-Table Count,Case,Mode,FPS,GarmentMs,BodyMs,Vertices,AllocBytes
-```
-
-規模は50／100／300／500／1000体。各JVMで9 caseをframe-only→detailの2段階で実行する。
-
-| case | 条件 |
-|---|---|
-| lod0-legacy | 全員LOD0、従来のRigid頂点送信、遮蔽OFF |
-| lod0 | 全員LOD0、一括Rigid頂点送信、遮蔽OFF |
-| lod1 / lod2 | 同じ配置・視点で全員のMesh LODだけ固定、遮蔽OFF |
-| lod-auto | 同じ配置でCamera距離から自動LOD、遮蔽ON |
-| occlusion | LOD0固定、遮蔽ON |
-| distance-mix | 近中遠に分散、半数がWANDER、自動LOD・遮蔽ON |
-| lod-varied-legacy / lod-varied | 多種類・染色の同一配置、旧／新Texture合成、他の条件は同一 |
-
-Texture coldは採取開始時のCache clearを含む。旧Texture合成は従来のmask演算・Optional overlay、旧Rigidは従来のMatrix overload／属性別送信に切り替える診断用経路で、古いjarとの比較ではない。既存のEnvelope高速化は両方で維持する。`-Run`で結果名を変え、既存ログは上書きしない。`-Images`は各JVMで実行し、PNGとCSVは直近runの`build/citizen-lod-images/`、成功markerは各runの生ログへ残す。
-
-画像比較は4体型×6姿勢×7装備×6方向×3LODの3024シーン。LOD0は旧Rigid＋遮蔽OFFと新Rigid＋遮蔽ONの全pixel一致を要求する。LOD1／2はそれぞれ20／48ブロック相当の投影サイズで完全Meshとの輪郭差を測る。近景画像の単純縮小ではなく同じRaster条件で再描画する。自動の輪郭差上限8%は退行検出のguardであり、許容品質が人間によって承認されたという意味ではない。連続動画・実際の街でのPop-in・すべてのResource Packは別途確認する。既存Envelope画像比較は送信属性列もbit単位比較する。
-
-Vanilla Culling QAは、Frustum呼出しが1回だけであること、拒否が尊重されること、十分遠いEntityはFrustum前に拒否されることをassertする。LOD3はLOD2 MeshのままVanillaの距離判定に従い、独自カリングを追加しない。Boundsは既存Vanillaの`.inflate(.5)`を維持する。このテストはすべての衣服・姿勢が常にBounds内という証明ではない。
-
-通常の距離／hysteresisはClient Configの`citizenRendering`。`/apparelprofile lod -1`は自動、0～3は診断用固定。`switch`に`debugDisableCitizenLod`、`debugEnableCitizenOcclusion`、`debugDisableCitizenOcclusion`、`debugUseLegacyRigidRendering`、`debugUseLegacyTextureComposition`を指定して比較できる。遮蔽は省略効果0という測定結果により通常OFFとし、比較時だけ`debugEnableCitizenOcclusion=true`かつ`debugDisableCitizenOcclusion=false`にする。装備・永続Stateは変更しない。GUIはLOD0、Mirrorは反射Cameraからの独立LODを用いる。TOP装備時の標準上半身下着非描画は従来ルールを維持する。
-
-`-Reverse`はLOD caseの順序を反転する（同じWorld内のframe→detailは維持）。`-Reload`は全採取後に実Resource Reloadを行い、旧snapshotのGeometryが交換され、Textureを再取得でき、装備NBTが保持されることをassertする。Reloadの時間はFPSの採取窓に含まない。
-
-Texture演算短絡の効果が安定しなかったため、通常の`debugUseLegacyTextureComposition`は既定true（従来演算）。falseで選ぶ新演算は診断専用とする。LOD比較のFixtureはcold演算を全caseで新演算へ統一し、`lod-varied-legacy`のみ従来演算へ切り替える。標準のcold演算復帰後に全規模の絶対FPSを再採取した結果ではないことに注意する。
-
-`lodNCitizens`は描画呼出し数、各frameの一意数や保存Citizen総数とは別。`lodNVertices`はCommonGarmentRendererのGarment／Support範囲で、Native Head等を含まない。`observedGeometryMeshes`／`observedTopologyBytes`は採取中に使ったMeshのprimitive索引・UV配列だけで、全Geometry Cache Heapではない。`supportOcclusion`と省略数を別記し、省略0なら高速化として扱わない。不透明性は幾何候補が実際に必要な場合だけsource画像から最終alphaを再現し、Texture Cacheと同時に解放する。Texture画像全体の追加走査を全Citizenへ一律に行わない。
-
-`citizenGarment`は今回CitizenでFrameを一度だけ構築・共有した後の衣服描画時間。`apparelRenderFrame`／`envelopePoseBuild`も別記し、以前Frame構築を内包していたGarment時間と単純比較しない。親子inclusiveの加算は禁止。LODごとの時間もGarment時間の子である。Render Thread allocationはProfiler込みのframe全体で、LOD Geometryの静的保持量やGPU使用量ではない。
-
-### Citizen追加描画比較
-
-OSのクリップボードがアクセス拒否となる環境では、通常GUI QAの`-PgaugeSkipClipboard=true`でコピー1項目だけを明示的に未検証として分離できる。既定falseで通常のassertは維持する。この場合の完走マーカーは`CITIZEN_GAUGE_CLIENT_PARTIAL_PASSED`であり、通常の`CITIZEN_GAUGE_CLIENT_PASSED`ではない。ログの`CITIZEN_GAUGE_CLIENT_CLIPBOARD_SKIPPED`を確認し、全GUI検証済みとは報告しない。クリップボードを利用できる対話環境で、別途通常QAを行う。
-
-実ワールドでは視点・解像度・描画距離・Entity倍率・VSync・上限FPSを固定し、`/apparelprofile compare 10`で6条件を順に採取する。各条件は40 Client tickの待機後、指定秒数×20 Client tickを記録する。通常→Garment OFF→Citizen描画OFF→鏡OFF→LOD3固定→Citizen Shadow OFF。CitizenはServerに残り、装備・NBT・ワールドの永続データは変更しない。Client tickが追い付かない場合は指定秒数より実時間が長くなり、FPSは実測フレーム間隔で算出する。
-
-細分CPU計測自体の影響を分離するため、同じ条件で`/apparelprofile compareframes 10`も実行する。これは同じ6条件をフレーム時間だけで比較し、各LOD・Citizenの詳細counter／CPU時間は採取しない。NaNやcounter未出力は未計測であり0負荷ではない。CPU時間の表とFPSだけの別窓を混ぜて負荷割合を算出しない。
-
-比較前のスイッチを終了・`/apparelprofile cancel`・ログアウト／Dimension変更時に復元する。`/apparelprofile reset`は診断スイッチを通常既定へ戻し計測を終了する。比較中はカメラや設定を変えず、メニューを開かないこと。メニュー中は採取進行を止める。ログ`CITIZEN_LIVE_COMPARISON`へ各条件終了時のカメラ・設定とCPU/FPSを記録する。同じ視点を自動固定する機能ではなく、移動した結果は比較から除外する。事前にOFFだった機能は通常caseでもOFFのため、標準比較はまずresetする。
-
-個別の比較は`/apparelprofile switch <name> true/false`。追加名は`debugDisableMirrorRendering`、`debugDisableCitizenShadows`、`debugEnableReflectionCitizenLod`、`debugUseIndexedRigidRendering`。鏡OFFでは既存反射Cacheを解放し、復帰時に再取得するためwarmupを確保する。Shadow OFFはCitizenだけの半径を0とし、他Entityや地形の影設定を変えない。反射LODは独立した鏡viewごとのhysteresisを使い、主視点の状態やGUIプレビューLOD0へ書き戻さない。共有Rigid変換と反射LODは検証後の標準ON（各enable/useスイッチ既定true）、Shadow非描画・鏡非描画は診断時だけON（disableスイッチ既定false）。
-
-`lodNCitizen`はsnapshot／LOD選択後からBody・Head・GarmentまでのCPU経過時間で、`citizenRenderer`の子。`primaryCitizenRenderer`と`reflectionCitizenRenderer`も同じ親の内訳で合算に注意する。`reflectionLodNCitizens`は反射描画呼出し回数。主視点の一意Citizen数とは区別する。`renderTypeRequestsChanged`と`textureBindingRequestsChanged`はHead＋共通Garment／Support範囲の要求変化で、実GPU bindやdraw回数ではない。送信頂点counterは従来どおりGarment／Supportに限り、Native ModelPartのHead／HairやShadowは含まない。
-
-```powershell
-.\src\test\profile-citizen-submission.ps1 -Offline -Images -Run first
-.\src\test\profile-citizen-submission.ps1 -Offline -Reverse -Counts 100 -Run reverse
-.\src\test\profile-citizen-submission.ps1 -Offline -Counts 100 -Cases mix-before,mix-after,varied-before,varied-after -Run mixed
-.\src\test\profile-citizen-submission.ps1 -Offline -Counts 100 -Cases mirror-before,mirror-lod,mirror-off -Run mirrors
-```
-
-同じJVM内で従来の全属性一括送信（before）と共有Rigid位置変換（after）を切り替える。旧Texture演算・遮蔽OFF・既存の自動LODを両方で維持する。静的Meshは両方でロード済みで、過去jarとの常駐Heap比較ではない。caseごと120tick warmup＋200tick採取、frame-only→detailを独立に採取する。従来のA/B/C Fixtureも維持する。
-
-Rigid MeshはElement単位で厳密な座標共有とcorner索引を事前計算し、Poseごとの行列変換だけ共有する。UV・Face法線・送信順・送信数・RenderType・透過性を変えない。`rigidPrimitiveBytes`はその保持配列の合計で、既存BakedFaceやJava objectを含む総Heapではない。`heapUsedBytes`／`heapCommittedBytes`／`jvmDirectBufferBytes`はプロセス全体のreport時点値（peakではない）。Direct Buffer統計はNativeImage・driver等の全native割当や実VRAMを包含しない。GPU時間は別途ツールが必要で、CPU送信時間から推計しない。
-
-### Citizen移動LOD・描画方式の試作比較
-
-試作はgaugeTest source setだけに置く。通常MODへ一体型Mesh・ImpostorのスイッチやRendererを登録しない。既存CitizenRendererの頂点列を共有のpose-baked Meshにまとめる方式と、128×128 RGBAのImpostorをLOD3で比較する。いずれも近距離・鏡・準備待ちでは従来3Dへ戻す。Atlasによる単一drawや完全な動的rigged meshではない。Static MeshのEntity別複製は行わず、外見・装備・Pose・位相・Resource世代をキーに64件まで保持する。
-
-```powershell
-.\src\test\profile-citizen-movement.ps1 -Offline -Run
-.\src\test\profile-citizen-movement.ps1 -Offline -Counts 100 -Images -Reload -Run
-.\src\test\profile-citizen-movement.ps1 -Offline -Counts 100 -Cases 'depart-3d,boundary-3d,mixed-3d,camera-3d,both-3d,teleport-3d,chunks-3d,mirror-3d,mirrorcamera-3d,varied-3d,varied-mesh,varied-impostor' -Run
-.\src\test\report-citizen-movement.ps1 -Logs build/<client-log>.log
-```
-
-`-Run`なしはコマンド表示のみ。5規模を直列で実行し、新規専用平坦Worldだけを操作する。40 Client tick待機＋200 Client tick採取。NoAI・位置更新はこのFixtureの再現性確保に限定し、通常CitizenのAIやGateway移動の代用テストとはしない。通常は詳細計測込みのFPS、`-FramesOnly`で別窓の軽量FPS比較。`-Reload`は採取窓外で実Reload後に全caseを再試験する（phase 1は詳細計測）。
-
-`CITIZEN_MOVEMENT_WINDOW`はwarmupを除く試作Mesh／Sprite生成。`CITIZEN_MOVEMENT_PROFILE`内の試作counterはwarmup込みのcase全体。元の3Dへフォールバックする回数、64件上限のeviction、資源解放を別記する。Impostor生成は1 game tickあたり1件、未生成でCitizenを隠さない。元のTexture合成Cacheの上限は変更しない。
-
-通常Profilerにも`citizenLodSelection`、`frameMaxMs`、`gcCollections`／`gcTimeMs`を追加。詳細計測で変更の前後5 frame intervalの和集合を`lodTransitionIntervals`／`transitionP95Ms`／`transitionP99Ms`等へ記録する。Frame-only窓では変更counter・詳細CPU・allocationは未計測（NaN等）でありゼロではない。GCは同一JVMのServer等を含むprocess全体の差分。親子CPUを合算しない。試作の再送信にはBody・Head・Garmentが混在するので、通常のGarment子scopeだけで試作全体の負荷を評価しない。
-
-画像QAは4 Profile×6 Pose×7衣服構成×4方向×2方式×遠近＝2688シーン。近距離復帰は全pixel一致をassertし、遠距離の差はCSV／PNGへ保存する。`CITIZEN_REPRESENTATION_IMAGE_MEASUREMENT_COMPLETE`は画質の採用合格マーカーではない。保持した位相Meshと次の動的Poseの差も別画像で確認する。元Texture Cacheと最終姿勢Meshの寿命統合、鏡での試作自身のLOD、実街での連続目視QAが未検証のまま通常へ採用しない。
-
-2026-10-21の採否：両試作とも通常不採用。Meshは同一Poseで一致しても位相内の歩行変形が止まり、衣服／外見混在では64Entryを超えて再生成・割当・GCが増加した。Impostorは輪郭差が大きく、混在時の性能も安定しない。通常は既存3D LODを維持する。全5規模の固定／往復／混在FPS・1% Low・p95/p99と採否は`docs-private/ai-context/2026-10-21-citizen-moving-lod-prototypes.md`を参照する。
-
-### Citizen描画の完成状態と配布監査
-
-通常描画は既存LOD・Envelope高速化・共有Rigid変換・鏡Cameraの独立LODを使用し、全LODで毎フレームのアニメーションを維持する。基本Profilerとライブ比較コマンドは維持するが、計測は既定OFF。不採用のPose低Hz化・変形キャッシュとその専用画像QA／JUnit4件は撤去した。`pose`／`deform`ケースと`-AnimationImages`は使用しない。過去の測定結果は`docs-private/ai-context/2026-10-21-citizen-animation-lod.md`に残し、集計Scriptは過去ログも読み取れる。
-
-`build`に含まれる`verifyProductionRendering`は再難読化後の配布jarを検査し、gaugeTestのクラス・pipeline用Mixin設定・撤去済みPose試作のクラス／APIが混入すると失敗する。Atlas・一体型Mesh・Impostor・固定Buffer・Bulk送信の試作は`src/test/gauge/`に限定され、通常版では利用できない。既存の診断専用遮蔽比較／Texture演算比較は既定OFF／従来演算を維持し、通常経路へ採用しない。
-
-## Citizen描画パイプラインの検証専用試作
-
-通常配布版には含めない。`-Pipeline`（Gradleでは`-PgaugePipeline=true`）でのみoptional Mixinを有効にする。`3d`が現行、`request`が連続Consumer要求の省略、`fixedbuf`が同一Citizen内の固定buffer、`bulk`がForge bulk送信、`atlas`がBody／標準下着4枚だけの有限Atlas。既存のPose低Hz・Mesh・Impostorは使用しない。
-
-```powershell
-.src\test\profile-citizen-movement.ps1 -Counts 50,100,300,500,1000 -Pipeline -FramesOnly -Reload -Offline -Run -Cases 'fixed-3d,fixed-request,fixed-fixedbuf,fixed-bulk,fixed-atlas,palette-3d,palette-atlas,approach-3d,approach-atlas,street-3d,street-atlas,spread-3d,spread-atlas'
-.src\test\report-citizen-pipeline.ps1 -Logs build/<fresh-client-log>.log -Csv
-```
-
-各case120 Client tick warmup＋200 tick採取。`FramesOnly`はphase0の詳細を停止、`Reload`は実Resource Reload後のphase1で詳細を採取する。GPU時間ではない。`palette`は静止した衣服・Profile・肌色・髪色混在、`street`は同構成の接近往復、`spread`は6/20/45/80ブロックへ分散。`occluded`は壁の裏側（独自Entity Culling MODなし）、`mirror`／`mirrorcamera`は既存鏡Fixture。外部Entity Culling・Shader MODを導入済みと仮定しない。
-
-`-PipelineImages`は4試作×4032シーン（上下視点・子どもを含む）、1680連続歩行比較、8透過／不透明順序比較を行う。`CITIZEN_PIPELINE_IMAGES`／`CITIZEN_PIPELINE_TEMPORAL_PASSED`／`CITIZEN_PIPELINE_TRANSLUCENCY_PASSED`を確認する。Native QAは1028頂点の全属性byte一致、詳細OFFでcounter非記録、手動Flush後の再取得、実format guardを`CITIZEN_PIPELINE_NATIVE_PASSED`で検証する。optional hookや試作が実際に動かなければ試験を失敗させ、未計測を0と報告しない。
-
-要求数・変化数と、非空RenderType終了・BufferBuilder終了・実glDrawElements／glBindTextureは別counter。WorldのVanilla経由だけを対象に主視点／反射を分離し、HUD・他MOD直接GL・multi/indirect draw・GPU実行時間は含めない。RenderType別は最大64種類、超過分はtype64。固定bufferのFlushはCitizen既存CPU scopeの外へ移るため、本体CPUの見かけの減少を高速化と呼ばない。
-
-検証Clientだけの`/apparelpipeline 0|1|2|3|4`と既存`/apparelprofile frames|start|stop|report`でも比較できる。`fixed-quiet`では追加probeのみOFFとし、既存Profilerとの差を測る。テストのセーブデータ・装備は変更せず、各case終了・Reload・終了時に所有Native／Textureの解放を確認する。測定中は他build・graph更新を並行実行しない。
-
-採否・全数値・制約は`docs-private/ai-context/2026-10-21-citizen-render-pipeline.md`を参照する。実ワールド・GPU／VRAM・外部MOD互換が未検証なら明記し、単回FPSや要求減少だけで本番採用しない。
-
-自動Fixtureを作らずに対話診断する場合：
-
-```powershell
-.\gradlew.bat runGaugeTestClient -PjeiEnabled=false -PgaugePipeline=true -PgaugePipelineInteractive=true --offline
-```
-
-初回アクセシビリティ画面またはタイトルへ入り、自動ワールド作成・自動終了はしない。必ずワールドコピーと同じMOD構成／描画設定を用意する。`/apparelpipeline 0`で現行、`4`でAtlas、`/apparelprofile frames`→同じ視点を維持→`/apparelprofile stop`で詳細OFFのFPSを比較し、`start`では詳細counterを採取する。試作は通常配布jarにはない。終了前は`/apparelpipeline 0`、ログアウトでも所有資源を解放する。切替自体はCitizen装備・保存データ・Server AIを変更しない。
-
-### Support Atlas交互順の反復検証
-
-```powershell
-.\src\test\profile-citizen-movement.ps1 -Counts 100,1000 -Pipeline -PipelineResourcePack -FramesOnly -Offline -Run -WarmupTicks 120 -SampleTicks 400 -Cases 'fixed-3d,fixed-atlas,fixed-atlas,fixed-3d,fixed-3d,fixed-atlas,fixed-atlas,fixed-3d,street-3d,street-atlas,street-atlas,street-3d'
-.\src\test\report-support-atlas.ps1 -Logs build/<100-client-log>.log,build/<1000-client-log>.log -Csv
-```
-
-重複caseにtrial番号を付け、画像もtrial別に保存する。隣接するOFF／ONペアのFPS・1% Low・p95/p99・CPU・実Draw／Bindを比較し、順序を無視した単純な全窓平均だけで採用しない。詳細CPU／Drawは`FramesOnly`を外した別実行で採取するか、従来どおり`Reload`後の詳細窓で採取する。frames-onlyの未計測CPU／GL counterはNaNのまま扱う。
-
-WarmupTicks／SampleTicksはServer更新待ちを除いたFixture進行回数で、固定秒数ではない。Profilerは待機中のrender frameも採取する。特に1000体では400進行tickが20秒を超えるため、sampledIntervalsと実フレーム統計を正本にする。
-
-`PipelineResourcePack`はbuild配下へ元画像と同寸法・grayscaleの差し替えzipを生成し、実Reloadで画素・blur／clamp metadataを読み込む。旧Atlas解放→元Consumerへのfallback→pack順序復元→再Reload／Atlas再構築をassertする。`CITIZEN_ATLAS_RESOURCE_PACK_FALLBACK_PASSED`／`CITIZEN_ATLAS_RESOURCE_PACK_RESTORE_PASSED`を確認する。無効なサイズや色のBody PNGは既存loader自体が拒否するため、この有効pack試験と混同しない。
-
-現段階ではvanilla／mod_resources以外のpack、既知のOculus／Iris／OptiFine、非標準Source／実頂点formatを保守的にfallbackする。`supportAtlasFallback`／`supportAtlasFallbackRequests`を確認し、fallback中の値をAtlas有効の測定として扱わない。Shader policy単体テストは実Shader MODの起動試験ではない。Resource世代が変わるまで未対応環境の再構築を毎frame試みず、Reload listener／ログアウト／mode0で所有資源を解放する。
-
-Fixtureの反復改善だけでは採用せず、実ワールドで同一条件の反復改善・tail安定・互換性が確認できるまで診断専用を維持する。結果は`docs-private/ai-context/2026-10-21-support-atlas-validation.md`を参照する。
+ServerはOPの `/createapparel gauge profile start`／`stop`、詳細は `/createapparel gauge stats`。実時間10秒＋120tickのwarmup後に2000tickを採取する。nanoTimeはCPU側の経過時間で、GPU時間ではない。親子のinclusiveを合算しない。既存run IDのWorldは上書きせず停止する。

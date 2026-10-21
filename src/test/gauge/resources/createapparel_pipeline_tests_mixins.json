@@ -1,8 +1,0 @@
-{
-  "required": false,
-  "minVersion": "0.8.5",
-  "package": "com.rexhub.createapparel.citizen.population.pipeline.mixin",
-  "compatibilityLevel": "JAVA_17",
-  "client": ["BufferSourceProbeMixin", "RenderTypeProbeMixin", "BufferBuilderProbeMixin", "GlProbeMixin", "LevelProbeMixin", "CitizenPipelineMixin", "DiagnosticsProbeMixin"],
-  "injectors": { "defaultRequire": 0 }
-}

@@ -22,7 +22,7 @@ public final class CitizenTextureCache {
     private static final RenderResourceCache<Key, ResourceLocation> CACHE = new RenderResourceCache<>(256, id -> {
         Minecraft.getInstance().getTextureManager().release(id);
         FREE_IDS.addLast(id);
-    }, event -> { if (GarmentDiagnostics.enabled()) GarmentDiagnostics.count("citizenCache." + event.name(), 1); });
+    });
     private static final GarmentSourceImageCache<ResourceLocation, NativeImage> SOURCES =
             new GarmentSourceImageCache<>(CitizenTextureCache::read, NativeImage::close);
 
@@ -48,41 +48,36 @@ public final class CitizenTextureCache {
     }
 
     private static ResourceLocation compose(Key key) {
-        try (var diagnosticScope = GarmentDiagnostics.measure("citizenTextureComposeInclusive")) {
-            NativeImage face;
-            NativeImage hair;
-            try {
-                face = SOURCES.get(ClientCitizenAssets.FACE);
-                hair = key.texture().isPresent() ? SOURCES.get(key.texture().get()) : null;
-            } catch (IOException exception) {
-                throw new IllegalStateException("Failed to load Citizen head textures", exception);
-            }
-            NativeImage output = new NativeImage(64, 32, false);
-            DynamicTexture texture = null;
-            try {
-                for (int y = 0; y < 32; y++) for (int x = 0; x < 64; x++) {
-                    int hairPixel = hair == null ? 0 : CitizenHeadPixels.tintHair(argb(hair.getPixelRGBA(x, y)), key.hair());
-                    int pixel = hairPixel;
-                    if (x < 32 && y < 16) {
-                        int facePixel = CitizenHeadPixels.tintFace(argb(face.getPixelRGBA(x, y)), x, y, key.skin(), key.hair(), key.eye());
-                        pixel = GarmentTexturePixelOps.applyOverlay(facePixel, OptionalInt.of(hairPixel));
-                    }
-                    output.setPixelRGBA(x, y, argb(pixel));
+        NativeImage face;
+        NativeImage hair;
+        try {
+            face = SOURCES.get(ClientCitizenAssets.FACE);
+            hair = key.texture().isPresent() ? SOURCES.get(key.texture().get()) : null;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to load Citizen head textures", exception);
+        }
+        NativeImage output = new NativeImage(64, 32, false);
+        DynamicTexture texture = null;
+        try {
+            for (int y = 0; y < 32; y++) for (int x = 0; x < 64; x++) {
+                int hairPixel = hair == null ? 0 : CitizenHeadPixels.tintHair(argb(hair.getPixelRGBA(x, y)), key.hair());
+                int pixel = hairPixel;
+                if (x < 32 && y < 16) {
+                    int facePixel = CitizenHeadPixels.tintFace(argb(face.getPixelRGBA(x, y)), x, y, key.skin(), key.hair(), key.eye());
+                    pixel = GarmentTexturePixelOps.applyOverlay(facePixel, OptionalInt.of(hairPixel));
                 }
-                ResourceLocation id = FREE_IDS.pollFirst();
-                if (id == null) id = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "dynamic/citizen/" + nextId++);
-                try (var uploadScope = GarmentDiagnostics.measure("citizenTextureUpload")) {
-                    texture = new DynamicTexture(output);
-                    GarmentDiagnostics.count("citizenDynamicTexturesCreated", 1);
-                    texture.setFilter(false, false);
-                    Minecraft.getInstance().getTextureManager().register(id, texture);
-                }
-                return id;
-            } catch (RuntimeException | Error exception) {
-                if (texture == null) output.close();
-                else { texture.close(); GarmentDiagnostics.count("citizenFailedTexturesDestroyed", 1); }
-                throw exception;
+                output.setPixelRGBA(x, y, argb(pixel));
             }
+            ResourceLocation id = FREE_IDS.pollFirst();
+            if (id == null) id = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "dynamic/citizen/" + nextId++);
+            texture = new DynamicTexture(output);
+            texture.setFilter(false, false);
+            Minecraft.getInstance().getTextureManager().register(id, texture);
+            return id;
+        } catch (RuntimeException | Error exception) {
+            if (texture == null) output.close();
+            else texture.close();
+            throw exception;
         }
     }
 

@@ -76,8 +76,7 @@ final class PlayerApparelLayer extends RenderLayer<AbstractClientPlayer, PlayerM
         }
 
         CommonGarmentRenderer.renderHumanoid(
-                new GarmentRenderContext(getParentModel(), snapshot,
-                        GarmentRenderContext.TargetType.PLAYER),
+                new GarmentRenderContext(getParentModel(), snapshot),
                 poseStack, buffer, packedLight, packedOverlay);
     }
 }

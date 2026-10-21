@@ -62,22 +62,6 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
         return generation;
     }
 
-    public String envelopeCacheReport() {
-        var snapshot = state;
-        int meshes = 0;
-        long bytes = 0;
-        for (var part : snapshot.garmentParts().values()) if (part.legEnvelope().isPresent()) {
-            var geometry = part.legEnvelope().get().geometry();
-            meshes += geometry.cachedMeshCount(); bytes += geometry.cachedTopologyBytes();
-        }
-        long rigidBytes = 0; int rigidMeshes = 0;
-        for (var parts : List.of(snapshot.garmentParts(), snapshot.bodyParts())) for (var part : parts.values()) for (var element : part.elements()) {
-            rigidBytes += element.mesh().topologyBytes(); rigidMeshes++;
-        }
-        return "cachedEnvelopeMeshes=" + meshes + " cachedEnvelopeTopologyBytes=" + bytes + " (primitive index/UV arrays only, not total heap)"
-                + " rigidMeshes=" + rigidMeshes + " rigidPrimitiveBytes=" + rigidBytes;
-    }
-
     private ClientGarmentAssets() {
     }
 

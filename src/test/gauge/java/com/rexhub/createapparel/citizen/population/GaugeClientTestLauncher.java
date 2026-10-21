@@ -60,17 +60,7 @@ public final class GaugeClientTestLauncher {
         } catch (Throwable exception) { failure = exception; }
     }
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
-        if (Boolean.getBoolean("apparel.gaugeTest.pipelineInteractive")) {
-            var diagnosticClient = Minecraft.getInstance();
-            if (stage == 0 && diagnosticClient.getOverlay() == null && (diagnosticClient.screen instanceof net.minecraft.client.gui.screens.TitleScreen
-                    || diagnosticClient.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen)) {
-                stage = 99;
-                LogUtils.getLogger().info("CITIZEN_PIPELINE_INTERACTIVE_READY screen={} automaticFixture=false; use a world copy and /apparelpipeline 0..4", diagnosticClient.screen.getClass().getSimpleName());
-                if (Boolean.getBoolean("apparel.gaugeTest.pipelineInteractiveSmoke")) Minecraft.getInstance().stop();
-            }
-            return;
-        }
-        if (Boolean.getBoolean("apparel.gaugeTest.performanceClient")) return;
+        if (Boolean.getBoolean("apparel.gaugeTest.renderClient")) return;
         if (event.phase != TickEvent.Phase.END || stage == 99) return;
         var mc = Minecraft.getInstance(); if (mc.getOverlay() != null) return;
         try {

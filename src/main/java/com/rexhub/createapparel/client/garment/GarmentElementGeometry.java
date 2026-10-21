@@ -42,7 +42,6 @@ public final class GarmentElementGeometry {
         public float u(int corner) { return uv[corner * 2]; }
         public float v(int corner) { return uv[corner * 2 + 1]; }
         public float normal(int offset) { return normals[offset]; }
-        public long topologyBytes() { return (long) (positions.length + uv.length + normals.length + indices.length) * Integer.BYTES; }
         @Override public boolean equals(Object other) {
             return other instanceof Mesh mesh && java.util.Arrays.equals(positions, mesh.positions) && java.util.Arrays.equals(uv, mesh.uv)
                     && java.util.Arrays.equals(normals, mesh.normals) && java.util.Arrays.equals(indices, mesh.indices);

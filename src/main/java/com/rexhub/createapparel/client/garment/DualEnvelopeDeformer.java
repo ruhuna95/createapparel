@@ -97,16 +97,6 @@ public final class DualEnvelopeDeformer {
         }
 
         public List<Quad> quads() { return quads; }
-        public int cachedMeshCount() {
-            int count = 1 + (bodyEdgeMesh == null ? 0 : 1);
-            for (var lod : lods) if (lod != null) count += lod.cachedMeshCount();
-            return count;
-        }
-        public long cachedTopologyBytes() {
-            long bytes = mesh.topologyBytes() + (bodyEdgeMesh == null ? 0 : bodyEdgeMesh.topologyBytes());
-            for (var lod : lods) if (lod != null) bytes += lod.cachedTopologyBytes();
-            return bytes;
-        }
         public Prepared lod(int level) {
             if (deformationGeometry != this) return deformationGeometry.lod(level);
             if (level <= 0) return this;
@@ -187,7 +177,6 @@ public final class DualEnvelopeDeformer {
         }
 
         public int positionCount() { return positions.length; }
-        public long topologyBytes() { return (long) indices.length * Integer.BYTES + (long) uv.length * Float.BYTES; }
         public int cornerCount() { return indices.length; }
         public int quadCount() { return indices.length / 4; }
         public int positionIndex(int corner) { return indices[corner]; }
@@ -256,60 +245,58 @@ public final class DualEnvelopeDeformer {
         }
 
         public Pose(Prepared geometry, LegEnvelopeGeometry legs, float clearance, boolean followCrouchingBodyEdges, int lod) {
-            try (var diagnosticScope = GarmentDiagnostics.measure("envelopePoseBuild")) {
-                this.geometry = geometry;
-                drawGeometry = geometry.lod(lod);
-                this.clearance = clearance;
-                bodyEdges = followCrouchingBodyEdges && legs.hasBodyEdges()
-                        && legs.torsoBottom() > geometry.bottom && legs.torsoBottom() < geometry.top
-                        ? new SkirtBodyEdgeGeometry(geometry, legs, clearance) : null;
-                quads = bodyEdges == null ? drawGeometry.quads : drawGeometry.quadsAtBodyEdge(legs.torsoBottom());
-                mesh = bodyEdges == null ? drawGeometry.mesh : drawGeometry.bodyEdgeMesh;
-                offsets = new float[(geometry.bands + 1) * 6];
-                float[] bounds = new float[4];
-                boolean moved = false;
-                for (int side = 0; side < 2; side++) {
-                    float lateralSlope = legs.lateralSlope(side, geometry.boundary(side, 0, true), geometry.top,
-                            geometry.boundary(0, 0, false), geometry.boundary(2, 0, false), clearance);
-                    if (legs.extents(side, -Float.MAX_VALUE, Float.MAX_VALUE, bounds)) {
-                        float waist = geometry.boundary(side, 0, true);
-                        float hem = geometry.boundary(side, 1, true);
-                        lateralLimits[side] = side == 0 ? waist - Math.min(hem, bounds[0] - clearance)
-                                : Math.max(hem, bounds[1] + clearance) - waist;
-                    }
-                    for (int row = 1; row <= geometry.bands; row++) {
-                        float previous = geometry.ring(row - 1);
-                        float next = geometry.ring(Math.min(geometry.bands, row + 1));
-                        float lower = lerp(geometry.top, geometry.bottom, next);
-                        float upper = lerp(geometry.top, geometry.bottom, previous);
-                        if (!legs.extents(side, lower, upper, bounds)) continue;
-                        int index = row * 6 + side * 3;
-                        float minX = geometry.boundary(0, previous, true);
-                        float maxX = geometry.boundary(1, previous, true);
-                        float minZ = geometry.boundary(0, previous, false);
-                        float maxZ = geometry.boundary(2, previous, false);
-                        float depth = geometry.top - geometry.height(row);
-                        float forwardReach = Math.max(0, Math.max(minZ - bounds[2], bounds[3] - maxZ));
-                        float lateralWeight = depth / (float) Math.hypot(depth, forwardReach);
-                        offsets[index] = Math.max(lateralSlope * depth,
-                                Math.max(0, side == 0 ? minX - bounds[0] + clearance : bounds[1] + clearance - maxX)
-                                        * lateralWeight);
-                        offsets[index + 1] = Math.max(0, minZ - bounds[2] + clearance);
-                        offsets[index + 2] = Math.max(0, bounds[3] + clearance - maxZ);
-                        moved |= offsets[index] > 0 || offsets[index + 1] > 0 || offsets[index + 2] > 0;
-                    }
-                    float rearSlope = followCrouchingBodyEdges ? legs.crouchingRearSlope(side) : Float.NaN;
-                    if (Float.isFinite(rearSlope)) {
-                        for (int row = 1; row <= geometry.bands; row++) {
-                            offsets[row * 6 + side * 3 + 2] = rearSlope * (geometry.top - geometry.height(row));
-                        }
-                        moved = true;
-                    }
+            this.geometry = geometry;
+            drawGeometry = geometry.lod(lod);
+            this.clearance = clearance;
+            bodyEdges = followCrouchingBodyEdges && legs.hasBodyEdges()
+                    && legs.torsoBottom() > geometry.bottom && legs.torsoBottom() < geometry.top
+                    ? new SkirtBodyEdgeGeometry(geometry, legs, clearance) : null;
+            quads = bodyEdges == null ? drawGeometry.quads : drawGeometry.quadsAtBodyEdge(legs.torsoBottom());
+            mesh = bodyEdges == null ? drawGeometry.mesh : drawGeometry.bodyEdgeMesh;
+            offsets = new float[(geometry.bands + 1) * 6];
+            float[] bounds = new float[4];
+            boolean moved = false;
+            for (int side = 0; side < 2; side++) {
+                float lateralSlope = legs.lateralSlope(side, geometry.boundary(side, 0, true), geometry.top,
+                        geometry.boundary(0, 0, false), geometry.boundary(2, 0, false), clearance);
+                if (legs.extents(side, -Float.MAX_VALUE, Float.MAX_VALUE, bounds)) {
+                    float waist = geometry.boundary(side, 0, true);
+                    float hem = geometry.boundary(side, 1, true);
+                    lateralLimits[side] = side == 0 ? waist - Math.min(hem, bounds[0] - clearance)
+                            : Math.max(hem, bounds[1] + clearance) - waist;
                 }
-                straighten();
-                changed = moved;
-                if (bodyEdges != null) changed = true;
+                for (int row = 1; row <= geometry.bands; row++) {
+                    float previous = geometry.ring(row - 1);
+                    float next = geometry.ring(Math.min(geometry.bands, row + 1));
+                    float lower = lerp(geometry.top, geometry.bottom, next);
+                    float upper = lerp(geometry.top, geometry.bottom, previous);
+                    if (!legs.extents(side, lower, upper, bounds)) continue;
+                    int index = row * 6 + side * 3;
+                    float minX = geometry.boundary(0, previous, true);
+                    float maxX = geometry.boundary(1, previous, true);
+                    float minZ = geometry.boundary(0, previous, false);
+                    float maxZ = geometry.boundary(2, previous, false);
+                    float depth = geometry.top - geometry.height(row);
+                    float forwardReach = Math.max(0, Math.max(minZ - bounds[2], bounds[3] - maxZ));
+                    float lateralWeight = depth / (float) Math.hypot(depth, forwardReach);
+                    offsets[index] = Math.max(lateralSlope * depth,
+                            Math.max(0, side == 0 ? minX - bounds[0] + clearance : bounds[1] + clearance - maxX)
+                                    * lateralWeight);
+                    offsets[index + 1] = Math.max(0, minZ - bounds[2] + clearance);
+                    offsets[index + 2] = Math.max(0, bounds[3] + clearance - maxZ);
+                    moved |= offsets[index] > 0 || offsets[index + 1] > 0 || offsets[index + 2] > 0;
+                }
+                float rearSlope = followCrouchingBodyEdges ? legs.crouchingRearSlope(side) : Float.NaN;
+                if (Float.isFinite(rearSlope)) {
+                    for (int row = 1; row <= geometry.bands; row++) {
+                        offsets[row * 6 + side * 3 + 2] = rearSlope * (geometry.top - geometry.height(row));
+                    }
+                    moved = true;
+                }
             }
+            straighten();
+            changed = moved;
+            if (bodyEdges != null) changed = true;
         }
 
         private void straighten() {

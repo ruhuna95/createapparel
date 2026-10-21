@@ -510,8 +510,7 @@ public final class MirrorRenderManager {
     }
 
     private boolean enabled() {
-        return !com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugDisableMirrorRendering
-                && !failed && shader != null && ModConfigs.CLIENT.enabled.get()
+        return !failed && shader != null && ModConfigs.CLIENT.enabled.get()
                 && ModConfigs.CLIENT.quality.get() != ModConfigs.MirrorQuality.OFF
                 && !Minecraft.useShaderTransparency() && !ModList.get().isLoaded("oculus");
     }

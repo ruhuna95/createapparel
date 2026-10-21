@@ -10,15 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GarmentTexturePixelOpsTest {
-    @Test void lazyOpacityMatchesComposedPixelAtEveryAlphaPair() {
+    @Test void sourceOverAlphaMatchesIndependentIntegerReference() {
         for (int destination = 0; destination <= 255; destination++) for (int source = 0; source <= 255; source++) {
             assertEquals(GarmentTexturePixelOps.applyOverlay(destination << 24 | 0xA06030, source << 24 | 0x20E080) >>> 24,
-                    GarmentTexturePixelOps.overlayAlpha(destination, source));
+                    (source * 255 + destination * (255 - source) + 127) / 255);
         }
         for (int channel = 0; channel < 256; channel++) assertEquals(channel, (int) (channel / 255F * 255));
     }
     @Test
-    void fastTintMatchesReferenceAtEveryMaskCombination() {
+    void standardTintMatchesIndependentReferenceAtEveryMaskCombination() {
         var random = new java.util.Random(618);
         for (int sample = 0; sample < 8; sample++) {
             int primary = random.nextInt();
@@ -26,9 +26,19 @@ class GarmentTexturePixelOpsTest {
             var accent = sample % 3 == 0 ? OptionalInt.of(random.nextInt()) : OptionalInt.empty();
             for (int s = -1; s <= 256; s++) for (int a = -1; a <= 256; a++) {
                 assertEquals(GarmentTexturePixelOps.composeTint(primary, secondary, accent, s, a),
-                        GarmentTexturePixelOps.composeTintFast(primary, secondary, accent, s, a));
+                        referenceLerp(referenceLerp(primary, secondary.orElse(primary), s), accent.orElse(primary), a));
             }
         }
+    }
+
+    private static int referenceLerp(int from, int to, int mask) {
+        double weight = Math.max(0, Math.min(255, mask)) / 255.0;
+        int result = 0;
+        for (int shift = 0; shift < 24; shift += 8) {
+            int a = from >> shift & 255, b = to >> shift & 255;
+            result |= (int) Math.round(a + (b - a) * weight) << shift;
+        }
+        return result;
     }
 
     private static final int PRIMARY = 0x000000;

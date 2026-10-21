@@ -5,7 +5,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.client.garment.LoadoutRenderSnapshot;
-import com.rexhub.createapparel.client.garment.GarmentDiagnostics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.model.PlayerModel;
@@ -26,9 +25,6 @@ final class CitizenLodClientChecks {
         var target = new TextureTarget(256, 320, true, Minecraft.ON_OSX);
         var projection = new Matrix4f(RenderSystem.getProjectionMatrix());
         var modelView = RenderSystem.getModelViewStack();
-        boolean legacyRigid = GarmentDiagnostics.debugUseLegacyRigidRendering;
-        boolean indexedRigid = GarmentDiagnostics.debugUseIndexedRigidRendering;
-        GarmentDiagnostics.debugUseIndexedRigidRendering = true;
         modelView.pushPose();
         int scenes = 0;
         double maxSilhouette = 0;
@@ -49,16 +45,15 @@ final class CitizenLodClientChecks {
                     var source = new LoadoutRenderSnapshot(EnvelopeRenderClientChecks.outfit(outfit), arm, chest);
                     String name = arm + "-" + chest + "-pose" + pose + "-outfit" + outfit + "-view" + view;
                     float yaw = view < 4 ? view * 90 : 25, pitch = view == 4 ? 35 : view == 5 ? -25 : 0;
-                    for (int lod = 0; lod < 3; lod++) {
+                    for (int lod = 0; lod < 4; lod++) {
                         float scale = lod == 0 ? 140 : lod == 1 ? 30 : 13;
-                        GarmentDiagnostics.debugUseLegacyRigidRendering = true;
-                        EnvelopeRenderClientChecks.draw(target, model, source, false, 0, false, yaw, pitch, scale);
+                        EnvelopeRenderClientChecks.draw(target, model, source, false, 0, yaw, pitch, scale);
                         int textures = com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache.size();
                         try (var before = Screenshot.takeScreenshot(target)) {
-                            GarmentDiagnostics.debugUseLegacyRigidRendering = false;
-                            EnvelopeRenderClientChecks.draw(target, model, source, false, lod, true, yaw, pitch, scale);
+                                var vertices = EnvelopeRenderClientChecks.draw(target, model, source, true, lod, yaw, pitch, scale);
                             if (textures != com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache.size()) throw new AssertionError("LOD switch generated another texture");
                             try (var after = Screenshot.takeScreenshot(target)) {
+                                RenderReferenceChecks.check("lod-" + name + "-" + lod, after, vertices);
                                 int changed = 0, foreground = 0, silhouette = 0, background = before.getPixelRGBA(0, 0);
                                 for (int y = 0; y < before.getHeight(); y++) for (int x = 0; x < before.getWidth(); x++) {
                                     int a = before.getPixelRGBA(x, y), b = after.getPixelRGBA(x, y);
@@ -84,8 +79,6 @@ final class CitizenLodClientChecks {
             com.mojang.logging.LogUtils.getLogger().info("CITIZEN_LOD_IMAGES_PASSED scenes={} LOD0exactPixels=true maxSilhouetteFraction={} worst={} profiles=4 poses=6 outfits=7 views=6", scenes, maxSilhouette, worst);
         } finally {
             Files.writeString(output.resolve("comparison.csv"), results);
-            GarmentDiagnostics.debugUseLegacyRigidRendering = legacyRigid;
-            GarmentDiagnostics.debugUseIndexedRigidRendering = indexedRigid;
             modelView.popPose(); RenderSystem.applyModelViewMatrix(); mc.gameRenderer.resetProjectionMatrix(projection);
             target.destroyBuffers(); mc.getMainRenderTarget().bindWrite(true);
         }

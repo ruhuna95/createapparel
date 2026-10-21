@@ -76,10 +76,6 @@ final class GarmentTexturePixelOps {
         return result;
     }
 
-    static int overlayAlpha(int destination, int source) {
-        return (source * 255 + destination * (255 - source) + 127) / 255;
-    }
-
     static int composeTint(
             int primaryTint,
             OptionalInt secondaryTint,
@@ -101,13 +97,6 @@ final class GarmentTexturePixelOps {
         int green = lerpChannel(fromRgb >> 8 & 0xFF, toRgb >> 8 & 0xFF, weight);
         int blue = lerpChannel(fromRgb & 0xFF, toRgb & 0xFF, weight);
         return red << 16 | green << 8 | blue;
-    }
-
-    static int composeTintFast(int primary, OptionalInt secondary, OptionalInt accent, int secondaryMask, int accentMask) {
-        int first = secondaryMask <= 0 ? primary & 0xFFFFFF : secondaryMask >= 255 ? secondary.orElse(primary) & 0xFFFFFF
-                : lerpRgb(primary, secondary.orElse(primary), secondaryMask);
-        return accentMask <= 0 ? first : accentMask >= 255 ? accent.orElse(primary) & 0xFFFFFF
-                : lerpRgb(first, accent.orElse(primary), accentMask);
     }
 
     static double maskWeight(int maskRed) {

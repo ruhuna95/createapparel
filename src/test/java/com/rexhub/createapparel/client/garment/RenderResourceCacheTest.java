@@ -9,13 +9,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RenderResourceCacheTest {
-    @Test void observerIncludesDirectReferenceHitsAndDistinguishesEvictionFromClear() {
-        var events = new ArrayList<RenderResourceCache.Event>();
-        var cache = new RenderResourceCache<String, String>(1, ignored -> { }, events::add);
-        var reference = cache.reference("a", () -> "a"); reference.get(); reference.get(); cache.get("b", () -> "b");
-        cache.endFrame(); cache.get("b", () -> "b"); cache.endFrame(); cache.clear();
-        assertEquals(List.of(RenderResourceCache.Event.MISS, RenderResourceCache.Event.HIT, RenderResourceCache.Event.MISS,
-                RenderResourceCache.Event.HIT, RenderResourceCache.Event.EVICTION, RenderResourceCache.Event.RELEASE), events);
+    @Test void directReferencesReuseEntriesAndRecoverAfterEvictionAndClear() {
+        var released = new ArrayList<String>();
+        var loads = new AtomicInteger();
+        var cache = new RenderResourceCache<String, String>(1, released::add);
+        var reference = cache.reference("a", () -> { loads.incrementAndGet(); return "a"; });
+        assertEquals("a", reference.get()); assertEquals("a", reference.get());
+        cache.get("b", () -> { loads.incrementAndGet(); return "b"; });
+        cache.endFrame(); cache.get("b", () -> fail("Active entry reloaded")); cache.endFrame(); cache.clear();
+        assertEquals(List.of("a", "b"), released);
+        assertEquals("a", reference.get());
+        assertEquals(3, loads.get());
+        cache.clear();
+        assertEquals(List.of("a", "b", "a"), released);
     }
     @Test
     void cachedReferencesAvoidKeyLookupsAndShareResources() {

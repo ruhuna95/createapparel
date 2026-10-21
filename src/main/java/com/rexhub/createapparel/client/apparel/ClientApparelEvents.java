@@ -26,10 +26,17 @@ public final class ClientApparelEvents {
 
     @SubscribeEvent
     public static void clearOnLogout(ClientPlayerNetworkEvent.LoggingOut event) {
-        com.rexhub.createapparel.client.garment.GarmentDiagnostics.cancelComparison();
-        com.rexhub.createapparel.client.garment.GarmentDiagnostics.stop();
         ClientApparelInventories.clear();
         com.rexhub.createapparel.client.garment.CitizenTextureCache.clear();
+    }
+
+    @SubscribeEvent
+    public static void removeUnloadedCitizen(EntityLeaveLevelEvent event) {
+        if (event.getLevel().isClientSide && event.getEntity() instanceof com.rexhub.createapparel.entity.Citizen citizen
+                && net.minecraft.client.Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(citizen)
+                instanceof com.rexhub.createapparel.client.renderer.CitizenRenderer renderer) {
+            renderer.forget(citizen);
+        }
     }
 
     @SubscribeEvent
