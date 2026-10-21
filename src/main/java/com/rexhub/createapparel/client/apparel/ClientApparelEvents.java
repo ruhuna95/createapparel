@@ -26,6 +26,7 @@ public final class ClientApparelEvents {
 
     @SubscribeEvent
     public static void clearOnLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        com.rexhub.createapparel.client.garment.GarmentDiagnostics.cancelComparison();
         com.rexhub.createapparel.client.garment.GarmentDiagnostics.stop();
         ClientApparelInventories.clear();
         com.rexhub.createapparel.client.garment.CitizenTextureCache.clear();

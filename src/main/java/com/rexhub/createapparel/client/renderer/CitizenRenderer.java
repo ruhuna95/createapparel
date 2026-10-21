@@ -38,7 +38,7 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
         try (var diagnosticScope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.citizen(entity.getId())) {
             var minecraft = net.minecraft.client.Minecraft.getInstance();
             if (snapshotLevel.get() != minecraft.level) { snapshots.clear(); snapshotLevel = new java.lang.ref.WeakReference<>(minecraft.level); }
-            shadowRadius = 0.35F * entity.getScale();
+            shadowRadius = com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugDisableCitizenShadows ? 0 : 0.35F * entity.getScale();
             if (!entity.isInvisible()) {
                 var state = entity.citizenState();
                 var appearance = state.appearance();
@@ -53,17 +53,28 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
                     snapshots.put(entity, cached);
                 } else com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("citizenSnapshotHit", 1);
                 var snapshot = cached.snapshot();
-                boolean world = previewDepth == 0 && !com.rexhub.createapparel.client.mirror.MirrorRenderManager.INSTANCE.isRenderingReflection();
+                var mirrors = com.rexhub.createapparel.client.mirror.MirrorRenderManager.INSTANCE;
+                boolean reflection = mirrors.isRenderingReflection();
+                boolean world = previewDepth == 0 && (!reflection || com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugEnableReflectionCitizenLod);
                 int lod = 0;
+                try (var selectionScope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("citizenLodSelection")) {
                 if (world && !com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugDisableCitizenLod) {
                     var config = com.rexhub.createapparel.config.ModConfigs.CLIENT;
                     lod = com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugForceCitizenLod;
-                    if (lod < 0) lod = com.rexhub.createapparel.client.garment.CitizenRenderLod.select(cached.lod,
-                            minecraft.gameRenderer.getMainCamera().getPosition().distanceTo(entity.position()),
+                    int previous = cached.lod;
+                    if (reflection) {
+                        if (cached.reflectionLods == null) cached.reflectionLods = new java.util.WeakHashMap<>();
+                        previous = cached.reflectionLods.getOrDefault(mirrors.reflectionViewKey(), -1);
+                    }
+                    if (lod < 0) lod = com.rexhub.createapparel.client.garment.CitizenRenderLod.select(previous,
+                            (reflection ? mirrors.reflectionCamera() : minecraft.gameRenderer.getMainCamera()).getPosition().distanceTo(entity.position()),
                             config.citizenLod0Distance.get(), config.citizenLod1Distance.get(), config.citizenLod2Distance.get(), config.citizenLodHysteresis.get());
-                    com.rexhub.createapparel.client.garment.GarmentDiagnostics.lod(lod, cached.lod >= 0 && cached.lod != lod);
-                    cached.lod = lod;
+                    com.rexhub.createapparel.client.garment.GarmentDiagnostics.lod(lod, previous >= 0 && previous != lod);
+                    if (reflection) cached.reflectionLods.put(mirrors.reflectionViewKey(), lod);
+                    else cached.lod = lod;
                 } else com.rexhub.createapparel.client.garment.GarmentDiagnostics.lod(0, false);
+                }
+                try (var lodScope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measureCitizenLod(lod)) {
                 if (com.rexhub.createapparel.client.garment.GarmentDiagnostics.enabled()) {
                     boolean clothed = false;
                     for (var slot : com.rexhub.createapparel.client.garment.ResolvedApparelState.RENDER_ORDER) {
@@ -102,7 +113,10 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
                 var style = ClientCitizenAssets.INSTANCE.resolve(appearance.hairStyleId());
                 com.mojang.blaze3d.vertex.VertexConsumer vertices;
                 try (var scope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("citizenHead")) {
-                    vertices = buffer.getBuffer(RenderType.entityCutoutNoCull(CitizenTextureCache.get(appearance, style)));
+                    var texture = CitizenTextureCache.get(appearance, style);
+                    var type = RenderType.entityCutoutNoCull(texture);
+                    com.rexhub.createapparel.client.garment.GarmentDiagnostics.buffer(type, texture);
+                    vertices = buffer.getBuffer(type);
                     model.head.render(poseStack, vertices, light, overlay);
                 }
                 try (var scope = com.rexhub.createapparel.client.garment.GarmentDiagnostics.measure("citizenCosmetic")) {
@@ -119,6 +133,7 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
                     CommonGarmentRenderer.renderHumanoid(new GarmentRenderContext(model, snapshot, GarmentRenderContext.TargetType.CITIZEN, lod, frame),
                         poseStack, buffer, light, overlay);
                 poseStack.popPose();
+                }
             }
             super.render(entity, yaw, partialTick, poseStack, buffer, light);
         }
@@ -126,7 +141,11 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
 
     @Override
     public boolean shouldRender(Citizen entity, net.minecraft.client.renderer.culling.Frustum frustum, double x, double y, double z) {
-        boolean visible = !com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugDisableCitizenBodyRendering && super.shouldRender(entity, frustum, x, y, z);
+        if (com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugDisableCitizenBodyRendering) {
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("diagnosticCitizenCullingRejected", 1);
+            return false;
+        }
+        boolean visible = super.shouldRender(entity, frustum, x, y, z);
         com.rexhub.createapparel.client.garment.GarmentDiagnostics.count(visible ? "vanillaCitizenCullingAccepted" : "vanillaCitizenCullingRejected", 1);
         return visible;
     }
@@ -141,6 +160,7 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
         private final long revision, generation;
         private final LoadoutRenderSnapshot snapshot;
         private int lod = -1;
+        private java.util.WeakHashMap<Object, Integer> reflectionLods;
         private CommonGarmentRenderer.SupportOcclusion occlusion;
         private CachedLoadout(long revision, long generation, LoadoutRenderSnapshot snapshot) {
             this.revision = revision; this.generation = generation; this.snapshot = snapshot;

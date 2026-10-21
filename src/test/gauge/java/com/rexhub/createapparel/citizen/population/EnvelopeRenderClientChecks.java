@@ -37,6 +37,8 @@ final class EnvelopeRenderClientChecks {
         var modelView = RenderSystem.getModelViewStack();
         boolean legacy = GarmentDiagnostics.debugUseLegacyEnvelopeRendering;
         boolean legacyRigid = GarmentDiagnostics.debugUseLegacyRigidRendering;
+        boolean indexedRigid = GarmentDiagnostics.debugUseIndexedRigidRendering;
+        GarmentDiagnostics.debugUseIndexedRigidRendering = true;
         modelView.pushPose();
         int scenes = 0;
         try {
@@ -88,6 +90,7 @@ final class EnvelopeRenderClientChecks {
         } finally {
             GarmentDiagnostics.debugUseLegacyEnvelopeRendering = legacy;
             GarmentDiagnostics.debugUseLegacyRigidRendering = legacyRigid;
+            GarmentDiagnostics.debugUseIndexedRigidRendering = indexedRigid;
             modelView.popPose();
             RenderSystem.applyModelViewMatrix();
             mc.gameRenderer.resetProjectionMatrix(projection);

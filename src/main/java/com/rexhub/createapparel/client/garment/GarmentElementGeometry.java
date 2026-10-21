@@ -15,6 +15,45 @@ public final class GarmentElementGeometry {
     private GarmentElementGeometry() {
     }
 
+    public static final class Mesh {
+        private final float[] positions, uv, normals;
+        private final int[] indices;
+
+        Mesh(List<BakedFace> faces) {
+            var unique = new java.util.LinkedHashMap<Vec3, Integer>();
+            int count = faces.stream().mapToInt(face -> face.vertices().size()).sum();
+            indices = new int[count]; uv = new float[count * 2]; normals = new float[faces.size() * 3];
+            int corner = 0;
+            for (int f = 0; f < faces.size(); f++) {
+                var face = faces.get(f); var normal = face.normal();
+                normals[f * 3] = normal.x(); normals[f * 3 + 1] = normal.y(); normals[f * 3 + 2] = normal.z();
+                for (var vertex : face.vertices()) {
+                    indices[corner] = unique.computeIfAbsent(new Vec3(vertex.x(), vertex.y(), vertex.z()), ignored -> unique.size());
+                    uv[corner * 2] = vertex.u(); uv[corner * 2 + 1] = vertex.v(); corner++;
+                }
+            }
+            positions = new float[unique.size() * 3];
+            unique.forEach((point, index) -> { positions[index * 3] = point.x(); positions[index * 3 + 1] = point.y(); positions[index * 3 + 2] = point.z(); });
+        }
+        public int positionCount() { return positions.length / 3; }
+        public int cornerCount() { return indices.length; }
+        public float coordinate(int offset) { return positions[offset]; }
+        public int positionIndex(int corner) { return indices[corner]; }
+        public float u(int corner) { return uv[corner * 2]; }
+        public float v(int corner) { return uv[corner * 2 + 1]; }
+        public float normal(int offset) { return normals[offset]; }
+        public long topologyBytes() { return (long) (positions.length + uv.length + normals.length + indices.length) * Integer.BYTES; }
+        @Override public boolean equals(Object other) {
+            return other instanceof Mesh mesh && java.util.Arrays.equals(positions, mesh.positions) && java.util.Arrays.equals(uv, mesh.uv)
+                    && java.util.Arrays.equals(normals, mesh.normals) && java.util.Arrays.equals(indices, mesh.indices);
+        }
+        @Override public int hashCode() {
+            int result = java.util.Arrays.hashCode(positions);
+            result = 31 * result + java.util.Arrays.hashCode(uv); result = 31 * result + java.util.Arrays.hashCode(normals);
+            return 31 * result + java.util.Arrays.hashCode(indices);
+        }
+    }
+
     static List<Vec3> corners(Vec3 from, Vec3 to, float[] topInset, float[] bottomInset) {
         return corners(from, to, topInset, bottomInset, new float[2]);
     }

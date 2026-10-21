@@ -63,13 +63,19 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     }
 
     public String envelopeCacheReport() {
+        var snapshot = state;
         int meshes = 0;
         long bytes = 0;
-        for (var part : state.garmentParts().values()) if (part.legEnvelope().isPresent()) {
+        for (var part : snapshot.garmentParts().values()) if (part.legEnvelope().isPresent()) {
             var geometry = part.legEnvelope().get().geometry();
             meshes += geometry.cachedMeshCount(); bytes += geometry.cachedTopologyBytes();
         }
-        return "cachedEnvelopeMeshes=" + meshes + " cachedEnvelopeTopologyBytes=" + bytes + " (primitive index/UV arrays only, not total heap)";
+        long rigidBytes = 0; int rigidMeshes = 0;
+        for (var parts : List.of(snapshot.garmentParts(), snapshot.bodyParts())) for (var part : parts.values()) for (var element : part.elements()) {
+            rigidBytes += element.mesh().topologyBytes(); rigidMeshes++;
+        }
+        return "cachedEnvelopeMeshes=" + meshes + " cachedEnvelopeTopologyBytes=" + bytes + " (primitive index/UV arrays only, not total heap)"
+                + " rigidMeshes=" + rigidMeshes + " rigidPrimitiveBytes=" + rigidBytes;
     }
 
     private ClientGarmentAssets() {
@@ -605,8 +611,11 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
 
     public record Element(
             String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces, List<Vec3> corners,
-            List<BakedFace> bakedFaces
+            List<BakedFace> bakedFaces, GarmentElementGeometry.Mesh mesh
     ) {
+        public Element(String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces, List<Vec3> corners, List<BakedFace> bakedFaces) {
+            this(name, from, to, rotation, faces, corners, bakedFaces, new GarmentElementGeometry.Mesh(bakedFaces));
+        }
         public Element(String name, Vec3 from, Vec3 to, Rotation rotation, Map<Face, Uv> faces, List<Vec3> corners) {
             this(name, from, to, rotation, faces, corners, GarmentElementGeometry.bake(faces, corners));
         }

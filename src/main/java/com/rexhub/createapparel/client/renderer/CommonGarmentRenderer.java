@@ -655,8 +655,42 @@ public final class CommonGarmentRenderer {
             int packedOverlay,
             int tintRgb
     ) {
+        if (com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugUseIndexedRigidRendering
+                && !com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugUseLegacyRigidRendering) {
+            renderIndexedElement(element.mesh(), textureWidth, textureHeight, mapping, poseStack.last(), vertices, packedLight, packedOverlay, tintRgb);
+            return;
+        }
         renderFaces(element.bakedFaces(), textureWidth, textureHeight, mapping, poseStack, vertices,
                 packedLight, packedOverlay, tintRgb);
+    }
+
+    private static void renderIndexedElement(com.rexhub.createapparel.client.garment.GarmentElementGeometry.Mesh mesh,
+            int textureWidth, int textureHeight, PartMapping mapping, PoseStack.Pose pose, VertexConsumer vertices,
+            int light, int overlay, int tint) {
+        var buffers = ENVELOPE_BUFFERS.get();
+        if (buffers.inUse) buffers = new EnvelopeBuffers();
+        buffers.inUse = true;
+        try {
+            buffers.capacity(mesh.positionCount(), mesh.cornerCount() / 4);
+            for (int i = 0; i < mesh.positionCount(); i++) {
+                int p = i * 3;
+                pose.pose().transform(buffers.vertex.set(mesh.coordinate(p), mapping.humanoid() ? BODY_HEIGHT - mesh.coordinate(p + 1) : mesh.coordinate(p + 1), mesh.coordinate(p + 2), 1));
+                buffers.points[p] = buffers.vertex.x; buffers.points[p + 1] = buffers.vertex.y; buffers.points[p + 2] = buffers.vertex.z;
+            }
+            float red = (tint >> 16 & 255) / 255F, green = (tint >> 8 & 255) / 255F, blue = (tint & 255) / 255F;
+            for (int face = 0; face < mesh.cornerCount() / 4; face++) {
+                int n = face * 3;
+                pose.normal().transform(buffers.scratch.set(mesh.normal(n), mapping.humanoid() ? -mesh.normal(n + 1) : mesh.normal(n + 1), mesh.normal(n + 2)));
+                float nx = buffers.scratch.x, ny = buffers.scratch.y, nz = buffers.scratch.z;
+                for (int i = 0; i < 4; i++) {
+                    int corner = face * 4 + i, p = mesh.positionIndex(corner) * 3;
+                    vertices.vertex(buffers.points[p], buffers.points[p + 1], buffers.points[p + 2], red, green, blue, 1,
+                            mesh.u(corner) / textureWidth, mesh.v(corner) / textureHeight, overlay, light, nx, ny, nz);
+                }
+            }
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("submittedVertices", mesh.cornerCount());
+            com.rexhub.createapparel.client.garment.GarmentDiagnostics.count("rigidTransformedPositions", mesh.positionCount());
+        } finally { buffers.inUse = false; }
     }
 
     private static void renderFaces(List<BakedFace> faces, int textureWidth, int textureHeight, PartMapping mapping,

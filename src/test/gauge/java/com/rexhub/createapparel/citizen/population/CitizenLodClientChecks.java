@@ -27,6 +27,8 @@ final class CitizenLodClientChecks {
         var projection = new Matrix4f(RenderSystem.getProjectionMatrix());
         var modelView = RenderSystem.getModelViewStack();
         boolean legacyRigid = GarmentDiagnostics.debugUseLegacyRigidRendering;
+        boolean indexedRigid = GarmentDiagnostics.debugUseIndexedRigidRendering;
+        GarmentDiagnostics.debugUseIndexedRigidRendering = true;
         modelView.pushPose();
         int scenes = 0;
         double maxSilhouette = 0;
@@ -83,6 +85,7 @@ final class CitizenLodClientChecks {
         } finally {
             Files.writeString(output.resolve("comparison.csv"), results);
             GarmentDiagnostics.debugUseLegacyRigidRendering = legacyRigid;
+            GarmentDiagnostics.debugUseIndexedRigidRendering = indexedRigid;
             modelView.popPose(); RenderSystem.applyModelViewMatrix(); mc.gameRenderer.resetProjectionMatrix(projection);
             target.destroyBuffers(); mc.getMainRenderTarget().bindWrite(true);
         }

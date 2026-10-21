@@ -155,6 +155,7 @@ public final class MirrorRenderManager {
     @Nullable public RenderTarget reflectionTarget() { return reflectionTarget; }
     public Camera reflectionCamera() { return Objects.requireNonNull(reflectionCamera); }
     public int reflectionDepth() { return activeView.depth; }
+    public Object reflectionViewKey() { return activeView; }
     public void setShader(@Nullable ShaderInstance shader) { this.shader = shader; }
 
     public void beginFrame(PoseStack view, Camera camera) {
@@ -509,7 +510,8 @@ public final class MirrorRenderManager {
     }
 
     private boolean enabled() {
-        return !failed && shader != null && ModConfigs.CLIENT.enabled.get()
+        return !com.rexhub.createapparel.client.garment.GarmentDiagnostics.debugDisableMirrorRendering
+                && !failed && shader != null && ModConfigs.CLIENT.enabled.get()
                 && ModConfigs.CLIENT.quality.get() != ModConfigs.MirrorQuality.OFF
                 && !Minecraft.useShaderTransparency() && !ModList.get().isLoaded("oculus");
     }

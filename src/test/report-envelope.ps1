@@ -43,6 +43,12 @@ $rows = foreach ($log in $Logs) {
             CachedMeshes = Metric $body 'cachedEnvelopeMeshes'; CachedTopologyBytes = Metric $body 'cachedEnvelopeTopologyBytes'
             LodChanges = Metric $body 'citizenLodChanges'; CacheMiss = Metric $body 'garmentCache.MISS'; CacheHit = Metric $body 'garmentCache.HIT'
             TextureComposeMs = Section $body 'garmentTextureComposeInclusive'; TextureUploadMs = Section $body 'garmentTextureUpload'
+            TypeChanges = (Metric $body 'renderTypeRequestsChanged') / $perFrame
+            TextureChanges = (Metric $body 'textureBindingRequestsChanged') / $perFrame
+            ReflectionCalls = (Metric $body 'reflectionCitizenCalls') / $perFrame
+            ReflectionMs = Section $body 'reflectionCitizenRenderer'; PrimaryMs = Section $body 'primaryCitizenRenderer'
+            Lod0CitizenMs = Section $body 'lod0Citizen'; Lod1CitizenMs = Section $body 'lod1Citizen'
+            Lod2CitizenMs = Section $body 'lod2Citizen'; Lod3CitizenMs = Section $body 'lod3Citizen'
         }
     }
 }

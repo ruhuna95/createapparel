@@ -31,6 +31,8 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class GaugeClientTestLauncher {
+    private static final boolean SKIP_CLIPBOARD = Boolean.getBoolean("apparel.gaugeTest.skipClipboard");
+    private static final String SUCCESS_MARKER = SKIP_CLIPBOARD ? "CITIZEN_GAUGE_CLIENT_PARTIAL_PASSED" : "CITIZEN_GAUGE_CLIENT_PASSED";
     private static int stage, ticks, total;
     private static volatile Throwable failure;
     private static volatile UUID district, source;
@@ -58,6 +60,16 @@ public final class GaugeClientTestLauncher {
         } catch (Throwable exception) { failure = exception; }
     }
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
+        if (Boolean.getBoolean("apparel.gaugeTest.pipelineInteractive")) {
+            var diagnosticClient = Minecraft.getInstance();
+            if (stage == 0 && diagnosticClient.getOverlay() == null && (diagnosticClient.screen instanceof net.minecraft.client.gui.screens.TitleScreen
+                    || diagnosticClient.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen)) {
+                stage = 99;
+                LogUtils.getLogger().info("CITIZEN_PIPELINE_INTERACTIVE_READY screen={} automaticFixture=false; use a world copy and /apparelpipeline 0..4", diagnosticClient.screen.getClass().getSimpleName());
+                if (Boolean.getBoolean("apparel.gaugeTest.pipelineInteractiveSmoke")) Minecraft.getInstance().stop();
+            }
+            return;
+        }
         if (Boolean.getBoolean("apparel.gaugeTest.performanceClient")) return;
         if (event.phase != TickEvent.Phase.END || stage == 99) return;
         var mc = Minecraft.getInstance(); if (mc.getOverlay() != null) return;
@@ -320,11 +332,14 @@ public final class GaugeClientTestLauncher {
                     screen.keyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_E, 0, 0); screen.charTyped('E', 0);
                     check(mc.screen == screen && fields.get(2).getValue().equals("E"), "Inventory key does not close a focused name field");
                     fields.get(2).setValue(DISTRICT_NAME);
-                    String clipboard = mc.keyboardHandler.getClipboard();
-                    try {
-                        check(screen.mouseClicked(left + CitizenGaugeScreen.DISTRICT_WIDTH - 47, top + CitizenGaugeScreen.DISTRICT_HEIGHT - 25, 0), "Copy button sits immediately left of save");
-                        check(mc.keyboardHandler.getClipboard().equals(menu.info().getUUID("District").toString()), "Copy still copies District UUID, not the editable name");
-                    } finally { mc.keyboardHandler.setClipboard(clipboard); }
+                    if (SKIP_CLIPBOARD) LogUtils.getLogger().warn("CITIZEN_GAUGE_CLIENT_CLIPBOARD_SKIPPED: OS clipboard unavailable; copy verification remains unverified");
+                    else {
+                        String clipboard = mc.keyboardHandler.getClipboard();
+                        try {
+                            check(screen.mouseClicked(left + CitizenGaugeScreen.DISTRICT_WIDTH - 47, top + CitizenGaugeScreen.DISTRICT_HEIGHT - 25, 0), "Copy button sits immediately left of save");
+                            check(mc.keyboardHandler.getClipboard().equals(menu.info().getUUID("District").toString()), "Copy still copies District UUID, not the editable name");
+                        } finally { mc.keyboardHandler.setClipboard(clipboard); }
+                    }
                     check(screen.mouseClicked(left + CitizenGaugeScreen.DISTRICT_WIDTH - 25, top + CitizenGaugeScreen.DISTRICT_HEIGHT - 25, 0), "Create-style confirm saves radius and name"); advance(17);
                 } }
                 case 17 -> { if (ticks > 20) { use(DISTRICT); advance(18); } }
@@ -731,7 +746,7 @@ public final class GaugeClientTestLauncher {
                     worldCapture = "gauge-client-wire-factory.png"; advance(223);
                 } }
                 case 223 -> { if (ticks > 10 && worldCapture == null) {
-                    stage = 99; LogUtils.getLogger().info("CITIZEN_GAUGE_CLIENT_PASSED: districtMenu, sourceMenu, settingsPackets, links, citizenFlags, rangePreview, screenshots"); mc.stop();
+                    stage = 99; LogUtils.getLogger().info("{}: districtMenu, sourceMenu, settingsPackets, links, citizenFlags, rangePreview, screenshots", SUCCESS_MARKER); mc.stop();
                 } }
                 case 80 -> { if (ticks > 50) { advance(81); server(() -> {
                     var population = CitizenPopulationManager.get(serverPlayer().serverLevel());
@@ -744,7 +759,7 @@ public final class GaugeClientTestLauncher {
                     var state = population.data().citizen(member); check(state != null && state.independent() && state.force() && state.districtId() == null, "Registry flags survive restart");
                     check(population.chainCount() == 0 && population.incoming(a) == 0, "No stale transfer reservations after restart"); saved = true;
                 }); } }
-                case 81 -> { if (saved) { stage = 99; LogUtils.getLogger().info("CITIZEN_GAUGE_CLIENT_PASSED: processRestart, gaugeId, districtId, links, settings, citizenRegistry, noStaleReservations"); mc.stop(); } }
+                case 81 -> { if (saved) { stage = 99; LogUtils.getLogger().info("{}: processRestart, gaugeId, districtId, links, settings, citizenRegistry, noStaleReservations", SUCCESS_MARKER); mc.stop(); } }
                 default -> { }
             }
         } catch (Throwable error) { stage = 99; LogUtils.getLogger().error("CITIZEN_GAUGE_CLIENT_FAILED", error); mc.stop(); }

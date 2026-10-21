@@ -18,6 +18,31 @@ class CitizenLodTest {
     }
     private static int select(int previous, double distance) { return CitizenRenderLod.select(previous, distance, 12, 32, 64, 1); }
 
+    @Test void movingCamerasAndCitizensPromoteRestoreAndDoNotChatter() {
+        for (int population : new int[]{1, 50, 100, 300, 500, 1000}) {
+            var levels = new int[population];
+            java.util.Arrays.fill(levels, -1);
+            for (int frame = 0; frame <= 1600; frame++) {
+                double distance = frame <= 800 ? 80 - frame * .1 : (frame - 800) * .1;
+                for (int i = 0; i < population; i++) {
+                    levels[i] = select(levels[i], distance);
+                    if (frame == 800) assertEquals(0, levels[i]);
+                    if (frame == 1600) assertEquals(3, levels[i]);
+                }
+            }
+        }
+        for (double boundary : new double[]{12, 32, 64}) {
+            int previous = select(-1, boundary - 2), initial = previous;
+            for (int frame = 0; frame < 10000; frame++) {
+                previous = select(previous, boundary + .9 * Math.sin(frame));
+                assertEquals(initial, previous);
+            }
+        }
+        assertEquals(0, select(3, 2));
+        assertEquals(3, select(0, 200));
+        assertEquals(0, select(-1, 2));
+    }
+
     @Test void lodMeshesKeepOriginalDeformationFieldUvAndOpeningsForEveryEnvelope() throws Exception {
         var root = Path.of("src/main/resources/assets/createapparel/garment_models/parts");
         int count = 0;
