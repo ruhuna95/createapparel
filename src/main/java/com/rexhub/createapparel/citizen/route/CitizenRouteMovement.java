@@ -44,6 +44,7 @@ public final class CitizenRouteMovement {
     private boolean detouring;
     private State state = State.IDLE;
     private final Map<UUID, Long> inaccessibleMarkers = new HashMap<>();
+    private Set<UUID> departedMarkers = Set.of();
 
     public CitizenRouteMovement(Citizen citizen) { this.citizen = citizen; }
     public State state() { return state; }
@@ -117,6 +118,7 @@ public final class CitizenRouteMovement {
         priority = CitizenPathfindingScheduler.Priority.AUTONOMY;
         state = State.IDLE;
         inaccessibleMarkers.clear();
+        departedMarkers = Set.of();
         consecutiveFailures = 0; destinationPathIssued = false; nextDetourCheck = 0;
         avoidedCrossing = null;
     }
@@ -164,6 +166,7 @@ public final class CitizenRouteMovement {
         if (graphVersion != manager.data().version()) {
             graphVersion = manager.data().version();
             inaccessibleMarkers.clear();
+            departedMarkers = Set.of();
             if (!detouring) plan = null;
             var connection = edge == null ? null : manager.data().edge(edge);
             boolean committedCrossing = crossingStarted && connection != null && connection.conditional()
@@ -295,13 +298,17 @@ public final class CitizenRouteMovement {
             return;
         }
         if (plan == null) {
-            var resolved = manager.planner().plan(citizen, destination, inaccessibleMarkers.keySet(), avoidedCrossing);
+            var resolved = manager.planner().plan(citizen, destination, inaccessibleMarkers.keySet(), avoidedCrossing, departedMarkers);
             if (resolved.deferred()) { retryAfter = time + 1; return; }
-            if (resolved.fallback() && citizen.intents().useGatewayFallback()) return;
             if (resolved.fallback() && avoidedCrossing != null) { state = State.WAIT_ROUTE; retryAfter = time + RouteSettings.RETRY_INTERVAL; return; }
+            if (resolved.fallback() && citizen.intents().useGatewayFallback()) return;
             plan = resolved;
             planIndex = 0;
-            if (!plan.fallback()) { start(manager, plan.nodes().get(0), null); return; }
+            if (!plan.fallback()) {
+                citizen.getNavigation().stop();
+                destinationPathIssued = false;
+                start(manager, plan.nodes().get(0), null); return;
+            }
         }
         if (!plan.fallback() && planIndex < plan.nodes().size()) {
             start(manager, plan.nodes().get(planIndex), plan.edges().get(planIndex - 1));
@@ -316,9 +323,14 @@ public final class CitizenRouteMovement {
         if (destinationPathIssued) {
             destinationPathIssued = false;
             if (citizen.position().distanceToSqr(pathStart) < 0.25) {
+                departedMarkers = Set.of();
                 recordFailure(time); plan = null; return;
             }
             consecutiveFailures = 0;
+            if (!plan.fallback()) departedMarkers = new HashSet<>(plan.nodes());
+            plan = null;
+            retryAfter = time + 1;
+            return;
         }
         if (time < retryAfter) return;
         var goal = BlockPos.containing(destination);
@@ -334,6 +346,7 @@ public final class CitizenRouteMovement {
                 return;
             }
             plan = null;
+            departedMarkers = Set.of();
             recordFailure(manager.level().getGameTime());
         });
     }

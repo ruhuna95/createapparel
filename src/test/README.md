@@ -1,5 +1,9 @@
 # 自動検証
 
+## Intentの経路優先移動
+
+`CitizenIntentRouteGameTests`は5種類のIntentがSTANDのまま接続Graphを実際に歩き、利用可能なGatewayを先行利用しないことを検査する。始点側だけ／終点側だけのGraph、部分経路cacheの編集無効化、経路→自由Navigation、自由Navigation→経路、切れた2つの経路への再接続・往復ループ防止と、既存Graph予算の維持も専用Dedicated GameTestで検証する。通常行動のWALK化で代替しない。
+
 ## Fashion / Retail / Advertisement
 
 広告矩形の回帰は`FashionRetailGameTests`の`bothPanelTypesPreserveRectanglesAndRejoinAfterRefillingAHole`、`panelPlacementTicksGrowRectanglesAndBuildIndependentAdjacentRectangles`、`panelMergeLimitsDoNotPreventANewAdjacentRectangle`、`panelMultiwayRectanglesAndEditedFragmentsRespectTheirMergeFamilies`、`signageDeferredRemovalRecoversChannelAndTheRemainingRectangle`で検査する。両媒体・全方位の破壊後の矩形維持と穴埋め、実予約Tickでの隣接拡張・別矩形の形成、枚数上限・所有者・個別設定の保護、多矩形の一括連結、Familyの保存、代表不在のサイネージ破壊とChannel／Layout保持を含む。

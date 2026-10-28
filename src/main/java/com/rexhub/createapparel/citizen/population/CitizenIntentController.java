@@ -80,7 +80,6 @@ public final class CitizenIntentController {
         clear(false);
         active = intent; destination = point; gatewayPassed = false; lastProgress = level.getGameTime(); lastDistance = Double.POSITIVE_INFINITY;
         manager.intentChanged(citizen, null, intent);
-        selectGateway(level);
         move(); return true;
     }
 
@@ -107,9 +106,7 @@ public final class CitizenIntentController {
     }
     private void selectGateway(ServerLevel level) {
         departure = null;
-        if (gatewayPassed || active == null || active.district() == null) return;
-        if (active.source() == CitizenIntent.Source.GAUGE_TRANSFER && citizen.citizenState().behavior().mode() == CitizenBehaviorMode.WALK
-                && !gatewayFallbackAllowed) return;
+        if (gatewayPassed || !gatewayFallbackAllowed || active == null || active.district() == null) return;
         var population = CitizenPopulationManager.get(level);
         var source = active.source() == CitizenIntent.Source.GAUGE_TRANSFER ? population.data().district(citizen.citizenState().population().districtId())
                 : population.physicalDistrict(citizen.position());
@@ -122,8 +119,7 @@ public final class CitizenIntentController {
                 .min(Comparator.comparingDouble(marker -> marker.center().distanceToSqr(citizen.position()))).map(RouteMarker::id).orElse(null);
     }
     public boolean useGatewayFallback() {
-        if (!(citizen.level() instanceof ServerLevel level) || active == null || active.source() != CitizenIntent.Source.GAUGE_TRANSFER
-                || citizen.citizenState().behavior().mode() != CitizenBehaviorMode.WALK || gatewayPassed || gatewayFallbackAllowed) return false;
+        if (!(citizen.level() instanceof ServerLevel level) || active == null || gatewayPassed || gatewayFallbackAllowed) return false;
         gatewayFallbackAllowed = true;
         selectGateway(level);
         if (departure == null) return false;

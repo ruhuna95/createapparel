@@ -398,9 +398,13 @@ public final class CitizenPopulationRecoveryGameTests {
 
     @GameTest(template = "citizen_behavior", batch = "citizen_population_recovery", timeoutTicks = 700)
     public static void isolatedMarkerAndStandAreNotMistakenForStuckMovement(GameTestHelper helper) {
-        room(helper); var home = gauge(helper, 8, 8, false); marker(helper, home.center(), false);
-        var walker = citizen(helper, home, home.center(), CitizenBehaviorMode.WALK);
-        var standing = citizen(helper, home, home.center().offset(2, 0, 0), CitizenBehaviorMode.STAND);
+        room(helper); var home = gauge(helper, 8, 8, false);
+        var isolatedStart = home.center().above(80);
+        for (int x = -2; x <= 4; x++) for (int z = -2; z <= 2; z++)
+            helper.getLevel().setBlockAndUpdate(isolatedStart.offset(x, -1, z), Blocks.STONE.defaultBlockState());
+        marker(helper, isolatedStart, false);
+        var walker = citizen(helper, home, isolatedStart, CitizenBehaviorMode.WALK);
+        var standing = citizen(helper, home, isolatedStart.offset(2, 0, 0), CitizenBehaviorMode.STAND);
         var walkerStart = walker.position(); var standStart = standing.position();
         helper.runAtTickTime(650, () -> {
             helper.assertTrue(!walker.intents().stucked() && !standing.intents().stucked()

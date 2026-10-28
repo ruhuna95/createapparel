@@ -16,7 +16,7 @@ public final class CitizenRoutePlanner {
     public record Statistics(int searches, int visitedNodes, int scannedEdges, int queued, int active, long nanos) { }
     private record Endpoint(UUID id, double cost) { }
     private record Key(UUID citizen, List<Endpoint> starts, List<Endpoint> targets, long version, long loaded,
-                       @Nullable UUID avoided, boolean openOnly) { }
+                       @Nullable UUID avoided, boolean openOnly, @Nullable Vec3 partialTarget, double partialLimit, boolean reverse) { }
     private record Visit(UUID marker, double cost) { }
     private record Crossing(UUID edge, boolean open) { }
     private record Cached(Plan plan, long expires, long runtime, long conditions, boolean delivered, boolean validated,
@@ -31,6 +31,9 @@ public final class CitizenRoutePlanner {
         boolean initialized;
         @Nullable UUID bestGoal;
         double bestCost = Double.POSITIVE_INFINITY;
+        @Nullable UUID bestPartial;
+        double partialDistance;
+        double partialCost = Double.POSITIVE_INFINITY;
         @Nullable Visit expanding;
         Iterator<RouteEdge> adjacent = Collections.emptyIterator();
         boolean finishing;
@@ -40,7 +43,7 @@ public final class CitizenRoutePlanner {
         @Nullable Cached validating;
         int validationCursor;
         long validationRuntime;
-        Search(Citizen citizen, Key key) { this.citizen = citizen; this.key = key; }
+        Search(Citizen citizen, Key key) { this.citizen = citizen; this.key = key; partialDistance = key.partialLimit; }
     }
     private final CitizenRouteManager manager;
     private final Map<Key, Cached> cache = new LinkedHashMap<>();
@@ -69,19 +72,28 @@ public final class CitizenRoutePlanner {
     }
 
     public Plan plan(Citizen citizen, Vec3 destination, Set<UUID> excludedMarkers, @Nullable UUID avoided) {
+        return plan(citizen, destination, excludedMarkers, avoided, Set.of());
+    }
+
+    public Plan plan(Citizen citizen, Vec3 destination, Set<UUID> excludedMarkers, @Nullable UUID avoided, Set<UUID> departedMarkers) {
         if (com.rexhub.createapparel.citizen.population.CitizenDiagnostics.debugDisableCitizenRoutePlanning) return Plan.pending();
         try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(manager.level(), "routePlan")) {
-            var starts = candidates(citizen.position(), excludedMarkers).stream()
+            var starts = candidates(citizen.position(), excludedMarkers, departedMarkers).stream()
                     .map(node -> new Endpoint(node.id(), node.center().distanceTo(citizen.position()))).toList();
-            var targets = candidates(destination, excludedMarkers).stream()
+            var targets = candidates(destination, excludedMarkers, departedMarkers).stream()
                     .map(node -> new Endpoint(node.id(), node.center().distanceTo(destination))).toList();
-            if (starts.isEmpty() || targets.isEmpty()) { cancel(citizen); return Plan.vanilla(); }
-            return query(citizen, starts, targets, avoided, false);
+            double limit = citizen.position().distanceTo(destination) - 1;
+            if (!starts.isEmpty()) return query(citizen, starts, targets, avoided, false,
+                    avoided == null ? destination : null, limit, false);
+            if (!targets.isEmpty() && avoided == null) return query(citizen, targets, List.of(), null, false,
+                    citizen.position(), limit, true);
+            cancel(citizen); return Plan.vanilla();
         }
     }
 
-    private List<RouteMarker> candidates(Vec3 point, Set<UUID> excluded) {
-        var nearby = manager.nearby(point, RouteSettings.DISCOVERY_RADIUS).stream().filter(node -> !excluded.contains(node.id())).toList();
+    private List<RouteMarker> candidates(Vec3 point, Set<UUID> excluded, Set<UUID> departed) {
+        var nearby = manager.nearby(point, RouteSettings.DISCOVERY_RADIUS).stream()
+                .filter(node -> !excluded.contains(node.id()) && !departed.contains(node.id())).toList();
         if (nearby.isEmpty()) return List.of();
         double closest = nearby.get(0).center().distanceTo(point);
         return nearby.stream().filter(node -> node.center().distanceTo(point) <= closest + 4).limit(4).toList();
@@ -96,10 +108,16 @@ public final class CitizenRoutePlanner {
     }
 
     private Plan query(Citizen citizen, List<Endpoint> starts, List<Endpoint> targets, @Nullable UUID avoided, boolean openOnly) {
+        return query(citizen, starts, targets, avoided, openOnly, null, 0, false);
+    }
+
+    private Plan query(Citizen citizen, List<Endpoint> starts, List<Endpoint> targets, @Nullable UUID avoided, boolean openOnly,
+                       @Nullable Vec3 partialTarget, double partialLimit, boolean reverse) {
         if (com.rexhub.createapparel.citizen.population.CitizenDiagnostics.debugDisableCitizenRoutePlanning) return Plan.pending();
         try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(manager.level(), "routeQuery")) {
             refreshBudget();
-            var key = new Key(citizen.getUUID(), starts, targets, manager.data().version(), manager.loadRevision(), avoided, openOnly);
+            var key = new Key(citizen.getUUID(), starts, targets, manager.data().version(), manager.loadRevision(), avoided, openOnly,
+                    partialTarget, partialLimit, reverse);
             var previous = requests.get(citizen.getUUID());
             if (previous != null && equivalent(previous, key)) key = previous;
             else if (previous != null) cancel(citizen);
@@ -158,6 +176,9 @@ public final class CitizenRoutePlanner {
 
     private static boolean equivalent(Key first, Key second) {
         if (first.version != second.version || first.loaded != second.loaded || first.openOnly != second.openOnly
+                || first.reverse != second.reverse || Math.abs(first.partialLimit - second.partialLimit) > 1
+                || (first.partialTarget == null) != (second.partialTarget == null)
+                || first.partialTarget != null && first.partialTarget.distanceToSqr(second.partialTarget) > 1
                 || !Objects.equals(first.avoided, second.avoided) || !first.targets.equals(second.targets)
                 || first.starts.size() != second.starts.size()) return false;
         for (var start : first.starts) if (second.starts.stream().noneMatch(other -> other.id.equals(start.id) && Math.abs(other.cost - start.cost) <= 1)) return false;
@@ -222,6 +243,13 @@ public final class CitizenRoutePlanner {
                 if (terminal != null && visit.cost + terminal < search.bestCost) {
                     search.bestCost = visit.cost + terminal; search.bestGoal = visit.marker;
                 }
+                if (search.key.partialTarget != null && search.previous.containsKey(visit.marker)) {
+                    double distance = manager.data().marker(visit.marker).center().distanceTo(search.key.partialTarget);
+                    if (distance < search.partialDistance - 1.0E-6
+                            || search.bestPartial != null && Math.abs(distance - search.partialDistance) <= 1.0E-6 && visit.cost < search.partialCost) {
+                        search.bestPartial = visit.marker; search.partialDistance = distance; search.partialCost = visit.cost;
+                    }
+                }
                 search.expanding = visit;
                 search.adjacent = manager.data().connections(visit.marker);
             }
@@ -240,8 +268,9 @@ public final class CitizenRoutePlanner {
     }
 
     @Nullable private Plan finish(Search search) {
-        if (search.bestGoal == null) return Plan.vanilla();
-        search.finishing = true; search.tracing = search.bestGoal;
+        var goal = search.bestGoal == null ? search.bestPartial : search.bestGoal;
+        if (goal == null) return Plan.vanilla();
+        search.finishing = true; search.tracing = goal;
         return finishSlice(search);
     }
 
@@ -263,7 +292,7 @@ public final class CitizenRoutePlanner {
             search.tracing = previous;
         }
         if (search.tracing != null) return null;
-        Collections.reverse(search.resultNodes); Collections.reverse(search.resultEdges);
+        if (!search.key.reverse) { Collections.reverse(search.resultNodes); Collections.reverse(search.resultEdges); }
         return new Plan(search.resultNodes, search.resultEdges, false, false, search.key.version, search.key.loaded);
     }
 
@@ -297,6 +326,7 @@ public final class CitizenRoutePlanner {
 
     private void restart(Search search) {
         active--; search.initialized = search.finishing = false; search.tracing = search.bestGoal = null;
+        search.bestPartial = null; search.partialDistance = search.key.partialLimit; search.partialCost = Double.POSITIVE_INFINITY;
         search.bestCost = Double.POSITIVE_INFINITY; search.expanding = null; search.adjacent = Collections.emptyIterator();
         search.queue.clear(); search.costs.clear(); search.previous.clear(); search.via.clear(); search.goals.clear();
         search.resultNodes.clear(); search.resultEdges.clear(); search.resultCrossings.clear();
