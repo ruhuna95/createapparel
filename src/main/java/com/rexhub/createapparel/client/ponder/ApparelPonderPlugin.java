@@ -12,12 +12,15 @@ import java.util.List;
 
 public final class ApparelPonderPlugin implements PonderPlugin {
     public static final ResourceLocation PRODUCTION = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "production");
+    public static final ResourceLocation RETAIL = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "retail");
 
     @Override
     public String getModId() { return CreateApparel.MOD_ID; }
 
     @Override
     public void registerScenes(PonderSceneRegistrationHelper<ResourceLocation> helper) {
+        helper.forComponents(com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER_ITEM.getId())
+                .addStoryBoard("production", ApparelRetailScenes::build, RETAIL);
         register(helper, List.of(ModItems.SPINNING_MACHINE.getId()), ProductionGuide.SPINNING, ProductionGuide.SPINNING_AUTOMATION);
         register(helper, List.of(ModItems.LOOM.getId()), ProductionGuide.WEAVING, ProductionGuide.WEAVING_AUTOMATION);
         register(helper, List.of(ModItems.SEWING_MACHINE.getId()),
@@ -36,6 +39,9 @@ public final class ApparelPonderPlugin implements PonderPlugin {
 
     @Override
     public void registerTags(PonderTagRegistrationHelper<ResourceLocation> helper) {
+        helper.registerTag(RETAIL).title("Apparel Shops").description("Cashiers, storage and linked displays")
+                .item(com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER_ITEM.get()).addToIndex().register();
+        helper.addToTag(RETAIL).add(com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER_ITEM.getId());
         helper.registerTag(PRODUCTION).title("Apparel Production")
                 .description("Spinning, weaving, sewing and silkworm rearing")
                 .item(ModItems.SEWING_MACHINE.get()).addToIndex().register();

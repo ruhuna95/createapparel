@@ -296,20 +296,19 @@ public final class CitizenMenuGameTests {
     }
 
     @GameTest(template = "apparel_state", batch = "citizen")
-    public static void simultaneousMenusUseCurrentStateAndPhoneRequiresActualHand(GameTestHelper helper) {
+    public static void exclusiveMenusRejectOtherPlayersAndPhoneRequiresActualHand(GameTestHelper helper) {
         var f = fixture(helper);
         var otherPlayer = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "citizen-other"));
         otherPlayer.setPos(f.citizen().position());
         var other = new CitizenMenu(20, otherPlayer.getInventory(), f.citizen());
         otherPlayer.containerMenu = other;
-        f.menu().setCarried(new ItemStack(ModItems.BRIEFS.get()));
-        f.menu().clicked(GarmentSlot.INNER_BOTTOM.ordinal(), 0, ClickType.PICKUP, f.player());
-        other.clicked(GarmentSlot.BOTTOM.ordinal(), 0, ClickType.PICKUP, otherPlayer);
         var before = f.citizen().citizenState().serializeNBT();
         var items = inventory(f);
-        f.menu().clicked(GarmentSlot.INNER_BOTTOM.ordinal(), 0, ClickType.PICKUP, f.player());
+        other.setCarried(new ItemStack(ModItems.SWEATER.get()));
+        other.clicked(GarmentSlot.TOP.ordinal(), 0, ClickType.PICKUP, otherPlayer);
         unchanged(helper, f, before, items);
-        helper.assertTrue(!other.getCarried().isEmpty() && CitizenCoverage.isCovered(f.menu().loadout()), "Concurrent viewers commit against current state");
+        helper.assertTrue(!other.stillValid(otherPlayer) && other.getCarried().is(ModItems.SWEATER.get())
+                && f.citizen().interaction().isViewer(f.player(), f.menu()), "A second menu cannot acquire or edit an occupied Citizen");
         var mock = helper.makeMockPlayer();
         for (var hand : InteractionHand.values()) {
             mock.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);

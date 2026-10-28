@@ -26,7 +26,7 @@ import java.util.List;
 public record CitizenActionPacket(int containerId, int entityId, @Nullable Action action,
                                   int index, String category, String value) {
     public enum Action { TAB, STYLE, ARM_PROFILE, CHEST_PROFILE, SKIN_TONE, HAIR_STYLE, HAIR_COLOR, EYE_COLOR,
-        BEHAVIOR_MODE, WANDER_RADIUS, POSE_ROTATION_STEP, STAND_LOOK_MODE, POSE_PRESET, POPULATION_FORCE, POPULATION_INDEPENDENT }
+        BEHAVIOR_MODE, WANDER_RADIUS, POSE_ROTATION_STEP, STAND_LOOK_MODE, POSE_PRESET, POPULATION_FORCE, POPULATION_INDEPENDENT, FORCE_FASHION }
 
     public static CitizenActionPacket select(CitizenMenu menu, Action action, String value) {
         return new CitizenActionPacket(menu.containerId, menu.citizen() == null ? -1 : menu.citizen().getId(),
@@ -73,6 +73,15 @@ public record CitizenActionPacket(int containerId, int entityId, @Nullable Actio
         if (action == Action.TAB) {
             if (index >= 0 && index < CitizenMenu.Tab.values().length) menu.setTab(CitizenMenu.Tab.values()[index]);
             return;
+        }
+        if (action == Action.FORCE_FASHION) {
+            if (menu.tab() != CitizenMenu.Tab.GARMENT || !category.isEmpty() || index != 0
+                    || !value.equals("true") && !value.equals("false")) return;
+            menu.citizen().citizenState().fashion().setForceFashion(Boolean.parseBoolean(value));
+            if (Boolean.parseBoolean(value) && menu.citizen().intents().active() != null
+                    && menu.citizen().intents().active().source() == com.rexhub.createapparel.citizen.population.CitizenIntent.Source.FASHION)
+                menu.citizen().intents().cancel();
+            menu.citizen().syncState(); return;
         }
         if (action == Action.STYLE) {
             if (menu.tab() == CitizenMenu.Tab.GARMENT && index >= 0 && index < GarmentSlot.values().length) {

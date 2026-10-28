@@ -68,7 +68,7 @@ public abstract class ApparelMenu extends AbstractContainerMenu {
             };
     }
 
-    private static SlotPosition apparelSlotPosition(GarmentSlot slot) {
+    public static SlotPosition apparelSlotPosition(GarmentSlot slot) {
         return switch (slot) {
             case FACE -> apparelGridPosition(1.0F, 1.5F);
             case HEAD -> apparelGridPosition(1.0F, 2.5F);
@@ -181,5 +181,5 @@ public abstract class ApparelMenu extends AbstractContainerMenu {
         return List.copyOf(contents);
     }
 
-    private record SlotPosition(int x, int y) { }
+    public record SlotPosition(int x, int y) { }
 }

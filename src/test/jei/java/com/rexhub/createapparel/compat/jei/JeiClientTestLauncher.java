@@ -37,6 +37,7 @@ public final class JeiClientTestLauncher {
         var mc = Minecraft.getInstance();
         try {
             if (!started && mc.screen != null && mc.getOverlay() == null) {
+                Files.createDirectories(root().resolve("build/phase23"));
                 started = true;
                 mc.options.pauseOnLostFocus = false;
                 mc.options.guiScale().set(2);

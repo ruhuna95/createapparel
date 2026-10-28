@@ -48,6 +48,9 @@ public final class ModRegistries {
 
     public static void register(IEventBus modEventBus) {
         ModBlocks.bootstrap();
+        com.rexhub.createapparel.fashion.FashionRegistries.bootstrap();
+        com.rexhub.createapparel.photo.PhotoRegistries.bootstrap();
+        com.rexhub.createapparel.advertisement.AdvertisementRegistries.bootstrap();
         ModMirrors.bootstrap();
         ModFluids.bootstrap();
         ModArmInteractionPoints.bootstrap();

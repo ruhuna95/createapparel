@@ -23,6 +23,37 @@ public final class GarmentCreativePresetsGameTests {
     }
 
     @GameTest(template = "apparel_state", batch = "apparel_state")
+    public static void mainCreativeTabPreservesRequestedGroupOrder(GameTestHelper helper) {
+        var tab = ModCreativeModeTabs.CREATE_APPAREL.get();
+        tab.buildContents(new CreativeModeTab.ItemDisplayParameters(
+                FeatureFlags.DEFAULT_FLAGS, true, helper.getLevel().registryAccess()));
+        var entries = tab.getDisplayItems().stream().map(ItemStack::getItem).toList();
+        var expected = ModItems.creativeTabItems().stream().map(net.minecraftforge.registries.RegistryObject::get).toList();
+        helper.assertTrue(entries.equals(expected), "The native main tab preserves the complete configured item order");
+        helper.assertTrue(new java.util.HashSet<>(entries).size() == entries.size(), "Every main-tab item appears once");
+        helper.assertTrue(entries.subList(0, 4).equals(java.util.List.of(
+                        ModItems.SMART_PHONE.get(), ModItems.CITIZEN_GAUGE.get(),
+                        com.rexhub.createapparel.photo.PhotoRegistries.CAMERA.get(), ModItems.SPINNING_MACHINE.get())),
+                "Tools precede the existing machinery group");
+        int lastMirror = entries.indexOf(com.rexhub.createapparel.init.ModMirrors.ITEMS
+                .get(com.rexhub.createapparel.init.ModMirrors.WARPED_MIRRORED_DOOR).get());
+        helper.assertTrue(lastMirror > 3 && entries.subList(lastMirror + 1, lastMirror + 8).equals(java.util.List.of(
+                        com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER_ITEM.get(),
+                        com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_BROADCASTER_ITEM.get(),
+                        com.rexhub.createapparel.advertisement.AdvertisementRegistries.POSTER_ITEM.get(),
+                        com.rexhub.createapparel.advertisement.AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get(),
+                        com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_PANEL_ITEM.get(),
+                        ModItems.SEWING_PATTERN.get(), ModItems.COTTON_SEEDS.get())),
+                "Retail, advertising, the sewing pattern and materials follow the last mirror");
+        helper.assertTrue(entries.subList(entries.size() - 5, entries.size()).equals(java.util.List.of(
+                        ModItems.PLUM_DYE.get(), com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_BUCKET.get(),
+                        com.rexhub.createapparel.photo.PhotoRegistries.ADVERTISING_PHOTO.get(),
+                        ModItems.SILKWORM_SPAWN_EGG.get(), ModItems.CITIZEN_SPAWN_EGG.get())),
+                "The last dye is followed by coating, photography supplies and both spawn eggs");
+        helper.succeed();
+    }
+
+    @GameTest(template = "apparel_state", batch = "apparel_state")
     public static void creativeTabUsesIndependentAppearanceStacksAndLeavesDefaultsUntouched(GameTestHelper helper) {
         var tab = ModCreativeModeTabs.CREATE_APPAREL_GARMENT.get();
         tab.buildContents(new CreativeModeTab.ItemDisplayParameters(

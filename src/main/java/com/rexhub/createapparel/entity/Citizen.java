@@ -23,7 +23,11 @@ public final class Citizen extends PathfinderMob {
     private static final EntityDataAccessor<CompoundTag> DATA_STATE =
             SynchedEntityData.defineId(Citizen.class, EntityDataSerializers.COMPOUND_TAG);
     private final CitizenState citizenState = new CitizenState();
+    private final com.rexhub.createapparel.citizen.CitizenInteractionController interaction =
+            new com.rexhub.createapparel.citizen.CitizenInteractionController(this);
     private float ageScale = 1;
+    private final com.rexhub.createapparel.fashion.CitizenFashionController fashionController = new com.rexhub.createapparel.fashion.CitizenFashionController(this);
+    public com.rexhub.createapparel.fashion.CitizenFashionController fashionController() { return fashionController; }
     private CitizenBehaviorState observedBehavior = CitizenBehaviorState.DEFAULT;
     private final CitizenLookController lookController = new CitizenLookController(this);
     private final com.rexhub.createapparel.citizen.population.CitizenIntentController intents = new com.rexhub.createapparel.citizen.population.CitizenIntentController(this);
@@ -46,6 +50,10 @@ public final class Citizen extends PathfinderMob {
     }
 
     public CitizenState citizenState() { return citizenState; }
+    public com.rexhub.createapparel.citizen.CitizenInteractionController interaction() { return interaction; }
+
+    @Override
+    public boolean isEffectiveAi() { return (interaction == null || !interaction.active()) && super.isEffectiveAi(); }
     public com.rexhub.createapparel.citizen.population.CitizenIntentController intents() { return intents; }
     public com.rexhub.createapparel.citizen.route.CitizenRouteMovement routeMovement() { return routeMovement; }
 
@@ -87,6 +95,7 @@ public final class Citizen extends PathfinderMob {
 
     public void setPoseYaw(float yaw) {
         if (level().isClientSide || citizenState.behavior().mode() != CitizenBehaviorMode.POSE) return;
+        interaction.resumeYaw(net.minecraft.util.Mth.wrapDegrees(yaw));
         setYRot(net.minecraft.util.Mth.wrapDegrees(yaw));
         yBodyRot = yHeadRot = getYRot();
         setYHeadRot(getYRot());
@@ -169,8 +178,10 @@ public final class Citizen extends PathfinderMob {
     public void tick() {
         try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure(level(), "entityTick")) {
             if (!level().isClientSide) com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.citizen(getUUID());
+            if (!level().isClientSide) interaction.tick();
             super.tick();
-            if (!level().isClientSide) intents.tick();
+            if (!level().isClientSide && interaction.active()) return;
+            if (!level().isClientSide) { intents.tick(); fashionController.tick(); }
             var behavior = citizenState.behavior();
             if (routeMovement.hasDestination()) return;
             if (behavior.mode() == CitizenBehaviorMode.STAND && behavior.lookMode() == CitizenLookMode.BODY) {

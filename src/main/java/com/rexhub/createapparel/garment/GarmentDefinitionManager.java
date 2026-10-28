@@ -61,7 +61,26 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
                     GarmentDefinition definition = GarmentDefinition.fromJson(id, entry.getValue().getAsJsonObject());
                     loaded.put(id, definition);
                 });
+        Map<String, com.rexhub.createapparel.fashion.FashionDesignModifier> modifiers = new LinkedHashMap<>();
+        resourceManager.getResource(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "fashion/design_modifiers.json")).ifPresent(resource -> {
+            try (var reader = resource.openAsReader()) {
+                var json = GSON.fromJson(reader, com.google.gson.JsonObject.class);
+                var designs = loaded.values().stream().flatMap(definition -> definition.designs().stream()).collect(java.util.stream.Collectors.toSet());
+                json.entrySet().forEach(entry -> {
+                    if (!designs.contains(entry.getKey())) throw new IllegalArgumentException("Unknown fashion design: " + entry.getKey());
+                    modifiers.put(entry.getKey(), com.rexhub.createapparel.fashion.FashionDesignModifier.parse(entry.getValue().getAsJsonObject()));
+                });
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Cannot read fashion design modifiers", exception);
+            }
+        });
         definitions = Collections.unmodifiableMap(loaded);
+        com.rexhub.createapparel.fashion.FashionTagResolver.acceptModifiers(modifiers);
+        loaded.values().forEach(definition -> definition.designs().forEach(design -> {
+            var tags = com.rexhub.createapparel.fashion.FashionTagResolver.resolve(definition, design);
+            if (tags.contains(com.rexhub.createapparel.fashion.FashionTag.FEMININE) && tags.contains(com.rexhub.createapparel.fashion.FashionTag.MASCULINE))
+                com.mojang.logging.LogUtils.getLogger().warn("Garment {} / {} has conflicting fashion targets; automatic purchases are disabled", definition.id(), design);
+        }));
     }
 
     @SubscribeEvent

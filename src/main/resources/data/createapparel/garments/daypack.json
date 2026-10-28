@@ -1,4 +1,8 @@
 {
+  "fashion_tags": ["simple", "casual"],
+  "fashion_design_overrides": {
+    "plain": { "add": [], "remove": ["casual"] }
+  },
   "default_slot": "back",
   "allowed_slots": [
     "back"

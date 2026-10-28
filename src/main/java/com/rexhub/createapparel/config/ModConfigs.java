@@ -34,6 +34,7 @@ public final class ModConfigs {
     }
 
     public static final class Common {
+        public final com.rexhub.createapparel.fashion.FashionConfig fashion;
         public final ForgeConfigSpec.IntValue maxNewPathRequestsPerTick;
         public final ForgeConfigSpec.IntValue maxActiveCitizensPerDimension;
         public final ForgeConfigSpec.IntValue activityRotationTicks;
@@ -56,6 +57,7 @@ public final class ModConfigs {
         public final ForgeConfigSpec.IntValue populationAutonomyTicks;
         public final ForgeConfigSpec.DoubleValue populationVisitChance;
         private Common(ForgeConfigSpec.Builder builder) {
+            fashion = new com.rexhub.createapparel.fashion.FashionConfig(builder);
             builder.push("citizenRoutes");
             maxNewPathRequestsPerTick = builder.defineInRange("maxNewPathRequestsPerTick", 4, 1, 64);
             maxActiveCitizensPerDimension = builder.defineInRange("maxActiveCitizensPerDimension", 80, 1, 4096);

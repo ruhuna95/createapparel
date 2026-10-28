@@ -41,6 +41,7 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
     private Button radiusButton;
     private Button worldRotationButton;
     private Button populationForceButton;
+    private Button fashionLockButton;
     private Button populationIndependentButton;
     private CitizenBehaviorMode observedMode;
 
@@ -59,6 +60,10 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
     @Override
     protected boolean initCustomControls() {
         appearanceButtons.clear();
+        fashionLockButton = addRenderableWidget(new FashionLockButton(leftPos + 76, topPos + 36, button -> {
+            if (menu.citizen() != null) ModNetwork.updateCitizen(CitizenActionPacket.select(menu, CitizenActionPacket.Action.FORCE_FASHION,
+                    Boolean.toString(!menu.citizen().citizenState().fashion().forceFashion())));
+        }, () -> menu.citizen() != null && menu.citizen().citizenState().fashion().forceFashion()));
         tabButtons.clear();
         behaviorButtons.clear();
         for (var tab : CitizenMenu.Tab.values()) {
@@ -199,6 +204,7 @@ public final class CitizenScreen extends WardrobeScreen<CitizenMenu> {
         rotationButton.setMessage(Component.translatable("screen.createapparel.citizen.preview_rotation", Math.round(previewRotation)));
         boolean behaviorTab = menu.tab() == CitizenMenu.Tab.BEHAVIOR;
         populationForceButton.visible = populationForceButton.active = behaviorTab;
+        fashionLockButton.visible = fashionLockButton.active = menu.tab() == CitizenMenu.Tab.GARMENT;
         populationIndependentButton.visible = populationIndependentButton.active = behaviorTab;
         var population = menu.citizen() == null ? com.rexhub.createapparel.citizen.population.CitizenPopulationState.DEFAULT : menu.citizen().citizenState().population();
         populationForceButton.setMessage(Component.translatable("screen.createapparel.gauge.force", Component.translatable("screen.createapparel.gauge." + (population.force() ? "on" : "off"))));

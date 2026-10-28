@@ -57,6 +57,7 @@ public final class CitizenMenu extends ApparelMenu {
         this.citizen = citizen;
         owner = inventory.player;
         sessionBaseYaw = citizen == null ? 0 : citizen.getYRot();
+        if (server && citizen != null) citizen.interaction().begin(owner, this);
         addDataSlot(new DataSlot() {
             @Override
             public int get() { return tab; }
@@ -126,6 +127,7 @@ public final class CitizenMenu extends ApparelMenu {
 
     @Override
     public void broadcastChanges() {
+        if (!owner.level().isClientSide && (citizen == null || !citizen.interaction().isViewer(owner, this))) return;
         super.broadcastChanges();
         if (!(owner instanceof ServerPlayer player) || citizen == null || !stillValid(player)) return;
         if (--behaviorInfoDelay > 0) return;
@@ -179,7 +181,14 @@ public final class CitizenMenu extends ApparelMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return owner == player && citizen != null && canEdit(player, citizen);
+        return owner == player && citizen != null && canEdit(player, citizen)
+                && (player.level().isClientSide || citizen.interaction().isViewer(player, this));
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (!player.level().isClientSide && citizen != null) citizen.interaction().end(this);
     }
 
     private boolean canOperate(Player player) {

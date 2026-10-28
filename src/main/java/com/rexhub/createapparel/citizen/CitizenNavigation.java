@@ -17,6 +17,15 @@ public final class CitizenNavigation extends GroundPathNavigation {
     private int checkedAt;
     public CitizenNavigation(Mob mob, Level level) { super(mob, level); }
 
+    public void resumeAfterInteraction() {
+        lastTimeoutCheck = level.getGameTime();
+        timeoutTimer = 0;
+        timeoutLimit = 0;
+        timeoutCachedNode = net.minecraft.core.Vec3i.ZERO;
+        lastStuckCheck = tick;
+        lastStuckCheckPos = mob.position();
+    }
+
     @Override
     public void tick() {
         try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("navigation")) {

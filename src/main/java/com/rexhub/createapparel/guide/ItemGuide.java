@@ -10,7 +10,7 @@ import java.util.Locale;
 public enum ItemGuide {
     SPINNING, LOOM, SEWING, PATTERN, PHONE, WARDROBE, HANGER, CLIP_HANGER, RACK, CLIP_RACK,
     REARING, MANNEQUIN, GARMENT, FABRIC, THREAD, FIBER, CROP, SEEDS, COCOON, DYE, GAUGE,
-    CITIZEN_EGG, SILKWORM_EGG, JEWELRY_BASE, MIRROR, COATING;
+    CITIZEN_EGG, SILKWORM_EGG, JEWELRY_BASE, MIRROR, COATING, REGISTER, CAMERA, PHOTO, ADVERTISEMENT, BROADCASTER;
 
     public String translationBase() {
         return this == REARING ? "block.createapparel.silkworm_rearing_tray"
@@ -19,7 +19,7 @@ public enum ItemGuide {
 
     public boolean hasDetails() {
         return switch (this) {
-            case PATTERN, PHONE, WARDROBE, HANGER, CLIP_HANGER, RACK, CLIP_RACK, MANNEQUIN, GAUGE -> true;
+            case PATTERN, PHONE, WARDROBE, HANGER, CLIP_HANGER, RACK, CLIP_RACK, MANNEQUIN, GAUGE, CAMERA, PHOTO, ADVERTISEMENT, BROADCASTER -> true;
             default -> false;
         };
     }
@@ -33,7 +33,7 @@ public enum ItemGuide {
     }
 
     public boolean hasPonder() {
-        return this == SPINNING || this == LOOM || this == SEWING || this == REARING;
+        return this == SPINNING || this == LOOM || this == SEWING || this == REARING || this == REGISTER;
     }
 
     public boolean hasExistingSummary() {
@@ -61,6 +61,11 @@ public enum ItemGuide {
             case "sewing_machine" -> SEWING;
             case "sewing_pattern" -> PATTERN;
             case "smart_phone" -> PHONE;
+            case "cash_register" -> REGISTER;
+            case "camera" -> CAMERA;
+            case "advertising_photo" -> PHOTO;
+            case "poster", "billboard_panel", "signage_panel" -> ADVERTISEMENT;
+            case "signage_broadcaster" -> BROADCASTER;
             case "citizen_gauge" -> GAUGE;
             case "wardrobe" -> WARDROBE;
             case "wall_hanger" -> HANGER;

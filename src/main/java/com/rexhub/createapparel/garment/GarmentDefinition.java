@@ -26,9 +26,19 @@ public record GarmentDefinition(
         Set<String> designs,
         Map<String, List<String>> styles,
         Map<GarmentSlot, Map<String, List<String>>> slotStyles,
-        List<ContextModelVariant> contextModelVariants
+        List<ContextModelVariant> contextModelVariants,
+        Set<com.rexhub.createapparel.fashion.FashionTag> fashionTags,
+        Map<String, com.rexhub.createapparel.fashion.FashionDesignModifier> fashionDesignOverrides
 ) {
     private static final int MAX_COLLECTION_SIZE = 256;
+
+    public GarmentDefinition(ResourceLocation id, GarmentSlot defaultSlot, Set<GarmentSlot> allowedSlots,
+                             ResourceLocation modelTemplate, String modelVariant, Map<GarmentSlot, String> slotModelVariants,
+                             String textureVariant, Set<String> designs, Map<String, List<String>> styles,
+                             Map<GarmentSlot, Map<String, List<String>>> slotStyles, List<ContextModelVariant> contextModelVariants) {
+        this(id, defaultSlot, allowedSlots, modelTemplate, modelVariant, slotModelVariants, textureVariant,
+                designs, styles, slotStyles, contextModelVariants, Set.of(), Map.of());
+    }
 
     public GarmentDefinition(ResourceLocation id, GarmentSlot defaultSlot, Set<GarmentSlot> allowedSlots,
                              ResourceLocation modelTemplate, String modelVariant, Map<GarmentSlot, String> slotModelVariants,
@@ -64,6 +74,13 @@ public record GarmentDefinition(
     }
 
     public GarmentDefinition {
+        fashionTags = Set.copyOf(fashionTags);
+        fashionDesignOverrides = Map.copyOf(fashionDesignOverrides);
+        if (!designs.containsAll(fashionDesignOverrides.keySet()))
+            throw new IllegalArgumentException("Fashion override references an unsupported design: " + id);
+        if (fashionTags.contains(com.rexhub.createapparel.fashion.FashionTag.THIN)
+                && fashionTags.contains(com.rexhub.createapparel.fashion.FashionTag.THICK))
+            throw new IllegalArgumentException("Conflicting climate tags: " + id);
         contextModelVariants = List.copyOf(contextModelVariants);
         if (contextModelVariants.stream().map(ContextModelVariant::coatPresent).distinct().count() != contextModelVariants.size()) {
             throw new IllegalArgumentException("Ambiguous context model variants: " + id);
@@ -182,8 +199,12 @@ public record GarmentDefinition(
             contextVariants.add(new ContextModelVariant(GsonHelper.getAsBoolean(when, "coat_present"),
                     GsonHelper.getAsString(rule, "model_variant")));
         }
+        var fashionTags = com.rexhub.createapparel.fashion.FashionTag.parse(GsonHelper.getAsJsonArray(json, "fashion_tags", new JsonArray()));
+        Map<String, com.rexhub.createapparel.fashion.FashionDesignModifier> overrides = new LinkedHashMap<>();
+        GsonHelper.getAsJsonObject(json, "fashion_design_overrides", new JsonObject()).entrySet().forEach(entry ->
+                overrides.put(entry.getKey(), com.rexhub.createapparel.fashion.FashionDesignModifier.parse(entry.getValue().getAsJsonObject())));
         return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants,
-                textureVariant, designs, styles, slotStyles, contextVariants);
+                textureVariant, designs, styles, slotStyles, contextVariants, fashionTags, overrides);
     }
 
     public void write(FriendlyByteBuf buffer) {
@@ -217,6 +238,10 @@ public record GarmentDefinition(
             buf.writeBoolean(rule.coatPresent());
             buf.writeUtf(rule.modelVariant());
         });
+        buffer.writeEnumSet(fashionTags.isEmpty() ? java.util.EnumSet.noneOf(com.rexhub.createapparel.fashion.FashionTag.class)
+                : java.util.EnumSet.copyOf(fashionTags), com.rexhub.createapparel.fashion.FashionTag.class);
+        buffer.writeVarInt(fashionDesignOverrides.size());
+        fashionDesignOverrides.forEach((design, modifier) -> { buffer.writeUtf(design, 128); modifier.write(buffer); });
     }
 
     public static GarmentDefinition read(FriendlyByteBuf buffer) {
@@ -281,8 +306,16 @@ public record GarmentDefinition(
         for (int index = 0; index < contextCount; index++) {
             contextVariants.add(new ContextModelVariant(buffer.readBoolean(), buffer.readUtf()));
         }
+        var fashionTags = buffer.readEnumSet(com.rexhub.createapparel.fashion.FashionTag.class);
+        int overrideCount = buffer.readVarInt();
+        if (overrideCount < 0 || overrideCount > MAX_COLLECTION_SIZE) throw new IllegalArgumentException("Invalid fashion overrides count");
+        Map<String, com.rexhub.createapparel.fashion.FashionDesignModifier> overrides = new LinkedHashMap<>();
+        for (int index = 0; index < overrideCount; index++) {
+            if (overrides.put(buffer.readUtf(128), com.rexhub.createapparel.fashion.FashionDesignModifier.read(buffer)) != null)
+                throw new IllegalArgumentException("Duplicate fashion design override");
+        }
         return new GarmentDefinition(id, slot, allowedSlots, modelTemplate, modelVariant, slotModelVariants,
-                textureVariant, designs, styles, slotStyles, contextVariants);
+                textureVariant, designs, styles, slotStyles, contextVariants, fashionTags, overrides);
     }
 
     private static ResourceLocation parseResourceLocation(String value, String field) {

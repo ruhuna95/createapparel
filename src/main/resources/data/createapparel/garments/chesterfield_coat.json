@@ -1,4 +1,8 @@
 {
+  "fashion_tags": ["simple", "formal", "thick"],
+  "fashion_design_overrides": {
+    "gingham_check": { "add": [], "remove": ["formal"] }
+  },
   "default_slot": "coat",
   "allowed_slots": [
     "coat"

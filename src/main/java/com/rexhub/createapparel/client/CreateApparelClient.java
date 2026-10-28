@@ -101,6 +101,12 @@ public final class CreateApparelClient {
             MenuScreens.register(ModMenuTypes.CITIZEN.get(), com.rexhub.createapparel.client.screen.CitizenScreen::new);
             MenuScreens.register(ModMenuTypes.ROUTE_MARKER.get(), com.rexhub.createapparel.client.screen.RouteMarkerScreen::new);
             MenuScreens.register(ModMenuTypes.CITIZEN_GAUGE.get(), com.rexhub.createapparel.client.screen.CitizenGaugeScreen::new);
+            MenuScreens.<com.rexhub.createapparel.photo.PhotographyMenu, net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<com.rexhub.createapparel.photo.PhotographyMenu>>register(
+                    com.rexhub.createapparel.photo.PhotoRegistries.PHOTOGRAPHY.get(), (menu, inventory, title) ->
+                    menu.mode() == com.rexhub.createapparel.photo.PhotographyMenu.Mode.EDIT
+                            ? new com.rexhub.createapparel.client.advertisement.PhotoEditScreen(menu, inventory, title)
+                            : new com.rexhub.createapparel.client.advertisement.PhotographyScreen(menu, inventory, title));
+            MenuScreens.register(com.rexhub.createapparel.advertisement.AdvertisementRegistries.CONTROL.get(), com.rexhub.createapparel.client.advertisement.AdvertisementControlScreen::new);
         });
     }
 
@@ -137,6 +143,7 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(com.rexhub.createapparel.advertisement.AdvertisementRegistries.PANEL_ENTITY.get(), com.rexhub.createapparel.client.advertisement.AdvertisementPanelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CITIZEN_GAUGE.get(), com.rexhub.createapparel.client.renderer.CitizenGaugeRenderer::new);
         event.registerEntityRenderer(ModEntities.CITIZEN.get(), com.rexhub.createapparel.client.renderer.CitizenRenderer::new);
         event.registerBlockEntityRenderer(com.rexhub.createapparel.init.ModMirrors.BLOCK_ENTITY.get(),

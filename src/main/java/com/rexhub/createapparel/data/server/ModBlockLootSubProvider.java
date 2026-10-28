@@ -21,6 +21,11 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
+        dropSelf(com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER.get());
+        dropSelf(com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_BROADCASTER.get());
+        dropSelf(com.rexhub.createapparel.advertisement.AdvertisementRegistries.BILLBOARD_PANEL.get());
+        dropSelf(com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_PANEL.get());
+        dropSelf(com.rexhub.createapparel.advertisement.AdvertisementRegistries.POSTER.get());
         add(ModBlocks.CITIZEN_GAUGE.get(), net.minecraft.world.level.storage.loot.LootTable.lootTable().withPool(
                 net.minecraft.world.level.storage.loot.LootPool.lootPool().setRolls(net.minecraft.world.level.storage.loot.providers.number.ConstantValue.exactly(1))
                         .add(net.minecraft.world.level.storage.loot.entries.DynamicLoot.dynamicEntry(

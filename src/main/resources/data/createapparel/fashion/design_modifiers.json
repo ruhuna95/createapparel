@@ -1,0 +1,21 @@
+{
+  "plain": { "add": [], "remove": [] },
+  "stripe": { "add": ["cool"], "remove": ["simple"] },
+  "horizontal_stripe": { "add": ["casual"], "remove": ["simple"] },
+  "double_stripe": { "add": ["cool"], "remove": ["simple"] },
+  "pinstripe": { "add": ["formal", "cool"], "remove": [] },
+  "tartan_check": { "add": ["cute"], "remove": ["simple"] },
+  "gingham_check": { "add": ["cute", "casual"], "remove": ["simple"] },
+  "polka_dot": { "add": ["cute"], "remove": ["simple"] },
+  "dot": { "add": ["cute"], "remove": ["simple"] },
+  "check": { "add": ["cool"], "remove": ["simple"] },
+  "argyle": { "add": ["formal"], "remove": ["simple"] },
+  "fair_isle": { "add": ["cute", "flashy"], "remove": ["simple"] },
+  "diamond": { "add": ["cool"], "remove": ["simple"] },
+  "color_block": { "add": ["flashy"], "remove": ["simple"] },
+  "two_tone_lr": { "add": ["flashy"], "remove": ["simple"] },
+  "logo_creeper": { "add": ["cute", "kids"], "remove": ["simple"] },
+  "logo_word": { "add": ["cool"], "remove": ["simple"] },
+  "logo_round": { "add": ["casual"], "remove": ["simple"] },
+  "patched": { "add": ["flashy", "casual"], "remove": ["simple"] }
+}

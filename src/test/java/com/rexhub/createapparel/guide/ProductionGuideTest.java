@@ -13,6 +13,101 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProductionGuideTest {
+    @Test
+    void normalSummariesUseTheRequestedDescriptions() throws IOException {
+        var lang = language("ja_jp");
+        for (var entry : new String[][]{
+                {"guide.createapparel.phone.tooltip.short_summary", "市民や地区の管理に使用。"},
+                {"guide.createapparel.gauge.tooltip.summary", "接続したゲージで地区の人口・移動・流入・流出を管理する。"},
+                {"guide.createapparel.register.tooltip.summary", "店員を配置すると在庫内の衣服を販売できる。"},
+                {"block.createapparel.poster.tooltip.summary", "ファッション広告のポスター。"},
+                {"block.createapparel.billboard_panel.tooltip.summary", "ファッション広告の看板パネル。"},
+                {"block.createapparel.signage_panel.tooltip.summary", "ファッション広告のデジタルサイネージ。"},
+                {"guide.createapparel.photo.tooltip.short_summary", "編集できる写真データ。"}
+        }) assertEquals(entry[1], lang.get(entry[0]).getAsString());
+    }
+
+    @Test
+    void furnitureShiftSummariesUseTheSameExplanationAsNormalTooltips() throws IOException {
+        for (String locale : List.of("en_us", "ja_jp")) {
+            var lang = language(locale);
+            for (var entry : new String[][]{
+                    {"wardrobe", "tooltip.createapparel.wardrobe.change_clothes"},
+                    {"hanger", "tooltip.createapparel.hanger.normal"},
+                    {"clip_hanger", "tooltip.createapparel.hanger.clip"},
+                    {"rack", "tooltip.createapparel.hanger.normal"},
+                    {"clip_rack", "tooltip.createapparel.hanger.clip"}
+            }) assertEquals(lang.get(entry[1]).getAsString(),
+                    lang.get("guide.createapparel." + entry[0] + ".tooltip.summary").getAsString(), entry[0]);
+        }
+    }
+
+    @Test
+    void shiftSummariesRetainTheirDetailedContext() throws IOException {
+        var lang = language("ja_jp");
+        assertTrue(lang.get("guide.createapparel.phone.tooltip.summary").getAsString().contains("経路グラフ"));
+        assertTrue(lang.get("guide.createapparel.photo.tooltip.summary").getAsString().contains("撮影時に固定"));
+    }
+
+    @Test
+    void retailLinkFeedbackIsExplicitAndOldClickHintsAreRemoved() throws IOException {
+        var japanese = language("ja_jp");
+        assertEquals("レジとリンクしました", japanese.get("message.createapparel.register.linked").getAsString());
+        assertEquals("レジとのリンクを解除しました", japanese.get("message.createapparel.register.unlinked").getAsString());
+        for (String locale : List.of("ja_jp", "en_us")) {
+            var lang = language(locale);
+            assertFalse(lang.has("message.createapparel.register.open"));
+            assertFalse(lang.has("message.createapparel.register.closed"));
+            assertFalse(lang.has("message.createapparel.register.storage_linked"));
+            assertFalse(lang.get("message.createapparel.register.linked").getAsString().isBlank());
+            assertFalse(lang.get("message.createapparel.register.unlinked").getAsString().isBlank());
+        }
+    }
+
+    @Test
+    void registerUsesPonderInsteadOfShiftDetailsInBothLanguages() throws IOException {
+        assertTrue(ItemGuide.REGISTER.hasPonder());
+        assertFalse(ItemGuide.REGISTER.hasDetails());
+        assertEquals(6, RetailGuide.textCount());
+        assertEquals("スマートフォンでレジを右クリックして設定を開始します。", RetailGuide.text(3, true));
+        for (boolean ja : List.of(false, true)) {
+            var lang = language(ja ? "ja_jp" : "en_us");
+            String prefix = "createapparel.ponder." + RetailGuide.ID + ".";
+            assertEquals(RetailGuide.title(ja), lang.get(prefix + "header").getAsString());
+            for (int index = 0; index < RetailGuide.textCount(); index++)
+                assertEquals(RetailGuide.text(index, ja), lang.get(prefix + "text_" + (index + 1)).getAsString());
+            assertFalse(lang.has("guide.createapparel.register.tooltip.condition1"));
+            assertFalse(lang.has("guide.createapparel.register.tooltip.behaviour1"));
+            assertFalse(lang.has("guide.createapparel.register.tooltip.short_summary"));
+            assertFalse(lang.has(prefix + "text_7"));
+            assertFalse(lang.has(prefix + "text_8"));
+            assertFalse(lang.get(prefix + "text_4").getAsString().isBlank());
+        }
+    }
+
+    @Test
+    void machineSummariesMarkOnlyTheRequestedMaterialsAndProducts() throws IOException {
+        for (String locale : List.of("ja_jp", "en_us")) {
+            var lang = language(locale);
+            boolean japanese = locale.equals("ja_jp");
+            for (var entry : new String[][]{
+                    {"spinning", japanese ? "繊維|羊毛|繭|糸" : "fibers|wool|cocoons|thread"},
+                    {"loom", japanese ? "糸|生地" : "threads|fabric"},
+                    {"sewing", japanese ? "生地|糸|衣服" : "fabric|thread|garments"}
+            }) {
+                String text = lang.get("guide.createapparel." + entry[0] + ".tooltip.summary").getAsString();
+                String[] parts = text.split("_", -1);
+                var highlighted = new java.util.ArrayList<String>();
+                for (int index = 1; index < parts.length; index += 2) highlighted.add(parts[index]);
+                assertEquals(List.of(entry[1].split("\\|")), highlighted, entry[0]);
+                assertEquals(1, parts.length % 2, entry[0]);
+                assertFalse(text.contains("["), entry[0]);
+            }
+        }
+        assertEquals("繊維・羊毛・繭から糸を作る。", language("ja_jp")
+                .get("guide.createapparel.spinning.tooltip.summary").getAsString().replace("_", ""));
+    }
+
     @Test void gaugeDetailsDescribeCurrentRolesAndNoLegacyAlwaysVisibleHelpRemains() throws IOException {
         for (String locale : List.of("en_us", "ja_jp")) {
             var lang = language(locale); String prefix = ItemGuide.GAUGE.translationBase() + ".tooltip.";

@@ -33,6 +33,16 @@ public final class CitizenIntentController {
     public CitizenIntentController(Citizen citizen) { this.citizen = citizen; }
     @Nullable public CitizenIntent active() { return active; }
     public boolean stucked() { return stucked; }
+    public void resumeAfterInteraction(long ticks) {
+        if (active != null) active = new CitizenIntent(active.source(), active.destinationType(), active.position(), active.district(),
+                active.startedAt(), active.expiresAt() + ticks, active.retryCount());
+        lastProgress += ticks;
+        nextCheck += ticks;
+        if (awaySince >= 0) awaySince += ticks;
+        if (returnAfter > 0) returnAfter += ticks;
+        if (walkAfter > 0) walkAfter += ticks;
+        if (autonomyProgressAt > 0) autonomyProgressAt += ticks;
+    }
     public void wanderFailed() { wanderFailures = Math.min(20, wanderFailures + 1); }
     public void wanderSucceeded() { wanderFailures = 0; }
     public void wanderIdle() { if (active == null) resetAutonomy(); }
@@ -50,6 +60,8 @@ public final class CitizenIntentController {
     public boolean request(CitizenIntent intent) {
         if (!(citizen.level() instanceof ServerLevel level) || citizen.isRemoved() || citizen.isNoAi()) return false;
         var manager = CitizenPopulationManager.get(level);
+        if (intent.source() == CitizenIntent.Source.FASHION && (citizen.citizenState().fashion().forceFashion()
+                || CitizenActivityScheduler.get(level).state(citizen) == CitizenActivityScheduler.State.THROTTLED)) return false;
         if (intent.source() != CitizenIntent.Source.PLAYER && manager.reserved(citizen.getUUID())
                 && intent.source() != CitizenIntent.Source.GAUGE_TRANSFER) return false;
         if (active != null && intent.source().ordinal() >= active.source().ordinal() && intent.source() != CitizenIntent.Source.PLAYER) return false;
@@ -138,7 +150,8 @@ public final class CitizenIntentController {
                 if (CitizenActivityScheduler.get(level).state(citizen) == CitizenActivityScheduler.State.THROTTLED) { resetAutonomy(); return; }
                 tickAutonomyRecovery(level, manager, now); autonomy(level, now); return;
             }
-            if (now >= active.expiresAt() || active.district() != null && !manager.enabled(active.district())) { cancel(); return; }
+            if (now >= active.expiresAt() || active.destinationType() == CitizenIntent.DestinationType.DISTRICT
+                    && active.district() != null && !manager.enabled(active.district())) { cancel(); return; }
             var reason = active.source() == CitizenIntent.Source.GAUGE_TRANSFER ? CitizenActivityScheduler.Reason.GAUGE_TRANSFER
                     : active.source() == CitizenIntent.Source.RETURN_HOME ? CitizenActivityScheduler.Reason.RETURN_HOME : CitizenActivityScheduler.Reason.PLAYER;
             if (active.source() != CitizenIntent.Source.IMPULSE_VISIT && active.source() != CitizenIntent.Source.FASHION)
@@ -165,12 +178,13 @@ public final class CitizenIntentController {
                     || citizen.routeMovement().consecutiveFailures() >= ModConfigs.COMMON.populationStuckRetries.get()) {
                 if (active.retryCount() < ModConfigs.COMMON.populationStuckRetries.get()) {
                     active = active.retried(); lastProgress = now; lastDistance = Double.POSITIVE_INFINITY;
-                    if (active.district() != null) {
+                    if (active.destinationType() == CitizenIntent.DestinationType.DISTRICT && active.district() != null) {
                         var point = DistrictDestinations.choose(level, citizen, manager.data().district(active.district()));
                         if (point != null) destination = point;
                     }
                     departure = null; move();
                 } else {
+                    if (active.source() == CitizenIntent.Source.FASHION) { cancel(); return; }
                     stucked = true;
                     var state = citizen.citizenState().population();
                     var district = manager.data().district(active.district() == null ? state.districtId() : active.district());
@@ -187,6 +201,7 @@ public final class CitizenIntentController {
     }
     private void complete(CitizenPopulationManager manager) {
         var previous = active;
+        if (previous != null && previous.source() == CitizenIntent.Source.FASHION) citizen.fashionController().arrived();
         clear(false);
         if (previous != null && previous.source() == CitizenIntent.Source.RETURN_HOME) awaySince = -1;
         if (previous != null && previous.source() == CitizenIntent.Source.GAUGE_TRANSFER) manager.arrived(citizen, previous.district());

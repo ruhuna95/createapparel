@@ -2,12 +2,20 @@ package com.rexhub.createapparel.compat.jei;
 
 import com.mojang.logging.LogUtils;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
+import com.rexhub.createapparel.client.guide.ItemGuideTooltipChecks;
+import com.rexhub.createapparel.entity.CitizenAge;
+import com.rexhub.createapparel.entity.CitizenAppearance;
+import com.rexhub.createapparel.entity.PosePreset;
 import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.GarmentCreativePresets;
 import com.rexhub.createapparel.init.ModRegistries;
 import com.rexhub.createapparel.material.FabricColor;
 import com.rexhub.createapparel.material.FabricMaterial;
+import com.rexhub.createapparel.photo.AdvertisingPhotoData;
+import com.rexhub.createapparel.photo.PhotoCopyRecipe;
+import com.rexhub.createapparel.photo.PhotoLayout;
+import com.rexhub.createapparel.photo.PhotoRegistries;
 import com.simibubi.create.content.processing.basin.BasinRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -29,6 +37,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.rexhub.createapparel.compat.jei.JeiClientTestLauncher.check;
 
@@ -61,17 +70,31 @@ public final class JeiClientChecks implements IModPlugin {
                     new Capture("sewing-en", ApparelJeiRecipeTypes.SEWING, "en_us", 2),
                     new Capture("rearing-en", ApparelJeiRecipeTypes.SILKWORM_REARING, "en_us", 2),
                     new Capture("silkworm-en", ApparelJeiRecipeTypes.SILKWORM_REARING, "en_us", 2, true),
+                    new Capture("photo-copy-en", RecipeTypes.CRAFTING, "en_us", 2),
+                    new Capture("tooltips-1-en", RecipeTypes.CRAFTING, "en_us", 2),
+                    new Capture("tooltips-2-en", RecipeTypes.CRAFTING, "en_us", 2),
+                    new Capture("tooltips-shift-wardrobe-en", RecipeTypes.CRAFTING, "en_us", 2),
+                    new Capture("tooltips-shift-hanger-en", RecipeTypes.CRAFTING, "en_us", 2),
+                    new Capture("tooltips-shift-rack-en", RecipeTypes.CRAFTING, "en_us", 2),
                     new Capture("spinning-ja", ApparelJeiRecipeTypes.SPINNING, "ja_jp", 2),
                     new Capture("weaving-ja", ApparelJeiRecipeTypes.WEAVING, "ja_jp", 2),
                     new Capture("sewing-ja", ApparelJeiRecipeTypes.SEWING, "ja_jp", 2),
                     new Capture("rearing-ja", ApparelJeiRecipeTypes.SILKWORM_REARING, "ja_jp", 2),
                     new Capture("silkworm-ja", ApparelJeiRecipeTypes.SILKWORM_REARING, "ja_jp", 2, true),
+                    new Capture("photo-copy-ja", RecipeTypes.CRAFTING, "ja_jp", 2),
+                    new Capture("tooltips-1-ja", RecipeTypes.CRAFTING, "ja_jp", 2),
+                    new Capture("tooltips-2-ja", RecipeTypes.CRAFTING, "ja_jp", 2),
+                    new Capture("tooltips-shift-wardrobe-ja", RecipeTypes.CRAFTING, "ja_jp", 2),
+                    new Capture("tooltips-shift-hanger-ja", RecipeTypes.CRAFTING, "ja_jp", 2),
+                    new Capture("tooltips-shift-rack-ja", RecipeTypes.CRAFTING, "ja_jp", 2),
                     new Capture("sewing-ja-scale1", ApparelJeiRecipeTypes.SEWING, "ja_jp", 1),
                     new Capture("sewing-ja-scale3", ApparelJeiRecipeTypes.SEWING, "ja_jp", 3));
             stage = 1;
             showCapture();
         } else if (stage == 2) {
-            check(mc.screen == (Object) runtime.getRecipesGui(), "JEI screen opened");
+            check(mc.screen == (Object) runtime.getRecipesGui() || mc.screen instanceof ItemGuideTooltipChecks.PreviewScreen,
+                    "Recipe or tooltip preview screen opened");
+            if (mc.screen instanceof ItemGuideTooltipChecks.PreviewScreen) ItemGuideTooltipChecks.check();
             captureReady = true;
         } else if (stage == 6) {
             if (++capture < captures.size()) { stage = 1; showCapture(); }
@@ -109,10 +132,21 @@ public final class JeiClientChecks implements IModPlugin {
     }
 
     private static void openCapture(Capture capture) {
-        if (capture.type == ApparelJeiRecipeTypes.SILKWORM_REARING) {
+        if (capture.name.startsWith("tooltips-")) {
+            int page = capture.name.startsWith("tooltips-shift-wardrobe-") ? 2
+                    : capture.name.startsWith("tooltips-shift-hanger-") ? 3
+                    : capture.name.startsWith("tooltips-shift-rack-") ? 4
+                    : capture.name.startsWith("tooltips-1-") ? 0 : 1;
+            Minecraft.getInstance().setScreen(new ItemGuideTooltipChecks.PreviewScreen(page));
+        } else if (capture.type == ApparelJeiRecipeTypes.SILKWORM_REARING) {
             var recipe = runtime.getRecipeManager().createRecipeLookup(ApparelJeiRecipeTypes.SILKWORM_REARING).get()
                     .filter(display -> display.tray() != capture.silkworm).findFirst().orElseThrow();
             runtime.getRecipesGui().showRecipes(runtime.getRecipeManager().getRecipeCategory(ApparelJeiRecipeTypes.SILKWORM_REARING),
+                    List.of(recipe), List.of());
+        } else if (capture.type == RecipeTypes.CRAFTING) {
+            var recipe = runtime.getRecipeManager().createRecipeLookup(RecipeTypes.CRAFTING).get()
+                    .filter(value -> value.getId().equals(id("photo_copy_manual_only"))).findFirst().orElseThrow();
+            runtime.getRecipesGui().showRecipes(runtime.getRecipeManager().getRecipeCategory(RecipeTypes.CRAFTING),
                     List.of(recipe), List.of());
         } else {
             runtime.getRecipesGui().showTypes(List.of(capture.type));
@@ -121,6 +155,7 @@ public final class JeiClientChecks implements IModPlugin {
     }
 
     private static void audit() throws Exception {
+        auditPhotoCopy("photo_copy_manual_only");
         var manager = runtime.getRecipeManager();
         var mc = Minecraft.getInstance();
         var rows = new ArrayList<String>();
@@ -216,6 +251,48 @@ public final class JeiClientChecks implements IModPlugin {
         LogUtils.getLogger().info("PHASE23_LOOKUPS_AND_NATIVE_RECIPES_PASSED");
     }
 
+    private static void auditPhotoCopy(String path) {
+        var manager = runtime.getRecipeManager();
+        var recipes = manager.createRecipeLookup(RecipeTypes.CRAFTING).get()
+                .filter(PhotoCopyRecipe.class::isInstance).toList();
+        long expected = Minecraft.getInstance().level.getRecipeManager().getRecipes().stream()
+                .filter(PhotoCopyRecipe.class::isInstance).count();
+        check(recipes.size() == expected && expected > 0, "Photo copy recipes registered exactly once");
+        var recipe = recipes.stream().filter(value -> value.getId().equals(id(path))).findFirst().orElseThrow();
+        var category = manager.getRecipeCategory(RecipeTypes.CRAFTING);
+        var factory = runtime.getJeiHelpers().getFocusFactory();
+        var layout = manager.createRecipeLayoutDrawable(category, recipe, factory.getEmptyFocusGroup()).orElseThrow();
+        checkPhotoCopySlots(layout.getRecipeSlotsView(), new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get()));
+
+        var photo = new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get(), 37);
+        new AdvertisingPhotoData(UUID.randomUUID(), UUID.randomUUID(), null, CitizenAppearance.DEFAULT,
+                CitizenAge.ADULT, List.of(), PosePreset.STANDING, PhotoLayout.DEFAULT).write(photo);
+        photo.getOrCreateTag().putString("JeiCopyTest", "preserved");
+        var before = photo.copy();
+        for (var stack : List.of(new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get()), photo)) {
+            for (var role : List.of(RecipeIngredientRole.INPUT, RecipeIngredientRole.OUTPUT)) {
+                var focus = factory.createFocus(role, VanillaTypes.ITEM_STACK, stack);
+                check(manager.createRecipeLookup(RecipeTypes.CRAFTING).limitFocus(List.of(focus)).get()
+                        .filter(value -> value.getId().equals(recipe.getId())).count() == 1,
+                        "Photo copy R/U lookup: " + role + " / " + stack.hasTag());
+                var focused = manager.createRecipeLayoutDrawable(category, recipe, factory.createFocusGroup(List.of(focus)))
+                        .orElseThrow();
+                checkPhotoCopySlots(focused.getRecipeSlotsView(), stack);
+            }
+        }
+        check(ItemStack.matches(photo, before), "Photo copy display does not mutate focused photo");
+        LogUtils.getLogger().info("JEI_PHOTO_COPY_PASSED id={} generation={}", recipe.getId(), generation);
+    }
+
+    private static void checkPhotoCopySlots(mezz.jei.api.gui.ingredient.IRecipeSlotsView slots, ItemStack photo) {
+        var inputs = slots.getSlotViews(RecipeIngredientRole.INPUT).stream()
+                .flatMap(slot -> slot.getItemStacks()).toList();
+        var outputs = slots.getSlotViews(RecipeIngredientRole.OUTPUT).stream()
+                .flatMap(slot -> slot.getItemStacks()).toList();
+        check(inputs.size() == 1 && ItemStack.matches(inputs.get(0), photo.copyWithCount(1)), "Photo copy input: one photo");
+        check(outputs.size() == 1 && ItemStack.matches(outputs.get(0), photo.copyWithCount(2)), "Photo copy output: two identical photos");
+    }
+
     private static <T> void lookup(RecipeType<T> type, RecipeIngredientRole role, ItemStack stack, ResourceLocation id) {
         var focus = runtime.getJeiHelpers().getFocusFactory().createFocus(role, VanillaTypes.ITEM_STACK, stack);
         check(runtime.getRecipeManager().createRecipeLookup(type).limitFocus(List.of(focus)).get().anyMatch(recipe -> {
@@ -239,6 +316,9 @@ public final class JeiClientChecks implements IModPlugin {
                 "{\"replace\":true,\"values\":[\"createapparel:white_cotton_fabric\"]}");
         write(pack.resolve("data/createapparel/recipes/spinning/cotton_thread.json"),
                 "{\"conditions\":[{\"type\":\"forge:false\"}],\"type\":\"createapparel:spinning\"}");
+        write(pack.resolve("data/createapparel/recipes/photo_copy_manual_only.json"),
+                "{\"conditions\":[{\"type\":\"forge:false\"}],\"type\":\"createapparel:photo_copy\"}");
+        write(pack.resolve("data/createapparel/recipes/phase23_photo_copy.json"), "{\"type\":\"createapparel:photo_copy\"}");
         server.execute(() -> {
             server.getPackRepository().reload();
             var packs = new ArrayList<>(server.getPackRepository().getSelectedIds());
@@ -249,6 +329,9 @@ public final class JeiClientChecks implements IModPlugin {
 
     private static void auditReload() {
         var manager = runtime.getRecipeManager();
+        auditPhotoCopy("phase23_photo_copy");
+        check(manager.createRecipeLookup(RecipeTypes.CRAFTING).get()
+                .noneMatch(recipe -> recipe.getId().equals(id("photo_copy_manual_only"))), "Removed photo copy disappears");
         if (net.minecraftforge.fml.ModList.get().isLoaded("destroy")) DestroyJeiChecks.audit(runtime);
         var spinning = manager.createRecipeLookup(ApparelJeiRecipeTypes.SPINNING).get().toList();
         check(spinning.stream().noneMatch(display -> display.recipe().getId().equals(id("spinning/cotton_thread"))), "Removed recipe disappears");

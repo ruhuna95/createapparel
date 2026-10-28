@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple"],
   "default_slot": "hands",
   "allowed_slots": [
     "hands"

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "createapparel:block/signage_panel",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createapparel:block/signage_panel"
+    },
+    "facing=south": {
+      "model": "createapparel:block/signage_panel",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "createapparel:block/signage_panel",
+      "y": 270
+    }
+  }
+}

@@ -45,6 +45,11 @@ public final class GarmentTooltipEvents {
                 appendSlots(event.getToolTip(), definition);
                 GarmentAppearance appearance = GarmentAppearance.fromStackOrDefault(event.getItemStack(), definition);
                 appendAppearance(event.getToolTip(), appearance);
+                var tags = com.rexhub.createapparel.fashion.FashionTagResolver.resolve(definition, appearance.design());
+                if (!tags.isEmpty()) event.getToolTip().add(Component.translatable("tooltip.createapparel.garment.fashion_tags",
+                        Component.literal(String.join(", ", tags.stream().sorted().map(tag ->
+                                Component.translatable("fashion_tag.createapparel." + tag.id()).getString()).toList())))
+                        .withStyle(ChatFormatting.GRAY));
             });
         }
     }

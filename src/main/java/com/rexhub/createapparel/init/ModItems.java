@@ -512,6 +512,9 @@ public final class ModItems {
 
     private static List<RegistryObject<Item>> createCreativeTabOrder() {
         List<RegistryObject<Item>> items = new ArrayList<>();
+        items.add(SMART_PHONE);
+        items.add(CITIZEN_GAUGE);
+        items.add(com.rexhub.createapparel.photo.PhotoRegistries.CAMERA);
         items.add(SPINNING_MACHINE);
         items.add(SILKWORM_REARING_TRAY);
         items.add(LOOM);
@@ -523,11 +526,12 @@ public final class ModItems {
         items.add(CLIP_CLOTHING_RACK);
         for (var variant : MannequinVariant.values()) items.add(MANNEQUINS.get(variant));
         items.addAll(ModMirrors.ITEMS.values());
-        items.add(ModFluids.MIRROR_COATING_BUCKET);
+        items.add(com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER_ITEM);
+        items.add(com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_BROADCASTER_ITEM);
+        items.add(com.rexhub.createapparel.advertisement.AdvertisementRegistries.POSTER_ITEM);
+        items.add(com.rexhub.createapparel.advertisement.AdvertisementRegistries.BILLBOARD_PANEL_ITEM);
+        items.add(com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_PANEL_ITEM);
         items.add(SEWING_PATTERN);
-        items.add(SMART_PHONE);
-        items.add(CITIZEN_GAUGE);
-        items.add(CITIZEN_SPAWN_EGG);
         addMaterialGroup(
                 items,
                 FabricMaterial.COTTON,
@@ -544,7 +548,7 @@ public final class ModItems {
                 List.of(HEMP_SEEDS, HEMP, HEMP_FIBER, HEMP_THREAD)
         );
         addMaterialGroup(items, FabricMaterial.WOOL, List.of(WOOL_THREAD));
-        addMaterialGroup(items, FabricMaterial.SILK, List.of(SILKWORM_SPAWN_EGG, COCOON, SILK_THREAD));
+        addMaterialGroup(items, FabricMaterial.SILK, List.of(COCOON, SILK_THREAD));
         addMaterialGroup(items, FabricMaterial.LEATHER, List.of());
         addMaterialGroup(
                 items,
@@ -556,6 +560,10 @@ public final class ModItems {
         items.add(GOLD_BRACELET_BASE);
         items.add(SILVER_BRACELET_BASE);
         items.addAll(APPAREL_DYES.values());
+        items.add(ModFluids.MIRROR_COATING_BUCKET);
+        items.add(com.rexhub.createapparel.photo.PhotoRegistries.ADVERTISING_PHOTO);
+        items.add(SILKWORM_SPAWN_EGG);
+        items.add(CITIZEN_SPAWN_EGG);
         return List.copyOf(items);
     }
 

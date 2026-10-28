@@ -8,17 +8,17 @@ final class ItemGuideLanguage {
 
     static void add(BiConsumer<String, String> add, boolean japanese) {
         for (var row : new Object[][]{
-                {ItemGuide.SPINNING, "Spins fibers, wool or cocoons into thread.", "繊維・羊毛・繭から糸を作る。"},
-                {ItemGuide.LOOM, "Weaves four matching threads into undyed fabric.", "同じ素材の糸4個から未染色の生地を織る。"},
-                {ItemGuide.SEWING, "Sews fabric and thread using a configured pattern.", "型紙に合わせて生地と糸から衣服を縫う。"},
+                {ItemGuide.SPINNING, "Spins _fibers_, _wool_ or _cocoons_ into _thread_.", "_繊維_・_羊毛_・_繭_から_糸_を作る。"},
+                {ItemGuide.LOOM, "Weaves four matching _threads_ into undyed _fabric_.", "同じ素材の_糸_4個から未染色の_生地_を織る。"},
+                {ItemGuide.SEWING, "Sews _fabric_ and _thread_ into _garments_ using a configured pattern.", "型紙に合わせて_生地_と_糸_から_衣服_を縫う。"},
                 {ItemGuide.PATTERN, "Sets the garment, design and additional colors for sewing.", "縫う衣服・デザイン・追加色を指定する型紙。"},
                 {ItemGuide.PHONE, "Manages Citizens and edits the Route Graph.", "市民の管理と経路グラフの編集に使用。"},
                 {ItemGuide.GAUGE, "Manages District population, transfers, influx and outflow through linked Gauges.", "接続したゲージで地区の人口・移動・流入・流出を管理する。"},
-                {ItemGuide.WARDROBE, "Opens your apparel equipment and appearance settings.", "衣服の装備と見た目を管理する。"},
-                {ItemGuide.HANGER, "Displays tops and outerwear on a wall.", "トップス・アウターを壁に掛けて展示する。"},
-                {ItemGuide.CLIP_HANGER, "Displays bottoms on a wall.", "ボトムスを壁に掛けて展示する。"},
-                {ItemGuide.RACK, "Displays tops and outerwear on a connected rack.", "トップス・アウターを連結式ラックに展示する。"},
-                {ItemGuide.CLIP_RACK, "Displays bottoms on a connected rack.", "ボトムスを連結式ラックに展示する。"},
+                {ItemGuide.WARDROBE, "Can change clothes.", "衣服を着替えることができる。"},
+                {ItemGuide.HANGER, "Can hold tops and outerwear.", "トップスとアウターを掛けることができる。"},
+                {ItemGuide.CLIP_HANGER, "Can hold bottoms.", "ボトムスを掛けることができる。"},
+                {ItemGuide.RACK, "Can hold tops and outerwear.", "トップスとアウターを掛けることができる。"},
+                {ItemGuide.CLIP_RACK, "Can hold bottoms.", "ボトムスを掛けることができる。"},
                 {ItemGuide.MANNEQUIN, "Displays apparel on the body parts supported by this mannequin.", "対応する部位に衣服を装着して展示する。"},
                 {ItemGuide.GARMENT, "Clothing that players and Citizens can wear.", "プレイヤーや市民が着ることが出来る衣服。"},
                 {ItemGuide.MIRROR, "Reflects nearby surroundings and worn apparel.", "周囲の景色や着用した衣服を映す鏡。"},
@@ -27,6 +27,9 @@ final class ItemGuideLanguage {
             if (!guide.hasSummary()) throw new IllegalStateException("Unexpected item guide: " + guide);
             add.accept(guide.translationBase() + ".tooltip.summary", (String) row[japanese ? 2 : 1]);
         }
+        add.accept("guide.createapparel.phone.tooltip.short_summary",
+                japanese ? "市民や地区の管理に使用。" : "Used to manage Citizens and Districts.");
+        FashionLanguage.guides(add, japanese);
         details(add, japanese, ItemGuide.PATTERN, new String[][]{
                 {"When used in hand", "手に持って右クリックしたとき", "Choose the garment, design and additional colors. Changes are saved automatically.", "衣服・デザイン・追加色を選ぶ。変更は自動保存される。"},
                 {"When used on the machine's filter", "ミシンのフィルター欄に使ったとき", "Sets the sewing recipe. The preview's fabric color is not saved to the pattern.", "縫製レシピを指定する。プレビューの生地色は型紙へ保存しない。"}});

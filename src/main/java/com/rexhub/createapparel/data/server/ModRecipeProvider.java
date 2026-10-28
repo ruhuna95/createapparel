@@ -169,6 +169,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
     public ModRecipeProvider(PackOutput output) {
         super(output, CreateApparel.MOD_ID);
         register(OptionalIntegrationRecipes::build);
+        register(FashionRecipes::build);
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.CITIZEN_GAUGE.get(), 2)
                 .pattern(" T ").pattern("CMC").pattern(" B ")
                 .define('T', AllItems.ELECTRON_TUBE.get()).define('C', Items.COMPARATOR)

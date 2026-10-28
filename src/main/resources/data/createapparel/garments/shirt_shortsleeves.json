@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "casual", "thin"],
   "model_template": "createapparel:shirt",
   "model_variant": "shirt_shortsleeves",
   "texture_variant": "default",

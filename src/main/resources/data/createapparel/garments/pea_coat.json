@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "casual", "thick"],
   "default_slot": "coat",
   "allowed_slots": [
     "coat"

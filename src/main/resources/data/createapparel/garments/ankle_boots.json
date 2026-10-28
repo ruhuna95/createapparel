@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "casual", "thick"],
   "default_slot": "feet",
   "allowed_slots": [
     "feet"

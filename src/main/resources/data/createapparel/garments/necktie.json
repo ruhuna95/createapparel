@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "formal"],
   "default_slot": "neck",
   "allowed_slots": [
     "neck"

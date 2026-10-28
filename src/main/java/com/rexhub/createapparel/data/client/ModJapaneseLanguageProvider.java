@@ -19,6 +19,7 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        FashionLanguage.add(this::add, true);
         add("createapparel.chemical.silver_ion", "銀イオン");
         add("createapparel.chemical.diamminesilver_i", "ジアンミン銀(I)イオン");
         add("createapparel.reaction.silver_dissolution", "銀の溶解");

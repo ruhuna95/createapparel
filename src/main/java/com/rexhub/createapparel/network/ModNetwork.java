@@ -15,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "34";
+    private static final String PROTOCOL_VERSION = "41";
 
     private static SimpleChannel channel;
 
@@ -113,6 +113,18 @@ public final class ModNetwork {
         channel.messageBuilder(GaugeReservationDiscardPacket.class, 15, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(GaugeReservationDiscardPacket::encode).decoder(GaugeReservationDiscardPacket::decode)
                 .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
+        channel.messageBuilder(RetailInspectionRequestPacket.class, 16, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(RetailInspectionRequestPacket::encode).decoder(RetailInspectionRequestPacket::decode)
+                .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
+        channel.messageBuilder(RetailInspectionPacket.class, 17, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(RetailInspectionPacket::encode).decoder(RetailInspectionPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient()).add();
+        channel.messageBuilder(RetailLinkSessionPacket.class, 18, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(RetailLinkSessionPacket::encode).decoder(RetailLinkSessionPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient()).add();
+        channel.messageBuilder(PhotographyStylesPacket.class, 19, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(PhotographyStylesPacket::encode).decoder(PhotographyStylesPacket::decode)
+                .consumerMainThread((packet, context) -> packet.handleClient()).add();
     }
 
     private static SimpleChannel channel() {
@@ -218,6 +230,16 @@ public final class ModNetwork {
         if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
     public static void sendRouteView(ServerPlayer player, RouteViewPacket packet) {
+        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+    public static void requestRetailInspection(RetailInspectionRequestPacket packet) { channel().sendToServer(packet); }
+    public static void sendRetailInspection(ServerPlayer player, RetailInspectionPacket packet) {
+        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+    public static void sendRetailLinkSession(ServerPlayer player, RetailLinkSessionPacket packet) {
+        if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+    public static void sendPhotographyStyles(ServerPlayer player, PhotographyStylesPacket packet) {
         if (channel != null && player.connection != null) channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 }

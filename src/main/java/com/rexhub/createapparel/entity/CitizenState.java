@@ -13,8 +13,21 @@ public final class CitizenState {
     private com.rexhub.createapparel.citizen.population.CitizenPopulationState population = com.rexhub.createapparel.citizen.population.CitizenPopulationState.DEFAULT;
     private Runnable changeListener = () -> { };
     private long revision;
+    private boolean loading;
+    private final java.util.Map<com.rexhub.createapparel.garment.GarmentSlot, net.minecraft.world.item.ItemStack> observedOutfit = new java.util.EnumMap<>(com.rexhub.createapparel.garment.GarmentSlot.class);
+    private final com.rexhub.createapparel.fashion.CitizenFashionData fashion = new com.rexhub.createapparel.fashion.CitizenFashionData();
+    public com.rexhub.createapparel.fashion.CitizenFashionData fashion() { return fashion; }
 
-    public CitizenState() { loadout.setChangeListener(this::changed); }
+    public CitizenState() { loadout.setChangeListener(() -> {
+        if (!loading) {
+            for (var slot : com.rexhub.createapparel.garment.GarmentSlot.values()) {
+                var stack = loadout.getStack(slot);
+                if (!net.minecraft.world.item.ItemStack.isSameItemSameTags(observedOutfit.getOrDefault(slot, net.minecraft.world.item.ItemStack.EMPTY), stack)) fashion.clearPurchase(slot);
+                observedOutfit.put(slot, stack.copy());
+            }
+            changed();
+        }
+    }); }
 
     public ApparelLoadout loadout() { return loadout; }
     public CitizenAppearance appearance() { return appearance; }
@@ -60,6 +73,7 @@ public final class CitizenState {
         tag.put("ApparelSlots", loadout.serializeNBT());
         behavior.write(tag);
         tag.put("Population", population.save());
+        tag.put("Fashion", fashion.save());
         return tag;
     }
 
@@ -68,9 +82,12 @@ public final class CitizenState {
         age = CitizenAge.read(tag.getString("Age"));
         behavior = CitizenBehaviorState.read(tag);
         population = com.rexhub.createapparel.citizen.population.CitizenPopulationState.load(tag.getCompound("Population"));
+        fashion.load(tag.getCompound("Fashion"));
         if (tag.contains("ApparelSlots", CompoundTag.TAG_COMPOUND)) {
-            loadout.deserializeNBT(tag.getCompound("ApparelSlots"));
+            loading = true;
+            try { loadout.deserializeNBT(tag.getCompound("ApparelSlots")); } finally { loading = false; }
         }
+        for (var slot : com.rexhub.createapparel.garment.GarmentSlot.values()) observedOutfit.put(slot, loadout.getStack(slot).copy());
         revision++;
     }
 }

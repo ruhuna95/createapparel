@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "cool"],
   "default_slot": "face",
   "allowed_slots": [
     "face"

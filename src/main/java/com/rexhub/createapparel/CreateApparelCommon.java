@@ -18,6 +18,7 @@ public final class CreateApparelCommon {
                 com.rexhub.createapparel.compat.destroy.DestroyChemistry.register();
             }
             ModNetwork.initialize();
+            com.rexhub.createapparel.advertisement.AdvertisementNetwork.initialize();
             com.rexhub.createapparel.mirror.MirrorMovementChecks.register();
             BlockStressValues.IMPACTS.register(ModBlocks.SILKWORM_REARING_TRAY.get(),
                     () -> com.rexhub.createapparel.block.SilkwormRearingTrayBlock.STRESS_IMPACT);

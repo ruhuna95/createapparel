@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "feminine", "cute", "thin"],
   "default_slot": "top",
   "allowed_slots": [
     "top"

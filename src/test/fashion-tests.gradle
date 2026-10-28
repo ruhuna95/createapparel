@@ -1,0 +1,33 @@
+sourceSets {
+    fashionTest {
+        java.setSrcDirs(['src/test/fashion/java'])
+        resources.setSrcDirs(['src/test/fashion/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+if (providers.gradleProperty('fashionLint').getOrElse('false').toBoolean()) {
+    tasks.named('compileJava', JavaCompile) { options.compilerArgs.add('-Xlint:deprecation') }
+}
+
+minecraft.runs {
+    fashionTestClient {
+        parent minecraft.runs.client
+        workingDirectory file('run/fashion-tests/client')
+        property 'forge.logging.console.level', 'info'
+        property 'apparel.fashionTest.client', 'true'
+        property 'apparel.fashionTest.projectDir', projectDir.absolutePath
+        property 'apparel.generateAdvertisementIcons', providers.gradleProperty('generateAdvertisementIcons').getOrElse('false')
+        mods { "${mod_id}" { source sourceSets.fashionTest } }
+    }
+}
+
+tasks.matching { it.name == 'runFashionTestClient' }.configureEach {
+    doLast {
+        def log = file('run/fashion-tests/client/logs/latest.log')
+        if (!log.exists() || !log.getText('UTF-8').contains('FASHION_CLIENT_QA_SUCCESS')) {
+            throw new GradleException('Fashion client checks did not report success; inspect run/fashion-tests/client/logs/latest.log')
+        }
+    }
+}

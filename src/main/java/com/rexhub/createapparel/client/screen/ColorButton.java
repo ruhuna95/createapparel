@@ -7,10 +7,10 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.IntSupplier;
 
-final class ColorButton extends Button {
+public final class ColorButton extends Button {
     private final IntSupplier color;
 
-    ColorButton(int x, int y, int width, int height, OnPress onPress, IntSupplier color) {
+    public ColorButton(int x, int y, int width, int height, OnPress onPress, IntSupplier color) {
         super(x, y, width, height, Component.empty(), onPress, DEFAULT_NARRATION);
         this.color = color;
     }

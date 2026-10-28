@@ -1,4 +1,8 @@
 {
+  "fashion_tags": ["simple", "casual"],
+  "fashion_design_overrides": {
+    "logo_creeper": { "add": [], "remove": ["kids"] }
+  },
   "slot": "top",
   "model_template": "createapparel:t_shirt",
   "model_variant": "long_sleeve",

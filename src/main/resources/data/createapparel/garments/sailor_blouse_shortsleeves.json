@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "feminine", "cute", "thin"],
   "model_template": "createapparel:sailor_blouse",
   "model_variant": "shortsleeves",
   "texture_variant": "default",

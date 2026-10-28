@@ -1,4 +1,9 @@
 {
+  "fashion_tags": ["simple", "feminine", "casual"],
+  "fashion_design_overrides": {
+    "stripe": { "add": [], "remove": ["cool"] },
+    "diamond": { "add": [], "remove": ["cool"] }
+  },
   "default_slot": "legwear",
   "allowed_slots": [
     "legwear"

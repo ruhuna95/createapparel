@@ -1,4 +1,5 @@
 {
+  "fashion_tags": ["simple", "casual"],
   "default_slot": "outer",
   "allowed_slots": [
     "outer"

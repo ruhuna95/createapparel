@@ -1,5 +1,74 @@
 # 自動検証
 
+## Fashion / Retail / Advertisement
+
+広告矩形の回帰は`FashionRetailGameTests`の`bothPanelTypesPreserveRectanglesAndRejoinAfterRefillingAHole`、`panelPlacementTicksGrowRectanglesAndBuildIndependentAdjacentRectangles`、`panelMergeLimitsDoNotPreventANewAdjacentRectangle`、`panelMultiwayRectanglesAndEditedFragmentsRespectTheirMergeFamilies`、`signageDeferredRemovalRecoversChannelAndTheRemainingRectangle`で検査する。両媒体・全方位の破壊後の矩形維持と穴埋め、実予約Tickでの隣接拡張・別矩形の形成、枚数上限・所有者・個別設定の保護、多矩形の一括連結、Familyの保存、代表不在のサイネージ破壊とChannel／Layout保持を含む。
+
+`FashionTagTest`は補正順、TARGET適格性、CLIMATE変更拒否、再読込相当の置換と全同梱データを検証する。`src/test/resources/garment/fashion-tag-combinations.tsv`は仕様資料の全115衣服・516組から独立に転記した期待値であり、実装から生成しない。全許可Designとの過不足、最終タグの完全一致、Definitionの通信往復後も同じ解決結果になることを確認する。資料のタグを変更した場合は期待値も更新する。`revisedFashionTagsLoadOnTheServerAndKeepDesignSpecificEligibility`は実Serverのリソース読込と、Creeper柄TシャツのAdult適格性・他衣服のkids維持・靴下とセーターの補正差などを検査する。`PhotoLayoutMathTest`はFIT/FILLの縦横比と位置寄せを検証する。
+
+写真ベースのデフォルト広告と最大9シーンの配信は`AdvertisementScenesTest`で、3種の同梱SNBT・9シーンの順序／ループ／クロスフェード境界・Packet往復と件数上限・デフォルト媒体のLayout保存を検査する。`FashionRetailGameTests`の`defaultAdvertisementsUseWorldPhotosAndPostersDoNotOpenMenus`、`broadcasterStoresNinePhotosPublishesOnCloseAndReturnsItems`、`panelLayoutsAreStagedAndSignageSceneEditsDoNotRewriteBroadcasts`、`legacyAdvertisementChannelsAndUnconfiguredGlobalPanelsMigrate`で、ポスター非GUI・発光15・配信機の9実物枠と疎な同一写真のNBT保存・閉鎖時確定・権限／旧Menu拒否・破壊時返却・配信データ保持・旧単独シーン／global移行を検査する。Retailの警告は全シーンの可視衣服を確認する。
+
+Fashion Client内の`AdvertisementSceneClientChecks`は、看板の3×2比率プレビューと6設定のみの画面、サイネージの2×3比率・チャンネル・9シーン選択、配信機の3×3枠への実SHIFT移動、チャンネル入力でのEキー、閉鎖時保存、公開写真非変更とJEI非表示を検査する。画像は`build/fashion-billboard-settings.png`、`fashion-signage-scene-settings.png`、`fashion-broadcaster-nine-scenes.png`、`fashion-signage-crossfade.png`。写真編集はインベントリ／衣服枠を持たない`PhotoEditScreen`の6設定＋保存だけとし、`fashion-photo-edit-fixed-direction.png`へ撮影する。
+
+看板／サイネージの128×128アイテム画像を再生成する場合は、次の順に実行する。Native側で同梱写真1／2を実レンダーし、広告部分だけ14×14へ間引いて8倍の最近傍拡大にする。枠は従来の解像度を保ち、`src/generated/resources/assets/createapparel/textures/item/`の2画像へ出力する。`FashionResourceTest`は広告部分の8×8単色セルと枠の色も検査する。続くDatagenが描画済みPNGをCacheへ登録し、生成モデルと翻訳も更新する。通常のDatagenは同梱済み生成PNGを保持するが、PNGを手動で削除した場合は先にNative生成が必要。
+
+```powershell
+.\gradlew.bat runFashionTestClient -PgenerateAdvertisementIcons=true
+.\gradlew.bat runData
+.\gradlew.bat build runGameTestServer
+```
+
+元ワールドの写真データを調査する場合は`src/test/tools/read_barrel_photos.py <world-folder>`をPython 3で実行する。Anvil/NBTを標準ライブラリのみで読み、樽の座標・Slotと写真SNBTを標準出力へ出す。ワールドを書き換えない。
+
+広告媒体の回帰は`FashionRetailGameTests`で、撮影時の身体の向きが編集操作・直接Data変更でも維持されること、上下ポスターの全方位の設置・支持喪失・単一ドロップ、看板の矩形再編成と最後の1枚だけ写真入りの回収、代表不在時の破壊記録・複数回破壊後の遅延復元を検査する。印刷は実DeployerのRecipe検索とDepotの処理・Capabilityを使い、1媒体だけの変換・写真Stackと追加データの非消費・不正入力／再印刷拒否・Serializer同期を確認する。`FashionResourceTest`はポスターの厚さ・絵画背面と2つのDatagen印刷レシピも検査する。
+
+JEI有効の`runFashionTestClient`はCreate標準デプロイヤーでの写真U検索／媒体R・U検索、完成品の写真入り見本と光沢、元Recipeの不変性、媒体の説明ページと手動印刷の非登録を検査する。写真編集画面の6設定＋保存・向き設定の非表示、向き操作Packet拒否とFraming変更の保存を確認し、`build/fashion-photo-edit-fixed-direction.png`を出力する。`runData`で新規レシピを生成した後は、別のGradle呼び出しで`build`／GameTest／Clientを実行し、先にコピーされた旧リソースでの試験を避ける。
+
+カメラ取引は`FashionRetailGameTests`で、入力支払い・未払いプレビュー非表示・通常／Shift取得・満杯／カーソル占有／不正Clickの無課金拒否・終了時の返却・旧撮影ボタンの無効化・衣服欄の共有配置・双方向の設定変更・身体の向きの保存／旧写真互換・見積り失効を検査する。`PhotoLayoutMathTest`は角度の範囲も確認する。専用Fashion Clientは色グリッド・ホイールでの向き変更・実スロットPacketでの投入／取得・料金差分・取引成功音を確認し、JEI有効時は実Runtimeの画面判定と一覧非表示も検査する。画像は`fashion-camera-{color-selector,paid-preview}.png`と`fashion-photo-rotated.png`。
+
+`PhotographyActionPacketTest`は全設定・色・逆スクロール・Garment選択・スタイルカテゴリの操作番号をVanillaのsigned byte Packetで往復する。`PhotographyStylesPacketTest`はMenu ID・写真UUID・全Garmentスロットのスタイル同期を確認する。`photographyStylesAreTemporaryAndCapturedInThePhoto`は一時スタイルの双方向変更・不正カテゴリ／古いMenuの拒否・写真への保存・実物非変更・次回撮影での復元を検査する。専用Clientは実ボタンとホイールでスタイル・Garment選択を変更し、写真への保存を検査して`build/fashion-camera-style-selector.png`へ撮影する。カメラClient試験も逆順→順順の実Packetを送り、15度になることを確認する。料金を64個超に設定した場合の複数スタックの預かり・同一NBT返却・確定消費はGameTestで検査する。
+
+`photographyStartsWithTheModelsWornStyles`は、市民と自撮りの現在のタックイン・袖まくり・前開きが撮影開始時のスナップショット・Menu・未変更の写真に引き継がれ、モデルの実装備が変わらないことを確認する。Client QAは同じ非既定スタイルのモデルで画面を開き、Vanillaの初回スロット同期後にも状態が維持されることを検査して`build/fashion-camera-initial-worn-styles.png`へ撮影する。
+
+カメラ衣服欄の一時的な着脱・交換・回収は`photographyClothingDragAndDropIsTemporaryAndPreservesPaidPhotos`、VanillaのQUICK_CRAFT開始／対象／終了通知は`photographyQuickCraftCanDressAndRecoverTrialClothing`、画面外投棄・Q・複製・ホットバー交換・死亡時のコピー流出防止、実物枠の保護と外部の所持品更新は`photographyTrialClothingCannotEscapeAndTracksExternalInventoryChanges`で検査する。元の衣服とモデルの実装備が変わらず、閉鎖時に写真や支払いを巻き戻さないことも確認する。専用Clientは実GUIのマウス操作で衣服回収→試着→返却→元の服へ戻す操作を行い、`build/fashion-camera-trial-clothes.png`を保存する。
+
+`photographyTrialClothingCannotEnterOrExtractRealBundleContents`は、衣服入りBundleの右クリック／右ドラッグによる実物の展開と、空のBundleへの仮コピー収納を拒否し、閉鎖後の実物と収納内容が完全に一致することを検査する。
+
+`PhotographyMenuLayoutTest`は320×240の最小GUI領域、衣服・プレビュー・スタイル・撮影設定の4列が重ならないこと、18px高のボタン、衣服領域内のスロット中央配置、18pxへ詰めた下段の間隔、返却注意書きの余白、インベントリと取引出力枠の等しい外側余白、作業台と同じ58pxの入力／出力間隔を検査する。`PhotoLayoutMathTest`は新規撮影の背景が白で、保存済みの背景色は読み込み時に維持されることも確認する。`photographyAndEditingStayOpenWhileOnlyConsentExpires`は共有時計を変えずにメニューの期限を過去へ設定し、撮影・編集は継続できて承認だけ失効することを確認する。専用Clientは新規撮影の白背景と衣服スロットの位置を確認し、960×720／GUI Scale3でも画面に収まる画像を`build/fashion-camera-compact.png`へ保存する。写真取得時の経験値オーブ取得音を実Sound Eventで検査する。
+
+`FashionResourceTest`は作成済み5種のモデル／BlockStateのmain管理、生成先との非重複、写真／ポスターのアイコン、配信機の面別テクスチャとbottom=top、旧広告PNGの不在、看板／サイネージの生成アイコンとモデル参照を確認する。`ResourceIntegrityTest`と合わせて参照切れ・重複も検査する。
+
+共通GameTestの`GarmentCreativePresetsGameTests`はメインタブの実表示順（先頭の道具、鏡の後の店舗／広告媒体、末尾の写真用品とスポーンエッグ）と衣類タブの独立した外観Stackを検証する。
+
+共通GameTestの`FashionRetailGameTests`は実Registry・Storage・Create Seatを使い、撮影料金・無課金失敗・購入時の1着減算と購入元ID、矩形連結と分割、ポスター片側破壊、同一NBTの写真2枚複製／デプロイヤー印刷時の写真非消費、通常／Shiftクラフトと満杯失敗、配信機4方向、共有チャンネル、市民との会話停止／閉鎖後の実歩行再開と単独セッションを確認する。媒体の製作は紙4枚→ポスター1個と、ポスター1個＋ガラス板1枚→看板パネル2個を実2×2 Gridで検証し、写真と媒体をクラフトしても印刷できないことを確認する。
+
+同一Citizenのスマートフォン／カメラ共通の一人専有は`phoneAndCameraShareOneExclusiveCitizenSession`で全4組合せを検査する。`invalidCitizenSessionsReleaseForDisconnectReplacementAndDimensionChange`と`exclusiveCitizenInteractionReleasesInvalidOwners`は閉鎖・切断・死亡・距離・Dimension・Menu差替え後の解放、`directCameraMenusCannotBypassAnOccupiedCitizenOrCharge`は不正な直接Menu生成の拒否／無課金と別Citizenの独立性、`replacingOwnCitizenMenuKeepsTheNewMenuExclusive`は同じ本人の切替と遅延終了通知の無効化を検査する。`CitizenMenuGameTests`の`exclusiveMenusRejectOtherPlayersAndPhoneRequiresActualHand`と`CitizenBehaviorGameTests`の`poseEditingIsExclusiveAndHandoverUsesTheNewSessionBase`も、衣服／見た目／行動／向きへの他人の変更拒否と引継ぎを確認する。
+
+`FashionObservationGameTests`はマネキンと広告3種の実Sourceを使い、通常／色付き／遮光ガラス・板ガラス・多重ガラス越しの観察、ガラス奥の壁・鉄格子による遮蔽、背後の観察拒否、他市民の視認条件の維持を確認する。未ロードChunkを視線判定で強制ロードしないことも検査する。観察済み履歴で判定し、購入抽選の成功率には依存しない。
+
+`RetailSetupGameTests`は正面シートの4方向・同高／1段下と範囲外拒否、通常使用でのスマートフォン選択、在庫の色一致と不足・補充、サイネージ配信更新、索引の解除・撤去、広告で見えない衣服とレジ再設置の誤警告防止を検査する。1024スロットの試験は1巡回256スロットの予算、90tick以上無変更なら再走査しないキャッシュ、実extract／insertの通知による再照合、接続数、simulateのみで在庫を消費しないことも確認する。
+
+同クラスは、同一tickの選択スロット往復Packet・同一内容のスマートフォン再同期の維持・異なるデータのスマートフォンへの交換・副手での解除、チェストの結合／片側破壊／保存復元／同座標の別ブロック拒否／結合リンク重複除去、Create保管庫のX／Z方向の幅・長さ・代表変更と構成在庫の変更通知も検査する。縦型の共通APIはY軸のテスト専用`Inventory`実装で検査し、特定アドオン実MODでの互換試験とは区別する。
+
+リンク操作の試験は、空手のレジ使用でメッセージがないこと、在庫・マネキン・広告3種でリンク／解除／再リンクと各1回の成功通知が一致すること、連結広告の非代表パネルから全体を解除できること、展示物索引からも解除されることを確認する。`ProductionGuideTest`は日英の明示的なリンク／解除文と旧通常操作メッセージの撤去を検査する。
+
+```powershell
+.\gradlew.bat -PjeiEnabled=false test --tests '*FashionTagTest' --tests '*PhotoLayoutMathTest'
+.\gradlew.bat -PjeiEnabled=false test --tests '*FashionResourceTest' --tests '*ResourceIntegrityTest'
+.\gradlew.bat -PjeiEnabled=false runGameTestServer
+.\gradlew.bat -PjeiEnabled=false runFashionTestClient
+```
+
+専用Clientは`src/test/fashion/`、設定は`src/test/fashion-tests.gradle`、隔離Worldは`run/fashion-tests/client/`。撮影GUI、縦横広告、撮影元消滅後の表示、3媒体、Channel差分同期、Player Skinのフォールバック、Resource Reloadを実行する。作成済み5種をHotbarへ並べてモデル欠落を確認し、レジと配信機も設置する。市民の服装ロックは18pxの正方形位置とTooltip、解除／ロックの実同期と画像を確認する。成功印は`FASHION_CLIENT_QA_SUCCESS`、画像は`build/fashion-*.png`。
+
+独立2Client間の承認操作、外部アカウントの実スキン変更、VS2実MOD、大量広告のMSPT/FPSベンチマークをこの専用試験で代替しない。
+
+同Clientの`RetailClientChecks`は実NetworkとゴーグルOverlayを使い、開店／閉店・店員／在庫状態と接続数、変更通知による在庫不足と補充後の解除、主手／副手のスマートフォンでの4種類のリンク枠、道具解除後の枠消去、Shift詳細の撤去、店舗Ponderの再生・リプレイを検査する。Ponderは6説明への短縮と、村人が実SeatEntityに乗車してCreateの乗員位置にいることを検査する。日英のGoggles／Ponder画像は`build/retail-*.png`、着席画像は`retail-ponder-cashier.png`、成功印は`RETAIL_CLIENT_QA_SUCCESS`（全体完了は`FASHION_CLIENT_QA_SUCCESS`）。
+
+同検証の末尾で、ラージチェスト化の構成同期・全体枠・接続数1、元側の破壊後の残存チェスト枠、実選択スロットPacketによる設定解除も検査する。画像は`build/retail-large-chest-highlight.png`と`build/retail-surviving-chest-highlight.png`。
+
+設定中の対象注視は、実カーソルと開始／解除のNetwork同期でラージチェスト・非代表広告パネル・マネキンを検査し、未リンク対象・リンク解除・設定終了・画面表示・副手・スロット往復による表示切替を確認する。画像は`build/retail-setting-{storage,advertisement,mannequin}.png`。`RetailLinkSessionPacketTest`はレジ参照・両手・9スロットの往復、1byteの解除通知、不正スロットの拒否を検査する。
+
 ## 配置と実行区分
 
 テスト関連のソース・リソース・専用ビルド設定・実行スクリプト・手順書を`src/test/`配下に集約する。Gradle Wrapper本体は`gradle/wrapper/`を維持する。
@@ -177,6 +246,8 @@ Citizen経路だけの実サーバー試験は次で実行する。専用起動�
 
 外部名前空間のModel／Textureの実在や実際の描画、GUI、Multiplayerはこの静的検査の保証範囲に含まれない。
 Client関連の変更では追加で`runClient`、JEI関連では`runJeiTestClient`／`-PjeiEnabled=false runJeiTestClient`／`-PjeiEnabled=false runJeiTestServer`を使用する。
+`runJeiTestClient`は広告写真複製の標準Crafting登録、未設定／撮影済み写真のR／U検索、入力1枚・同一NBT出力2枚、検索元の不変性、Datapackによる削除・追加後の再登録も検証する。`build/phase23/screenshots/photo-copy-en.png`／`photo-copy-ja.png`に実画面を保存する。
+同Client QAの`ItemGuideTooltipChecks`は対象15種の通常Tooltip、材料・製品の黄色、家具説明のオレンジと通常時のShift案内より前の配置、Shift中は内部へ移動して1回だけ表示すること、ゲージ概要と記録座標を検査する。家具のShift表示はCreateの`linesOnShift`と既存BlockItem説明を合成して配置処理を検証する。日英の通常表示は`build/phase23/screenshots/tooltips-{1,2}-{en,ja}.png`、家具のShift表示は`tooltips-shift-{wardrobe,hanger,rack}-{en,ja}.png`に保存する。
 GameTestやJUnitは外部Datapack全般の妥当性を保証するものではなく、同梱データの回帰検証を目的とする。
 
 ## 既存テストの棚卸し

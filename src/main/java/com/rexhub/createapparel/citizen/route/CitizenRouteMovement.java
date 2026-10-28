@@ -53,6 +53,12 @@ public final class CitizenRouteMovement {
     public boolean detouring() { return detouring; }
     public boolean waitingForCrossing() { return state == State.WAIT_CROSSING || avoidedCrossing != null; }
     public long retryAt() { return retryAfter; }
+    public void resumeAfterInteraction(long ticks) {
+        progressAt += ticks;
+        if (waitSince >= 0) waitSince += ticks;
+        if (retryAfter > 0) retryAfter += ticks;
+        if (nextDetourCheck > 0) nextDetourCheck += ticks;
+    }
     @Nullable public Vec3 currentDestination() {
         if (destination != null) return destination;
         if (target != null && targetDefinition != null) return targetDefinition.center();

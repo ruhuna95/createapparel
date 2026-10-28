@@ -377,7 +377,7 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
         var state = citizen.citizenState().population();
         var active = citizen.intents().active();
         var mode = citizen.citizenState().behavior().mode();
-        return citizen.level() == level && citizen.isAlive() && !citizen.isRemoved() && !citizen.isNoAi() && !citizen.isPassenger() && !citizen.isLeashed()
+        return citizen.level() == level && citizen.isAlive() && !citizen.isRemoved() && !citizen.isNoAi() && !citizen.interaction().active() && !citizen.isPassenger() && !citizen.isLeashed()
                 && !state.independent() && !state.force() && district.equals(state.districtId()) && state.transferCooldownUntil() <= level.getGameTime()
                 && !reserved(citizen.getUUID()) && (active == null || active.source() == CitizenIntent.Source.IMPULSE_VISIT)
                 && mode != CitizenBehaviorMode.FOLLOW && mode != CitizenBehaviorMode.POSE
@@ -604,7 +604,7 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
     }
     private boolean canAdjustRouteMode(Citizen citizen) {
         var state = citizen.citizenState().population();
-        return data.district(state.districtId()) != null && !state.independent() && !state.force() && !citizen.isNoAi() && !citizen.isPassenger() && !citizen.isLeashed()
+        return data.district(state.districtId()) != null && !state.independent() && !state.force() && !citizen.isNoAi() && !citizen.interaction().active() && !citizen.isPassenger() && !citizen.isLeashed()
                 && citizen.intents().active() == null && !reserved(citizen.getUUID()) && !citizen.routeMovement().hasDestination();
     }
     private int citizenCooldown() { return jitter(Math.max(ModConfigs.COMMON.populationCitizenCooldown.get(), ModConfigs.COMMON.populationGaugeCooldown.get() * 2)); }

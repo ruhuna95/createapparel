@@ -1,4 +1,8 @@
 {
+  "fashion_tags": ["simple", "feminine", "casual"],
+  "fashion_design_overrides": {
+    "contrast_bow": { "add": ["cute"], "remove": ["casual"] }
+  },
   "default_slot": "inner_bottom",
   "allowed_slots": [
     "inner_bottom"

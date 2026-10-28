@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
-final class SelectionMenu {
+public final class SelectionMenu {
     static final int SELECTED_SLOT_COLOR = 0xFFFFFF80;
     private static final int CELL = 20;
     private final Consumer<Component> narrator;
@@ -29,7 +29,7 @@ final class SelectionMenu {
     private boolean open;
     private boolean consumedClick;
 
-    SelectionMenu() {
+    public SelectionMenu() {
         this(label -> Minecraft.getInstance().getNarrator().sayNow(label));
     }
 
@@ -37,7 +37,7 @@ final class SelectionMenu {
         this.narrator = narrator;
     }
 
-    void open(Button anchor, int screenWidth, int screenHeight, List<Component> options,
+    public void open(Button anchor, int screenWidth, int screenHeight, List<Component> options,
               List<Integer> swatches, int current, IntConsumer onSelect) {
         if (options.isEmpty()) return;
         labels = List.copyOf(options);
@@ -59,11 +59,11 @@ final class SelectionMenu {
         announce();
     }
 
-    boolean isOpen() { return open; }
+    public boolean isOpen() { return open; }
 
-    void close() { open = false; }
+    public void close() { open = false; }
 
-    boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!open) return false;
         consumedClick = true;
         int index = indexAt(mouseX, mouseY);
@@ -76,19 +76,19 @@ final class SelectionMenu {
         return true;
     }
 
-    boolean mouseReleased() {
+    public boolean mouseReleased() {
         boolean consumed = consumedClick || open;
         consumedClick = false;
         return consumed;
     }
 
-    boolean mouseScrolled(double delta) {
+    public boolean mouseScrolled(double delta) {
         if (!open) return false;
         if (delta != 0) firstRow = Mth.clamp(firstRow + (delta > 0 ? -1 : 1), 0, maxFirstRow());
         return true;
     }
 
-    boolean keyPressed(int key) {
+    public boolean keyPressed(int key) {
         if (!open) return false;
         switch (key) {
             case GLFW.GLFW_KEY_ESCAPE -> close();
@@ -132,7 +132,7 @@ final class SelectionMenu {
         return index < labels.size() ? index : -1;
     }
 
-    void render(GuiGraphics graphics, int mouseX, int mouseY) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
         if (!open) return;
         var font = Minecraft.getInstance().font;
         graphics.pose().pushPose();

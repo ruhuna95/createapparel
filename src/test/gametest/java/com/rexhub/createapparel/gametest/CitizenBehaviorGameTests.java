@@ -579,7 +579,7 @@ public final class CitizenBehaviorGameTests {
     }
 
     @GameTest(template = "apparel_state", batch = "citizen_behavior")
-    public static void twoEditorsUseTheirOwnSessionBasesAndShareWorldRotation(GameTestHelper helper) {
+    public static void poseEditingIsExclusiveAndHandoverUsesTheNewSessionBase(GameTestHelper helper) {
         var citizen = citizen(helper);
         citizen.setYRot(30);
         var first = player(helper, citizen);
@@ -589,12 +589,17 @@ public final class CitizenBehaviorGameTests {
         var secondMenu = menu(second, citizen);
         citizen.setBehavior(CitizenBehaviorState.posed(PosePreset.CASUAL));
         CitizenActionPacket.step(firstMenu, CitizenActionPacket.Action.POSE_ROTATION_STEP, 2).handle(first);
-        helper.assertTrue(citizen.getYRot() == 75 && firstMenu.citizen() == secondMenu.citizen(), "First editor rotates shared entity using their opening yaw");
+        helper.assertTrue(citizen.getYRot() == 75 && firstMenu.stillValid(first) && !secondMenu.stillValid(second), "Only the first editor can rotate the Citizen");
         CitizenActionPacket.step(secondMenu, CitizenActionPacket.Action.POSE_ROTATION_STEP, 4).handle(second);
-        helper.assertTrue(citizen.getYRot() == 150 && firstMenu.sessionBaseYaw() == 30 && secondMenu.sessionBaseYaw() == 60,
-                "Second editor uses independent base and updates the same world entity");
+        helper.assertTrue(citizen.getYRot() == 75 && firstMenu.sessionBaseYaw() == 30, "The unauthorized editor cannot change the world rotation");
+        firstMenu.removed(first); first.containerMenu = first.inventoryMenu;
+        var replacement = menu(second, citizen);
+        CitizenActionPacket.step(replacement, CitizenActionPacket.Action.POSE_ROTATION_STEP, 4).handle(second);
+        helper.assertTrue(citizen.getYRot() == 165 && replacement.sessionBaseYaw() == 75, "The next owner uses the actual rotation at handover as their session base");
         CitizenActionPacket.select(firstMenu, CitizenActionPacket.Action.BEHAVIOR_MODE, "stand").handle(first);
-        helper.assertTrue(!secondMenu.rotatePose(3) && citizen.getYRot() == 150, "Concurrent mode change invalidates other editor pose controls");
+        helper.assertTrue(citizen.citizenState().behavior().mode() == CitizenBehaviorMode.POSE && citizen.getYRot() == 165, "Packets from the old owner cannot change the new owner's behavior");
+        CitizenActionPacket.select(replacement, CitizenActionPacket.Action.BEHAVIOR_MODE, "stand").handle(second);
+        helper.assertTrue(!replacement.rotatePose(3) && citizen.getYRot() == 165, "The current owner still controls validated pose mode changes");
         helper.succeed();
     }
 

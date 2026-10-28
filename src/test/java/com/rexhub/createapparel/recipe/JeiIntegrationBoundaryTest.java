@@ -31,16 +31,35 @@ class JeiIntegrationBoundaryTest {
     }
 
     @Test
-    void onlyTheConfiguredPatternConditionRemainsAsRecipeExplanation() throws Exception {
+    void machineRecipeExplanationsStayMinimal() throws Exception {
         for (String language : List.of("en_us", "ja_jp")) {
             var translations = JsonParser.parseString(Files.readString(Path.of(
                     "src/generated/resources/assets/createapparel/lang/" + language + ".json"))).getAsJsonObject();
             var keys = translations.keySet().stream().filter(key -> key.startsWith("jei.createapparel.")).collect(Collectors.toSet());
-            assertEquals(8, keys.size());
+            assertEquals(8, keys.stream().filter(key -> !key.startsWith("jei.createapparel.photo_copy.")).count());
+            assertTrue(keys.stream().noneMatch(key -> key.startsWith("jei.createapparel.ad_print.")));
             for (String key : keys) assertFalse(translations.get(key).getAsString().contains("[i]"), key);
             assertEquals(language.equals("ja_jp") ? "このレシピを指定した型紙が必要"
                             : "Requires a pattern configured for this recipe.",
                     translations.get("jei.createapparel.sewing.pattern").getAsString());
+        }
+    }
+
+    @Test
+    void photoCopyExplainsCapturedInputAndIdenticalCopiesInBothLanguages() throws Exception {
+        for (String language : List.of("en_us", "ja_jp")) {
+            var translations = JsonParser.parseString(Files.readString(Path.of(
+                    "src/generated/resources/assets/createapparel/lang/" + language + ".json"))).getAsJsonObject();
+            var keys = translations.keySet().stream().filter(key -> key.startsWith("jei.createapparel.photo_copy."))
+                    .collect(Collectors.toSet());
+            assertEquals(Set.of("jei.createapparel.photo_copy.input", "jei.createapparel.photo_copy.output"), keys);
+            for (String key : keys) assertFalse(translations.get(key).getAsString().contains("NBT"), key);
+            assertEquals(language.equals("ja_jp") ? "撮影済みの写真1枚を使用。プレイヤーのクラフトのみ対応。"
+                            : "Use one captured photo. Player crafting only.",
+                    translations.get("jei.createapparel.photo_copy.input").getAsString());
+            assertEquals(language.equals("ja_jp") ? "写真データが完全に同じ写真2枚になります。"
+                            : "Both copies retain all original photo data.",
+                    translations.get("jei.createapparel.photo_copy.output").getAsString());
         }
     }
 

@@ -23,7 +23,8 @@ public final class SmartPhoneItem extends Item {
             event.setCanceled(true);
             if (event.getLevel().isClientSide) {
                 event.setCancellationResult(InteractionResult.SUCCESS);
-            } else if (event.getEntity() instanceof ServerPlayer player && CitizenMenu.canEdit(player, citizen)) {
+            } else if (event.getEntity() instanceof ServerPlayer player && CitizenMenu.canEdit(player, citizen)
+                    && citizen.interaction().canBegin(player)) {
                 com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.get(player.serverLevel())
                         .forceActive(citizen, com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.Reason.INTERACTION, 100);
                 NetworkHooks.openScreen(player,

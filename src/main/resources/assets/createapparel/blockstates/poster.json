@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "createapparel:block/poster",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createapparel:block/poster"
+    },
+    "facing=south": {
+      "model": "createapparel:block/poster",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "createapparel:block/poster",
+      "y": 270
+    }
+  }
+}

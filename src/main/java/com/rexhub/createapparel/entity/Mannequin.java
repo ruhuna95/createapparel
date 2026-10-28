@@ -57,10 +57,15 @@ public final class Mannequin extends LivingEntity {
 
     public MannequinVariant variant() { return variant; }
     public MannequinState mannequinState() { return mannequinState; }
+    @Override public void onAddedToWorld() {
+        super.onAddedToWorld();
+        com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
+    }
     public long lastHitTime() { return lastHit; }
 
     public void syncState() {
         if (!level().isClientSide) entityData.set(DATA_STATE, mannequinState.serializeNBT(), true);
+        com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
     }
 
     @Override
@@ -74,6 +79,7 @@ public final class Mannequin extends LivingEntity {
         super.onSyncedDataUpdated(key);
         if (DATA_STATE.equals(key) && level().isClientSide && mannequinState != null) {
             mannequinState.deserializeNBT(entityData.get(DATA_STATE), variant.form());
+            com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
         }
     }
 

@@ -7,6 +7,7 @@ import com.rexhub.createapparel.client.screen.CitizenGaugeScreen;
 import com.rexhub.createapparel.client.screen.CitizenScreen;
 import com.rexhub.createapparel.client.screen.WardrobeScreen;
 import com.rexhub.createapparel.init.ModBlocks;
+import com.rexhub.createapparel.photo.PhotoCopyRecipe;
 import com.rexhub.createapparel.recipe.ModRecipeTypes;
 import com.rexhub.createapparel.recipe.SewingRecipe;
 import com.rexhub.createapparel.recipe.SilkwormRearingRecipe;
@@ -18,6 +19,7 @@ import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -46,6 +48,14 @@ public final class ApparelJeiPlugin implements IModPlugin {
         registration.addGuiScreenHandler(CitizenGaugeScreen.class, screen -> null);
         registration.addGuiScreenHandler(CitizenScreen.class, screen -> null);
         registration.addGuiScreenHandler(WardrobeScreen.class, screen -> null);
+        registration.addGuiScreenHandler(com.rexhub.createapparel.client.advertisement.PhotographyScreen.class, screen -> null);
+        registration.addGuiScreenHandler(com.rexhub.createapparel.client.advertisement.PhotoEditScreen.class, screen -> null);
+        registration.addGuiScreenHandler(com.rexhub.createapparel.client.advertisement.AdvertisementControlScreen.class, screen -> null);
+    }
+
+    @Override
+    public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
+        registration.getCraftingCategory().addCategoryExtension(PhotoCopyRecipe.class, recipe -> new PhotoCopyRecipeExtension());
     }
 
     @Override
@@ -76,6 +86,10 @@ public final class ApparelJeiPlugin implements IModPlugin {
         }
         RecipeManager manager = level.getRecipeManager();
         var registries = level.registryAccess();
+        registration.addRecipes(AdvertisementPrintingDisplay.TYPE, manager.getAllRecipesFor(
+                        com.rexhub.createapparel.advertisement.AdvertisementRegistries.AD_PRINTING_TYPE.get()).stream()
+                .filter(com.simibubi.create.AllRecipeTypes.CAN_BE_AUTOMATED)
+                .map(AdvertisementPrintingDisplay::create).flatMap(Optional::stream).toList());
         registration.addRecipes(ApparelJeiRecipeTypes.SPINNING,
                 displays(manager, ModRecipeTypes.SPINNING, SpinningRecipe.class,
                         recipe -> valid(ProcessingRecipeDisplay.spinning(recipe, registries))));

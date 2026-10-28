@@ -1,0 +1,17 @@
+{
+  "type": "createapparel:ad_printing",
+  "ingredients": [
+    {
+      "item": "createapparel:billboard_panel"
+    },
+    {
+      "item": "createapparel:advertising_photo"
+    }
+  ],
+  "keepHeldItem": true,
+  "results": [
+    {
+      "item": "createapparel:billboard_panel"
+    }
+  ]
+}

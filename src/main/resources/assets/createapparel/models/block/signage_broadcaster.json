@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "createapparel:block/signage_broadcaster_side",
+    "down": "createapparel:block/signage_broadcaster_top",
+    "up": "createapparel:block/signage_broadcaster_top",
+    "north": "createapparel:block/signage_broadcaster_front",
+    "south": "createapparel:block/signage_broadcaster_back",
+    "east": "createapparel:block/signage_broadcaster_side",
+    "west": "createapparel:block/signage_broadcaster_side"
+  }
+}

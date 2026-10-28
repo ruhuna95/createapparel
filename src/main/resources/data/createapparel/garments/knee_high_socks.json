@@ -1,4 +1,11 @@
 {
+  "fashion_tags": ["simple", "casual", "cute"],
+  "fashion_design_overrides": {
+    "stripe": { "add": [], "remove": ["cool"] },
+    "double_stripe": { "add": [], "remove": ["cool"] },
+    "toe_heel": { "add": ["flashy"], "remove": ["simple", "cute"] },
+    "argyle": { "add": ["flashy"], "remove": ["formal", "cute"] }
+  },
   "default_slot": "legwear",
   "allowed_slots": [
     "legwear"

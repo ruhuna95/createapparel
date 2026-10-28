@@ -1,4 +1,8 @@
 {
+  "fashion_tags": ["simple", "feminine"],
+  "fashion_design_overrides": {
+    "gingham_check": { "add": [], "remove": ["casual"] }
+  },
   "default_slot": "bottom",
   "allowed_slots": [
     "bottom"

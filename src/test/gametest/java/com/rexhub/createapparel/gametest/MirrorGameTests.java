@@ -191,7 +191,8 @@ public final class MirrorGameTests {
         var items = com.rexhub.createapparel.init.ModItems.creativeTabItems();
         int index = items.indexOf(com.rexhub.createapparel.init.ModItems.HEAD_MANNEQUIN_BLACK) + 1;
         for (var item : ModMirrors.ITEMS.values()) helper.assertTrue(items.get(index++) == item, "Mirrors follow mannequins in order");
-        helper.assertTrue(items.get(index) == ModFluids.MIRROR_COATING_BUCKET, "Coating bucket stays with mirror items");
+        helper.assertTrue(items.get(index) == com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER_ITEM,
+                "The retail group follows the last mirror item");
         helper.succeed();
     }
 

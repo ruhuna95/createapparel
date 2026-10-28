@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "createapparel:block/cash_register",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "createapparel:block/cash_register"
+    },
+    "facing=south": {
+      "model": "createapparel:block/cash_register",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "createapparel:block/cash_register",
+      "y": 270
+    }
+  }
+}
