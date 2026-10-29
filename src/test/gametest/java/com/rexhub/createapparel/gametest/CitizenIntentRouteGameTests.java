@@ -99,6 +99,43 @@ public final class CitizenIntentRouteGameTests {
         return citizen;
     }
 
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_intent_routes", timeoutTicks = 350)
+    public static void isolatedMarkersDoNotDivertDestinationTravel(GameTestHelper helper) {
+        room(helper);
+        var first = marker(helper, 8, 32, false);
+        marker(helper, 28, 36, false);
+        var start = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(6, 1, 32)));
+        var goal = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(36, 1, 32)));
+        var citizen = citizen(helper, start, true);
+        var planner = CitizenRouteManager.get(helper.getLevel()).planner();
+        var midpoint = citizen(helper, start.add(14, 0, 0), false);
+        var checked = new int[1];
+        helper.runAtTickTime(5, () -> {
+            long now = helper.getLevel().getGameTime();
+            helper.assertTrue(citizen.intents().request(new CitizenIntent(CitizenIntent.Source.PLAYER, CitizenIntent.DestinationType.POSITION,
+                    goal, null, now, now + 350, 0)), "Destination intent is accepted");
+        });
+        helper.onEachTick(() -> {
+            if (checked[0] == 0) {
+                var middlePlan = planner.plan(midpoint, goal);
+                if (!middlePlan.deferred()) {
+                    helper.assertTrue(middlePlan.fallback(), "Overlapping endpoint candidates still require a real edge: " + middlePlan);
+                    checked[0]++;
+                }
+            } else if (checked[0] == 1) {
+                var sameMarker = planner.between(midpoint, first.id(), first.id());
+                if (!sameMarker.deferred()) {
+                    helper.assertTrue(!sameMarker.fallback() && sameMarker.nodes().equals(List.of(first.id()))
+                            && sameMarker.edges().isEmpty(), "Explicit same-marker lookup remains valid");
+                    checked[0]++;
+                }
+            }
+            helper.assertTrue(citizen.routeMovement().currentMarker() == null,
+                    "Isolated marker must not become a compulsory waypoint: " + first.pos());
+            if (checked[0] == 2 && citizen.position().distanceToSqr(goal) <= 1) { citizen.discard(); helper.succeed(); }
+        });
+    }
+
     private static void walksInsteadOfGateway(GameTestHelper helper, CitizenIntent.Source source) {
         room(helper);
         var from = gauge(helper, 8);
