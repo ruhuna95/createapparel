@@ -1,5 +1,23 @@
 # 自動検証
 
+## 実2クライアントのMultiplayer検証
+
+```powershell
+.\src\test\run-multiplayer.ps1 -Offline
+```
+
+Java 17を使用する。専用source setの`src/test/multiplayer/`と`multiplayer-tests.gradle`で、127.0.0.1だけに待ち受ける通常Dedicated Serverと、異なる名前のClient A/Bを別JVMで起動する。新規の`run/multiplayer-tests/<RunId>/`だけを使用し、既存RunIdの上書きは拒否する。ポートの既定値は25585で、必要なら`-Port`を指定する。
+
+Apparelの自己／他Player同期、同じWardrobeからの実C2Sスタイル変更、Mannequin／Wall Hanger／Rack／Citizenの変更同期、Loomの糸表示、通常／Gateway／CrossingのRoute View、死亡と実Respawn、次元移動と再Tracking、両ClientとServerの実Chunk unload／reloadを検査する。続いて同じWorldを別JVMで再起動し、保存されたEntity UUID・装備・表示・Marker IDと再Login同期を照合する。操作指示・期待値・完了通知だけを共有ファイルへ出し、Clientの同期状態は製品の通信経路から受け取った状態で検査する。
+
+全プロセスの起動前にコンパイル・リソース準備を完了し、ForgeGradleのRunConfigから生成した引数でJavaを起動する。試験中に別のGradleから共有`build/resources`を更新しない。ログは`build/multiplayer-<RunId>-<initial|resume>-<Server|ClientA|ClientB>.log`。成功結果は同RunId内の`<initial|resume>-<server|A|B>-passed.txt`全6件で確認する。Launcherの終了コードだけを成功判定にしない。
+
+初回の3成功結果がそろった後、再起動試験だけを続行する場合は`-RunId <既存ID> -ResumeOnly`を指定できる。既存の再起動結果があるRunIdは上書きしない。cold LoginがTimeoutした場合は開始時だけ最大3回の再接続をログに記録し、接続後の切断は再接続で隠さない。
+
+Citizen WALK／Gateway移動／Crossing待機／迂回と予算の詳細は既存Dedicated GameTestも併用する。独立アカウントの認証・外部ネットワーク遅延・別PCのGPU性能・他MODとの互換試験を、このlocalhost検証の結果に含めない。
+
+死亡Fixtureは`keepInventory=true`で、Clientから通常のRespawn要求を送る。Citizenの変更同期・保存FixtureはNoAIの静止個体を使い、実WALK・Navigationと待機条件は共通Dedicated GameTestで別に確認する。
+
 ## Escalatedと市民の地形移動
 
 `CitizenEscalatedGameTests`は実Escalated 1.2.1（Minecraft 1.20.1／Forge／Create 6.0.8）を使い、通常床より少し迂回する自動歩道の優先選択、成人WALK／子供WANDERでの立ち乗りと降車後の歩行、エスカレーター上下搬送、実モーターの停止・逆転、乗車中の動力停止を検査する。自由歩行での逆進入回避と実迂回、上下エスカレーターの逆走経路除外、動的反転による古い経路の無効化、256rpmで中間目標を越えて降車しても引き返さないことも含む。Escalatedは専用runtimeだけに追加し、通常起動と配布JARには含めない。
@@ -186,6 +204,22 @@ ForgeのGameTest起動は、設定を省略するとランダムseedの通常地
 ## 対象を絞る場合
 
 ### Citizen Systemの最適化・診断・負荷確認
+
+現行の機能・予算・LODを維持する性能確認は、次を別々に実行する。描画／MSPTを比較する間は他のMinecraft検証を同時起動しない。
+
+```powershell
+.\gradlew.bat --offline -PjeiEnabled=false -PgaugeScale=true -PgaugeScaleProfile=true runGaugeTestServer
+.\gradlew.bat --offline -PjeiEnabled=false -PgaugePerformance=true -PgaugePerformanceCount=0 -PgaugePerformanceProfile=false -PgaugePerformanceSteady=true runGaugeTestServer
+.\gradlew.bat --offline -PjeiEnabled=false -PgaugePerformance=true -PgaugePerformanceCount=1000 -PgaugePerformanceProfile=false -PgaugePerformanceSteady=true runGaugeTestServer
+.\gradlew.bat --offline -PjeiEnabled=false -PgaugeRenderClient=true runGaugeTestClient
+.\gradlew.bat --offline -PjeiEnabled=false -PgaugeDisplayPerformance=true runGaugeTestClient
+```
+
+実市民のCPU試験は実時間10秒以上のwarmup後、400tickのMSPTを出力する。既存のACTIVE／THROTTLEDと探索予算を維持し、各停止診断フラグは指定しない。保存規模の試験とは実Entity数が異なる。
+
+`DisplayPerformanceClientChecks`は新規の隔離Worldで、各種類0→32→128個のMannequin／Wall Hanger／Rackを配置する。Rackは各2着、他は各1着。各段階の準備後100Client tickを待ち、1280×720・VSyncなし・FPS設定260（無制限）で240frameを測り、平均／p95 frame時間、ロード済みMannequin／BE数、製品RendererにSnapshotが作られたMannequin数、合成Texture数、Integrated Server平均MSPTを`DISPLAY_PERFORMANCE`へ出す。Snapshotの照会は測定後に一度だけ行い、毎frameのdraw数とは区別する。定常frameで新しい合成Textureが作られないことも要求する。数値を速度の合否閾値には使わない。画像は`build/display-performance-{0,32,128}.png`、成功印は`DISPLAY_PERFORMANCE_CLIENT_PASSED`。
+
+経路View通信の単独編集試験は、Chunk準備40tick後に先行QAの残存Citizenと一時的な実行状態を片付ける。測定は従来の240tick、16人、1編集の16Packetとpayload比率を維持する。空Deltaが追加された場合は`ROUTE_VIEW_DELTA`のruntime／load／maintenance Revisionで原因を区別する。
 
 `CitizenOptimizationTest`／`PopulationRequestQueueTest`はRevision分離、独立Networkの保持、共通64ノード予算、Chain逆引き、予約の診断／回復、Snapshot／Delta、2,000要求の公平性と連続更新時のHeap上限を確認する。`DistrictTerritoryTest`は64 Marker・16 Marker Chunkに加え、幾何変更の探索も256 Chunkセル／tick以内とする。`CitizenScaleTest`はA/B/Cの保存レコードとNBTを比較し、従来の全件ソートと優先キューを同じ2,400試行で比較する。時間にはJIT・GCの変動があるため、機能・件数・予算をassertし、速度比はassertしない。
 

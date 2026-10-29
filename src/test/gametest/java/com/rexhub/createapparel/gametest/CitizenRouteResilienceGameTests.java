@@ -248,7 +248,7 @@ public final class CitizenRouteResilienceGameTests {
         });
     }
 
-    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_view_load", timeoutTicks = 280)
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_view_load", timeoutTicks = 320)
     public static void routeViewMeasuresSharedSnapshotsAndFrequentEditDeltas(GameTestHelper helper) {
         floor(helper); var m = manager(helper); var nodes = new ArrayList<RouteMarker>();
         for (int x = 36; x <= 74; x++) for (int z = 36; z <= 74; z++) {
@@ -261,8 +261,19 @@ public final class CitizenRouteResilienceGameTests {
             player.setPos(helper.absoluteVec(new Vec3(52, 1, 52))); player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
             players.add(player); receivers.add(new RouteViewTransfer.Receiver());
         }
-        var stage = new int[]{0}; var tick = new int[]{0}; var bytes = new long[2][16]; var nanos = new long[2][16]; var packets = new long[2][16];
+        var stage = new int[]{0}; var tick = new int[]{0}; var warmup = new int[]{40};
+        var bytes = new long[2][16]; var nanos = new long[2][16]; var packets = new long[2][16];
         helper.onEachTick(() -> {
+            if (warmup[0] > 0) {
+                if (--warmup[0] == 0) {
+                    var previousCitizens = java.util.stream.StreamSupport.stream(helper.getLevel().getAllEntities().spliterator(), false)
+                            .filter(Citizen.class::isInstance).map(Citizen.class::cast).toList();
+                    previousCitizens.forEach(Citizen::discard);
+                    m.runtime().clear();
+                    LogUtils.getLogger().info("ROUTE_VIEW_FIXTURE_ISOLATED previousCitizens={}", previousCitizens.size());
+                }
+                return;
+            }
             int offset = tick[0] % 60;
             int count = new int[]{128, 600, 1024, 1024}[stage[0]];
             if (offset == 0) {
@@ -284,6 +295,10 @@ public final class CitizenRouteResilienceGameTests {
                 long started = System.nanoTime();
                 RouteViewSynchronization.update(players.get(i), packet -> {
                     packets[phase][index]++;
+                    if (index == 0 && phase == 1 && offset < 40) LogUtils.getLogger().info(
+                            "ROUTE_VIEW_DELTA stage={} offset={} base={} nodes={} edges={} removedNodes={} removedEdges={} loadedRevision={} runtimeRevision={} maintenanceRevision={}",
+                            stage[0], offset, packet.baseSnapshot(), packet.nodes().size(), packet.edges().size(),
+                            packet.removedNodes().size(), packet.removedEdges().size(), m.loadRevision(), m.runtime().viewRevision(), m.maintenanceRevision());
                     var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
                     try { packet.encode(buffer); bytes[phase][index] += buffer.readableBytes(); }
                     finally { buffer.release(); }

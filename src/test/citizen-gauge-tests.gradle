@@ -88,6 +88,7 @@ minecraft.runs {
         property 'apparel.gaugeTest.resume', providers.gradleProperty('gaugeResume').getOrElse('false')
         property 'apparel.gaugeTest.skipClipboard', providers.gradleProperty('gaugeSkipClipboard').getOrElse('false')
         property 'apparel.gaugeTest.renderClient', providers.gradleProperty('gaugeRenderClient').getOrElse('false')
+        property 'apparel.gaugeTest.displayPerformance', providers.gradleProperty('gaugeDisplayPerformance').getOrElse('false')
         property 'apparel.gaugeTest.renderReference', providers.gradleProperty('gaugeRenderReference').getOrElse('off')
         mods { "${mod_id}" { source sourceSets.gaugeTest } }
     }
@@ -114,7 +115,8 @@ tasks.matching { it.name == 'runGaugeTestClient' }.configureEach {
     doFirst { ext.gaugeClientStartedAt = System.currentTimeMillis() }
     doLast {
         def log = new File(gaugeTestClientDirectory, 'logs/latest.log')
-        def marker = providers.gradleProperty('gaugeRenderClient').getOrElse('false').toBoolean() ? 'CITIZEN_RENDER_CLIENT_PASSED'
+        def marker = providers.gradleProperty('gaugeDisplayPerformance').getOrElse('false').toBoolean() ? 'DISPLAY_PERFORMANCE_CLIENT_PASSED'
+                : providers.gradleProperty('gaugeRenderClient').getOrElse('false').toBoolean() ? 'CITIZEN_RENDER_CLIENT_PASSED'
                 : providers.gradleProperty('gaugeSkipClipboard').getOrElse('false').toBoolean() ? 'CITIZEN_GAUGE_CLIENT_PARTIAL_PASSED' : 'CITIZEN_GAUGE_CLIENT_PASSED'
         if (!log.isFile() || log.lastModified() < gaugeClientStartedAt || !log.getText('UTF-8').contains(marker)
                 || log.getText('UTF-8').contains('CITIZEN_RENDER_CLIENT_FAILED') || log.getText('UTF-8').contains('CITIZEN_GAUGE_CLIENT_FAILED'))

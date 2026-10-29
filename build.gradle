@@ -485,4 +485,5 @@ tasks.matching { it.name == 'runJeiTestClient' }.configureEach {
 
 apply from: 'src/test/citizen-gauge-tests.gradle'
 apply from: 'src/test/fashion-tests.gradle'
+apply from: 'src/test/multiplayer-tests.gradle'
 apply from: 'src/test/escalated-tests.gradle'

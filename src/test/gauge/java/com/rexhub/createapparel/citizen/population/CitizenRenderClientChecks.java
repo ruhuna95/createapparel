@@ -29,7 +29,8 @@ public final class CitizenRenderClientChecks {
     private CitizenRenderClientChecks() { }
 
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
-        if (!Boolean.getBoolean("apparel.gaugeTest.renderClient") || event.phase != TickEvent.Phase.END || stage == 99) return;
+        if (!Boolean.getBoolean("apparel.gaugeTest.renderClient") || Boolean.getBoolean("apparel.gaugeTest.displayPerformance")
+                || event.phase != TickEvent.Phase.END || stage == 99) return;
         var mc = Minecraft.getInstance();
         if (mc.getOverlay() != null) return;
         try {

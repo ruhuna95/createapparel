@@ -1,0 +1,101 @@
+sourceSets {
+    multiplayerTest {
+        java.setSrcDirs(['src/test/multiplayer/java'])
+        resources.setSrcDirs(['src/test/multiplayer/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+def multiplayerRunId = providers.gradleProperty('multiplayerRunId').getOrElse('local')
+if (!(multiplayerRunId ==~ /[A-Za-z0-9_-]+/)) throw new GradleException('Invalid multiplayerRunId')
+def multiplayerRoot = file("run/multiplayer-tests/${multiplayerRunId}")
+def multiplayerResume = providers.gradleProperty('multiplayerResume').getOrElse('false')
+def multiplayerPort = providers.gradleProperty('multiplayerPort').getOrElse('25585')
+if (!(multiplayerPort ==~ /\d{4,5}/)) throw new GradleException('Invalid multiplayerPort')
+
+minecraft.runs {
+    serverMultiplayerTest {
+        parent minecraft.runs.server
+        workingDirectory new File(multiplayerRoot, 'server')
+        property 'forge.logging.console.level', 'info'
+        property 'apparel.multiplayer.server', 'true'
+        property 'apparel.multiplayer.root', multiplayerRoot.absolutePath
+        property 'apparel.multiplayer.resume', multiplayerResume
+        mods { "${mod_id}" { source sourceSets.multiplayerTest } }
+    }
+    ['A', 'B'].each { role ->
+        "clientMultiplayerTest${role}" {
+            parent minecraft.runs.client
+            workingDirectory new File(multiplayerRoot, "client-${role}")
+            property 'forge.logging.console.level', 'info'
+            property 'apparel.multiplayer.role', role
+            property 'apparel.multiplayer.root', multiplayerRoot.absolutePath
+            property 'apparel.multiplayer.resume', multiplayerResume
+            property 'apparel.multiplayer.address', "127.0.0.1:${multiplayerPort}"
+            args '--username', "ApparelQA${role}", '--quickPlayMultiplayer', "127.0.0.1:${multiplayerPort}", '--width', '640', '--height', '480'
+            mods { "${mod_id}" { source sourceSets.multiplayerTest } }
+        }
+    }
+}
+
+tasks.register('prepareMultiplayerTestWorld') {
+    doLast {
+        def directory = new File(multiplayerRoot, 'server')
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText("""server-ip=127.0.0.1
+server-port=${multiplayerPort}
+online-mode=false
+enforce-secure-profile=false
+level-type=minecraft:flat
+generator-settings={"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:stone","height":2}],"biome":"minecraft:plains"}
+generate-structures=false
+level-seed=0
+view-distance=2
+simulation-distance=2
+spawn-protection=0
+max-tick-time=0
+""", 'UTF-8')
+    }
+}
+tasks.matching { it.name == 'prepareRunServerMultiplayerTest' }.configureEach { dependsOn 'prepareMultiplayerTestWorld' }
+tasks.matching { it.name in ['runServerMultiplayerTest', 'runClientMultiplayerTestA', 'runClientMultiplayerTestB'] }.configureEach {
+    doLast {
+        def phase = multiplayerResume.toBoolean() ? 'resume' : 'initial'
+        def role = name == 'runServerMultiplayerTest' ? 'server' : name.takeRight(1)
+        def result = new File(multiplayerRoot, "${phase}-${role}-passed.txt")
+        if (!result.isFile()) throw new GradleException("Multiplayer checks did not pass: ${result}")
+    }
+}
+
+tasks.register('exportMultiplayerTestLaunches') {
+    dependsOn 'multiplayerTestClasses', 'prepareRunServerMultiplayerTest', 'prepareRunClientMultiplayerTestA', 'prepareRunClientMultiplayerTestB'
+    doLast {
+        def launches = ['Server', 'ClientA', 'ClientB'].collect { role ->
+            def taskName = role == 'Server' ? 'runServerMultiplayerTest' : "runClientMultiplayerTest${role.takeRight(1)}"
+            def launch = tasks.named(taskName, JavaExec).get()
+            def config = launch.runConfig.get()
+            launch.mainClass.set(config.main)
+            def generator = launch.class.classLoader.loadClass('net.minecraftforge.gradle.common.util.runs.RunConfigGenerator')
+            def tokens = generator.configureTokensLazy(project, config, generator.mapModClassesToGradle(project, config),
+                    launch.minecraftArtifacts, launch.runtimeClasspathArtifacts)
+            launch.executable = launch.javaLauncher.get().executablePath.asFile.absolutePath
+            launch.workingDir = file(config.workingDirectory)
+            launch.workingDir.mkdirs()
+            launch.args(generator.getArgsStream(config, tokens, false).toArray())
+            config.jvmArgs.each { launch.jvmArgs(config.replace(tokens, it)) }
+            if (config.isClient()) launch.additionalClientArgs.get().each { launch.jvmArgs(config.replace(tokens, it)) }
+            config.environment.each { key, value -> launch.environment(key, config.replace(tokens, value)) }
+            config.properties.each { key, value -> launch.systemProperty(key, config.replace(tokens, value)) }
+            config.allSources.each { launch.classpath(it.runtimeClasspath) }
+            def jvmArguments = config.jvmArgs.collect { config.replace(tokens, it) }
+            if (config.isClient()) jvmArguments.addAll(launch.additionalClientArgs.get().collect { config.replace(tokens, it) })
+            def command = [launch.executable] + jvmArguments + launch.allJvmArgs + ['-cp', launch.classpath.asPath, launch.mainClass.get()] + launch.args
+            [role: role, directory: launch.workingDir.absolutePath, command: command,
+             environment: config.environment.collectEntries { key, value -> [key, config.replace(tokens, value)] }]
+        }
+        def output = file("build/multiplayer-${multiplayerRunId}.json")
+        output.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launches)), 'UTF-8')
+    }
+}
