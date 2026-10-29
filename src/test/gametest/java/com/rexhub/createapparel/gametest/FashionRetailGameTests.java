@@ -1100,42 +1100,53 @@ public final class FashionRetailGameTests {
         var level = helper.getLevel(); var start = citizen.position(); var state = citizen.citizenState().behavior();
         for (int x = -3; x <= 6; x++) for (int z = -3; z <= 3; z++)
             level.setBlockAndUpdate(citizen.blockPosition().offset(x, -1, z), Blocks.STONE.defaultBlockState());
-        var destination = start.add(3, 0, 0); long now = level.getGameTime();
-        var intent = new com.rexhub.createapparel.citizen.population.CitizenIntent(
-                com.rexhub.createapparel.citizen.population.CitizenIntent.Source.PLAYER,
-                com.rexhub.createapparel.citizen.population.CitizenIntent.DestinationType.POSITION, destination, null, now, now + 40, 0);
-        helper.assertTrue(citizen.intents().request(intent), "Original movement intent accepted");
-        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
-        var interaction = new net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract(
-                player, net.minecraft.world.InteractionHand.MAIN_HAND, citizen);
-        ((com.rexhub.createapparel.item.SmartPhoneItem) ModItems.SMART_PHONE.get()).interact(interaction);
-        helper.assertTrue(player.containerMenu instanceof com.rexhub.createapparel.menu.CitizenMenu && citizen.interaction().active(), "Phone opens a paused session");
-        helper.runAfterDelay(60, () -> {
-            helper.assertTrue(citizen.position().distanceToSqr(start) < 0.0001 && !citizen.isNoAi() && !citizen.isEffectiveAi(), "The Citizen stands still without changing NoAI");
-            helper.assertTrue(citizen.getLookAngle().dot(player.getEyePosition().subtract(citizen.getEyePosition()).normalize()) > 0.99, "The Citizen faces the interacting player");
-            helper.assertTrue(citizen.citizenState().behavior().equals(state) && destination.equals(citizen.routeMovement().currentDestination()), "Behavior and destination are preserved");
-            player.closeContainer();
-            helper.assertTrue(!citizen.interaction().active() && citizen.isEffectiveAi()
-                    && citizen.intents().active() != null && citizen.intents().active().retryCount() == 0
-                    && citizen.intents().active().expiresAt() > level.getGameTime(), "Closing resumes the original intent without menu-time expiry");
-            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(PhotoRegistries.CAMERA.get()));
-            PhotographyService.open(player, citizen, net.minecraft.world.InteractionHand.MAIN_HAND);
-            helper.assertTrue(player.containerMenu instanceof PhotographyMenu && citizen.interaction().active(), "Camera also pauses the Citizen");
-            helper.runAfterDelay(20, () -> {
-                helper.assertTrue(citizen.position().distanceToSqr(start) < 0.0001, "The capture session keeps the Citizen stopped");
-                player.closeContainer();
-                helper.assertTrue(citizen.isEffectiveAi() && state.equals(citizen.citizenState().behavior())
-                        && destination.equals(citizen.routeMovement().currentDestination()), "Capture close restores movement without changing settings");
-                helper.runAfterDelay(20, () -> {
-                    helper.assertTrue(citizen.getX() > start.x + 0.1, "The Citizen actually walks again after closing the menu: start=" + start
-                            + " position=" + citizen.position() + " destination=" + citizen.routeMovement().currentDestination()
-                            + " state=" + citizen.routeMovement().state() + " requests=" + citizen.routeMovement().navigationRequests()
-                            + " path=" + citizen.getNavigation().getPath() + " intent=" + citizen.intents().active()
-                            + " effectiveAi=" + citizen.isEffectiveAi());
-                    helper.succeed();
+        helper.startSequence().thenWaitUntil(() -> helper.assertTrue(citizen.onGround(), "The fixture Citizen settles on its floor"))
+                .thenExecute(() -> {
+                    helper.assertTrue(com.rexhub.createapparel.citizen.route.CitizenRouteManager.get(level)
+                            .nearby(start, com.rexhub.createapparel.citizen.route.RouteSettings.DISCOVERY_RADIUS).isEmpty(),
+                            "The menu-resume fixture must not see other test markers");
+                    var destination = start.add(3, 0, 0); long now = level.getGameTime();
+                    var intent = new com.rexhub.createapparel.citizen.population.CitizenIntent(
+                            com.rexhub.createapparel.citizen.population.CitizenIntent.Source.PLAYER,
+                            com.rexhub.createapparel.citizen.population.CitizenIntent.DestinationType.POSITION, destination, null, now, now + 40, 0);
+                    helper.assertTrue(citizen.intents().request(intent), "Original movement intent accepted");
+                    player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
+                    var interaction = new net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract(
+                            player, net.minecraft.world.InteractionHand.MAIN_HAND, citizen);
+                    ((com.rexhub.createapparel.item.SmartPhoneItem) ModItems.SMART_PHONE.get()).interact(interaction);
+                    helper.assertTrue(player.containerMenu instanceof com.rexhub.createapparel.menu.CitizenMenu && citizen.interaction().active(), "Phone opens a paused session");
+                    helper.runAfterDelay(60, () -> {
+                        helper.assertTrue(citizen.position().distanceToSqr(start) < 0.0001 && !citizen.isNoAi() && !citizen.isEffectiveAi(), "The Citizen stands still without changing NoAI");
+                        helper.assertTrue(citizen.getLookAngle().dot(player.getEyePosition().subtract(citizen.getEyePosition()).normalize()) > 0.99, "The Citizen faces the interacting player");
+                        helper.assertTrue(citizen.citizenState().behavior().equals(state) && destination.equals(citizen.routeMovement().currentDestination()), "Behavior and destination are preserved");
+                        player.closeContainer();
+                        helper.assertTrue(!citizen.interaction().active() && citizen.isEffectiveAi()
+                                && citizen.intents().active() != null && citizen.intents().active().retryCount() == 0
+                                && citizen.intents().active().expiresAt() > level.getGameTime(), "Closing resumes the original intent without menu-time expiry");
+                        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(PhotoRegistries.CAMERA.get()));
+                        PhotographyService.open(player, citizen, net.minecraft.world.InteractionHand.MAIN_HAND);
+                        helper.assertTrue(player.containerMenu instanceof PhotographyMenu && citizen.interaction().active(), "Camera also pauses the Citizen");
+                        helper.runAfterDelay(20, () -> {
+                            helper.assertTrue(citizen.position().distanceToSqr(start) < 0.0001, "The capture session keeps the Citizen stopped");
+                            player.closeContainer();
+                            helper.assertTrue(citizen.isEffectiveAi() && state.equals(citizen.citizenState().behavior())
+                                    && destination.equals(citizen.routeMovement().currentDestination()), "Capture close restores movement without changing settings");
+                            helper.runAfterDelay(20, () -> {
+                                helper.assertTrue(citizen.getX() > start.x + 0.1, "The Citizen actually walks again after closing the menu: start=" + start
+                                        + " position=" + citizen.position() + " destination=" + citizen.routeMovement().currentDestination()
+                                        + " state=" + citizen.routeMovement().state() + " requests=" + citizen.routeMovement().navigationRequests()
+                                        + " path=" + citizen.getNavigation().getPath() + " intent=" + citizen.intents().active()
+                                        + " effectiveAi=" + citizen.isEffectiveAi()
+                                        + " loadedSearchRegion=" + com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(level,
+                                        citizen.blockPosition(), (int) Math.ceil(citizen.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE)) + 8)
+                                        + " pending=" + com.rexhub.createapparel.citizen.route.CitizenPathfindingScheduler.get(level).pending(citizen)
+                                        + " retryIn=" + (citizen.routeMovement().retryAt() - level.getGameTime())
+                                        + " ground=" + level.getBlockState(citizen.blockPosition().below()));
+                                helper.succeed();
+                            });
+                        });
+                    });
                 });
-            });
-        });
     }
 
     @GameTest(template = "apparel_state", batch = "fashion", timeoutTicks = 100)

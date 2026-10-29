@@ -42,7 +42,10 @@ public final class CitizenPopulationRecoveryGameTests {
     private static CitizenPopulationManager population(GameTestHelper helper) { return CitizenPopulationManager.get(helper.getLevel()); }
     private static void room(GameTestHelper helper) { GameTestFixtures.dryRoom(helper, 0, 0, 38); }
     private static CitizenGauge gauge(GameTestHelper helper, int x, int z, boolean source) {
-        var pos = helper.absolutePos(new BlockPos(x, 1, z));
+        return gauge(helper, new BlockPos(x, 1, z), source);
+    }
+    private static CitizenGauge gauge(GameTestHelper helper, BlockPos localPos, boolean source) {
+        var pos = helper.absolutePos(localPos);
         helper.getLevel().setBlock(pos.south(), Blocks.STONE.defaultBlockState(), 3);
         helper.getLevel().setBlock(pos, ModBlocks.CITIZEN_GAUGE.get().defaultBlockState(), 3);
         var entity = (CitizenGaugeBlockEntity) helper.getLevel().getBlockEntity(pos);
@@ -140,11 +143,23 @@ public final class CitizenPopulationRecoveryGameTests {
 
     @GameTest(template = "citizen_behavior", batch = "citizen_population_recovery", timeoutTicks = 650)
     public static void stuckWalkerWithNoUsableMarkerResumesWanderWithoutWarp(GameTestHelper helper) {
-        room(helper); var home = gauge(helper, 18, 15, false); var node = marker(helper, home.center().east(4), false);
+        GameTestFixtures.dryRoom(helper, new BlockPos(0, 128, 0), 38);
+        var home = gauge(helper, new BlockPos(18, 129, 15), false); var node = marker(helper, home.center().east(4), false);
         helper.getLevel().setBlock(node.pos().above(), Blocks.STONE.defaultBlockState(), 3);
         var citizen = citizen(helper, home, home.center(), CitizenBehaviorMode.WALK); Vec3[] previous = {citizen.position()};
         helper.onEachTick(() -> {
-            helper.assertTrue(citizen.position().distanceToSqr(previous[0]) < 2.25, "No usable recovery marker must cause WANDER rather than a recovery warp");
+            var nearbyMarkers = CitizenRouteManager.get(helper.getLevel()).nearby(citizen.position(), RouteSettings.DISCOVERY_RADIUS);
+            if (citizen.citizenState().behavior().mode() == CitizenBehaviorMode.WALK) {
+                helper.assertTrue(nearbyMarkers.stream().allMatch(marker -> marker.id().equals(node.id())),
+                        "Unusable-marker fixture must not see other test markers: " + nearbyMarkers.stream().map(RouteMarker::pos).toList());
+            }
+            if (citizen.position().distanceToSqr(previous[0]) >= 2.25) {
+                var routes = CitizenRouteManager.get(helper.getLevel());
+                helper.fail("No usable recovery marker must cause WANDER rather than a recovery warp: from=" + previous[0]
+                        + " to=" + citizen.position() + " mode=" + citizen.citizenState().behavior().mode()
+                        + " fixtureMarker=" + node.pos() + " nearby=" + routes.nearby(previous[0], RouteSettings.DISCOVERY_RADIUS).stream()
+                        .map(marker -> marker.pos() + ":endpoints=" + routes.endpointCandidates(citizen, null, marker)).toList());
+            }
             previous[0] = citizen.position();
         });
         helper.runAtTickTime(600, () -> {

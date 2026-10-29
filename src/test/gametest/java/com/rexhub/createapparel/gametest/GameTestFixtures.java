@@ -8,9 +8,13 @@ final class GameTestFixtures {
     private GameTestFixtures() { }
 
     static void dryRoom(GameTestHelper helper, int originX, int originZ, int size) {
+        dryRoom(helper, new BlockPos(originX, 0, originZ), size);
+    }
+
+    static void dryRoom(GameTestHelper helper, BlockPos origin, int size) {
         for (int x = 0; x < size; x++) for (int z = 0; z < size; z++) for (int y = 0; y <= 5; y++) {
             boolean boundary = x == 0 || z == 0 || x == size - 1 || z == size - 1 || y == 0 || y == 5;
-            helper.setBlock(new BlockPos(originX + x, y, originZ + z), boundary ? Blocks.STONE : Blocks.AIR);
+            helper.setBlock(origin.offset(x, y, z), boundary ? Blocks.STONE : Blocks.AIR);
         }
     }
 }
