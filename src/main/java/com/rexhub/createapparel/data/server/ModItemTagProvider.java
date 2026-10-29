@@ -34,6 +34,10 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         addThreadTags();
         addFabricTags();
         addGemTags();
+        var recyclableGarments = tag(ModTags.Items.RECYCLABLE_GARMENTS);
+        ModItems.garmentCreativeTabItems().stream().map(item -> item.get())
+                .filter(item -> item instanceof com.rexhub.createapparel.garment.GarmentItem)
+                .forEach(recyclableGarments::add);
         tag(ModTags.Items.SILVER_ACCESSORY_NUGGETS).add(Items.IRON_NUGGET)
                 .addOptionalTag(ResourceLocation.parse("forge:nuggets/silver"));
         tag(ModTags.Items.CITIZEN_LOWER_COVERING_TOPS).add(

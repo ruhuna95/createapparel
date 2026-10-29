@@ -110,5 +110,8 @@
         0
       ]
     }
+  },
+  "textures": {
+    "particle": "createapparel:item/old_cloth"
   }
 }

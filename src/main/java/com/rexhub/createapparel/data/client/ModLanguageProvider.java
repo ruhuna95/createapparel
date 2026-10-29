@@ -22,6 +22,8 @@ public final class ModLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         FashionLanguage.add(this::add, false);
+        addItem(ModItems.OLD_CLOTH, "Old Cloth");
+        add("entity.minecraft.villager.createapparel.tailor", "Tailor");
         add("createapparel.chemical.silver_ion", "Silver Ion");
         add("createapparel.chemical.diamminesilver_i", "Diamminesilver(I) Ion");
         add("createapparel.reaction.silver_dissolution", "Silver Dissolution");

@@ -20,6 +20,8 @@ public final class ModJapaneseLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         FashionLanguage.add(this::add, true);
+        addItem(ModItems.OLD_CLOTH, "古布");
+        add("entity.minecraft.villager.createapparel.tailor", "被服職人");
         add("createapparel.chemical.silver_ion", "銀イオン");
         add("createapparel.chemical.diamminesilver_i", "ジアンミン銀(I)イオン");
         add("createapparel.reaction.silver_dissolution", "銀の溶解");

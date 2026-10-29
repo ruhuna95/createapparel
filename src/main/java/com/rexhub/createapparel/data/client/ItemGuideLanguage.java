@@ -21,6 +21,7 @@ final class ItemGuideLanguage {
                 {ItemGuide.CLIP_RACK, "Can hold bottoms.", "ボトムスを掛けることができる。"},
                 {ItemGuide.MANNEQUIN, "Displays apparel on the body parts supported by this mannequin.", "対応する部位に衣服を装着して展示する。"},
                 {ItemGuide.GARMENT, "Clothing that players and Citizens can wear.", "プレイヤーや市民が着ることが出来る衣服。"},
+                {ItemGuide.OLD_CLOTH, "Crush garments to obtain scraps that _Tailors_ buy for emeralds.", "衣服を破砕して得られる端切れ。_被服職人_に売却できる。"},
                 {ItemGuide.MIRROR, "Reflects nearby surroundings and worn apparel.", "周囲の景色や着用した衣服を映す鏡。"},
         }) {
             var guide = (ItemGuide) row[0];

@@ -211,6 +211,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
 
     private void garmentModel(RegistryObject<Item> item) {
         getBuilder(item.getId().getPath()).parent(new ModelFile.UncheckedModelFile(mcLoc("builtin/entity")))
+                .texture("particle", modLoc("item/old_cloth"))
                 .transforms()
                 .transform(ItemDisplayContext.GUI).rotation(0, 180, 0).translation(0, -1, 0).scale(0.82F).end()
                 .transform(ItemDisplayContext.GROUND).rotation(0, 180, 0).translation(0, 2, 0).scale(0.5F).end()

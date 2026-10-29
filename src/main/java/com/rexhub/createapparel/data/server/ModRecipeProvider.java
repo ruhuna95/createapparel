@@ -257,6 +257,13 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
         milling("cotton_boll", ModItems.COTTON_BOLL, ModItems.COTTON_FIBER);
         milling("flax", ModItems.FLAX, ModItems.FLAX_FIBER);
         milling("hemp", ModItems.HEMP, ModItems.HEMP_FIBER);
+        register(consumer -> new ProcessingRecipeBuilder<>(
+                com.simibubi.create.content.kinetics.crusher.CrushingRecipe::new,
+                asResource("garments_to_old_cloth"))
+                .require(ModTags.Items.RECYCLABLE_GARMENTS)
+                .output(ModItems.OLD_CLOTH.get())
+                .duration(100)
+                .build(consumer));
 
         register(consumer -> new ProcessingRecipeBuilder<>(
                 MixingRecipe::new,

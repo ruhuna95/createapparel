@@ -43,6 +43,8 @@ import static com.rexhub.createapparel.compat.jei.JeiClientTestLauncher.check;
 
 @JeiPlugin
 public final class JeiClientChecks implements IModPlugin {
+    private static final RecipeType<com.simibubi.create.content.kinetics.crusher.AbstractCrushingRecipe> CRUSHING =
+            RecipeType.create("create", "crushing", com.simibubi.create.content.kinetics.crusher.AbstractCrushingRecipe.class);
     private static IJeiRuntime runtime;
     private static int generation;
     private static int stage;
@@ -65,7 +67,13 @@ public final class JeiClientChecks implements IModPlugin {
         var mc = Minecraft.getInstance();
         if (stage == 0) {
             audit();
-            captures = List.of(new Capture("spinning-en", ApparelJeiRecipeTypes.SPINNING, "en_us", 2),
+            captures = List.of(new Capture("tailor-en", CRUSHING, "en_us", 2),
+                    new Capture("tailor-trades-en", CRUSHING, "en_us", 2),
+                    new Capture("old-cloth-crushing-en", CRUSHING, "en_us", 2),
+                    new Capture("tailor-ja", CRUSHING, "ja_jp", 2),
+                    new Capture("tailor-trades-ja", CRUSHING, "ja_jp", 2),
+                    new Capture("old-cloth-crushing-ja", CRUSHING, "ja_jp", 2),
+                    new Capture("spinning-en", ApparelJeiRecipeTypes.SPINNING, "en_us", 2),
                     new Capture("weaving-en", ApparelJeiRecipeTypes.WEAVING, "en_us", 2),
                     new Capture("sewing-en", ApparelJeiRecipeTypes.SEWING, "en_us", 2),
                     new Capture("rearing-en", ApparelJeiRecipeTypes.SILKWORM_REARING, "en_us", 2),
@@ -92,7 +100,9 @@ public final class JeiClientChecks implements IModPlugin {
             stage = 1;
             showCapture();
         } else if (stage == 2) {
-            check(mc.screen == (Object) runtime.getRecipesGui() || mc.screen instanceof ItemGuideTooltipChecks.PreviewScreen,
+            check(mc.screen == (Object) runtime.getRecipesGui() || mc.screen instanceof ItemGuideTooltipChecks.PreviewScreen
+                            || mc.screen instanceof TailorClientChecks.PreviewScreen
+                            || mc.screen instanceof net.minecraft.client.gui.screens.inventory.MerchantScreen,
                     "Recipe or tooltip preview screen opened");
             if (mc.screen instanceof ItemGuideTooltipChecks.PreviewScreen) ItemGuideTooltipChecks.check();
             captureReady = true;
@@ -132,7 +142,15 @@ public final class JeiClientChecks implements IModPlugin {
     }
 
     private static void openCapture(Capture capture) {
-        if (capture.name.startsWith("tooltips-")) {
+        if (capture.name.startsWith("tailor-trades-")) {
+            Minecraft.getInstance().setScreen(TailorClientChecks.tradeScreen());
+        } else if (capture.name.startsWith("tailor-")) {
+            Minecraft.getInstance().setScreen(new TailorClientChecks.PreviewScreen());
+        } else if (capture.type == CRUSHING) {
+            var recipe = runtime.getRecipeManager().createRecipeLookup(CRUSHING).get()
+                    .filter(value -> value.getId().equals(id("crushing/garments_to_old_cloth"))).findFirst().orElseThrow();
+            runtime.getRecipesGui().showRecipes(runtime.getRecipeManager().getRecipeCategory(CRUSHING), List.of(recipe), List.of());
+        } else if (capture.name.startsWith("tooltips-")) {
             int page = capture.name.startsWith("tooltips-shift-wardrobe-") ? 2
                     : capture.name.startsWith("tooltips-shift-hanger-") ? 3
                     : capture.name.startsWith("tooltips-shift-rack-") ? 4
@@ -155,6 +173,7 @@ public final class JeiClientChecks implements IModPlugin {
     }
 
     private static void audit() throws Exception {
+        TailorClientChecks.audit(runtime, CRUSHING);
         auditPhotoCopy("photo_copy_manual_only");
         var manager = runtime.getRecipeManager();
         var mc = Minecraft.getInstance();

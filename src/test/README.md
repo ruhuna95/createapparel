@@ -1,5 +1,23 @@
 # 自動検証
 
+## 古布リサイクル・被服職人
+
+`OldClothRecipeTest`はCrushingの生成JSON、追加式の職業POIタグ、アイテムモデル、日英翻訳と通常／ゾンビ村人の64×64職業テクスチャを検査する。`TailorGameTests`は全Garmentと金属装飾品のタグ区分、NBT非依存の破砕、実Create Crusherの入出力、全ミシンStateのPOI、無職成人のバニラ就職AI、各レベル2枠の候補・数量・抽選、達人10オファーと補充・保存復元を検証する。古布2個→エメラルド1個の実オファーと全縫製レシピから、基本価格での素材買戻し／購入材料の縫製・破砕が利益を生まないことも検査する。
+
+`runJeiTestClient`はCreate標準Crushingカテゴリの入力／出力逆引きとGarment NBT、古布のモデルBake、日英の職業名とバニラ取引画面、通常村人／ゾンビ村人の描画を検査する。画像は`build/phase23/screenshots/tailor-{en,ja}.png`、`tailor-trades-{en,ja}.png`、`old-cloth-crushing-{en,ja}.png`。成功印は`TAILOR_JEI_CLIENT_PASSED`と全体の`PHASE23_JEI_CLIENT_PASSED`。
+
+`GarmentItemDisplayTest`は全衣服の生成モデルに古布の`particle`指定があることを検査する。Clientでは全Garmentの通常／プリセットNBTについて、Bake後のSpriteとバニラ`BreakingItemParticle`の実Quad UVが古布のAtlas領域を参照することも検証する。
+
+```powershell
+.\gradlew.bat -PjeiEnabled=false runData
+.\gradlew.bat -PjeiEnabled=false build runGameTestServer
+.\gradlew.bat runJeiTestClient
+```
+
+生成直後のResource更新を確実に反映するため、`runData`の完了後に次のGradleを実行する。実行中のMinecraftと同じ`build/resources`を更新する別のGradle処理を並行起動しない。
+
+移動再開の`phoneAndCameraPauseTheSameIntentAndResumeAfterClosing`は、床への実際の接地を待ってから会話を始める。復旧の`stuckWalkerWithNoUsableMarkerResumesWanderWithoutWarp`は128block上の部屋・地区・Marker・Citizenを使い、32block以内の他FixtureのMarkerから分離する。両試験はMarker混入を前提検査で拒否し、元の期限・移動距離・会話後20tickの判定を維持する。
+
 ## Intentの経路優先移動
 
 `CitizenIntentRouteGameTests`は5種類のIntentがSTANDのまま接続Graphを実際に歩き、利用可能なGatewayを先行利用しないことを検査する。始点側だけ／終点側だけのGraph、部分経路cacheの編集無効化、経路→自由Navigation、自由Navigation→経路、切れた2つの経路への再接続・往復ループ防止と、既存Graph予算の維持も専用Dedicated GameTestで検証する。通常行動のWALK化で代替しない。

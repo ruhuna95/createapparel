@@ -214,6 +214,7 @@ public final class ModItems {
             registerGarment("blouse_bow_tie_three_quarter_sleeve");
 
     public static final RegistryObject<Item> COTTON_SEEDS = registerSeeds("cotton_seeds", ModBlocks.COTTON_CROP);
+    public static final RegistryObject<Item> OLD_CLOTH = registerSimple("old_cloth");
     public static final RegistryObject<Item> COTTON_BOLL = registerSimple("cotton_boll");
     public static final RegistryObject<Item> COTTON_FIBER = registerSimple("cotton_fiber");
     public static final RegistryObject<Item> COTTON_THREAD = registerSimple("cotton_thread");
@@ -532,6 +533,7 @@ public final class ModItems {
         items.add(com.rexhub.createapparel.advertisement.AdvertisementRegistries.BILLBOARD_PANEL_ITEM);
         items.add(com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_PANEL_ITEM);
         items.add(SEWING_PATTERN);
+        items.add(OLD_CLOTH);
         addMaterialGroup(
                 items,
                 FabricMaterial.COTTON,

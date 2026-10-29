@@ -18,6 +18,10 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public final class ModRegistries {
+    public static final DeferredRegister<net.minecraft.world.entity.ai.village.poi.PoiType> POI_TYPES =
+            DeferredRegister.create(ForgeRegistries.POI_TYPES, CreateApparel.MOD_ID);
+    public static final DeferredRegister<net.minecraft.world.entity.npc.VillagerProfession> VILLAGER_PROFESSIONS =
+            DeferredRegister.create(ForgeRegistries.VILLAGER_PROFESSIONS, CreateApparel.MOD_ID);
     public static final DeferredRegister<net.minecraftforge.fluids.FluidType> FLUID_TYPES =
             DeferredRegister.create(ForgeRegistries.Keys.FLUID_TYPES, CreateApparel.MOD_ID);
     public static final DeferredRegister<net.minecraft.world.level.material.Fluid> FLUIDS =
@@ -60,6 +64,7 @@ public final class ModRegistries {
         ModEntities.bootstrap();
         ModLootModifiers.bootstrap();
         ModItems.bootstrap();
+        com.rexhub.createapparel.villager.ModVillagers.bootstrap();
         ModCreativeModeTabs.bootstrap();
 
         BLOCKS.register(modEventBus);
@@ -67,6 +72,8 @@ public final class ModRegistries {
         FLUIDS.register(modEventBus);
         ARM_INTERACTION_POINT_TYPES.register(modEventBus);
         ITEMS.register(modEventBus);
+        POI_TYPES.register(modEventBus);
+        VILLAGER_PROFESSIONS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);
         MENU_TYPES.register(modEventBus);
         RECIPE_TYPES.register(modEventBus);

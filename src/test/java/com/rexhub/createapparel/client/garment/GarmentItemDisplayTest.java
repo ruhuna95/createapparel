@@ -30,6 +30,10 @@ class GarmentItemDisplayTest {
                 assertTrue(Files.exists(generated), "Missing generated model: " + item);
                 var model = JsonParser.parseString(Files.readString(generated)).getAsJsonObject();
                 assertEquals("minecraft:builtin/entity", model.get("parent").getAsString(), item.toString());
+                assertTrue(model.has("textures"), "Missing particle texture: " + item);
+                assertEquals("createapparel:item/old_cloth",
+                        model.getAsJsonObject("textures").get("particle").getAsString(), item.toString());
+                assertTrue(Files.exists(Path.of("src/main/resources/assets/createapparel/textures/item/old_cloth.png")));
             }
         }
     }

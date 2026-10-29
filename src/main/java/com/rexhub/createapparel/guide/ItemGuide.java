@@ -10,7 +10,7 @@ import java.util.Locale;
 public enum ItemGuide {
     SPINNING, LOOM, SEWING, PATTERN, PHONE, WARDROBE, HANGER, CLIP_HANGER, RACK, CLIP_RACK,
     REARING, MANNEQUIN, GARMENT, FABRIC, THREAD, FIBER, CROP, SEEDS, COCOON, DYE, GAUGE,
-    CITIZEN_EGG, SILKWORM_EGG, JEWELRY_BASE, MIRROR, COATING, REGISTER, CAMERA, PHOTO, ADVERTISEMENT, BROADCASTER;
+    CITIZEN_EGG, SILKWORM_EGG, JEWELRY_BASE, MIRROR, COATING, REGISTER, CAMERA, PHOTO, ADVERTISEMENT, BROADCASTER, OLD_CLOTH;
 
     public String translationBase() {
         return this == REARING ? "block.createapparel.silkworm_rearing_tray"
@@ -56,6 +56,7 @@ public enum ItemGuide {
         if (path.endsWith("_bracelet_base") || path.endsWith("_necklace_base")) return JEWELRY_BASE;
         if (path.contains("mirror") && !path.equals("mirror_coating_fluid_bucket")) return MIRROR;
         return switch (path) {
+            case "old_cloth" -> OLD_CLOTH;
             case "spinning_machine" -> SPINNING;
             case "loom" -> LOOM;
             case "sewing_machine" -> SEWING;

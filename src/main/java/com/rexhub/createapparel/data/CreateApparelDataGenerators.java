@@ -60,6 +60,8 @@ public final class CreateApparelDataGenerators {
                 new ModGlobalLootModifierProvider(output)
         );
         generator.addProvider(event.includeServer(), new ModRecipeProvider(output));
+        generator.addProvider(event.includeServer(), new com.rexhub.createapparel.data.server.ModPoiTypeTagProvider(
+                output, event.getLookupProvider(), event.getExistingFileHelper()));
         generator.addProvider(event.includeClient(), new ModLanguageProvider(output));
         generator.addProvider(event.includeClient(), new ModJapaneseLanguageProvider(output));
     }

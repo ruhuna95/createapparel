@@ -37,14 +37,14 @@ public final class GarmentCreativePresetsGameTests {
                 "Tools precede the existing machinery group");
         int lastMirror = entries.indexOf(com.rexhub.createapparel.init.ModMirrors.ITEMS
                 .get(com.rexhub.createapparel.init.ModMirrors.WARPED_MIRRORED_DOOR).get());
-        helper.assertTrue(lastMirror > 3 && entries.subList(lastMirror + 1, lastMirror + 8).equals(java.util.List.of(
+        helper.assertTrue(lastMirror > 3 && entries.subList(lastMirror + 1, lastMirror + 9).equals(java.util.List.of(
                         com.rexhub.createapparel.fashion.FashionRegistries.CASH_REGISTER_ITEM.get(),
                         com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_BROADCASTER_ITEM.get(),
                         com.rexhub.createapparel.advertisement.AdvertisementRegistries.POSTER_ITEM.get(),
                         com.rexhub.createapparel.advertisement.AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get(),
                         com.rexhub.createapparel.advertisement.AdvertisementRegistries.SIGNAGE_PANEL_ITEM.get(),
-                        ModItems.SEWING_PATTERN.get(), ModItems.COTTON_SEEDS.get())),
-                "Retail, advertising, the sewing pattern and materials follow the last mirror");
+                        ModItems.SEWING_PATTERN.get(), ModItems.OLD_CLOTH.get(), ModItems.COTTON_SEEDS.get())),
+                "Retail, advertising, the sewing pattern, recycling and materials follow the last mirror");
         helper.assertTrue(entries.subList(entries.size() - 5, entries.size()).equals(java.util.List.of(
                         ModItems.PLUM_DYE.get(), com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_BUCKET.get(),
                         com.rexhub.createapparel.photo.PhotoRegistries.ADVERTISING_PHOTO.get(),

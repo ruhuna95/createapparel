@@ -12,6 +12,7 @@ public final class ModTags {
     }
 
     public static final class Items {
+        public static final TagKey<Item> RECYCLABLE_GARMENTS = create("recyclable_garments");
         public static final TagKey<Item> APPAREL_DYES = create("apparel_dyes");
         public static final TagKey<Item> CITIZEN_LOWER_COVERING_TOPS = create("citizen/lower_covering_tops");
         public static final TagKey<Item> FIBERS = create("fibers");

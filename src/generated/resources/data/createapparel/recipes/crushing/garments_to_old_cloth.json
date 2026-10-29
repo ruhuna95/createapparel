@@ -1,0 +1,14 @@
+{
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "tag": "createapparel:recyclable_garments"
+    }
+  ],
+  "processingTime": 100,
+  "results": [
+    {
+      "item": "createapparel:old_cloth"
+    }
+  ]
+}
