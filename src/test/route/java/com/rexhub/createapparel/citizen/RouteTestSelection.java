@@ -18,11 +18,14 @@ public final class RouteTestSelection {
     public static void loaded(FMLLoadCompleteEvent event) {
         event.enqueueWork(() -> {
             ForgeGameTestHooks.registerGametests();
+            if (!Boolean.getBoolean("apparel.escalatedTests"))
+                GameTestRegistry.getAllTestFunctions().removeIf(test -> test.getBatchName().equals("citizen_escalated"));
             var names = Arrays.stream(System.getProperty("apparel.routeTest.names", "").split(","))
                     .map(String::strip).filter(name -> !name.isEmpty()).map(name -> name.toLowerCase(Locale.ROOT))
                     .collect(Collectors.toSet());
             GameTestRegistry.getAllTestFunctions().removeIf(test -> names.isEmpty()
                     ? !test.getBatchName().startsWith("citizen_route") && !test.getBatchName().startsWith("citizen_navigation")
+                    && !test.getBatchName().equals("citizen_escalated")
                     : names.stream().noneMatch(name -> test.getTestName().toLowerCase(Locale.ROOT).equals(name)
                     || test.getTestName().toLowerCase(Locale.ROOT).endsWith("." + name)));
             int count = GameTestRegistry.getAllTestFunctions().size();

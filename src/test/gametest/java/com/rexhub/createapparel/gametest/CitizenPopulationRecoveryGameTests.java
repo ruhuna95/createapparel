@@ -180,10 +180,19 @@ public final class CitizenPopulationRecoveryGameTests {
         var forced = citizen(helper, home, home.center().north(2), CitizenBehaviorMode.WANDER); population.flags(forced, false, true);
         var independent = citizen(helper, home, home.center().north(3), CitizenBehaviorMode.WANDER); population.flags(independent, true, false);
         var standing = citizen(helper, home, home.center().south(3), CitizenBehaviorMode.STAND);
+        var capacityHistory = new ArrayList<String>();
+        helper.onEachTick(() -> {
+            if (helper.getTick() <= 240 && helper.getTick() % 20 == 0) capacityHistory.add(helper.getTick() + ":ready="
+                    + population.routeCapacity().ready() + ":length=" + population.routeCapacity().length(home.districtId())
+                    + ":walkers=" + population.data().walkingPopulation(home.districtId()));
+        });
         helper.runAtTickTime(240, () -> {
             helper.assertTrue(Math.abs(population.routeCapacity().length(home.districtId()) - 6) < 1.0E-6, "Six meters of edges are cached once per district");
             helper.assertTrue(citizens.stream().filter(c -> c.citizenState().behavior().mode() == CitizenBehaviorMode.WALK).count() == 2
-                    && population.data().walkingPopulation(home.districtId()) == 2, "Only two wanderers fill six meters of route capacity");
+                    && population.data().walkingPopulation(home.districtId()) == 2, "Only two wanderers fill six meters of route capacity: indexed="
+                            + population.data().walkingPopulation(home.districtId()) + " citizens=" + citizens.stream().map(c -> c.getUUID() + ":" + c.citizenState().behavior().mode()
+                            + ":" + c.position() + ":" + c.intents().active() + ":" + c.routeMovement().state() + ":ticks=" + c.tickCount).toList()
+                            + " history=" + capacityHistory);
             helper.assertTrue(forced.citizenState().behavior().mode() == CitizenBehaviorMode.WANDER
                     && independent.citizenState().behavior().mode() == CitizenBehaviorMode.WANDER
                     && standing.citizenState().behavior().mode() == CitizenBehaviorMode.STAND, "Autonomy respects FORCE, INDEPENDENT and STAND");

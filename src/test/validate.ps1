@@ -1,7 +1,8 @@
 param(
     [switch]$Offline,
     [switch]$OptionalRecipes,
-    [switch]$Destroy
+    [switch]$Destroy,
+    [switch]$Escalated
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,6 +42,18 @@ try {
             }
             if ($taskExitCode -ne 0) { throw "Optional recipe case $recipeCase failed (exit code $taskExitCode)." }
         }
+    }
+    if ($Escalated) {
+        Write-Host 'Citizen route validation with Escalated'
+        $previousErrorAction = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            & .\gradlew.bat @gradleArguments -PescalatedTests=true runRouteTestServer 2>&1 | ForEach-Object { Write-Host $_ }
+            $taskExitCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $previousErrorAction
+        }
+        if ($taskExitCode -ne 0) { throw 'Citizen route validation with Escalated failed.' }
     }
     Write-Host 'Datagen, JUnit/build, and dedicated GameTest validation passed.'
 } finally {

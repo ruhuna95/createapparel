@@ -349,9 +349,35 @@ public final class CitizenRouteResilienceGameTests {
 
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 1220)
     public static void unreachableMarkerEntersLowFrequencyRetryAndRecovers(GameTestHelper helper) {
+        retryAndRecover(helper, 4);
+    }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 1220)
+    public static void shortRecoveryWalkClearsPreviousNavigationFailures(GameTestHelper helper) {
+        retryAndRecover(helper, 0.8);
+    }
+
+    private static void retryAndRecover(GameTestHelper helper, double startDistance) {
         floor(helper); var node = marker(helper, 12, 1, 12);
         helper.getLevel().setBlock(node.pos().above(), Blocks.STONE.defaultBlockState(), 2);
-        var walker = citizen(helper, node.center().add(-4, 0, 0), true); walker.setBehavior(CitizenBehaviorState.walking());
+        var walker = citizen(helper, node.center().add(-startDistance, 0, 0), true); walker.setBehavior(CitizenBehaviorState.walking());
+        var initialPosition = walker.position();
+        var entered = new boolean[1];
+        var lastState = new String[]{""};
+        helper.onEachTick(() -> {
+            var movement = walker.routeMovement();
+            var state = movement.state() + ":" + movement.currentMarker() + ":" + movement.consecutiveFailures() + ":" + movement.navigationRequests();
+            if (!state.equals(lastState[0])) {
+                lastState[0] = state;
+                LogUtils.getLogger().info("ROUTE_RECOVERY_TRACE tick={} short={} pos={} state={} attempt={} nav={}",
+                        helper.getTick(), startDistance < 1, walker.position(), state, recoveryAttempt(movement),
+                        walker.getNavigation().getPath());
+            }
+            if (entered[0] || !node.id().equals(walker.routeMovement().currentMarker())) return;
+            entered[0] = true;
+            if (startDistance < 1) helper.assertTrue(walker.position().distanceToSqr(initialPosition) < 0.25,
+                    "Recovery really succeeds after less than half a block of movement");
+        });
         helper.runAtTickTime(650, () -> {
             helper.assertTrue(walker.routeMovement().consecutiveFailures() >= RouteSettings.FAILURE_WAIT_THRESHOLD
                     && walker.routeMovement().retryAt() > helper.getLevel().getGameTime(), "Repeated failures back off instead of spinning");
@@ -359,9 +385,27 @@ public final class CitizenRouteResilienceGameTests {
             helper.getLevel().removeBlock(node.pos().above(), false);
         });
         helper.runAtTickTime(1180, () -> {
-            helper.assertTrue(node.id().equals(walker.routeMovement().currentMarker()) && walker.routeMovement().consecutiveFailures() == 0, "Successful movement resets failures");
+            helper.assertTrue(walker.routeMovement().navigationRequests() == 1,
+                    "Actual recovery progress must not be cancelled by stale failure counts: requests=" + walker.routeMovement().navigationRequests());
+            helper.assertTrue(node.id().equals(walker.routeMovement().currentMarker()) && walker.routeMovement().consecutiveFailures() == 0,
+                    "Successful movement resets failures: pos=" + walker.position() + ", state=" + walker.routeMovement().state()
+                            + ", current=" + walker.routeMovement().currentMarker() + ", failures=" + walker.routeMovement().consecutiveFailures()
+                            + ", target=" + walker.routeMovement().currentDestination() + ", marker=" + markerState(helper, node)
+                            + ", nearby=" + manager(helper).nearby(walker.position(), RouteSettings.DISCOVERY_RADIUS).stream().map(RouteMarker::id).toList());
             walker.discard(); helper.succeed();
         });
+    }
+
+    private static String recoveryAttempt(CitizenRouteMovement movement) {
+        var values = new ArrayList<String>();
+        for (var name : List.of("attemptOrigin", "pathStart", "pathIssued")) {
+            try {
+                var field = CitizenRouteMovement.class.getDeclaredField(name);
+                field.setAccessible(true);
+                values.add(name + "=" + field.get(movement));
+            } catch (ReflectiveOperationException exception) { throw new AssertionError(exception); }
+        }
+        return values.toString();
     }
 
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience", timeoutTicks = 620)

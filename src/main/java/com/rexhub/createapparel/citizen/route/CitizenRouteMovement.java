@@ -25,6 +25,7 @@ public final class CitizenRouteMovement {
     private CitizenPathfindingScheduler.Priority priority = CitizenPathfindingScheduler.Priority.AUTONOMY;
     private List<BlockPos> endpoints = List.of();
     private int endpointIndex;
+    private int waypointIndex;
     private int planIndex;
     private boolean pathIssued;
     private boolean crossingStarted;
@@ -110,7 +111,7 @@ public final class CitizenRouteMovement {
         plan = null;
         detouring = false;
         endpoints = List.of();
-        endpointIndex = planIndex = 0;
+        endpointIndex = planIndex = waypointIndex = 0;
         pathIssued = crossingStarted = false;
         waitSince = -1;
         retryAfter = 0;
@@ -160,6 +161,14 @@ public final class CitizenRouteMovement {
         var scheduler = CitizenPathfindingScheduler.get(level);
         var activity = CitizenActivityScheduler.get(level);
         if (citizen.isPassenger() || citizen.isLeashed()) { scheduler.cancel(citizen); citizen.getNavigation().stop(); pathIssued = false; return; }
+        if (((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).consumeTransportExit()) {
+            scheduler.cancel(citizen);
+            citizen.getNavigation().stop();
+            pathIssued = destinationPathIssued = false;
+            waypointIndex = 0;
+            progressAt = time;
+            progressDistance = Double.POSITIVE_INFINITY;
+        }
         if (destination != null && priority != CitizenPathfindingScheduler.Priority.AUTONOMY) {
             activity.forceActive(citizen, CitizenActivityScheduler.Reason.PLAYER, 40);
         }
@@ -206,7 +215,8 @@ public final class CitizenRouteMovement {
                 citizen.getNavigation().stop();
                 scheduler.cancel(citizen);
                 if (edge != null) manager.runtime().succeeded(citizen.getUUID(), edge);
-                if (edge != null || citizen.position().distanceToSqr(attemptOrigin) > 0.25) consecutiveFailures = 0;
+                if (edge != null || citizen.position().distanceToSqr(attemptOrigin) > 0.25
+                        || pathIssued && citizen.position().distanceToSqr(pathStart) > 1.0E-4) consecutiveFailures = 0;
                 previous = current;
                 current = target;
                 currentDefinition = targetDefinition;
@@ -246,6 +256,7 @@ public final class CitizenRouteMovement {
                 if (pathIssued) {
                     var candidate = endpoints.get(endpointIndex);
                     if (citizen.position().distanceToSqr(pathStart) < 0.25 || citizen.position().distanceToSqr(issuedWaypoint) > 1
+                            && !((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).transportPassedWaypoint()
                             || issuedWaypoint.distanceToSqr(Vec3.atBottomCenterOf(candidate)) < 0.01) endpointIndex++;
                     pathIssued = false;
                 }
@@ -332,19 +343,24 @@ public final class CitizenRouteMovement {
             retryAfter = time + 1;
             return;
         }
-        if (time < retryAfter) return;
+        if (time < retryAfter || !((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).canStartPath()) return;
         var goal = BlockPos.containing(destination);
         if (!com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(manager.level(), goal, 0)) { retryAfter = time + RouteSettings.RETRY_INTERVAL; return; }
         var expected = destination;
-        var waypoint = intermediate(Vec3.atBottomCenterOf(goal));
         CitizenPathfindingScheduler.get(manager.level()).submit(citizen, priority, () -> expected.equals(destination), () -> {
+            if (!((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).canStartPath()) return;
+            var waypoints = intermediates(Vec3.atBottomCenterOf(goal));
+            if (waypointIndex >= waypoints.size()) waypointIndex = 0;
             navigationRequests++;
-            var path = citizen.getNavigation().createPath(waypoint, 0);
+            var path = citizen.getNavigation().createPath(waypoints.get(waypointIndex), 0);
             if (path != null && path.canReach() && citizen.getNavigation().moveTo(path, 1)) {
+                waypointIndex = 0;
                 destinationPathIssued = true; pathStart = citizen.position();
                 progressAt = manager.level().getGameTime(); progressDistance = citizen.position().distanceTo(destination);
                 return;
             }
+            if (++waypointIndex < waypoints.size()) return;
+            waypointIndex = 0;
             plan = null;
             departedMarkers = Set.of();
             recordFailure(manager.level().getGameTime());
@@ -385,7 +401,7 @@ public final class CitizenRouteMovement {
             Collections.rotate(varied, Math.floorMod(citizen.getUUID().hashCode(), varied.size()));
             endpoints = List.copyOf(varied);
         }
-        endpointIndex = 0;
+        endpointIndex = waypointIndex = 0;
         pathIssued = crossingStarted = false;
         waitSince = -1;
         nextDetourCheck = 0;
@@ -393,31 +409,55 @@ public final class CitizenRouteMovement {
     }
 
     private void requestPath(CitizenRouteManager manager, BlockPos endpoint, long time) {
+        if (!((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).canStartPath()) return;
         var selectedTarget = target;
         var selectedEdge = edge;
-        var waypoint = intermediate(Vec3.atBottomCenterOf(endpoint));
         CitizenPathfindingScheduler.get(manager.level()).submit(citizen, priority,
                 () -> Objects.equals(selectedTarget, target) && Objects.equals(selectedEdge, edge) && graphVersion == manager.data().version()
                         && manager.loaded(manager.data().marker(selectedTarget)) && (selectedEdge == null
                         || manager.data().edge(selectedEdge) != null && manager.loaded(manager.data().marker(current))), () -> {
+                    if (!((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).canStartPath()) return;
                     if (!manager.safeEndpoint(citizen, endpoint)) { endpointIndex++; return; }
                     var connection = selectedEdge == null ? null : manager.data().edge(selectedEdge);
                     if (connection != null && connection.conditional() && !crossingStarted && !manager.crossingOpen(connection)) return;
+                    var waypoints = intermediates(Vec3.atBottomCenterOf(endpoint));
+                    if (waypointIndex >= waypoints.size()) waypointIndex = 0;
                     navigationRequests++;
-                    var path = citizen.getNavigation().createPath(waypoint, 0);
-                    if (path == null || !path.canReach() || !citizen.getNavigation().moveTo(path, 1)) { endpointIndex++; return; }
+                    var path = citizen.getNavigation().createPath(waypoints.get(waypointIndex), 0);
+                    if (path == null || !path.canReach() || !citizen.getNavigation().moveTo(path, 1)) {
+                        if (++waypointIndex >= waypoints.size()) { waypointIndex = 0; endpointIndex++; }
+                        return;
+                    }
+                    waypointIndex = 0;
                     pathIssued = true;
                     pathStart = citizen.position();
-                    issuedWaypoint = Vec3.atBottomCenterOf(waypoint);
+                    issuedWaypoint = path.getEntityPosAtNode(citizen, path.getNodeCount() - 1);
                     progressAt = manager.level().getGameTime(); progressDistance = citizen.position().distanceTo(Vec3.atBottomCenterOf(endpoint));
                     crossingStarted = connection != null && connection.conditional();
                     state = State.MOVING;
                 });
     }
 
-    private BlockPos intermediate(Vec3 endpoint) {
+    private List<BlockPos> intermediates(Vec3 endpoint) {
         var delta = endpoint.subtract(citizen.position());
-        return BlockPos.containing(delta.lengthSqr() > 144 ? citizen.position().add(delta.normalize().scale(12)) : endpoint);
+        if (delta.lengthSqr() <= 144) return List.of(BlockPos.containing(endpoint));
+        var projected = BlockPos.containing(citizen.position().add(delta.normalize().scale(12)));
+        var manager = CitizenRouteManager.get((ServerLevel) citizen.level());
+        var candidates = new LinkedHashSet<BlockPos>();
+        for (int side : new int[]{0, 1, -1, 2, -2, 3, -3}) {
+            var column = projected.offset(Math.abs(delta.x) >= Math.abs(delta.z) ? 0 : side, 0,
+                    Math.abs(delta.x) >= Math.abs(delta.z) ? side : 0);
+            for (int height : new int[]{0, 1, -1, 2, -2, 3, -3, 4, -4}) {
+                var candidate = column.above(height);
+                if (manager.safeEndpoint(citizen, candidate)
+                        && ((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).supportsTravel(candidate, delta)) {
+                    if (side == 0) return List.of(candidate);
+                    candidates.add(candidate);
+                    break;
+                }
+            }
+        }
+        return candidates.isEmpty() ? List.of(projected) : List.copyOf(candidates);
     }
 
     private void failEdge(CitizenRouteManager manager, long time, boolean navigationFailure) {
@@ -451,6 +491,7 @@ public final class CitizenRouteMovement {
     }
 
     private boolean makingProgress(Vec3 goal, long time) {
+        if (((com.rexhub.createapparel.citizen.CitizenNavigation) citizen.getNavigation()).transportProgress()) progressAt = time;
         double distance = citizen.position().distanceTo(goal);
         if (distance < progressDistance - 0.25) { progressDistance = distance; progressAt = time; }
         return time - progressAt < RouteSettings.PATH_PROGRESS_TIMEOUT;

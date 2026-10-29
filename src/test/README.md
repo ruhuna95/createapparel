@@ -1,5 +1,46 @@
 # 自動検証
 
+## Escalatedと市民の地形移動
+
+`CitizenEscalatedGameTests`は実Escalated 1.2.1（Minecraft 1.20.1／Forge／Create 6.0.8）を使い、通常床より少し迂回する自動歩道の優先選択、成人WALK／子供WANDERでの立ち乗りと降車後の歩行、エスカレーター上下搬送、実モーターの停止・逆転、乗車中の動力停止を検査する。自由歩行での逆進入回避と実迂回、上下エスカレーターの逆走経路除外、動的反転による古い経路の無効化、256rpmで中間目標を越えて降車しても引き返さないことも含む。Escalatedは専用runtimeだけに追加し、通常起動と配布JARには含めない。
+
+64rpmで目的地が自動歩道の横へ2ブロックずれたWALK／WANDERと子供の木製自動歩道について、到着前の逆戻りを0.03ブロックの許容差で検出する。上下それぞれのエスカレーターと横の階段を使い、下段→上段→下段→上段の3区間を実移動し、目的地の更新が継続することも確認する。片道到着だけで往復成功とは扱わない。
+
+側面進入の5件では、X軸の金属自動歩道・Z軸の子供WANDERと木製自動歩道・上下エスカレーター・停止設備と端部について、両側面からの直角／斜め進入を通常費用のfallbackでも除外する。動力付きの平坦2件では、横から出発して入口まで回り、実際に乗車して目的地へ着くことも確認する。
+
+入口までの迂回を含む実経路長にも既定の16block制限を維持する。横2block・前方14blockの自由歩行では、入口経由が制限を超えるため通常床を選べることを専用試験で確認する。優先利用を要求する自由歩行試験は前方13blockとし、範囲内で実乗車・到着・降車後の逆戻り禁止を検査する。診断用に32blockを渡す照会は試験内だけで、製品の探索距離は変更しない。
+
+公式公開JAR `escalated-1.2.1+create.6.0.8-mc.1.20.1-forge.jar`を`run/route-tests/dependencies/escalated-1.2.1.jar`へ置く。SHA1は`0e371200b2c77d21aec10f646ce6533a7d94c221`。
+
+```powershell
+.\gradlew.bat runRouteTestServer -PjeiEnabled=false -PescalatedTests=true --offline
+.\src\test\validate.ps1 -Offline -Escalated
+```
+
+`CitizenNavigationGameTests`には成人／子供の1ブロック段差・バニラ階段の3ブロック上り下り、長い階段の中間目標が床へ埋まらないことを確認する5件も含む。Escalatedなしでも同じ往復試験を行える。経路試験は高い床へ分離し、周辺のFixtureと干渉させない。
+
+### 手動確認用ワールド
+
+```powershell
+.\gradlew.bat runEscalatedClient -PescalatedTests=true -PjeiEnabled=false --offline
+```
+
+専用環境`run/escalated-client/`で、新しい`escalated-manual-<時刻>`ワールドを作成し、起動したままにする。既存ワールドは上書きしない。Y=80の床上に、Z=0の金属自動歩道、10の木製自動歩道、22の上りエスカレーター、34の下りエスカレーター、46の通常段差、56の階段を配置する。市民のWALK／WANDER、成人／子供と、上段から戻るための階段も含む。
+
+開始位置は`(-5,83,-5)`。スマートフォン・レンチ・市民スポーンエッグ・クリエイティブモーター・ベルトコネクターを所持する。スマートフォンで経路を確認し、モーターのGUIから速度0／反転を試せる。準備完了のログは`ESCALATED_MANUAL_WORLD_READY`、初期画像は専用環境の`escalated-manual-ready.png`。
+
+6人のWALK市民は到着Markerの変化を`ESCALATED_MANUAL_PATROL`へ記録する。開始Markerを含む4回の認識で`ESCALATED_MANUAL_PATROL_PROVED`を出し、各コースの連続3区間の移動を追跡する。これはサーバー側の到着追跡であり、ユーザーの目視確認やWANDERの全挙動の合格を自動判定するものではない。
+
+### 移動失敗の回帰
+
+```powershell
+.\gradlew.bat runRouteTestServer -PjeiEnabled=false '-ProuteTests=isolatedMarkersDoNotDivertDestinationTravel,realGaugeGatewayTransitKeepsMembershipUntilTheFinalDistrictArrival,unreachableMarkerEntersLowFrequencyRetryAndRecovers,shortRecoveryWalkClearsPreviousNavigationFailures,districtWanderersFillOnlyAvailableRouteDensityAndProtectFlags' --offline
+```
+
+接続EdgeのないMarkerを強制経由せず、遠い目的地への自由区間を継続できることを専用試験で確認する。地区転送は地区内にある有効なGatewayを使い、700tick期限と最終到着まで所属を変えない期待値を維持する。旧`gatewayDiagnosticFar`はGatewayを地区範囲外へ置いていたため廃止した。`GAUGE_GATEWAY_ROUTE_DIAGNOSTIC`に50／150／300／500／650tickのMarker・経路を記録する。
+
+復旧2件は650tickで頭上の障害物を除去し、1180tickまでに実歩行で到着して失敗回数を0へ戻す。短距離ケースはRegionへの進入まで0.5block未満であることを検査し、両方とも復旧Navigationが1回で完了することを要求する。`ROUTE_RECOVERY_TRACE`には状態変更時の開始位置・Path発行状態を記録し、正常な復旧中に過去の失敗を理由とした中断がないか追跡できる。
+
 ## 古布リサイクル・被服職人
 
 `OldClothRecipeTest`はCrushingの生成JSON、追加式の職業POIタグ、アイテムモデル、日英翻訳と通常／ゾンビ村人の64×64職業テクスチャを検査する。`TailorGameTests`は全Garmentと金属装飾品のタグ区分、NBT非依存の破砕、実Create Crusherの入出力、全ミシンStateのPOI、無職成人のバニラ就職AI、各レベル2枠の候補・数量・抽選、達人10オファーと補充・保存復元を検証する。古布2個→エメラルド1個の実オファーと全縫製レシピから、基本価格での素材買戻し／購入材料の縫製・破砕が利益を生まないことも検査する。

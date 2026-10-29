@@ -40,6 +40,7 @@ final class CitizenPathShortcut {
                     x + 1 + halfX - EPSILON, from.y + 1, z + 1 + halfZ - EPSILON);
             if (!cell.contains(from) && cell.clip(from, target).isEmpty()) continue;
             var support = new BlockPos(x, supportY, z);
+            if (CitizenEscalatedTransport.isWalkway(level.getBlockState(support))) return false;
             var boxes = level.getBlockState(support).getCollisionShape(level, support, CollisionContext.of(mob)).toAabbs();
             if (boxes.size() != 1) return false;
             var top = boxes.get(0);

@@ -163,7 +163,8 @@ public final class CitizenIntentController {
             }
             if (destination == null) { cancel(); return; }
             if (departure == null && citizen.position().distanceToSqr(destination) <= arrivalRadius() * arrivalRadius()) { complete(manager); return; }
-            if (citizen.routeMovement().state() == CitizenRouteMovement.State.WAIT_CROSSING) { lastProgress = now; return; }
+            if (citizen.routeMovement().state() == CitizenRouteMovement.State.WAIT_CROSSING
+                    || ((CitizenNavigation) citizen.getNavigation()).transportProgress()) { lastProgress = now; return; }
             var reachedMarker = citizen.routeMovement().currentMarker();
             if (reachedMarker != null && !reachedMarker.equals(progressMarker)) {
                 progressMarker = reachedMarker; lastProgress = now; lastDistance = Double.POSITIVE_INFINITY;
@@ -216,7 +217,9 @@ public final class CitizenIntentController {
         }
         if (autonomyOrigin == null || autonomyOrigin.distanceToSqr(citizen.position()) >= 0.25) {
             autonomyOrigin = citizen.position(); autonomyProgressAt = now;
-            autonomyRetries = wanderFailures = autonomyFailureBase = 0; stucked = false;
+            autonomyRetries = wanderFailures = 0;
+            autonomyFailureBase = behavior.mode() == CitizenBehaviorMode.WALK ? movement.consecutiveFailures() : 0;
+            stucked = false;
         }
         boolean demand = behavior.mode() == CitizenBehaviorMode.WALK
                 ? movement.currentDestination() != null || movement.consecutiveFailures() > 0

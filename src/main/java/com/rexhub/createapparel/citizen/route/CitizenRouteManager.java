@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
-import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
 import javax.annotation.Nullable;
 import java.util.*;
@@ -251,7 +250,7 @@ public final class CitizenRouteManager {
     public boolean safeEndpoint(Citizen citizen, BlockPos pos) {
         if (!level.isInWorldBounds(pos) || !level.isInWorldBounds(pos.above()) || !level.getWorldBorder().isWithinBounds(pos)
                 || !CitizenNavigation.hasLoadedRegion(level, pos, 1) || !level.getFluidState(pos).isEmpty()
-                || WalkNodeEvaluator.getBlockPathTypeStatic(level, pos.mutable()) != BlockPathTypes.WALKABLE) return false;
+                || citizen.getNavigation().getNodeEvaluator().getBlockPathType(level, pos.getX(), pos.getY(), pos.getZ()) != BlockPathTypes.WALKABLE) return false;
         var bounds = citizen.getBoundingBox().move(Vec3.atBottomCenterOf(pos).subtract(citizen.position()));
         return level.getWorldBorder().isWithinBounds(bounds) && level.noCollision(citizen, bounds);
     }

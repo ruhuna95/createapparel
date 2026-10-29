@@ -73,6 +73,65 @@ public final class CitizenNavigationGameTests {
                 path == null ? null : path.getNextNodeIndex() + "/" + path.getNodeCount() + ":" + (path.isDone() ? "done" : path.getNextEntityPos(citizen)));
     }
 
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_navigation", timeoutTicks = 1400)
+    public static void adultWalksUpAndDownFullBlockSteps(GameTestHelper helper) { terrain(helper, false, false); }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_navigation", timeoutTicks = 1400)
+    public static void childWalksUpAndDownFullBlockSteps(GameTestHelper helper) { terrain(helper, false, true); }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_navigation", timeoutTicks = 1400)
+    public static void adultWalksUpAndDownVanillaStairs(GameTestHelper helper) { terrain(helper, true, false); }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_navigation", timeoutTicks = 1400)
+    public static void childWalksUpAndDownVanillaStairs(GameTestHelper helper) { terrain(helper, true, true); }
+
+    @GameTest(template = "citizen_route_resilience", batch = "citizen_navigation", timeoutTicks = 1400)
+    public static void longStairRouteProjectsIntermediateOntoUpperFloor(GameTestHelper helper) { terrain(helper, true, false, 63); }
+
+    private static void terrain(GameTestHelper helper, boolean stairs, boolean child) {
+        terrain(helper, stairs, child, 54);
+    }
+
+    private static void terrain(GameTestHelper helper, boolean stairs, boolean child, int endX) {
+        prepare(helper);
+        for (int x = 42; x <= endX + 4; x++) for (int z = 43; z <= 45; z++) {
+            int rise = Math.max(0, Math.min(3, x - 46));
+            for (int y = 64; y <= 64 + rise; y++) helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
+            if (stairs && x >= 47 && x <= 49) helper.setBlock(new BlockPos(x, 64 + rise, z),
+                    Blocks.STONE_STAIRS.defaultBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING,
+                            net.minecraft.core.Direction.EAST));
+        }
+        var manager = CitizenRouteManager.get(helper.getLevel());
+        var positions = java.util.List.of(helper.absolutePos(new BlockPos(44, 65, 44)), helper.absolutePos(new BlockPos(endX, 68, 44)));
+        var markers = new java.util.ArrayList<RouteMarker>();
+        for (var pos : positions) {
+            helper.getLevel().setBlock(pos, ModBlocks.CITIZEN_ROUTE_MARKER.get().defaultBlockState(), 2);
+            var marker = manager.register((CitizenRouteMarkerBlockEntity) Objects.requireNonNull(helper.getLevel().getBlockEntity(pos))).withRegion(0.5, 0.5);
+            manager.data().put(marker);
+            markers.add(marker);
+        }
+        manager.data().link(markers.get(0).id(), markers.get(1).id(), false);
+        var walker = Objects.requireNonNull(ModEntities.CITIZEN.get().create(helper.getLevel()));
+        walker.setBaby(child);
+        walker.setPos(markers.get(0).center());
+        walker.setOnGround(true);
+        helper.getLevel().addFreshEntity(walker);
+        CitizenActivityScheduler.get(helper.getLevel()).forceActive(walker, CitizenActivityScheduler.Reason.INTERACTION, 1500);
+        walker.setBehavior(CitizenBehaviorState.walking());
+        var climbed = new boolean[]{false};
+        var previous = new Vec3[]{walker.position()};
+        helper.onEachTick(() -> {
+            helper.assertTrue(walker.position().distanceToSqr(previous[0]) < 2.25, "Terrain traversal never teleports");
+            previous[0] = walker.position();
+            if (markers.get(1).id().equals(walker.routeMovement().currentMarker())) climbed[0] = true;
+            if (helper.getTick() % 200 == 0) logMovement(helper, walker, markers.get(1));
+            if (!climbed[0] || !markers.get(0).id().equals(walker.routeMovement().currentMarker())) return;
+            helper.assertTrue(Math.abs(walker.getY() - markers.get(0).center().y) < 0.5, "Returns to the lower floor after climbing three blocks");
+            walker.discard();
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "citizen_route_resilience", batch = "citizen_navigation", timeoutTicks = 400)
     public static void diagonalWalkDoesNotFollowAGridZigzag(GameTestHelper helper) {
         diagonalWalk(helper, 44, 44, 68, 56, false);

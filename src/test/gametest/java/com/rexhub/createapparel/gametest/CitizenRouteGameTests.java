@@ -648,7 +648,10 @@ public final class CitizenRouteGameTests {
 
     @GameTest(template = "citizen_behavior", batch = "citizen_route_movement", timeoutTicks = 180)
     public static void destinationIntentUsesVanillaWhenNoGraphExists(GameTestHelper helper) {
-        floor(helper); var start = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(20, 1, 20))); var citizen = citizen(helper, start, true);
+        for (int x = 1; x < 38; x++) for (int z = 1; z < 38; z++) helper.setBlock(new BlockPos(x, 128, z), Blocks.STONE);
+        var start = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(20, 129, 20)));
+        helper.assertTrue(manager(helper).nearby(start, RouteSettings.DISCOVERY_RADIUS).isEmpty(), "Fixture has no nearby graph");
+        var citizen = citizen(helper, start, true);
         var destination = start.add(5, 0, 0); citizen.routeMovement().requestDestination(destination, CitizenPathfindingScheduler.Priority.PLAYER);
         helper.runAtTickTime(140, () -> {
             helper.assertTrue(citizen.position().distanceToSqr(destination) <= 1.1, "Destination fallback: pos=" + citizen.position()

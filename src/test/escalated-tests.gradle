@@ -1,0 +1,39 @@
+sourceSets {
+    escalatedClientTest {
+        java.setSrcDirs(['src/test/route/client/java'])
+        resources.setSrcDirs(['src/test/route/client/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+if (providers.gradleProperty('escalatedTests').getOrElse('false').toBoolean()) {
+    repositories {
+        flatDir {
+            dirs project.file('run/route-tests/dependencies')
+            content { includeGroup 'local.escalated' }
+        }
+    }
+    dependencies {
+        routeTestRuntimeOnly fg.deobf('local.escalated:escalated:1.2.1')
+        escalatedClientTestRuntimeOnly fg.deobf('local.escalated:escalated:1.2.1')
+    }
+    minecraft.runs.routeTestServer.property 'apparel.escalatedTests', 'true'
+}
+
+minecraft.runs {
+    escalatedClient {
+        parent minecraft.runs.client
+        workingDirectory file('run/escalated-client')
+        property 'forge.logging.console.level', 'info'
+        property 'apparel.escalatedClient', 'true'
+        mods { "${mod_id}" { source sourceSets.escalatedClientTest } }
+    }
+}
+
+tasks.matching { it.name == 'runEscalatedClient' }.configureEach {
+    doFirst {
+        if (!providers.gradleProperty('escalatedTests').getOrElse('false').toBoolean())
+            throw new GradleException('Use -PescalatedTests=true to load Escalated in the manual client.')
+    }
+}

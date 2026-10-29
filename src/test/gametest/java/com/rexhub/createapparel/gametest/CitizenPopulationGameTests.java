@@ -970,7 +970,8 @@ public final class CitizenPopulationGameTests {
         room(helper); var a = gauge(helper, 5, 10, false); var b = gauge(helper, 27, 10, false); var population = manager(helper); var citizen = citizen(helper, a);
         population.settings(b.id(), 8, 0);
         var routes = CitizenRouteManager.get(helper.getLevel());
-        var departurePos = helper.absolutePos(new BlockPos(7, 1, 13)); var arrivalPos = helper.absolutePos(new BlockPos(27, 1, 19));
+        var departurePos = helper.absolutePos(new BlockPos(7, 1, 13));
+        var arrivalPos = helper.absolutePos(new BlockPos(27, 1, 19));
         for (var pos : List.of(departurePos, arrivalPos)) helper.getLevel().setBlock(pos, ModBlocks.GATEWAY_ROUTE_MARKER.get().defaultBlockState(), 3);
         var departure = routes.register((com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity) helper.getLevel().getBlockEntity(departurePos))
                 .withDistrict(a.districtId()).withRegion(0.5, 1);
@@ -979,6 +980,14 @@ public final class CitizenPopulationGameTests {
         routes.data().put(departure); routes.data().put(arrival);
         population.link(a.id(), b.id()); population.settings(b.id(), 8, 2);
         var transited = new boolean[1];
+        for (long at : new long[]{50, 150, 300, 500, 650}) helper.runAtTickTime(at, () -> {
+            var path = citizen.getNavigation().getPath();
+            com.mojang.logging.LogUtils.getLogger().info("GAUGE_GATEWAY_ROUTE_DIAGNOSTIC tick={} pos={} departure={} arrival={} current={} goal={} nearby={} path={}",
+                    helper.getTick(), citizen.position(), departure.pos(), arrival.pos(), citizen.routeMovement().currentMarker(),
+                    citizen.routeMovement().currentDestination(), routes.nearby(citizen.position(), RouteSettings.DISCOVERY_RADIUS).stream()
+                            .map(marker -> marker.id() + ":" + marker.pos() + ":edges=" + routes.data().connected(marker.id()).size()).toList(),
+                    path == null ? null : java.util.stream.IntStream.range(0, path.getNodeCount()).mapToObj(path::getNodePos).toList());
+        });
         helper.runAtTickTime(650, () -> com.mojang.logging.LogUtils.getLogger().info("GAUGE_GATEWAY_PROGRESS tick={} pos={} intent={} route={} goal={} nav={} failures={} requests={} chains={} populations={}/{} transited={}",
                 helper.getTick(), citizen.position(), citizen.intents().active(), citizen.routeMovement().state(), citizen.routeMovement().currentDestination(),
                 citizen.getNavigation().getTargetPos(), citizen.routeMovement().consecutiveFailures(), population.requestCount(), population.chainCount(),

@@ -22,6 +22,8 @@ import net.minecraftforge.network.NetworkHooks;
 public final class Citizen extends PathfinderMob {
     private static final EntityDataAccessor<CompoundTag> DATA_STATE =
             SynchedEntityData.defineId(Citizen.class, EntityDataSerializers.COMPOUND_TAG);
+    private static final EntityDataAccessor<Boolean> DATA_STANDING_ON_TRANSPORT =
+            SynchedEntityData.defineId(Citizen.class, EntityDataSerializers.BOOLEAN);
     private final CitizenState citizenState = new CitizenState();
     private final com.rexhub.createapparel.citizen.CitizenInteractionController interaction =
             new com.rexhub.createapparel.citizen.CitizenInteractionController(this);
@@ -36,6 +38,7 @@ public final class Citizen extends PathfinderMob {
 
     public Citizen(EntityType<? extends Citizen> type, Level level) {
         super(type, level);
+        moveControl = new com.rexhub.createapparel.citizen.CitizenMoveControl(this);
         setPersistenceRequired();
         if (!level.isClientSide) {
             CitizenOutfitPreset.DEFAULT.equip(citizenState);
@@ -50,6 +53,8 @@ public final class Citizen extends PathfinderMob {
     }
 
     public CitizenState citizenState() { return citizenState; }
+    public boolean standingOnTransport() { return entityData.get(DATA_STANDING_ON_TRANSPORT); }
+    public void setStandingOnTransport(boolean standing) { entityData.set(DATA_STANDING_ON_TRANSPORT, standing); }
     public com.rexhub.createapparel.citizen.CitizenInteractionController interaction() { return interaction; }
 
     @Override
@@ -125,6 +130,7 @@ public final class Citizen extends PathfinderMob {
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(DATA_STATE, new CompoundTag());
+        entityData.define(DATA_STANDING_ON_TRANSPORT, false);
     }
 
     @Override
@@ -200,7 +206,18 @@ public final class Citizen extends PathfinderMob {
 
     @Override
     public void travel(net.minecraft.world.phys.Vec3 movement) {
-        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("mobTravel")) { super.travel(movement); }
+        try (var diagnosticScope = com.rexhub.createapparel.citizen.population.CitizenSystemMetrics.measure("mobTravel")) {
+            if (standingOnTransport()) {
+                setDeltaMovement(getDeltaMovement().multiply(0, 1, 0));
+                super.travel(net.minecraft.world.phys.Vec3.ZERO);
+            } else super.travel(movement);
+        }
+    }
+
+    @Override
+    public void calculateEntityAnimation(boolean includeHeight) {
+        if (standingOnTransport()) walkAnimation.update(0, 1);
+        else super.calculateEntityAnimation(includeHeight);
     }
 
     @Override
