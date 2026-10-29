@@ -40,7 +40,6 @@ public final class FashionLanguage {
                 {"item.createapparel.advertising_photo", "Advertising Photo", "広告写真"},
                 {"jei.createapparel.photo_copy.input", "Use one captured photo. Player crafting only.", "撮影済みの写真1枚を使用。プレイヤーのクラフトのみ対応。"},
                 {"jei.createapparel.photo_copy.output", "Both copies retain all original photo data.", "写真データが完全に同じ写真2枚になります。"},
-                {"tooltip.createapparel.garment.fashion_tags", "Fashion: %s", "ファッション: %s"},
                 {"screen.createapparel.fashion.lock", "Outfit lock", "服装ロック"},
                 {"tooltip.createapparel.register.open", "OPEN", "開店中"},
                 {"tooltip.createapparel.register.closed", "CLOSED", "閉店中"},

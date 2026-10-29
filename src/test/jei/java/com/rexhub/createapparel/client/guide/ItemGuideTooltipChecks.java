@@ -1,7 +1,11 @@
 package com.rexhub.createapparel.client.guide;
 
 import com.mojang.logging.LogUtils;
+import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.guide.ItemGuide;
+import com.rexhub.createapparel.init.GarmentCreativePresets;
+import com.rexhub.createapparel.init.ModItems;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import net.createmod.catnip.lang.FontHelper;
@@ -11,6 +15,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -29,6 +34,7 @@ public final class ItemGuideTooltipChecks {
 
     public static void check() {
         require(!Screen.hasShiftDown(), "Normal tooltip checks require Shift to be released");
+        checkGarments();
         for (String id : ITEMS) {
             var stack = stack(id);
             var guide = ItemGuide.forItem(stack.getItem());
@@ -67,6 +73,32 @@ public final class ItemGuideTooltipChecks {
             }
         }
         LogUtils.getLogger().info("ITEM_GUIDE_TOOLTIPS_PASSED language={}", Minecraft.getInstance().getLanguageManager().getSelected());
+    }
+
+    private static void checkGarments() {
+        for (var entry : ModItems.garmentCreativeTabItems()) {
+            if (!(entry.get() instanceof GarmentItem)) continue;
+            for (var garment : List.of(new ItemStack(entry.get()), GarmentCreativePresets.create(entry))) {
+                for (var flag : List.of(TooltipFlag.NORMAL, TooltipFlag.ADVANCED)) {
+                    var lines = garment.getTooltipLines(Minecraft.getInstance().player, flag);
+                    require(!hasTranslation(lines, "tooltip.createapparel.garment.fashion_tags"),
+                            "Garment tooltips hide fashion tags: " + entry.getId());
+                    require(hasTranslation(lines, "tooltip.createapparel.garment.slot"),
+                            "Garment tooltips retain equipment slots: " + entry.getId());
+                    require(hasTranslation(lines, entry.get() instanceof MetalAccessoryItem
+                                    ? "tooltip.createapparel.accessory.metal" : "tooltip.createapparel.garment.material"),
+                            "Garment tooltips retain material information: " + entry.getId());
+                    if (garment.is(ModItems.WATCH.get())) {
+                        require(hasTranslation(lines, "tooltip.createapparel.watch.check_time"),
+                                "Watch tooltip retains its time-checking instructions");
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean hasTranslation(List<Component> lines, String key) {
+        return lines.stream().anyMatch(line -> line.getContents() instanceof TranslatableContents text && text.getKey().equals(key));
     }
 
     private static List<Component> expandedFurniture(ItemStack stack) {

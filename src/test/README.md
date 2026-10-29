@@ -8,6 +8,10 @@
 
 `GarmentItemDisplayTest`は全衣服の生成モデルに古布の`particle`指定があることを検査する。Clientでは全Garmentの通常／プリセットNBTについて、Bake後のSpriteとバニラ`BreakingItemParticle`の実Quad UVが古布のAtlas領域を参照することも検証する。
 
+`necklace`と`bracelet`（`MetalAccessoryItem`）、`glasses`・`sunglasses`・`watch`はリサイクル対象外。JUnitで生成タグからの除外を確認し、GameTestで通常品／プリセットNBTの破砕拒否、Clientで同じNBT別のJEIリサイクル逆引き除外を確認する。
+
+`ItemGuideTooltipChecks`は全衣服の通常品／プリセットNBT・通常／詳細Tooltipを日英で検査し、ファッションタグ行がなく、装備スロットと素材情報が残ることを確認する。内部のタグ解決は既存`FashionTagTest`で引き続き検証する。
+
 ```powershell
 .\gradlew.bat -PjeiEnabled=false runData
 .\gradlew.bat -PjeiEnabled=false build runGameTestServer
