@@ -53,8 +53,8 @@ public final class LoomBlockEntity extends SingleInputProcessingBlockEntity<Weav
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void initialize() {
+        super.initialize();
         updateThreadVisibility();
     }
 

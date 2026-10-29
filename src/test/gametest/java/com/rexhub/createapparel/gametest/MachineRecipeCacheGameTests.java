@@ -2,6 +2,7 @@ package com.rexhub.createapparel.gametest;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.block.entity.SewingMachineBlockEntity;
+import com.rexhub.createapparel.block.LoomBlock;
 import com.rexhub.createapparel.garment.GarmentData;
 import com.rexhub.createapparel.garment.GarmentDefinitionManager;
 import com.rexhub.createapparel.garment.PatternData;
@@ -37,6 +38,36 @@ import java.util.Optional;
 @PrefixGameTestTemplate(false)
 public final class MachineRecipeCacheGameTests {
     private MachineRecipeCacheGameTests() {
+    }
+
+    @GameTest(template = "apparel_state", batch = "phase17_machines")
+    public static void loomThreadVisibilityFollowsInventoryAndRestoredInputWithoutProcessingTicks(GameTestHelper helper) {
+        var machine = place(helper, ModBlocks.LOOM.get());
+        var inventory = inventory(machine);
+        var level = helper.getLevel();
+        var pos = machine.getBlockPos();
+        inventory.insertItem(0, new ItemStack(ModItems.COTTON_THREAD.get()), true);
+        helper.assertTrue(!level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "Simulated input stays invisible");
+        inventory.insertItem(0, new ItemStack(ModItems.COTTON_THREAD.get()), false);
+        helper.assertTrue(level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "One thread is visible immediately while stopped");
+        var saved = machine.saveWithFullMetadata();
+        var player = helper.makeMockPlayer();
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        ((com.rexhub.createapparel.block.entity.LoomBlockEntity) machine).interact(player, net.minecraft.world.InteractionHand.MAIN_HAND);
+        helper.assertTrue(!level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "Manual removal hides thread immediately");
+        level.removeBlock(pos, false);
+        level.setBlockAndUpdate(pos, ModBlocks.LOOM.get().defaultBlockState());
+        var restored = (KineticBlockEntity) level.getBlockEntity(pos);
+        if (restored == null) throw new IllegalStateException("Restored Loom missing");
+        restored.load(saved);
+        restored.initialize();
+        helper.assertTrue(level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "Initialization repairs stale block state after NBT restoration");
+        inventory(restored).insertItem(0, new ItemStack(ModItems.COTTON_THREAD.get(), 3), false);
+        speed(restored, 64);
+        ticks(restored, 300);
+        helper.assertTrue(inventory(restored).getStackInSlot(0).isEmpty()
+                && !level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "Last processing cycle hides thread when input is consumed");
+        helper.succeed();
     }
 
     @GameTest(template = "apparel_state", batch = "phase17_machines")
