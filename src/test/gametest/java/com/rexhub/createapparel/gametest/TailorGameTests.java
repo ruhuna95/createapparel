@@ -2,6 +2,7 @@ package com.rexhub.createapparel.gametest;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.init.GarmentCreativePresets;
 import com.rexhub.createapparel.init.ModBlocks;
 import com.rexhub.createapparel.init.ModItems;
@@ -59,17 +60,20 @@ public final class TailorGameTests {
         helper.assertTrue(crushing.getProcessingDuration() == 100, "100 tick duration");
         for (var entry : ModRegistries.ITEMS.getEntries()) {
             var stack = new ItemStack(entry.get());
-            boolean recyclable = entry.get() instanceof GarmentItem;
+            boolean recyclable = entry.get() instanceof GarmentItem && !(entry.get() instanceof MetalAccessoryItem)
+                    && !Set.of("glasses", "sunglasses", "watch").contains(entry.getId().getPath());
             helper.assertTrue(stack.is(ModTags.Items.RECYCLABLE_GARMENTS) == recyclable, "Exact recyclable tag: " + entry.getId());
             var inventory = new ItemStackHandler(1);
             inventory.setStackInSlot(0, stack);
             var wrapper = new RecipeWrapper(inventory);
             helper.assertTrue(crushing.matches(wrapper, helper.getLevel()) == recyclable, "Exact crushing input: " + entry.getId());
-            if (!recyclable) continue;
+            if (!(entry.get() instanceof GarmentItem)) continue;
             for (var input : List.of(stack, GarmentCreativePresets.create(entry))) {
                 inventory.setStackInSlot(0, input.copy());
                 inventory.getStackInSlot(0).getOrCreateTag().putString("RecyclingTest", "discard");
-                helper.assertTrue(crushing.matches(wrapper, helper.getLevel()), "NBT does not restrict crushing");
+                helper.assertTrue(crushing.matches(wrapper, helper.getLevel()) == recyclable,
+                        "NBT does not change crushing eligibility: " + entry.getId());
+                if (!recyclable) continue;
                 var outputs = crushing.rollResults();
                 helper.assertTrue(outputs.size() == 1 && outputs.get(0).is(ModItems.OLD_CLOTH.get())
                         && outputs.get(0).getCount() == 1 && !outputs.get(0).hasTag(), "One clean scrap at 100% chance");

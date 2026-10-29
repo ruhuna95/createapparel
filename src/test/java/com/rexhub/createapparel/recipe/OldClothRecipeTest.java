@@ -36,7 +36,11 @@ class OldClothRecipeTest {
                 .map(value -> value.getAsString()).collect(Collectors.toSet());
         assertTrue(values.size() > 100);
         assertTrue(values.containsAll(List.of("createapparel:t_shirt", "createapparel:trench_coat", "createapparel:sneakers")));
-        assertFalse(values.contains("createapparel:gold_necklace"));
+        assertFalse(values.contains("createapparel:necklace"));
+        assertFalse(values.contains("createapparel:bracelet"));
+        assertFalse(values.contains("createapparel:glasses"));
+        assertFalse(values.contains("createapparel:sunglasses"));
+        assertFalse(values.contains("createapparel:watch"));
         assertFalse(tag.has("replace") && tag.get("replace").getAsBoolean());
     }
 

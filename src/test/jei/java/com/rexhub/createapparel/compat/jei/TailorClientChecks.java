@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.init.GarmentCreativePresets;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.villager.ModVillagers;
@@ -45,11 +46,14 @@ final class TailorClientChecks {
         var factory = runtime.getJeiHelpers().getFocusFactory();
         for (var garment : ModItems.garmentCreativeTabItems()) {
             if (!(garment.get() instanceof GarmentItem)) continue;
+            boolean recyclable = !(garment.get() instanceof MetalAccessoryItem)
+                    && !List.of("glasses", "sunglasses", "watch").contains(garment.getId().getPath());
             for (var stack : List.of(new ItemStack(garment.get()), GarmentCreativePresets.create(garment))) {
                 auditCrushingParticle(stack);
                 var focus = factory.createFocus(RecipeIngredientRole.INPUT, VanillaTypes.ITEM_STACK, stack);
                 check(manager.createRecipeLookup(type).limitFocus(List.of(focus)).get()
-                        .anyMatch(recipe -> recipe.getId().equals(id)), "Native crushing lookup handles garment NBT");
+                        .anyMatch(recipe -> recipe.getId().equals(id)) == recyclable,
+                        "Native crushing lookup respects accessory exclusions regardless of NBT: " + garment.getId());
             }
         }
         var output = factory.createFocus(RecipeIngredientRole.OUTPUT, VanillaTypes.ITEM_STACK, new ItemStack(ModItems.OLD_CLOTH.get()));

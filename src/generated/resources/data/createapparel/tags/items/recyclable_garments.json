@@ -103,16 +103,11 @@
     "createapparel:hat",
     "createapparel:casquette",
     "createapparel:sun_visor",
-    "createapparel:glasses",
-    "createapparel:sunglasses",
     "createapparel:mask",
     "createapparel:backpack",
     "createapparel:daypack",
     "createapparel:crossbody_bag",
-    "createapparel:necklace",
     "createapparel:necktie",
-    "createapparel:watch",
-    "createapparel:bracelet",
     "createapparel:wristband",
     "createapparel:gloves"
   ]

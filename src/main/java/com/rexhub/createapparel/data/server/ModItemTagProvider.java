@@ -1,6 +1,8 @@
 package com.rexhub.createapparel.data.server;
 
 import com.rexhub.createapparel.CreateApparel;
+import com.rexhub.createapparel.garment.GarmentItem;
+import com.rexhub.createapparel.garment.MetalAccessoryItem;
 import com.rexhub.createapparel.init.ModItems;
 import com.rexhub.createapparel.init.ModTags;
 import com.rexhub.createapparel.material.FabricColor;
@@ -36,7 +38,11 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         addGemTags();
         var recyclableGarments = tag(ModTags.Items.RECYCLABLE_GARMENTS);
         ModItems.garmentCreativeTabItems().stream().map(item -> item.get())
-                .filter(item -> item instanceof com.rexhub.createapparel.garment.GarmentItem)
+                .filter(item -> item instanceof GarmentItem
+                        && !(item instanceof MetalAccessoryItem)
+                        && item != ModItems.GLASSES.get()
+                        && item != ModItems.SUNGLASSES.get()
+                        && item != ModItems.WATCH.get())
                 .forEach(recyclableGarments::add);
         tag(ModTags.Items.SILVER_ACCESSORY_NUGGETS).add(Items.IRON_NUGGET)
                 .addOptionalTag(ResourceLocation.parse("forge:nuggets/silver"));
