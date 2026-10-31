@@ -109,6 +109,7 @@ public final class SilkwormRearingTrayBlockEntity extends KineticBlockEntity {
         super.lazyTick();
         if (level == null || level.isClientSide) return;
         updateRedstone();
+        exportOutput();
         if (hasSilkworm && pendingResult.isEmpty() && !paused
                 && SilkwormRearingSpeed.progressPerTick(getSpeed()) > 0) {
             startCycle();
@@ -136,8 +137,16 @@ public final class SilkwormRearingTrayBlockEntity extends KineticBlockEntity {
         progress = 0;
         processingTime = 0;
         changeState(State.READY);
+        exportOutput();
         setChanged();
         sendData();
+    }
+
+    private void exportOutput() {
+        ItemStack output = inventory.getStackInSlot(1);
+        if (output.isEmpty()) return;
+        ItemStack remainder = MachineOutputTransport.exportThroughFunnels(this, output);
+        if (remainder.getCount() != output.getCount()) inventory.setStackInSlot(1, remainder);
     }
 
     private void startCycle() {

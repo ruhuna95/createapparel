@@ -173,6 +173,24 @@ JEI有効の`runFashionTestClient`はCreate標準デプロイヤーでの写真U
 通常の`runClient`／`runServer`には読み込まないため、そこで既存GameTestを`/test`から実行する構成ではない。
 以下のコマンドはすべてプロジェクトルートで実行する。
 
+## 製造設備のファンネル搬出
+
+`MachineFunnelGameTests`は4設備の通常ファンネル、PUSHING形状の真鍮ベルトファンネル、RETRACTED形状の安山岩ファンネルと実駆動ベルトを水平4方向で検証する。ベルト反転、Filter・Redstone・満杯、養蚕台の保存済み出力の再試行と二重搬出防止、縫製データと型紙保持も確認する。PULLINGは搬入用なので搬出しない。
+
+```powershell
+$tests = @(
+    'completedProductsLeaveNormalFunnelsForEveryMachineAndDirection'
+    'completedProductsReachBeltFunnelsForEveryMachineAndDirection'
+    'photoAndesiteFunnelsExportOntoMovingBeltsInEveryDirection'
+    'photoAndesiteFunnelKeepsTrayOutputWhenBeltReverses'
+    'trayKeepsSavedOutputUntilBeltFunnelCanAcceptAndNeverDuplicates'
+    'beltFunnelDirectionFilterAndPowerDoNotAcceptRejectedProducts'
+)
+.\gradlew.bat runGameTestServer -PjeiEnabled=false "-PgameTests=$($tests -join ',')"
+```
+
+共通GameTest全体にも含まれる。加工・停止・Recipe再解決は`MachineRecipeCacheGameTests`、養蚕台の保存・物流は`SilkwormRearingTrayGameTests`で継続して確認する。
+
 ## 一括検証
 
 1.21.1ではGameTest構造物が自動的にBarrierで囲まれる。既存`apparel_state`は外側の空間も使うfixtureのため、16×8×16のロード範囲を予約し、テスト開始時にそのBarrierだけを除去する。Citizen用の明示的な部屋・壁・障害物は保持する。`-PgameTests=<methodName,...>`で共通GameTestを選択できる。
