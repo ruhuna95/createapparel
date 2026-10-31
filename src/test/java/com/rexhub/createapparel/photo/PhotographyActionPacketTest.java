@@ -30,10 +30,10 @@ class PhotographyActionPacketTest {
         assertTrue(action >= 0 && action <= Byte.MAX_VALUE);
         var buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
-            new ServerboundContainerButtonClickPacket(12, action).write(buffer);
-            var decoded = new ServerboundContainerButtonClickPacket(buffer);
-            assertEquals(12, decoded.getContainerId());
-            assertEquals(action, decoded.getButtonId());
+            ServerboundContainerButtonClickPacket.STREAM_CODEC.encode(buffer, new ServerboundContainerButtonClickPacket(12, action));
+            var decoded = ServerboundContainerButtonClickPacket.STREAM_CODEC.decode(buffer);
+            assertEquals(12, decoded.containerId());
+            assertEquals(action, decoded.buttonId());
             assertEquals(0, buffer.readableBytes());
         } finally { buffer.release(); }
     }

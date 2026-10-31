@@ -3,14 +3,23 @@ package com.rexhub.createapparel.network;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public record GarmentDefinitionsPacket(List<GarmentDefinition> definitions,
-        java.util.Map<String, com.rexhub.createapparel.fashion.FashionDesignModifier> fashionModifiers) {
+        java.util.Map<String, com.rexhub.createapparel.fashion.FashionDesignModifier> fashionModifiers) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<GarmentDefinitionsPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "garment_definitions_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, GarmentDefinitionsPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), GarmentDefinitionsPacket::decode);
+
+    @Override
+    public Type<GarmentDefinitionsPacket> type() {
+        return TYPE;
+    }
+
     private static final int MAX_DEFINITIONS = 4096;
 
     public GarmentDefinitionsPacket {
@@ -48,12 +57,9 @@ public record GarmentDefinitionsPacket(List<GarmentDefinition> definitions,
     }
 
     public void handleClient() {
-        DistExecutor.unsafeRunWhenOn(
-                Dist.CLIENT,
-                () -> () -> {
+        {
                     ClientGarmentAssets.acceptDefinitions(definitions);
                     com.rexhub.createapparel.fashion.FashionTagResolver.acceptModifiers(fashionModifiers);
                 }
-        );
     }
 }

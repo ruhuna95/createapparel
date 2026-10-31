@@ -16,8 +16,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.HashSet;
 import java.util.List;
@@ -46,7 +46,7 @@ public final class CitizenCommandGameTests {
         helper.assertTrue(result == 1 && nearby(source).size() == 1, "Command creates one Citizen");
         var child = nearby(source).get(0);
         helper.assertTrue(child.position().equals(source.getPosition()), "Spawn at command execution position");
-        helper.assertTrue(child.isBaby() && child.getScale() == 0.5F, "Child category and render scale");
+        helper.assertTrue(child.isBaby() && child.getScale() * child.getAgeScale() == 0.5F, "Child category and render scale");
         helper.assertTrue(Math.abs(child.getBbHeight() - 0.9375F) < 0.00001 && Math.abs(child.getBbWidth() - 0.3F) < 0.00001,
                 "Child dimensions scale with body");
         helper.assertTrue(child.getAttributeValue(Attributes.MOVEMENT_SPEED) == 0.3, "Child movement matches a playing baby villager instead of scaling with body size");
@@ -61,7 +61,7 @@ public final class CitizenCommandGameTests {
         restored.load(saved);
         helper.assertTrue(restored.isBaby() && restored.getBbHeight() == child.getBbHeight()
                 && restored.getEyeHeight() == child.getEyeHeight(), "Restored child dimensions and eye height");
-        helper.assertTrue(restored.citizenState().serializeNBT().equals(child.citizenState().serializeNBT()), "Actual clothes and appearance persist");
+        helper.assertTrue(restored.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(child.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Actual clothes and appearance persist");
         child.getEntityData().packDirty();
         child.citizenState().setAge(CitizenAge.CHILD);
         helper.assertTrue(child.getEntityData().packDirty() == null, "Same age does not resend");

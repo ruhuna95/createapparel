@@ -21,7 +21,7 @@ public final class RetailDisplayIndex {
     public static void unload(Level level) { LEVELS.remove(level); }
 
     public static void update(Mannequin mannequin) {
-        if (mannequin.isAddedToWorld()) get(mannequin.level()).update(mannequin, mannequin.mannequinState().linkedRegister());
+        if (mannequin.isAddedToLevel()) get(mannequin.level()).update(mannequin, mannequin.mannequinState().linkedRegister());
     }
 
     public static void update(AdvertisementPanelBlockEntity panel) {

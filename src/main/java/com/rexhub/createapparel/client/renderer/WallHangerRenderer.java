@@ -21,4 +21,9 @@ public final class WallHangerRenderer implements BlockEntityRenderer<WallHangerB
         HangerDisplay.renderGarment(hanger.garment(), poseStack, buffer, light, overlay);
         poseStack.popPose();
     }
+
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(WallHangerBlockEntity blockEntity) {
+        return blockEntity.getRenderBoundingBox();
+    }
 }

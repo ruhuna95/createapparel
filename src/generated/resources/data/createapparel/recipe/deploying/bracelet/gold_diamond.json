@@ -1,0 +1,24 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "createapparel:gold_bracelet_base"
+    },
+    {
+      "tag": "createapparel:gems/diamond"
+    }
+  ],
+  "results": [
+    {
+      "components": {
+        "minecraft:custom_data": {
+          "MetalAccessoryData": {
+            "gem": "diamond",
+            "metal_color": "gold"
+          }
+        }
+      },
+      "id": "createapparel:bracelet"
+    }
+  ]
+}

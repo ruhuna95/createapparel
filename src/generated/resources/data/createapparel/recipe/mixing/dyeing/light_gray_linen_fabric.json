@@ -1,0 +1,122 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    [
+      {
+        "item": "createapparel:linen_fabric"
+      },
+      {
+        "item": "createapparel:white_linen_fabric"
+      },
+      {
+        "item": "createapparel:orange_linen_fabric"
+      },
+      {
+        "item": "createapparel:magenta_linen_fabric"
+      },
+      {
+        "item": "createapparel:light_blue_linen_fabric"
+      },
+      {
+        "item": "createapparel:yellow_linen_fabric"
+      },
+      {
+        "item": "createapparel:lime_linen_fabric"
+      },
+      {
+        "item": "createapparel:pink_linen_fabric"
+      },
+      {
+        "item": "createapparel:gray_linen_fabric"
+      },
+      {
+        "item": "createapparel:light_gray_linen_fabric"
+      },
+      {
+        "item": "createapparel:cyan_linen_fabric"
+      },
+      {
+        "item": "createapparel:purple_linen_fabric"
+      },
+      {
+        "item": "createapparel:blue_linen_fabric"
+      },
+      {
+        "item": "createapparel:brown_linen_fabric"
+      },
+      {
+        "item": "createapparel:green_linen_fabric"
+      },
+      {
+        "item": "createapparel:red_linen_fabric"
+      },
+      {
+        "item": "createapparel:black_linen_fabric"
+      },
+      {
+        "item": "createapparel:cream_linen_fabric"
+      },
+      {
+        "item": "createapparel:beige_linen_fabric"
+      },
+      {
+        "item": "createapparel:greige_linen_fabric"
+      },
+      {
+        "item": "createapparel:tan_linen_fabric"
+      },
+      {
+        "item": "createapparel:navy_linen_fabric"
+      },
+      {
+        "item": "createapparel:cerulean_linen_fabric"
+      },
+      {
+        "item": "createapparel:sky_linen_fabric"
+      },
+      {
+        "item": "createapparel:olive_linen_fabric"
+      },
+      {
+        "item": "createapparel:khaki_linen_fabric"
+      },
+      {
+        "item": "createapparel:forest_linen_fabric"
+      },
+      {
+        "item": "createapparel:mint_linen_fabric"
+      },
+      {
+        "item": "createapparel:burgundy_linen_fabric"
+      },
+      {
+        "item": "createapparel:coral_linen_fabric"
+      },
+      {
+        "item": "createapparel:rose_linen_fabric"
+      },
+      {
+        "item": "createapparel:mustard_linen_fabric"
+      },
+      {
+        "item": "createapparel:lavender_linen_fabric"
+      },
+      {
+        "item": "createapparel:plum_linen_fabric"
+      }
+    ],
+    {
+      "item": "minecraft:light_gray_dye"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "results": [
+    {
+      "id": "createapparel:light_gray_linen_fabric"
+    }
+  ]
+}

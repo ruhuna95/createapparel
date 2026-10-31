@@ -12,11 +12,11 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class GarmentDefinitionManager extends SimpleJsonResourceReloadListener {
     private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
     private static final GarmentDefinitionManager INSTANCE = new GarmentDefinitionManager();
@@ -54,7 +54,7 @@ public final class GarmentDefinitionManager extends SimpleJsonResourceReloadList
                 .sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString)))
                 .forEach(entry -> {
                     ResourceLocation id = entry.getKey();
-                    Item item = ForgeRegistries.ITEMS.getValue(id);
+                    Item item = BuiltInRegistries.ITEM.get(id);
                     if (!(item instanceof GarmentItem)) {
                         throw new IllegalStateException("Garment definition has no matching GarmentItem: " + id);
                     }

@@ -27,10 +27,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import java.util.Optional;
 
@@ -50,8 +49,8 @@ public final class MachineRecipeCacheGameTests {
         helper.assertTrue(!level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "Simulated input stays invisible");
         inventory.insertItem(0, new ItemStack(ModItems.COTTON_THREAD.get()), false);
         helper.assertTrue(level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "One thread is visible immediately while stopped");
-        var saved = machine.saveWithFullMetadata();
-        var player = helper.makeMockPlayer();
+        var saved = machine.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup());
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         ((com.rexhub.createapparel.block.entity.LoomBlockEntity) machine).interact(player, net.minecraft.world.InteractionHand.MAIN_HAND);
         helper.assertTrue(!level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "Manual removal hides thread immediately");
@@ -59,7 +58,7 @@ public final class MachineRecipeCacheGameTests {
         level.setBlockAndUpdate(pos, ModBlocks.LOOM.get().defaultBlockState());
         var restored = (KineticBlockEntity) level.getBlockEntity(pos);
         if (restored == null) throw new IllegalStateException("Restored Loom missing");
-        restored.load(saved);
+        restored.loadWithComponents(saved, com.rexhub.createapparel.TestRegistries.lookup());
         restored.initialize();
         helper.assertTrue(level.getBlockState(pos).getValue(LoomBlock.THREAD_VISIBLE), "Initialization repairs stale block state after NBT restoration");
         inventory(restored).insertItem(0, new ItemStack(ModItems.COTTON_THREAD.get(), 3), false);
@@ -97,8 +96,8 @@ public final class MachineRecipeCacheGameTests {
                 "Additional input invalidates cache");
         machine.tick();
         helper.assertTrue(remaining(machine) == before - 8, "Same-recipe insertion preserves progress");
-        var saved = machine.saveWithFullMetadata();
-        machine.load(saved);
+        var saved = machine.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup());
+        machine.loadWithComponents(saved, com.rexhub.createapparel.TestRegistries.lookup());
         speed(machine, 64);
         machine.tick();
         helper.assertTrue(remaining(machine) == before - 12, "Loading resolves again and preserves saved progress");
@@ -117,7 +116,7 @@ public final class MachineRecipeCacheGameTests {
     public static void sewingPatternChangeResetsProgressAndPatternIsNeverConsumed(GameTestHelper helper) {
         var machine = (SewingMachineBlockEntity) place(helper, ModBlocks.SEWING_MACHINE.get());
         FilteringBehaviour filter = BlockEntityBehaviour.get(machine, FilteringBehaviour.TYPE);
-        var recipe = (SewingRecipe) helper.getLevel().getRecipeManager().byKey(ModItems.PULLOVER_HOODIE.getId()).orElseThrow();
+        var recipe = (SewingRecipe) helper.getLevel().getRecipeManager().byKey(ModItems.PULLOVER_HOODIE.getId()).orElseThrow().value();
         var pattern = pattern(recipe, "plain");
         filter.setFilter(pattern);
         var inventory = inventory(machine);
@@ -157,7 +156,7 @@ public final class MachineRecipeCacheGameTests {
 
     private static ItemStack pattern(SewingRecipe recipe, String design) {
         var pattern = new ItemStack(ModItems.SEWING_PATTERN.get());
-        new PatternData(recipe.getId(), design, Optional.of(FabricColor.BLUE), Optional.of(FabricColor.YELLOW)).write(pattern);
+        new PatternData(com.rexhub.createapparel.TestRecipes.id(recipe), design, Optional.of(FabricColor.BLUE), Optional.of(FabricColor.YELLOW)).write(pattern);
         return pattern;
     }
 
@@ -177,10 +176,10 @@ public final class MachineRecipeCacheGameTests {
         var weaving = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "weaving/cotton_fabric");
         int before = remaining(machine);
         try {
-            manager.replaceRecipes(original.stream().filter(recipe -> !recipe.getId().equals(weaving)).toList());
+            manager.replaceRecipes(original.stream().filter(recipe -> !recipe.id().equals(weaving)).toList());
             RecipeCacheReloadListener.invalidate(manager);
             ticks(machine, 30);
-            helper.assertTrue(remaining(machine) == before && !machine.saveWithFullMetadata().getBoolean("Processing"),
+            helper.assertTrue(remaining(machine) == before && !machine.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup()).getBoolean("Processing"),
                     "Removed recipe cannot keep processing from a stale cache");
             helper.assertTrue(inventory.getStackInSlot(0).getCount() == 4, "Reload never consumes input for a removed recipe");
         } finally {
@@ -203,7 +202,7 @@ public final class MachineRecipeCacheGameTests {
     }
 
     private static IItemHandler inventory(KineticBlockEntity machine) {
-        return machine.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().orElseThrow();
+        return java.util.Optional.ofNullable(machine.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, machine.getBlockPos(), null)).orElseThrow();
     }
 
     private static void speed(KineticBlockEntity machine, int rpm) {
@@ -226,7 +225,7 @@ public final class MachineRecipeCacheGameTests {
     }
 
     private static int remaining(KineticBlockEntity machine) {
-        return machine.saveWithFullMetadata().getInt("ProcessingTicks");
+        return machine.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup()).getInt("ProcessingTicks");
     }
 
     private static void ticks(KineticBlockEntity machine, int count) {

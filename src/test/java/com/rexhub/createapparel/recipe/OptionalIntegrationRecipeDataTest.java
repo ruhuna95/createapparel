@@ -13,7 +13,7 @@ class OptionalIntegrationRecipeDataTest {
     @Test void syntheticFallbackUsesTheSpecifiedHeatedMixture() throws Exception {
         var recipe = read("mixing/synthetic_fiber");
         assertEquals("create:mixing", recipe.get("type").getAsString());
-        assertEquals("heated", recipe.get("heatRequirement").getAsString());
+        assertEquals("heated", recipe.get("heat_requirement").getAsString());
         assertEquals("createapparel:synthetic_fiber_fallback", condition(recipe));
         var inputs = recipe.getAsJsonArray("ingredients");
         assertEquals(3, inputs.size());
@@ -21,7 +21,7 @@ class OptionalIntegrationRecipeDataTest {
         assertEquals("minecraft:slime_ball", inputs.get(1).getAsJsonObject().get("item").getAsString());
         assertEquals("minecraft:water", inputs.get(2).getAsJsonObject().get("fluid").getAsString());
         assertEquals(250, inputs.get(2).getAsJsonObject().get("amount").getAsInt());
-        assertEquals("createapparel:synthetic_fiber", recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("item").getAsString());
+        assertEquals("createapparel:synthetic_fiber", recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("id").getAsString());
     }
 
     @Test void nylonUsesTheExactOptionalItemAndItsDestroyCondition() throws Exception {
@@ -30,14 +30,14 @@ class OptionalIntegrationRecipeDataTest {
         assertEquals("createapparel:synthetic_fiber_destroy", condition(recipe));
         assertEquals(1, recipe.getAsJsonArray("ingredients").size());
         assertEquals("destroy:nylon", recipe.getAsJsonArray("ingredients").get(0).getAsJsonObject().get("item").getAsString());
-        assertEquals("createapparel:synthetic_fiber", recipe.getAsJsonObject("result").get("item").getAsString());
+        assertEquals("createapparel:synthetic_fiber", recipe.getAsJsonObject("result").get("id").getAsString());
         assertEquals(2, recipe.getAsJsonObject("result").get("count").getAsInt());
     }
 
     @Test void mirrorPreservesItsExistingRecipeAndConditionIds() throws Exception {
         var recipe = read("mixing/mirror_coating_fluid");
         assertEquals("createapparel:mirror_coating_fallback", condition(recipe));
-        assertEquals("heated", recipe.get("heatRequirement").getAsString());
+        assertEquals("heated", recipe.get("heat_requirement").getAsString());
         assertEquals(1000, recipe.getAsJsonArray("ingredients").get(2).getAsJsonObject().get("amount").getAsInt());
         assertEquals(1000, recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("amount").getAsInt());
         assertEquals(250, read("filling/mirror_panel").getAsJsonArray("ingredients").get(1).getAsJsonObject().get("amount").getAsInt());
@@ -46,33 +46,34 @@ class OptionalIntegrationRecipeDataTest {
     @Test void destroyMirrorRequiresNonEmptySilverAndTheApprovedMixture() throws Exception {
         var recipe = read("mixing/mirror_coating_fluid_from_destroy");
         assertEquals("create:mixing", recipe.get("type").getAsString());
-        var conditions = recipe.getAsJsonArray("conditions");
+        var conditions = recipe.getAsJsonArray("neoforge:conditions");
         assertEquals(2, conditions.size());
         assertEquals("createapparel:mirror_coating_destroy", conditions.get(0).getAsJsonObject().get("type").getAsString());
         var nonEmpty = conditions.get(1).getAsJsonObject();
-        assertEquals("forge:not", nonEmpty.get("type").getAsString());
-        assertEquals("forge:tag_empty", nonEmpty.getAsJsonObject("value").get("type").getAsString());
-        assertEquals("forge:ingots/silver", nonEmpty.getAsJsonObject("value").get("tag").getAsString());
+        assertEquals("neoforge:not", nonEmpty.get("type").getAsString());
+        assertEquals("neoforge:tag_empty", nonEmpty.getAsJsonObject("value").get("type").getAsString());
+        assertEquals("c:ingots/silver", nonEmpty.getAsJsonObject("value").get("tag").getAsString());
         var ingredients = recipe.getAsJsonArray("ingredients");
         assertEquals(2, ingredients.size());
         var mixture = ingredients.get(0).getAsJsonObject();
-        assertEquals("destroy:mixture", mixture.get("createapparel:mirror_mixture").getAsString());
+        assertEquals("createapparel:mirror_mixture", mixture.get("type").getAsString());
         assertEquals("createapparel:diamminesilver_i", mixture.get("molecule").getAsString());
-        assertEquals(1f, mixture.get("concentration").getAsFloat());
+        assertEquals(0.9f, mixture.get("min_concentration").getAsFloat());
+        assertEquals(1.1f, mixture.get("max_concentration").getAsFloat());
         assertEquals(900, mixture.get("amount").getAsInt());
         assertEquals("create:honey", ingredients.get(1).getAsJsonObject().get("fluid").getAsString());
         assertEquals(100, ingredients.get(1).getAsJsonObject().get("amount").getAsInt());
-        assertEquals("createapparel:mirror_coating_fluid", recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("fluid").getAsString());
+        assertEquals("createapparel:mirror_coating_fluid", recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("id").getAsString());
         assertEquals(1000, recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("amount").getAsInt());
     }
 
     private static String condition(JsonObject json) {
-        assertEquals(1, json.getAsJsonArray("conditions").size());
-        return json.getAsJsonArray("conditions").get(0).getAsJsonObject().get("type").getAsString();
+        assertEquals(1, json.getAsJsonArray("neoforge:conditions").size());
+        return json.getAsJsonArray("neoforge:conditions").get(0).getAsJsonObject().get("type").getAsString();
     }
 
     private static JsonObject read(String path) throws Exception {
         return JsonParser.parseString(Files.readString(Path.of(
-                "src/generated/resources/data/createapparel/recipes/" + path + ".json"))).getAsJsonObject();
+                "src/generated/resources/data/createapparel/recipe/" + path + ".json"))).getAsJsonObject();
     }
 }

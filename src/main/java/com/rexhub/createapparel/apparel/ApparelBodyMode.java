@@ -2,7 +2,7 @@ package com.rexhub.createapparel.apparel;
 
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import java.util.EnumSet;
 import java.util.List;

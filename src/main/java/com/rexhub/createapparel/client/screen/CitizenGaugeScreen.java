@@ -126,7 +126,7 @@ public final class CitizenGaugeScreen extends AbstractContainerScreen<CitizenGau
     private boolean invalidRange() { int value = inputValue(range); return value < 1 || value > 256; }
     private boolean invalidTarget() { int value = inputValue(target); return value < 0 || value > inputValue(range); }
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics); super.render(graphics, mouseX, mouseY, partialTick); renderTooltip(graphics, mouseX, mouseY);
+        renderBackground(graphics, mouseX, mouseY, partialTick); super.render(graphics, mouseX, mouseY, partialTick); renderTooltip(graphics, mouseX, mouseY);
         var info = menu.info();
         if (districtLayout && isHovering(18, 94, 18, 18, mouseX, mouseY) || !districtLayout && isHovering(60, 32, imageWidth - 72, 24, mouseX, mouseY)) {
             long last = info.getLong("LastSuccessfulAction");
@@ -210,8 +210,8 @@ public final class CitizenGaugeScreen extends AbstractContainerScreen<CitizenGau
         if (!districtLayout) DistrictGaugeIcon.render(graphics, flow == CitizenGauge.Flow.OUTFLOW ? DistrictGaugeIcon.OUTFLOW : DistrictGaugeIcon.INFLUX,
                 0xFFFFFF, leftPos + flowContentX(text(flow == CitizenGauge.Flow.INFLUX ? "source" : "outflow")), topPos + 36);
         var preview = new ItemStack(ModItems.CITIZEN_GAUGE.get());
-        if (districtLayout) preview.getOrCreateTag().putLong("GaugeCenter", menu.info().getLong("Center"));
-        else if (flow == CitizenGauge.Flow.OUTFLOW) preview.getOrCreateTag().putBoolean("GaugeOutflow", true);
+        if (districtLayout) com.rexhub.createapparel.item.ItemData.update(preview, customData -> customData.putLong("GaugeCenter", menu.info().getLong("Center")));
+        else if (flow == CitizenGauge.Flow.OUTFLOW) com.rexhub.createapparel.item.ItemData.update(preview, customData -> customData.putBoolean("GaugeOutflow", true));
         GuiGameElement.of(preview).scale(4).at(0, 0, -200)
                 .render(graphics, leftPos + imageWidth - 5, topPos + imageHeight - (districtLayout ? 53 : 45));
     }
@@ -254,7 +254,7 @@ public final class CitizenGaugeScreen extends AbstractContainerScreen<CitizenGau
         }
         @Override public void onClick(double x, double y) {
             String visible = inputFont.plainSubstrByWidth(getValue().substring(Math.min(viewStart, getValue().length())), width - 8);
-            moveCursorTo(Math.min(viewStart, getValue().length()) + inputFont.plainSubstrByWidth(visible, Math.max(0, (int) x - getX() - 4)).length());
+            moveCursorTo(Math.min(viewStart, getValue().length()) + inputFont.plainSubstrByWidth(visible, Math.max(0, (int) x - getX() - 4)).length(), false);
         }
         @Override public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             if (!visible) return;

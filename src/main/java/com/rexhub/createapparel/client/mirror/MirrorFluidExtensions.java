@@ -1,7 +1,7 @@
 package com.rexhub.createapparel.client.mirror;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 
 public final class MirrorFluidExtensions implements IClientFluidTypeExtensions {
     @Override public ResourceLocation getStillTexture() { return ResourceLocation.withDefaultNamespace("block/water_still"); }

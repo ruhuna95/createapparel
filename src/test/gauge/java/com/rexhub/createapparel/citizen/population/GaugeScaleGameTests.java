@@ -13,12 +13,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.lang.management.ManagementFactory;
@@ -26,7 +25,7 @@ import java.util.*;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class GaugeScaleGameTests {
     private static final int LOADED_CITIZENS = 100, SAMPLE_TICKS = 600;
     private static final java.lang.reflect.Method PATH_WAIT = pathWaitMethod();
@@ -35,20 +34,20 @@ public final class GaugeScaleGameTests {
     private static CompoundTag restoredExpected;
     private static Throwable restartFailure;
     private GaugeScaleGameTests() { }
-    @SubscribeEvent public static void serverStarting(net.minecraftforge.event.server.ServerAboutToStartEvent event) {
+    @SubscribeEvent public static void serverStarting(net.neoforged.neoforge.event.server.ServerAboutToStartEvent event) {
         restartStarted = System.nanoTime(); restoredExpected = null; restartFailure = null;
     }
-    @SubscribeEvent public static void serverStarted(net.minecraftforge.event.server.ServerStartedEvent event) {
+    @SubscribeEvent public static void serverStarted(net.neoforged.neoforge.event.server.ServerStartedEvent event) {
         if (!Boolean.getBoolean("apparel.gaugeTest.scaleResume")) return;
         try {
             var level = event.getServer().overworld(); long started = System.nanoTime();
-            var expected = NbtIo.readCompressed(expectedFile(level));
+            var expected = NbtIo.readCompressed(expectedFile(level).toPath(), net.minecraft.nbt.NbtAccounter.unlimitedHeap());
             var data = CitizenPopulationManager.get(level).data(); var routes = CitizenRouteManager.get(level).data();
             for (var raw : expected.getList("Gauges", 10)) { var tag = (CompoundTag) raw; var gauge = data.gauge(tag.getUUID("Id"));
                 if (gauge == null || !gauge.districtId().equals(tag.getUUID("District"))) throw new AssertionError("Gauge identity did not survive restart"); }
             for (var raw : expected.getList("Citizens", 10)) { var tag = (CompoundTag) raw; var citizen = data.citizen(tag.getUUID("Id"));
                 if (citizen == null || !Objects.equals(citizen.districtId(), tag.hasUUID("District") ? tag.getUUID("District") : null)) throw new AssertionError("Citizen membership did not survive restart"); }
-            var actualLinks = data.save(new CompoundTag()).getList("Links", 10);
+            var actualLinks = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getList("Links", 10);
             if (actualLinks.size() != expected.getList("Links", 10).size() || routes.markers().size() != expected.getInt("Markers")) throw new AssertionError("Links or Route registry did not survive restart");
             restoredExpected = expected;
             LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_SCALE_RESTART gauges=%d savedCitizens=%d markers=%d startupReadyMs=%.3f registryValidationMs=%.3f",
@@ -81,12 +80,12 @@ public final class GaugeScaleGameTests {
         });
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void tickStart(TickEvent.ServerTickEvent event) {
-        if (active != null && event.phase == TickEvent.Phase.START) active.tickStarted = System.nanoTime();
+    public static void tickStart(net.neoforged.neoforge.event.tick.ServerTickEvent.Pre event) {
+        if (active != null) active.tickStarted = System.nanoTime();
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void tickEnd(TickEvent.ServerTickEvent event) {
-        if (active == null || event.phase != TickEvent.Phase.END || active.tickStarted == 0) return;
+    public static void tickEnd(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        if (active == null || active.tickStarted == 0) return;
         var run = active; long elapsed = System.nanoTime() - run.tickStarted; run.tickStarted = 0;
         run.elapsed++;
         if (run.elapsed == 100 && Boolean.getBoolean("apparel.gaugeTest.scaleProfile")) CitizenPopulationManager.get(run.level).metrics().start();
@@ -95,12 +94,12 @@ public final class GaugeScaleGameTests {
         if (run.elapsed % 20 == 0) run.peakHeap = Math.max(run.peakHeap, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void maintenanceStart(TickEvent.LevelTickEvent event) {
-        if (active != null && event.level == active.level && event.phase == TickEvent.Phase.END) active.maintenanceStarted = System.nanoTime();
+    public static void maintenanceStart(net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
+        if (active != null && event.getLevel() == active.level) active.maintenanceStarted = System.nanoTime();
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void maintenanceEnd(TickEvent.LevelTickEvent event) {
-        if (active == null || event.level != active.level || event.phase != TickEvent.Phase.END) return;
+    public static void maintenanceEnd(net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
+        if (active == null || event.getLevel() != active.level) return;
         var run = active;
         if (run.elapsed >= 100 && run.samples < SAMPLE_TICKS) {
             run.maintenance += System.nanoTime() - run.maintenanceStarted;
@@ -182,7 +181,7 @@ public final class GaugeScaleGameTests {
             if (Boolean.getBoolean("apparel.gaugeTest.scaleProfile")) { manager.metrics().stop(); LogUtils.getLogger().info("CITIZEN_MIXED_CPU_PROFILE {}", manager.metrics().summary()); }
             helper.assertTrue(samples >= SAMPLE_TICKS - 2 && manager.loadedCount() == LOADED_CITIZENS, "Stable real loaded population is maintained");
             helper.assertTrue(nodes.stream().allMatch(gauge -> data.gauge(gauge.id()) != null), "Unloaded Gauge records remain registered");
-            long start = System.nanoTime(); var nbt = data.save(new CompoundTag()); var routeNbt = routes.save(new CompoundTag()); long saveNanos = System.nanoTime() - start;
+            long start = System.nanoTime(); var nbt = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); var routeNbt = routes.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); long saveNanos = System.nanoTime() - start;
             helper.assertTrue(nbt.getList("Citizens", 10).size() == gaugeCount * 5 && routes.markers().size() == gaugeCount * 10, "Measured registry and route counts must match the scenario exactly");
             start = System.nanoTime(); CitizenPopulationSavedData.load(nbt); CitizenRouteSavedData.load(routeNbt); long loadNanos = System.nanoTime() - start;
             int bytes;
@@ -209,15 +208,19 @@ public final class GaugeScaleGameTests {
                 for (boolean spread : new boolean[]{false, true}) for (int count : new int[]{1, 4, 16}) {
                     GaugeViewSynchronization.clear(); var players = new ArrayList<net.minecraft.server.level.ServerPlayer>(); var packets = new long[2];
                     for (int i = 0; i < count; i++) {
-                        var player = new net.minecraft.server.level.ServerPlayer(level.getServer(), level, new com.mojang.authlib.GameProfile(new UUID(90, i), "GaugeView" + i));
-                        var connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
-                            private void capture(net.minecraft.network.protocol.Packet<?> packet) {
-                                if (packet instanceof net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket payload) { packets[0]++; packets[1] += payload.getData().readableBytes(); }
+                        var player = new net.minecraft.server.level.ServerPlayer(level.getServer(), level, new com.mojang.authlib.GameProfile(new UUID(90, i), "GaugeView" + i), net.minecraft.server.level.ClientInformation.createDefault());
+                        var connection = com.rexhub.createapparel.TestConnections.create(packet -> {
+                            if (packet instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket payload) {
+                                packets[0]++;
+                                var bytes = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), level.registryAccess(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
+                                try {
+                                    net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket.GAMEPLAY_STREAM_CODEC.encode(bytes, payload);
+                                    packets[1] += bytes.readableBytes();
+                                } finally { bytes.release(); }
                             }
-                            @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { capture(packet); }
-                            @Override public void send(net.minecraft.network.protocol.Packet<?> packet, net.minecraft.network.PacketSendListener listener) { capture(packet); }
-                        };
-                        player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(level.getServer(), connection, player);
+                        });
+                        player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(level.getServer(), connection, player,
+                                new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE));
                         player.setPos(.5 + (spread ? i % 4 * 16 : 0), 64, .5 + (spread ? i / 4 * 16 : 0)); player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(ModItems.CITIZEN_GAUGE.get())); players.add(player);
                     }
                     long started = System.nanoTime(); players.forEach(GaugeViewSynchronization::send); long initial = System.nanoTime() - started;
@@ -234,9 +237,9 @@ public final class GaugeScaleGameTests {
             } finally { GaugeViewSynchronization.clear(); originals.forEach(data::put); }
         }
         private void persist() {
-            var data = CitizenPopulationManager.get(level).data(); var expected = data.save(new CompoundTag());
+            var data = CitizenPopulationManager.get(level).data(); var expected = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup());
             expected.putInt("Markers", CitizenRouteManager.get(level).data().markers().size());
-            try { NbtIo.writeCompressed(expected, expectedFile(level)); }
+            try { NbtIo.writeCompressed(expected, expectedFile(level).toPath()); }
             catch (java.io.IOException exception) { throw new IllegalStateException(exception); }
             long started = System.nanoTime(); level.getServer().saveEverything(true, true, true);
             LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_SCALE_WORLD_SAVE gauges=%d savedCitizens=%d worldSaveMs=%.3f", gaugeCount, gaugeCount * 5, (System.nanoTime() - started) / 1e6));

@@ -5,10 +5,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LazyOptional;
+import net.neoforged.neoforge.capabilities.ICapabilityInvalidationListener;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.util.*;
 
 public final class RetailStorageLinks {
@@ -17,7 +16,7 @@ public final class RetailStorageLinks {
     private final Map<Long, Set<CashRegisterBlockEntity>> chunks = new HashMap<>();
     private final Map<CashRegisterBlockEntity, Set<BlockPos>> dependencies = new IdentityHashMap<>();
     private final Set<CashRegisterBlockEntity> waiting = new LinkedHashSet<>();
-    private final Set<LazyOptional<?>> capabilities = Collections.newSetFromMap(new WeakHashMap<>());
+    private final Map<BlockPos, ICapabilityInvalidationListener> capabilities = new HashMap<>();
 
     private RetailStorageLinks() { }
     public static void unload(ServerLevel level) { LEVELS.remove(level); }
@@ -67,13 +66,21 @@ public final class RetailStorageLinks {
             if (register.linkedStoragePositions().contains(pos)) register.refreshStorages();
     }
 
-    static void watch(Level level, BlockPos pos, LazyOptional<?> capability) {
+    static void watch(Level level, BlockPos pos) {
         if (!(level instanceof ServerLevel server)) return;
         var service = LEVELS.computeIfAbsent(server, ignored -> new RetailStorageLinks());
-        if (service.capabilities.add(capability)) {
-            var owner = new WeakReference<>(level);
-            capability.addListener(ignored -> RetailInspection.blockChanged(owner.get(), pos));
-        }
+        service.capabilities.computeIfAbsent(pos.immutable(), position -> {
+            ICapabilityInvalidationListener listener = () -> {
+                if (!service.positions.containsKey(position)) {
+                    service.capabilities.remove(position);
+                    return false;
+                }
+                RetailInspection.blockChanged(server, position);
+                return true;
+            };
+            server.registerCapabilityListener(position, listener);
+            return listener;
+        });
     }
 
     public static void chunkChanged(Level level, long chunk) {

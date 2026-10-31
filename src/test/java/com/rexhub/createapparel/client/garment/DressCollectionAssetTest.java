@@ -337,7 +337,7 @@ class DressCollectionAssetTest {
         var japanese = json(Path.of("src/generated/resources/assets/createapparel/lang/ja_jp.json"));
         for (String kind : LENGTHS.keySet()) for (String variant : variants(kind)) {
             String id = kind + "_" + variant;
-            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + id + ".json"));
+            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/" + id + ".json"));
             assertEquals("createapparel:" + id, recipe.getAsJsonObject("result").get("id").getAsString());
             assertEquals(2, recipe.getAsJsonObject("thread").get("count").getAsInt());
             var fabrics = recipe.getAsJsonObject("fabric");

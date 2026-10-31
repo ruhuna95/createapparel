@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -140,7 +140,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
     private Optional<ResolvedGarment> resolve(ItemStack stack, GarmentWearContext wearContext,
                                              ArmProfile armProfile, ChestProfile chestProfile, boolean itemDisplay) {
         AssetState snapshot = state;
-        ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
         if (itemId == null) {
             return Optional.empty();
         }
@@ -358,7 +358,7 @@ public final class ClientGarmentAssets implements ResourceManagerReloadListener 
             return;
         }
         for (GarmentDefinition definition : definitionsToValidate.values()) {
-            if (!(ForgeRegistries.ITEMS.getValue(definition.id()) instanceof GarmentItem)) {
+            if (!(BuiltInRegistries.ITEM.get(definition.id()) instanceof GarmentItem)) {
                 throw new IllegalStateException("Unknown garment item: " + definition.id());
             }
             GarmentModelTemplate template = templatesToValidate.get(definition.modelTemplate());

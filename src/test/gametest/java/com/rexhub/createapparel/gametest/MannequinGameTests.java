@@ -18,8 +18,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -66,7 +66,7 @@ public final class MannequinGameTests {
 
     @GameTest(template = "apparel_state", batch = "mannequin")
     public static void vanillaPickingReachesHandsAndSneakingReturnsGarments(GameTestHelper helper) {
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         for (var variant : MannequinVariant.values()) {
             if (!variant.form().hasTorso()) continue;
@@ -115,7 +115,7 @@ public final class MannequinGameTests {
 
     @GameTest(template = "apparel_state", batch = "mannequin")
     public static void scaledPickingRejectsTheOldSilhouetteAndReturnsOnlyTheAimedGarment(GameTestHelper helper) {
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         player.setShiftKeyDown(true);
         for (var variant : MannequinVariant.values()) {
@@ -146,7 +146,7 @@ public final class MannequinGameTests {
     public static void sneakRemovalRequiresAnUnobstructedAimWithinReach(GameTestHelper helper) {
         var entity = create(helper, MannequinVariant.FULL_WHITE_CLASSIC);
         entity.setYRot(0);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         player.setShiftKeyDown(true);
         var loadout = entity.mannequinState().loadout();
@@ -162,7 +162,7 @@ public final class MannequinGameTests {
         aim(player, start, end);
         helper.assertTrue(!entity.interactAt(player, fakeHit, InteractionHand.MAIN_HAND).consumesAction(),
                 "A forged body hit cannot remove garments when the actual aim misses");
-        aim(player, torso.add(0, 0, player.getEntityReach() + 2), torso);
+        aim(player, torso.add(0, 0, player.entityInteractionRange() + 2), torso);
         helper.assertTrue(!entity.interactAt(player, fakeHit, InteractionHand.MAIN_HAND).consumesAction(),
                 "Actual target must be within entity reach");
         aim(player, torso.add(0, 0, 2), torso);
@@ -230,12 +230,12 @@ public final class MannequinGameTests {
     public static void clientMenuViewsValidateSyncedDefinitionsWithoutServerLookup(GameTestHelper helper) {
         var entity = create(helper, MannequinVariant.UPPER_WHITE_CLASSIC);
         helper.getLevel().addFreshEntity(entity);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         var definitions = new java.util.HashMap<net.minecraft.resources.ResourceLocation,
                 com.rexhub.createapparel.garment.GarmentDefinition>();
         com.rexhub.createapparel.garment.GarmentDefinitionManager.all().forEach(definition -> definitions.put(definition.id(), definition));
-        var mannequinBuffer = new FriendlyByteBuf(Unpooled.buffer());
-        var wardrobeBuffer = new FriendlyByteBuf(Unpooled.buffer());
+        var mannequinBuffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
+        var wardrobeBuffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
         try {
             mannequinBuffer.writeVarInt(entity.getId());
             wardrobeBuffer.writeBlockPos(entity.blockPosition());
@@ -280,7 +280,7 @@ public final class MannequinGameTests {
             for (var slot : variant.form().slots()) {
                 var definition = com.rexhub.createapparel.garment.GarmentDefinitionManager.all().stream()
                         .filter(d -> d.allowedSlots().contains(slot)).findFirst().orElseThrow();
-                var item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(definition.id());
+                var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(definition.id());
                 loadout.setStackInSlot(slot.ordinal(), new ItemStack(java.util.Objects.requireNonNull(item)));
             }
             for (var pose : variant.form().poses()) for (float yaw : new float[]{0, 45, 135, -170}) for (int step : new int[]{0, 1, 7, 15}) {
@@ -335,22 +335,22 @@ public final class MannequinGameTests {
     public static void rotationPacketsAndLegacyStateRoundTrip(GameTestHelper helper) {
         for (int step = 0; step < MannequinState.ROTATION_STEPS; step++) {
             var packet = MannequinActionPacket.rotationStep(43, step % 2 == 0 ? 1 : -1);
-            var buffer = new FriendlyByteBuf(Unpooled.buffer());
+            var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
             try {
                 packet.encode(buffer);
                 helper.assertTrue(packet.equals(MannequinActionPacket.decode(buffer)), "Rotation packet round trip");
             } finally { buffer.release(); }
             var state = new MannequinState(MannequinForm.FULL);
             state.setBodyRotationStep(step);
-            var saved = state.serializeNBT();
+            var saved = state.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
             var restored = new MannequinState(MannequinForm.FULL);
-            restored.deserializeNBT(saved, MannequinForm.FULL);
+            restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), saved, MannequinForm.FULL);
             helper.assertTrue(restored.bodyRotationDegrees() == step * 22.5F, "All 16 rotation steps persist");
             saved.remove("BodyRotationStep");
-            restored.deserializeNBT(saved, MannequinForm.FULL);
+            restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), saved, MannequinForm.FULL);
             helper.assertTrue(restored.bodyRotationStep() == 0, "Legacy saves default to no body offset");
             saved.putInt("BodyRotationStep", 16);
-            restored.deserializeNBT(saved, MannequinForm.FULL);
+            restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), saved, MannequinForm.FULL);
             helper.assertTrue(restored.bodyRotationStep() == 0, "Malformed rotation save uses safe default");
         }
         helper.succeed();
@@ -367,7 +367,7 @@ public final class MannequinGameTests {
             for (GarmentSlot slot : GarmentSlot.values()) {
                 var definition = com.rexhub.createapparel.garment.GarmentDefinitionManager.all().stream()
                         .filter(d -> d.allowedSlots().contains(slot)).findFirst().orElseThrow();
-                var item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(definition.id());
+                var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(definition.id());
                 ItemStack stack = new ItemStack(java.util.Objects.requireNonNull(item));
                 boolean supported = variant.form().slots().contains(slot);
                 helper.assertTrue(loadout.isItemValid(slot.ordinal(), stack) == supported, "Form slot validation: " + variant + "/" + slot);
@@ -381,7 +381,7 @@ public final class MannequinGameTests {
                 }
             }
             helper.assertTrue(!loadout.isItemValid(GarmentSlot.HEAD.ordinal(), new ItemStack(Items.STONE)), "Reject non-garments");
-            var saved = entity.mannequinState().serializeNBT();
+            var saved = entity.mannequinState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
             helper.assertTrue(saved.getAllKeys().equals(java.util.Set.of("ApparelLoadout", "PosePreset", "BodyRotationStep")), "Only mutable state is saved");
             var apparel = saved.getCompound("ApparelLoadout");
             helper.assertTrue(!apparel.contains("ChestProfile") && !apparel.contains("SkinTone") && !apparel.contains("ArmProfile"), "No player profile NBT");
@@ -419,16 +419,16 @@ public final class MannequinGameTests {
                 helper.assertTrue(restored.mannequinState().pose() == pose && restored.getYRot() == 135, "Pose and vanilla yaw persist");
                 helper.assertTrue(restored.mannequinState().bodyRotationStep() == entity.mannequinState().bodyRotationStep(),
                         "Relative body rotation persists separately from vanilla yaw");
-                helper.assertTrue(restored.mannequinState().loadout().serializeNBT().equals(loadout.serializeNBT()), "Items, appearance and style persist");
+                helper.assertTrue(restored.mannequinState().loadout().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(loadout.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Items, appearance and style persist");
                 var state = entity.getEntityData().getNonDefaultValues().stream().map(value -> value.value())
                         .filter(value -> value instanceof net.minecraft.nbt.CompoundTag tag && tag.contains("ApparelLoadout"))
                         .map(value -> (net.minecraft.nbt.CompoundTag) value).findFirst().orElseThrow();
-                FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+                net.minecraft.network.RegistryFriendlyByteBuf buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
                 try {
-                    EntityDataSerializers.COMPOUND_TAG.write(buffer, state);
+                    EntityDataSerializers.COMPOUND_TAG.codec().encode(buffer, state);
                     var client = new MannequinState(variant.form());
-                    client.deserializeNBT(EntityDataSerializers.COMPOUND_TAG.read(buffer), variant.form());
-                    helper.assertTrue(client.serializeNBT().equals(entity.mannequinState().serializeNBT()), "Tracking payload includes all mutable state");
+                    client.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), EntityDataSerializers.COMPOUND_TAG.codec().decode(buffer), variant.form());
+                    helper.assertTrue(client.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(entity.mannequinState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Tracking payload includes all mutable state");
                 } finally { buffer.release(); }
             }
             helper.assertTrue(!entity.mannequinState().setPose(
@@ -441,7 +441,7 @@ public final class MannequinGameTests {
     public static void menuActionsAreServerAuthoritative(GameTestHelper helper) {
         var entity = create(helper, MannequinVariant.UPPER_WHITE_CLASSIC);
         var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "mannequin-test"));
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "mannequin-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.setPos(entity.getX(), entity.getY(), entity.getZ());
         var menu = new MannequinMenu(17, player.getInventory(), entity);
         player.containerMenu = menu;
@@ -487,7 +487,7 @@ public final class MannequinGameTests {
         entity.setYRot(0);
         entity.yBodyRot = entity.yBodyRotO = 0;
         helper.getLevel().addFreshEntity(entity);
-        var source = helper.makeMockPlayer();
+        var source = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         Vec3 gap = entity.position().add(0.9, 1.2, 0);
         Vec3 start = gap.add(0, 0, 2);
         Vec3 end = gap.add(0, 0, -2);
@@ -538,7 +538,7 @@ public final class MannequinGameTests {
     public static void normalInteractionRequiresAnActualShapeAndPedestalStillAcceptsApparel(GameTestHelper helper) {
         var entity = create(helper, MannequinVariant.UPPER_BLACK_SLIM);
         entity.setYRot(0);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         Vec3 gap = entity.position().add(0.9, 1.2, 0);
         aim(player, gap.add(0, 0, 2), gap);
@@ -561,7 +561,7 @@ public final class MannequinGameTests {
     @GameTest(template = "apparel_state", batch = "mannequin")
     public static void consecutiveGuiStepsUseServerStateAndRejectInvalidOrStalePackets(GameTestHelper helper) {
         var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "mannequin-steps"));
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "mannequin-steps"), net.minecraft.server.level.ClientInformation.createDefault());
         for (var variant : MannequinVariant.values()) {
             var entity = create(helper, variant);
             var state = entity.mannequinState();
@@ -584,35 +584,35 @@ public final class MannequinGameTests {
                 helper.assertTrue(state.pose() == poses.get(index), "Pose delta cycles within " + variant.form());
             }
             for (int delta : new int[]{0, 2, -2, Integer.MIN_VALUE, Integer.MAX_VALUE}) {
-                var before = state.serializeNBT();
+                var before = state.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
                 MannequinActionPacket.poseStep(71, delta).handle(player);
                 MannequinActionPacket.rotationStep(71, delta).handle(player);
-                helper.assertTrue(state.serializeNBT().equals(before), "Invalid delta preserves state: " + delta);
+                helper.assertTrue(state.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(before), "Invalid delta preserves state: " + delta);
                 for (var packet : java.util.List.of(MannequinActionPacket.poseStep(71, delta),
                         MannequinActionPacket.rotationStep(71, delta))) {
-                    var buffer = new FriendlyByteBuf(Unpooled.buffer());
+                    var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
                     try {
                         packet.encode(buffer);
                         helper.assertTrue(packet.equals(MannequinActionPacket.decode(buffer)), "Signed delta round trip");
                     } finally { buffer.release(); }
                 }
             }
-            var before = state.serializeNBT();
+            var before = state.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
             MannequinActionPacket.poseStep(72, 1).handle(player);
             MannequinActionPacket.rotationStep(72, -1).handle(player);
-            helper.assertTrue(state.serializeNBT().equals(before), "Wrong container cannot step");
+            helper.assertTrue(state.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(before), "Wrong container cannot step");
             player.setPos(entity.getX() + 20, entity.getY(), entity.getZ());
             MannequinActionPacket.poseStep(71, 1).handle(player);
             MannequinActionPacket.rotationStep(71, -1).handle(player);
-            helper.assertTrue(state.serializeNBT().equals(before), "Out-of-reach menu cannot step");
+            helper.assertTrue(state.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(before), "Out-of-reach menu cannot step");
             player.setPos(entity.getX(), entity.getY(), entity.getZ());
             player.containerMenu = player.inventoryMenu;
             MannequinActionPacket.poseStep(71, 1).handle(player);
             MannequinActionPacket.rotationStep(71, -1).handle(player);
-            helper.assertTrue(state.serializeNBT().equals(before), "Closed menu cannot step");
+            helper.assertTrue(state.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(before), "Closed menu cannot step");
         }
         var style = MannequinActionPacket.style(71, GarmentSlot.TOP, "sleeves", "rolled");
-        var buffer = new FriendlyByteBuf(Unpooled.buffer());
+        var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
         try {
             style.encode(buffer);
             helper.assertTrue(style.equals(MannequinActionPacket.decode(buffer)), "Style wire format round trip");
@@ -623,7 +623,7 @@ public final class MannequinGameTests {
     @GameTest(template = "apparel_state", batch = "mannequin")
     public static void interactionsAndFullInventoryDoNotLoseItems(GameTestHelper helper) {
         var entity = create(helper, MannequinVariant.FULL_BLACK_SLIM);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SHIRT_LONGSLEEVES.get(), 2));
         Vec3 equipTarget = entity.position().add(modelToEntity(entity.variant(), new org.joml.Vector3f(0, 6, -2), entity.getYRot()));
@@ -654,7 +654,7 @@ public final class MannequinGameTests {
             entity.moveTo(entity.getX() + (creative ? 10 : 0), entity.getY(), entity.getZ());
             helper.getLevel().addFreshEntity(entity);
             entity.mannequinState().loadout().insertItem(GarmentSlot.TOP.ordinal(), new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()), false);
-            var player = helper.makeMockPlayer();
+            var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
             player.getAbilities().instabuild = creative;
             var source = helper.getLevel().damageSources().playerAttack(player);
             var previousDrops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2))
@@ -698,7 +698,7 @@ public final class MannequinGameTests {
         double beforeExternalMovement = entity.getX();
         entity.travel(Vec3.ZERO);
         helper.assertTrue(entity.getX() > beforeExternalMovement, "External velocity is retained");
-        helper.assertTrue(!entity.isPushable() && !entity.isPushedByFluid(net.minecraftforge.common.ForgeMod.WATER_TYPE.get())
+        helper.assertTrue(!entity.isPushable() && !entity.isPushedByFluid(net.neoforged.neoforge.common.NeoForgeMod.WATER_TYPE.value())
                 && entity.getPistonPushReaction() == net.minecraft.world.level.material.PushReaction.NORMAL, "No fluid push, normal piston response");
         entity.mannequinState().loadout().insertItem(GarmentSlot.INNER_BOTTOM.ordinal(), new ItemStack(ModItems.BRIEFS.get()), false);
         entity.mannequinState().setPose(PosePreset.CROSS_LEG, entity.variant().form());
@@ -735,12 +735,12 @@ public final class MannequinGameTests {
             entity.mannequinState().loadout().insertItem(slot.ordinal(),
                     new ItemStack(variant.form().hasHead() ? ModItems.CAP.get() : ModItems.BRIEFS.get()), false);
             entity.mannequinState().setPose(variant.form().poses().get(variant.form().poses().size() - 1), variant.form());
-            var before = entity.mannequinState().serializeNBT();
+            var before = entity.mannequinState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
             state.entityInside(helper.getLevel(), pos, entity);
             helper.assertTrue(Math.abs(entity.getYRot() - 125.4F) < 0.001, "Create rotates vanilla yaw for " + variant.id());
             helper.assertTrue(Math.abs(entity.yBodyRot - entity.getYRot()) < 0.001
                     && Math.abs(entity.yHeadRot - entity.getYRot()) < 0.001, "Body and head follow turntable yaw");
-            helper.assertTrue(entity.mannequinState().serializeNBT().equals(before), "Turntable does not edit pose or garments");
+            helper.assertTrue(entity.mannequinState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(before), "Turntable does not edit pose or garments");
             entity.tick();
             helper.assertTrue(Math.abs(entity.getYRot() - 125.4F) < 0.001, "Tick preserves external rotation");
             if (variant.form() == MannequinForm.HEAD) {
@@ -807,24 +807,24 @@ public final class MannequinGameTests {
             var direct = manager.byKey(directId);
             helper.assertTrue(direct.isEmpty() == (variant.armProfile() == com.rexhub.createapparel.apparel.ArmProfile.SLIM),
                     "Only classic and profile-free forms have direct recipes");
-            direct.ifPresent(recipe -> helper.assertTrue(recipe instanceof net.minecraft.world.item.crafting.ShapedRecipe
-                    && recipe.getResultItem(helper.getLevel().registryAccess()).is(ModItems.mannequins().get(variant).get()),
+            direct.ifPresent(recipe -> helper.assertTrue(recipe.value() instanceof net.minecraft.world.item.crafting.ShapedRecipe
+                    && recipe.value().getResultItem(helper.getLevel().registryAccess()).is(ModItems.mannequins().get(variant).get()),
                     "Vanilla shaped result matches type"));
             if (!variant.form().hasTorso()) continue;
             var other = java.util.Arrays.stream(MannequinVariant.values()).filter(v -> v.form() == variant.form()
                     && v.color() == variant.color() && v.armProfile() != variant.armProfile()).findFirst().orElseThrow();
             var recipe = (net.minecraft.world.item.crafting.CraftingRecipe) manager.byKey(
                     net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
-                            other.id() + "_from_" + variant.id())).orElseThrow();
+                            other.id() + "_from_" + variant.id())).orElseThrow().value();
             var grid = new net.minecraft.world.inventory.TransientCraftingContainer(dummyMenu, 2, 2);
             for (int slot = 0; slot < 4; slot++) {
                 grid.clearContent();
                 grid.setItem(slot, new ItemStack(ModItems.mannequins().get(variant).get()));
-                helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Single item shapeless matches every grid position");
-                helper.assertTrue(recipe.assemble(grid, helper.getLevel().registryAccess()).is(ModItems.mannequins().get(other).get()),
+                helper.assertTrue(recipe.matches(grid.asCraftInput(), helper.getLevel()), "Single item shapeless matches every grid position");
+                helper.assertTrue(recipe.assemble(grid.asCraftInput(), helper.getLevel().registryAccess()).is(ModItems.mannequins().get(other).get()),
                         "Same form/color opposite profile result");
                 grid.setItem((slot + 1) % 4, new ItemStack(Items.WHITE_DYE));
-                helper.assertTrue(!recipe.matches(grid, helper.getLevel()), "Conversion takes only the mannequin item");
+                helper.assertTrue(!recipe.matches(grid.asCraftInput(), helper.getLevel()), "Conversion takes only the mannequin item");
             }
         }
         helper.succeed();

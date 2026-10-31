@@ -21,7 +21,7 @@ final class CitizenRenderWorldChecks {
         if (failure != null) throw new AssertionError("World rendering checks failed", failure);
         if (pending) return false;
         var mc = Minecraft.getInstance();
-        var renderer = (CitizenRenderer) mc.getEntityRenderDispatcher().renderers.get(com.rexhub.createapparel.init.ModEntities.CITIZEN.get());
+        var renderer = (CitizenRenderer) mc.getEntityRenderDispatcher().getRenderer(new Citizen(com.rexhub.createapparel.init.ModEntities.CITIZEN.get(), mc.level));
         var field = CitizenRenderer.class.getDeclaredField("snapshots"); field.setAccessible(true);
         var snapshots = (Map<?, ?>) field.get(renderer);
         ticks++;
@@ -40,7 +40,13 @@ final class CitizenRenderWorldChecks {
         }
         if (ticks == 190 && LODS.values().stream().noneMatch(set -> set.containsAll(Set.of(0, 1, 2, 3))))
             throw new AssertionError("Moving Citizens did not traverse all LODs: " + LODS);
-        if (ticks == 280 && VIEWS.size() < 2) throw new AssertionError("Independent mirror LOD views were not rendered: " + VIEWS.size());
+        if (ticks == 275) {
+            net.minecraft.client.Screenshot.grab(new java.io.File(System.getProperty("apparel.gaugeTest.projectDir"), "build"),
+                    "citizen-render-mirrors.png", mc.getMainRenderTarget(), ignored -> { });
+            LogUtils.getLogger().info("CITIZEN_MIRROR_DIAGNOSTICS {}", mirrorState(snapshots));
+        }
+        if (ticks == 280 && VIEWS.size() < 2) throw new AssertionError("Independent mirror LOD views were not rendered: "
+                + VIEWS.size() + " " + mirrorState(snapshots));
         if (ticks == 280) beforeUnload = CitizenRenderClientChecks.clientCitizens();
         if (ticks > 300 && ticks < 360 && CitizenRenderClientChecks.clientCitizens().isEmpty()) {
             unloaded = true;
@@ -71,5 +77,26 @@ final class CitizenRenderWorldChecks {
             } catch (Throwable exception) { failure = exception; } finally { pending = false; }
         });
         return false;
+    }
+
+    private static String mirrorState(Map<?, ?> snapshots) throws ReflectiveOperationException {
+        var mc = Minecraft.getInstance();
+        var mirrors = com.rexhub.createapparel.client.mirror.MirrorRenderManager.INSTANCE;
+        var view = field(mirrors, "mainView");
+        var reflections = snapshots.values().stream().map(cache -> {
+            try { return String.valueOf(field(cache, "reflectionLods")); }
+            catch (ReflectiveOperationException exception) { throw new IllegalStateException(exception); }
+        }).toList();
+        return "camera=" + mc.gameRenderer.getMainCamera().getPosition() + " frame=" + field(mirrors, "frame")
+                + " failed=" + field(mirrors, "failed") + " shader=" + field(mirrors, "shader")
+                + " submissions=" + ((Map<?, ?>) field(view, "submissions")).size()
+                + " clusters=" + ((List<?>) field(view, "clusters")).size()
+                + " textures=" + ((Map<?, ?>) field(view, "textures")).size() + " reflections=" + reflections;
+    }
+
+    private static Object field(Object target, String name) throws ReflectiveOperationException {
+        var field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(target);
     }
 }

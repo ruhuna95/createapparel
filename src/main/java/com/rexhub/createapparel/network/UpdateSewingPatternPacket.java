@@ -20,7 +20,17 @@ public record UpdateSewingPatternPacket(
         String design,
         Optional<FabricColor> secondaryColor,
         Optional<FabricColor> accentColor
-) {
+) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<UpdateSewingPatternPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "update_sewing_pattern_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, UpdateSewingPatternPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), UpdateSewingPatternPacket::decode);
+
+    @Override
+    public Type<UpdateSewingPatternPacket> type() {
+        return TYPE;
+    }
+
     private static final int MAX_DESIGN_LENGTH = 64;
 
     public UpdateSewingPatternPacket {
@@ -55,7 +65,8 @@ public record UpdateSewingPatternPacket(
         SewingRecipe recipe = player.level().getRecipeManager()
                 .getAllRecipesFor(SewingRecipe.recipeType())
                 .stream()
-                .filter(candidate -> candidate.getId().equals(recipeId))
+                .filter(candidate -> candidate.id().equals(recipeId))
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
                 .findFirst()
                 .orElse(null);
         if (recipe == null || !recipe.matchesPatternItem(stack)) {

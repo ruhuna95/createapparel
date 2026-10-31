@@ -1,6 +1,6 @@
 {
   "parent": "block/block",
-  "loader": "forge:obj",
+  "loader": "neoforge:obj",
   "flip_v": false,
   "model": "createapparel:models/block/spinning_machine/bobbin_thread.obj",
   "textures": {

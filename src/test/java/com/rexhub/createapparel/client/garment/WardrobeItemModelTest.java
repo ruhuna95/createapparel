@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.renderer.block.model.BlockElement;
 import net.minecraft.core.Direction;
-import net.minecraftforge.client.model.ExtendedBlockModelDeserializer;
+import net.neoforged.neoforge.client.model.ExtendedBlockModelDeserializer;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -39,9 +39,9 @@ class WardrobeItemModelTest {
                     var direction = Direction.byName(face.getKey());
                     var expectedFace = expectedElement.faces.get(direction);
                     var actualFace = actualElement.faces.get(direction);
-                    assertArrayEquals(expectedFace.uv.uvs, actualFace.uv.uvs, 0.000001f);
-                    assertEquals(expectedFace.texture, actualFace.texture);
-                    assertEquals(expectedFace.uv.rotation, actualFace.uv.rotation);
+                    assertArrayEquals(expectedFace.uv().uvs, actualFace.uv().uvs, 0.000001f);
+                    assertEquals(expectedFace.texture(), actualFace.texture());
+                    assertEquals(expectedFace.uv().rotation, actualFace.uv().rotation);
                     String texture = face.getValue().getAsJsonObject().get("texture").getAsString().substring(1);
                     assertEquals(block.getAsJsonObject("textures").get(texture), item.getAsJsonObject("textures").get(texture));
                 }

@@ -11,7 +11,7 @@ def productionRenderingJar = tasks.named('jar', Jar).flatMap { it.archiveFile }
 tasks.register('verifyProductionRendering') {
     group = 'verification'
     description = 'Rejects Citizen rendering fixtures and retired animation trials in the distribution jar.'
-    dependsOn 'reobfJar'
+    dependsOn 'jar'
     inputs.file(productionRenderingJar)
     inputs.files(fileTree('src/test/gauge/java') { include '**/*.java'; exclude '**/package-info.java' })
     doLast {
@@ -41,13 +41,10 @@ tasks.register('verifyProductionRendering') {
 tasks.named('check').configure { dependsOn 'verifyProductionRendering' }
 
 if (providers.gradleProperty('gaugeTrash').getOrElse('false').toBoolean()) {
-    repositories {
-        flatDir { dirs project.file('run/gauge-tests/dependencies'); content { includeGroup 'local.gauge' } }
-    }
     dependencies {
-        gaugeTestRuntimeOnly fg.deobf('local.gauge:trashcans:1.1.1a-forge-mc1.20.4')
-        gaugeTestRuntimeOnly fg.deobf('local.gauge:supermartijn642configlib:1.1.8-forge-mc1.20')
-        gaugeTestRuntimeOnly fg.deobf('local.gauge:supermartijn642corelib:1.1.25a-forge-mc1.20.1')
+        gaugeTestRuntimeOnly 'maven.modrinth:trash-cans:TbzPls06'
+        gaugeTestRuntimeOnly 'maven.modrinth:supermartijn642s-config-lib:qKL9jM75'
+        gaugeTestRuntimeOnly 'maven.modrinth:supermartijn642s-core-lib:HGyYs7Z4'
     }
 }
 
@@ -55,42 +52,42 @@ def gaugeTestRunId = providers.gradleProperty('gaugeTestRunId').getOrElse("${Sys
 if (!(gaugeTestRunId ==~ /[A-Za-z0-9_-]+/)) throw new GradleException('Invalid gaugeTestRunId')
 def gaugeTestServerDirectory = file("run/gauge-tests/server-${gaugeTestRunId}")
 def gaugeTestClientDirectory = file('run/gauge-tests/client')
-minecraft.runs {
+neoForge.runs {
     gaugeTestServer {
-        parent minecraft.runs.gameTestServer
-        workingDirectory gaugeTestServerDirectory
-        property 'apparel.gaugeTest.server', 'true'
-        property 'apparel.gaugeTest.scale', providers.gradleProperty('gaugeScale').getOrElse('false')
-        property 'apparel.gaugeTest.scaleCase', providers.gradleProperty('gaugeScaleCase').getOrElse('0')
-        property 'apparel.gaugeTest.scaleResume', providers.gradleProperty('gaugeScaleResume').getOrElse('false')
-        property 'apparel.gaugeTest.scaleProfile', providers.gradleProperty('gaugeScaleProfile').getOrElse('false')
-        property 'apparel.gaugeTest.moving', providers.gradleProperty('gaugeMoving').getOrElse('false')
-        property 'apparel.gaugeTest.movingResume', providers.gradleProperty('gaugeMovingResume').getOrElse('false')
-        property 'apparel.gaugeTest.trash', providers.gradleProperty('gaugeTrash').getOrElse('false')
-        property 'apparel.gaugeTest.performance', providers.gradleProperty('gaugePerformance').getOrElse('false')
-        property 'apparel.gaugeTest.performanceCount', providers.gradleProperty('gaugePerformanceCount').getOrElse('100')
-        property 'apparel.gaugeTest.performanceProfile', providers.gradleProperty('gaugePerformanceProfile').getOrElse('true')
-        property 'apparel.gaugeTest.performanceSteady', providers.gradleProperty('gaugePerformanceSteady').getOrElse('false')
-        property 'apparel.gaugeTest.performanceSampleTicks', providers.gradleProperty('gaugePerformanceSampleTicks').getOrElse('400')
-        property 'apparel.diagnostics.testWorld', providers.gradleProperty('gaugePerformance').getOrElse('false')
-        property 'apparel.gaugeTest.performanceJfr', providers.gradleProperty('gaugePerformanceJfr').getOrElse('false')
+        type = 'gameTestServer'
+        gameDirectory = gaugeTestServerDirectory
+        systemProperty 'apparel.gaugeTest.server', 'true'
+        systemProperty 'apparel.gaugeTest.scale', providers.gradleProperty('gaugeScale').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.scaleCase', providers.gradleProperty('gaugeScaleCase').getOrElse('0')
+        systemProperty 'apparel.gaugeTest.scaleResume', providers.gradleProperty('gaugeScaleResume').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.scaleProfile', providers.gradleProperty('gaugeScaleProfile').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.moving', providers.gradleProperty('gaugeMoving').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.movingResume', providers.gradleProperty('gaugeMovingResume').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.trash', providers.gradleProperty('gaugeTrash').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.performance', providers.gradleProperty('gaugePerformance').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.performanceCount', providers.gradleProperty('gaugePerformanceCount').getOrElse('100')
+        systemProperty 'apparel.gaugeTest.performanceProfile', providers.gradleProperty('gaugePerformanceProfile').getOrElse('true')
+        systemProperty 'apparel.gaugeTest.performanceSteady', providers.gradleProperty('gaugePerformanceSteady').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.performanceSampleTicks', providers.gradleProperty('gaugePerformanceSampleTicks').getOrElse('400')
+        systemProperty 'apparel.diagnostics.testWorld', providers.gradleProperty('gaugePerformance').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.performanceJfr', providers.gradleProperty('gaugePerformanceJfr').getOrElse('false')
         ['debugDisableCitizenAutonomy', 'debugDisableCitizenBehaviorGoal', 'debugDisableCitizenPopulationTick', 'debugDisableCitizenRoutePlanning'].each { diagnostic ->
-            property "apparel.diagnostics.${diagnostic}", providers.gradleProperty(diagnostic).getOrElse('false')
+            systemProperty "apparel.diagnostics.${diagnostic}", providers.gradleProperty(diagnostic).getOrElse('false')
         }
-        property 'forge.logging.console.level', 'info'
-        mods { "${mod_id}" { source sourceSets.gaugeTest } }
+        systemProperty 'forge.logging.console.level', 'info'
+        sourceSet = sourceSets.gaugeTest
     }
     gaugeTestClient {
-        parent minecraft.runs.client
-        workingDirectory gaugeTestClientDirectory
-        property 'forge.logging.console.level', 'info'
-        property 'apparel.gaugeTest.projectDir', projectDir.absolutePath
-        property 'apparel.gaugeTest.resume', providers.gradleProperty('gaugeResume').getOrElse('false')
-        property 'apparel.gaugeTest.skipClipboard', providers.gradleProperty('gaugeSkipClipboard').getOrElse('false')
-        property 'apparel.gaugeTest.renderClient', providers.gradleProperty('gaugeRenderClient').getOrElse('false')
-        property 'apparel.gaugeTest.displayPerformance', providers.gradleProperty('gaugeDisplayPerformance').getOrElse('false')
-        property 'apparel.gaugeTest.renderReference', providers.gradleProperty('gaugeRenderReference').getOrElse('off')
-        mods { "${mod_id}" { source sourceSets.gaugeTest } }
+        client()
+        gameDirectory = gaugeTestClientDirectory
+        systemProperty 'forge.logging.console.level', 'info'
+        systemProperty 'apparel.gaugeTest.projectDir', projectDir.absolutePath
+        systemProperty 'apparel.gaugeTest.resume', providers.gradleProperty('gaugeResume').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.skipClipboard', providers.gradleProperty('gaugeSkipClipboard').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.renderClient', providers.gradleProperty('gaugeRenderClient').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.displayPerformance', providers.gradleProperty('gaugeDisplayPerformance').getOrElse('false')
+        systemProperty 'apparel.gaugeTest.renderReference', providers.gradleProperty('gaugeRenderReference').getOrElse('off')
+        sourceSet = sourceSets.gaugeTest
     }
 }
 
@@ -100,7 +97,7 @@ tasks.register('prepareGaugeTestWorld', Copy) {
     into gaugeTestServerDirectory
 }
 
-tasks.matching { it.name == 'prepareRunGaugeTestServer' }.configureEach { dependsOn 'prepareGaugeTestWorld' }
+tasks.matching { it.name == 'prepareGaugeTestServerRun' }.configureEach { dependsOn 'prepareGaugeTestWorld' }
 
 tasks.matching { it.name == 'runGaugeTestServer' }.configureEach {
     doFirst { ext.gaugeTestStartedAt = System.currentTimeMillis() }

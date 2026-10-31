@@ -196,7 +196,7 @@ class NeckAccessoryAssetTest {
     void necklaceManufacturingUsesThreeNuggetsThenTaggedGemsAndOnlyAppearanceNbt() throws Exception {
         for (var metal : MetalAccessoryData.MetalColor.values()) {
             String name = metal.getSerializedName();
-            var compacting = json(GENERATED.resolve("recipes/compacting/" + name + "_necklace_base.json"));
+            var compacting = json(GENERATED.resolve("recipe/compacting/" + name + "_necklace_base.json"));
             assertEquals("create:compacting", compacting.get("type").getAsString());
             assertEquals(3, compacting.getAsJsonArray("ingredients").size());
             for (var ingredient : compacting.getAsJsonArray("ingredients")) {
@@ -206,17 +206,17 @@ class NeckAccessoryAssetTest {
                     assertEquals("minecraft:gold_nugget", ingredient.getAsJsonObject().get("item").getAsString());
                 }
             }
-            assertFalse(compacting.has("heatRequirement"));
+            assertFalse(compacting.has("heat_requirement"));
             for (var gem : MetalAccessoryData.Gem.values()) {
-                var recipe = json(GENERATED.resolve("recipes/deploying/necklace/" + name + "_" + gem.getSerializedName() + ".json"));
+                var recipe = json(GENERATED.resolve("recipe/deploying/necklace/" + name + "_" + gem.getSerializedName() + ".json"));
                 assertEquals("create:deploying", recipe.get("type").getAsString());
                 assertEquals("createapparel:" + name + "_necklace_base",
                         recipe.getAsJsonArray("ingredients").get(0).getAsJsonObject().get("item").getAsString());
                 assertEquals("createapparel:gems/" + gem.getSerializedName(),
                         recipe.getAsJsonArray("ingredients").get(1).getAsJsonObject().get("tag").getAsString());
                 var result = recipe.getAsJsonArray("results").get(0).getAsJsonObject();
-                assertEquals("createapparel:necklace", result.get("item").getAsString());
-                var root = result.getAsJsonObject("nbt");
+                assertEquals("createapparel:necklace", result.get("id").getAsString());
+                var root = result.getAsJsonObject("components").getAsJsonObject("minecraft:custom_data");
                 assertEquals(Set.of(MetalAccessoryData.TAG_NAME), root.keySet());
                 var data = root.getAsJsonObject(MetalAccessoryData.TAG_NAME);
                 assertEquals(Set.of("metal_color", "gem"), data.keySet());
@@ -225,7 +225,7 @@ class NeckAccessoryAssetTest {
             }
         }
         for (var gem : MetalAccessoryData.Gem.values()) {
-            var tag = json(GENERATED.resolve("tags/items/gems/" + gem.getSerializedName() + ".json"));
+            var tag = json(GENERATED.resolve("tags/item/gems/" + gem.getSerializedName() + ".json"));
             String fallback = switch (gem) {
                 case DIAMOND -> "diamond";
                 case EMERALD -> "emerald";
@@ -239,19 +239,19 @@ class NeckAccessoryAssetTest {
             if (gem == MetalAccessoryData.Gem.RUBY || gem == MetalAccessoryData.Gem.SAPPHIRE) {
                 assertEquals(2, values.size());
                 var optional = values.get(1).getAsJsonObject();
-                assertEquals("#forge:gems/" + gem.getSerializedName(), optional.get("id").getAsString());
+                assertEquals("#c:gems/" + gem.getSerializedName(), optional.get("id").getAsString());
                 assertFalse(optional.get("required").getAsBoolean());
             } else {
                 assertEquals(1, values.size());
             }
         }
-        var tie = json(GENERATED.resolve("recipes/necktie.json"));
+        var tie = json(GENERATED.resolve("recipe/necktie.json"));
         assertEquals("createapparel:sewing", tie.get("type").getAsString());
         assertEquals(1, tie.getAsJsonObject("fabric").get("count").getAsInt());
         assertEquals(1, tie.getAsJsonObject("thread").get("count").getAsInt());
         assertEquals(JsonParser.parseString("[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/wool\",\"createapparel:fabrics/silk\",\"createapparel:fabrics/synthetic\"]"),
                 tie.getAsJsonObject("fabric").get("tag"));
-        assertFalse(Files.exists(GENERATED.resolve("recipes/necklace.json")));
+        assertFalse(Files.exists(GENERATED.resolve("recipe/necklace.json")));
     }
 
     private static GarmentPartModel part(String id, String semantic) throws Exception {

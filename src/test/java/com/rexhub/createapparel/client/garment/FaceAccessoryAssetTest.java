@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FaceAccessoryAssetTest {
     private static final Path ASSETS = Path.of("src/main/resources/assets/createapparel");
-    private static final Path RECIPES = Path.of("src/generated/resources/data/createapparel/recipes");
+    private static final Path RECIPES = Path.of("src/generated/resources/data/createapparel/recipe");
 
     @Test
     void wearDefaultsDownAndOnlyMaskItemsSelectUp() throws Exception {
@@ -176,8 +176,8 @@ class FaceAccessoryAssetTest {
                             key.getAsJsonObject("G").get("item").getAsString());
                     assertEquals("minecraft:iron_nugget", key.getAsJsonObject("I").get("item").getAsString());
                     var result = recipe.getAsJsonObject("result");
-                    assertEquals("createapparel:" + eyewear, result.get("item").getAsString());
-                    var data = TagParser.parseTag(result.get("nbt").getAsString()).getCompound("GarmentData");
+                    assertEquals("createapparel:" + eyewear, result.get("id").getAsString());
+                    var data = TagParser.parseTag(result.getAsJsonObject("components").get("minecraft:custom_data").toString()).getCompound("GarmentData");
                     assertEquals(color, data.getString("primary_color"));
                     assertEquals("synthetic", data.getString("material"));
                     assertEquals("plain", data.getString("design"));

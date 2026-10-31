@@ -51,4 +51,9 @@ public final class ClothingRackRenderer implements BlockEntityRenderer<ClothingR
         }
         poseStack.popPose();
     }
+
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(ClothingRackBlockEntity blockEntity) {
+        return blockEntity.getRenderBoundingBox();
+    }
 }

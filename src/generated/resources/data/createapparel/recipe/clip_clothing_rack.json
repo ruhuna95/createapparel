@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createapparel:clothing_rack"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:clip_clothing_rack"
+  }
+}

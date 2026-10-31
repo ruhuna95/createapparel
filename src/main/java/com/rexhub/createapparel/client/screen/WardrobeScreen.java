@@ -33,7 +33,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -193,13 +193,13 @@ public class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScre
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalScroll, double delta) {
         if (selectionMenu.mouseScrolled(delta)) return true;
         if (buttonScroll.mouseScrolled(mouseX, mouseY, delta)) return true;
-        if (!showGarmentControls()) return super.mouseScrolled(mouseX, mouseY, delta);
+        if (!showGarmentControls()) return super.mouseScrolled(mouseX, mouseY, horizontalScroll, delta);
         if (delta == 0 || mouseX < leftPos || mouseX >= leftPos + imageWidth
                 || mouseY < topPos || mouseY >= topPos + PLAYER_INVENTORY_LABEL_Y) {
-            return super.mouseScrolled(mouseX, mouseY, delta);
+            return super.mouseScrolled(mouseX, mouseY, horizontalScroll, delta);
         }
         int direction = delta > 0 ? -1 : 1;
         int index = Math.floorMod(slotSelectionOrder.indexOf(selectedSlot) + direction, slotSelectionOrder.size());
@@ -415,7 +415,7 @@ public class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScre
         if (stack.isEmpty()) {
             return Optional.empty();
         }
-        ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return itemId == null ? Optional.empty() : ClientGarmentAssets.getDefinition(itemId);
     }
 
@@ -428,7 +428,7 @@ public class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScre
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
         if (!selectionMenu.isOpen()) renderTooltip(graphics, mouseX, mouseY);
         selectionMenu.render(graphics, mouseX, mouseY);
@@ -506,7 +506,7 @@ public class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScre
 
     protected void renderPlayerPreview(GuiGraphics graphics, int mouseX, int mouseY) {
         if (menu instanceof MannequinMenu mannequinMenu) {
-            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics,
+            EntityPreview.render(graphics,
                     leftPos + PREVIEW_CENTER_X, topPos + 88, 35,
                     leftPos + PREVIEW_CENTER_X - mouseX, topPos + 49 - mouseY, mannequinMenu.mannequin());
             return;
@@ -527,7 +527,7 @@ public class WardrobeScreen<T extends ApparelMenu> extends AbstractContainerScre
                 () -> {
                     graphics.pose().pushPose();
                     graphics.pose().translate(PREVIEW_CENTER_OFFSET_X, 0.0D, 0.0D);
-                    InventoryScreen.renderEntityInInventoryFollowsMouse(
+                    EntityPreview.render(
                             graphics,
                             leftPos + PREVIEW_CENTER_X,
                             topPos + 88,

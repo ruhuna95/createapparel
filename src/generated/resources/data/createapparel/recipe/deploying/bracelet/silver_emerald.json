@@ -1,0 +1,24 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "createapparel:silver_bracelet_base"
+    },
+    {
+      "tag": "createapparel:gems/emerald"
+    }
+  ],
+  "results": [
+    {
+      "components": {
+        "minecraft:custom_data": {
+          "MetalAccessoryData": {
+            "gem": "emerald",
+            "metal_color": "silver"
+          }
+        }
+      },
+      "id": "createapparel:bracelet"
+    }
+  ]
+}

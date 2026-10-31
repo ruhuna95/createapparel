@@ -26,10 +26,10 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,7 +65,7 @@ public final class QualityImprovementGameTests {
         crafts.put("wall_hanger_from_clip_wall_hanger", "wall_hanger");
         for (var craft : crafts.entrySet()) {
             String name = craft.getKey();
-            var recipe = (CraftingRecipe) manager.byKey(id(name)).orElseThrow();
+            var recipe = (CraftingRecipe) manager.byKey(id(name)).orElseThrow().value();
             grid.clearContent();
             for (int slot = 0; slot < recipe.getIngredients().size(); slot++) {
                 var ingredient = recipe.getIngredients().get(slot);
@@ -74,12 +74,12 @@ public final class QualityImprovementGameTests {
                                 + slot % shaped.getWidth() + (3 - shaped.getWidth()) / 2 : slot;
                 if (!ingredient.isEmpty()) grid.setItem(gridSlot, ingredient.getItems()[0].copy());
             }
-            helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Survival ingredients match: " + name);
-            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, grid, helper.getLevel()).orElseThrow()
-                    .getId().equals(recipe.getId()), "Craft has no conflicting recipe: " + name);
-            var output = recipe.assemble(grid, helper.getLevel().registryAccess());
+            helper.assertTrue(recipe.matches(grid.asCraftInput(), helper.getLevel()), "Survival ingredients match: " + name);
+            helper.assertTrue(manager.getRecipeFor(RecipeType.CRAFTING, grid.asCraftInput(), helper.getLevel()).orElseThrow()
+                    .id().equals(com.rexhub.createapparel.TestRecipes.id(recipe)), "Craft has no conflicting recipe: " + name);
+            var output = recipe.assemble(grid.asCraftInput(), helper.getLevel().registryAccess());
             helper.assertTrue(!output.isEmpty() && output.getCount() == 1
-                    && net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(output.getItem()).equals(id(craft.getValue())),
+                    && net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(output.getItem()).equals(id(craft.getValue())),
                     "Equipment crafting returns expected item: " + name);
         }
         helper.succeed();
@@ -108,10 +108,10 @@ public final class QualityImprovementGameTests {
                 tag -> List.copyOf(tag.getAllKeys()).forEach(tag::remove));
         for (var corrupt : corruptions) {
             valid.write(garment);
-            corrupt.accept(garment.getTag().getCompound(GarmentData.TAG_NAME));
+            com.rexhub.createapparel.item.ItemData.update(garment, tag -> corrupt.accept(tag.getCompound(GarmentData.TAG_NAME)));
             assertInvalid(helper, garment, definition, expected);
         }
-        garment.getOrCreateTag().putString(GarmentData.TAG_NAME, "not_a_compound");
+        com.rexhub.createapparel.item.ItemData.update(garment, tagData -> tagData.putString(GarmentData.TAG_NAME, "not_a_compound"));
         assertInvalid(helper, garment, definition, expected);
         helper.succeed();
     }
@@ -119,7 +119,7 @@ public final class QualityImprovementGameTests {
     private static void assertInvalid(GameTestHelper helper, ItemStack garment,
                                       com.rexhub.createapparel.garment.GarmentDefinition definition,
                                       GarmentData expected) {
-        var before = garment.save(new CompoundTag());
+        var before = garment.save(com.rexhub.createapparel.TestRegistries.lookup(), new net.minecraft.nbt.CompoundTag());
         helper.assertTrue(expected.equals(GarmentData.fromStackOrDefault(garment, definition))
                 && expected.equals(GarmentAppearance.fromStackOrDefault(garment, definition)), "Safe read uses defaults");
         boolean rejected = false;
@@ -129,25 +129,22 @@ public final class QualityImprovementGameTests {
             rejected = true;
         }
         helper.assertTrue(rejected, "Strict read rejects malformed NBT");
-        helper.assertTrue(before.equals(garment.save(new CompoundTag())), "Neither read mutates saved NBT");
+        helper.assertTrue(before.equals(garment.save(com.rexhub.createapparel.TestRegistries.lookup(), new net.minecraft.nbt.CompoundTag())), "Neither read mutates saved NBT");
     }
 
     @GameTest(template = "apparel_state", batch = "phase17_quality")
     public static void sewingInputIndexAcceptsTagsAndRefreshesOnReload(GameTestHelper helper) {
         var scans = new java.util.concurrent.atomic.AtomicInteger();
-        var manager = new RecipeManager(net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY) {
+        var manager = new RecipeManager(com.rexhub.createapparel.TestRegistries.lookup()) {
             @Override
-            public <C extends net.minecraft.world.Container, T extends net.minecraft.world.item.crafting.Recipe<C>>
-            List<T> getAllRecipesFor(RecipeType<T> type) {
+            public <C extends net.minecraft.world.item.crafting.RecipeInput, T extends net.minecraft.world.item.crafting.Recipe<C>>
+            List<net.minecraft.world.item.crafting.RecipeHolder<T>> getAllRecipesFor(RecipeType<T> type) {
                 scans.incrementAndGet();
                 return super.getAllRecipesFor(type);
             }
         };
-        var cotton = new SewingRecipe(id("index_test"),
-                new SewingRecipe.ItemRequirement(List.of(ModTags.Items.FABRICS_COTTON), 3),
-                new SewingRecipe.ItemRequirement(List.of(ModTags.Items.THREADS_COTTON), 1),
-                ModItems.SEWING_PATTERN.getId(), ModItems.T_SHIRT.getId());
-        manager.replaceRecipes(List.of(cotton));
+        var cotton = new SewingRecipe(new SewingRecipe.ItemRequirement(List.of(ModTags.Items.FABRICS_COTTON), 3), new SewingRecipe.ItemRequirement(List.of(ModTags.Items.THREADS_COTTON), 1), ModItems.SEWING_PATTERN.getId(), ModItems.T_SHIRT.getId());
+        manager.replaceRecipes(List.of(new net.minecraft.world.item.crafting.RecipeHolder<>(id("index_test"), cotton)));
         helper.assertTrue(!SewingRecipeInputIndex.get(manager).acceptsThread(new ItemStack(ModItems.COTTON_THREAD.get()))
                 && scans.get() == 0, "Insertion never builds an index by scanning recipes");
         RecipeCacheReloadListener.invalidate(manager);
@@ -164,11 +161,8 @@ public final class QualityImprovementGameTests {
             SewingRecipeInputIndex.get(manager).acceptsThread(new ItemStack(ModItems.COTTON_THREAD.get()));
         }
         helper.assertTrue(scans.get() == 1, "Only reload scans recipes; insertion checks never scan them");
-        var wool = new SewingRecipe(id("index_test"),
-                new SewingRecipe.ItemRequirement(List.of(ModTags.Items.FABRICS_WOOL), 3),
-                new SewingRecipe.ItemRequirement(List.of(ModTags.Items.THREADS_WOOL), 2),
-                ModItems.SEWING_PATTERN.getId(), ModItems.T_SHIRT.getId());
-        manager.replaceRecipes(List.of(wool));
+        var wool = new SewingRecipe(new SewingRecipe.ItemRequirement(List.of(ModTags.Items.FABRICS_WOOL), 3), new SewingRecipe.ItemRequirement(List.of(ModTags.Items.THREADS_WOOL), 2), ModItems.SEWING_PATTERN.getId(), ModItems.T_SHIRT.getId());
+        manager.replaceRecipes(List.of(new net.minecraft.world.item.crafting.RecipeHolder<>(id("index_test"), wool)));
         var generation = RecipeCacheReloadListener.generation();
         RecipeCacheReloadListener.invalidate(manager);
         var reloaded = SewingRecipeInputIndex.get(manager);
@@ -186,11 +180,11 @@ public final class QualityImprovementGameTests {
 
     @GameTest(template = "apparel_state", batch = "phase17_quality")
     public static void balancedSewingPreservesPatternMaterialAndAllColors(GameTestHelper helper) {
-        var recipe = (SewingRecipe) helper.getLevel().getRecipeManager().byKey(id("trench_coat")).orElseThrow();
+        var recipe = (SewingRecipe) helper.getLevel().getRecipeManager().byKey(id("trench_coat")).orElseThrow().value();
         var inventory = new ItemStackHandler(3);
         var pattern = new ItemStack(ModItems.SEWING_PATTERN.get());
-        new PatternData(recipe.getId(), "plain", Optional.of(FabricColor.BLUE), Optional.of(FabricColor.YELLOW)).write(pattern);
-        var before = pattern.save(new CompoundTag());
+        new PatternData(com.rexhub.createapparel.TestRecipes.id(recipe), "plain", Optional.of(FabricColor.BLUE), Optional.of(FabricColor.YELLOW)).write(pattern);
+        var before = pattern.save(com.rexhub.createapparel.TestRegistries.lookup(), new net.minecraft.nbt.CompoundTag());
         inventory.setStackInSlot(0, new ItemStack(ModItems.dyedFabric(FabricMaterial.LINEN, FabricColor.RED).get(), 8));
         inventory.setStackInSlot(1, new ItemStack(ModItems.LINEN_THREAD.get(), 2));
         inventory.setStackInSlot(2, pattern);
@@ -201,7 +195,7 @@ public final class QualityImprovementGameTests {
         helper.assertTrue(new GarmentData(FabricMaterial.LINEN, "plain", FabricColor.RED,
                 Optional.of(FabricColor.BLUE), Optional.of(FabricColor.YELLOW))
                 .equals(GarmentData.fromStackStrict(output, definition)), "Fabric material, design and colors are inherited");
-        helper.assertTrue(before.equals(pattern.save(new CompoundTag())), "Assembling does not consume or change pattern");
+        helper.assertTrue(before.equals(pattern.save(com.rexhub.createapparel.TestRegistries.lookup(), new net.minecraft.nbt.CompoundTag())), "Assembling does not consume or change pattern");
         inventory.setStackInSlot(1, new ItemStack(ModItems.LINEN_THREAD.get()));
         helper.assertTrue(!recipe.matches(wrapper, helper.getLevel()), "One thread cannot craft a two-thread recipe");
         helper.succeed();

@@ -11,14 +11,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.nio.file.Path;
 import java.util.Objects;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class FashionClientChecks {
     private static int stage, ticks, total;
     private static volatile AdvertisingPhotoData photo;
@@ -33,8 +32,8 @@ public final class FashionClientChecks {
     private static volatile boolean cameraOwnedPreserved;
     private static volatile boolean cameraStylesResent;
     private FashionClientChecks() { }
-    @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
-        if (!Boolean.getBoolean("apparel.fashionTest.client") || event.phase != TickEvent.Phase.END || stage == 99) return;
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
+        if (!Boolean.getBoolean("apparel.fashionTest.client") || stage == 99) return;
         var mc = Minecraft.getInstance(); if (mc.getOverlay() != null) return;
         try {
             if (failure != null) throw new AssertionError("Fashion server fixture failed", failure);
@@ -45,7 +44,7 @@ public final class FashionClientChecks {
                 mc.createWorldOpenFlows().createFreshLevel("fashion-qa-" + System.nanoTime(),
                         new net.minecraft.world.level.LevelSettings("Fashion QA", net.minecraft.world.level.GameType.CREATIVE, false, net.minecraft.world.Difficulty.PEACEFUL,
                                 false, new net.minecraft.world.level.GameRules(), net.minecraft.world.level.WorldDataConfiguration.DEFAULT), new WorldOptions(23, false, false),
-                        access -> access.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions()); return;
+                        access -> access.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions(), new net.minecraft.client.gui.screens.TitleScreen()); return;
             }
             if (mc.player == null || mc.level == null || mc.getSingleplayerServer() == null) return;
             if (stage == 1) {
@@ -73,10 +72,10 @@ public final class FashionClientChecks {
                         level.setBlockAndUpdate(posterPos.south(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
                         level.setBlockAndUpdate(posterPos.south().above(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
                         level.setBlockAndUpdate(posterPos, posterState); var posterItem = new net.minecraft.world.item.ItemStack(AdvertisementRegistries.POSTER_ITEM.get());
-                        posterItem.getOrCreateTag().put("Advertisement", AdvertisementSnapshot.photo(photo).save());
+                        com.rexhub.createapparel.item.ItemData.update(posterItem, tagData -> tagData.put("Advertisement", AdvertisementSnapshot.photo(photo).save()));
                         player.getInventory().setItem(2, posterItem.copy());
                         var printedBillboard = new net.minecraft.world.item.ItemStack(AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get());
-                        printedBillboard.getOrCreateTag().put("Advertisement", AdvertisementSnapshot.photo(photo).save());
+                        com.rexhub.createapparel.item.ItemData.update(printedBillboard, tagData -> tagData.put("Advertisement", AdvertisementSnapshot.photo(photo).save()));
                         player.getInventory().setItem(6, printedBillboard);
                         posterState.getBlock().setPlacedBy(level, posterPos, posterState, player, posterItem);
                         for (int y = 0; y < 2; y++) {
@@ -113,7 +112,7 @@ public final class FashionClientChecks {
                 var poster = (AdvertisementPanelBlockEntity) mc.level.getBlockEntity(new BlockPos(5, -60, 0));
                 if (poster == null || poster.width() != 1 || poster.height() != 2 || poster.localSnapshot().photo() == null)
                     throw new AssertionError("The world poster must be a vertical printed 1 by 2 surface");
-                var backing = mc.getBlockRenderer().getBlockModel(poster.getBlockState()).getParticleIcon(net.minecraftforge.client.model.data.ModelData.EMPTY);
+                var backing = mc.getBlockRenderer().getBlockModel(poster.getBlockState()).getParticleIcon(net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
                 if (!backing.contents().name().equals(net.minecraft.resources.ResourceLocation.parse("minecraft:painting/back")))
                     throw new AssertionError("The painting backing must be stitched into the block atlas");
                 screenshot("fashion-world.png"); stage = 5; ticks = 0;
@@ -132,7 +131,7 @@ public final class FashionClientChecks {
                         menuCitizenId = citizen.getId();
                         player.getInventory().setItem(9, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD, 64));
                         var trial = new net.minecraft.world.item.ItemStack(com.rexhub.createapparel.init.ModItems.T_SHIRT.get());
-                        trial.getOrCreateTag().putBoolean("CameraTrial", true); player.getInventory().setItem(10, trial);
+                        com.rexhub.createapparel.item.ItemData.update(trial, tagData -> tagData.putBoolean("CameraTrial", true)); player.getInventory().setItem(10, trial);
                         PhotographyService.open(player, citizen, net.minecraft.world.InteractionHand.MAIN_HAND);
                     } catch (Throwable throwable) { failure = throwable; }
                 }); return;
@@ -145,7 +144,7 @@ public final class FashionClientChecks {
             if (stage == 6) {
                 if (!reload.isDone()) return; reload.join();
                 var returned = mc.player.getInventory().getItem(10);
-                if (!returned.is(com.rexhub.createapparel.init.ModItems.T_SHIRT.get()) || !returned.hasTag() || !returned.getTag().getBoolean("CameraTrial"))
+                if (!returned.is(com.rexhub.createapparel.init.ModItems.T_SHIRT.get()) || !com.rexhub.createapparel.item.ItemData.hasData(returned) || !com.rexhub.createapparel.item.ItemData.read(returned).getBoolean("CameraTrial"))
                     throw new AssertionError("Closing did not synchronize the original owned clothing");
                 if (com.rexhub.createapparel.client.garment.ClientGarmentAssets.INSTANCE.generation() <= generation) throw new AssertionError("Resource generation did not advance");
                 if (!capture(photo, 4, 2, "fashion-photo-after-reload.png")) return;
@@ -176,7 +175,7 @@ public final class FashionClientChecks {
             }
             if (stage == 70) {
                 if (!(mc.screen instanceof PhotoEditScreen screen) || screen.getMenu().mode() != PhotographyMenu.Mode.EDIT) return;
-                if (net.minecraftforge.fml.ModList.get().isLoaded("jei")) com.rexhub.createapparel.compat.jei.FashionJeiChecks.checkHidden(screen);
+                if (net.neoforged.fml.ModList.get().isLoaded("jei")) com.rexhub.createapparel.compat.jei.FashionJeiChecks.checkHidden(screen);
                 var buttons = screen.children().stream().filter(net.minecraft.client.gui.components.Button.class::isInstance)
                         .map(net.minecraft.client.gui.components.Button.class::cast).toList();
                 if (buttons.size() != 7 || !screen.getMenu().slots.isEmpty()
@@ -205,7 +204,7 @@ public final class FashionClientChecks {
                         var citizen = (Citizen) player.serverLevel().getEntity(menuCitizenId);
                         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
                                 new net.minecraft.world.item.ItemStack(com.rexhub.createapparel.init.ModItems.SMART_PHONE.get()));
-                        var interactionEvent = new net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract(player,
+                        var interactionEvent = new net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteract(player,
                                 net.minecraft.world.InteractionHand.MAIN_HAND, citizen);
                         ((com.rexhub.createapparel.item.SmartPhoneItem) com.rexhub.createapparel.init.ModItems.SMART_PHONE.get()).interact(interactionEvent);
                     } catch (Throwable throwable) { failure = throwable; }
@@ -236,7 +235,7 @@ public final class FashionClientChecks {
             }
         } catch (Throwable throwable) { stage = 99; LogUtils.getLogger().error("FASHION_CLIENT_QA_FAILED", throwable); mc.stop(); }
     }
-    @SubscribeEvent public static void renderLockHover(net.minecraftforge.client.event.ScreenEvent.Render.Pre event) {
+    @SubscribeEvent public static void renderLockHover(net.neoforged.neoforge.client.event.ScreenEvent.Render.Pre event) {
         if (!Boolean.getBoolean("apparel.fashionTest.client") || stage != 9
                 || !(event.getScreen() instanceof com.rexhub.createapparel.client.screen.CitizenScreen screen)) return;
         var button = lockButton(screen);
@@ -263,7 +262,7 @@ public final class FashionClientChecks {
         } finally { com.mojang.blaze3d.platform.GlStateManager._bindTexture(before); }
         return true;
     }
-    @SubscribeEvent public static void sound(net.minecraftforge.client.event.sound.PlaySoundEvent event) {
+    @SubscribeEvent public static void sound(net.neoforged.neoforge.client.event.sound.PlaySoundEvent event) {
         if (Boolean.getBoolean("apparel.fashionTest.client") && event.getSound() != null
                 && event.getSound().getLocation().equals(net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP.getLocation())) heardTrade = true;
     }
@@ -278,7 +277,7 @@ public final class FashionClientChecks {
                     || !"opened".equals(initialStyles.get("open")))
                 throw new AssertionError("Initial slot synchronization lost the model's worn clothing styles");
             screenshot("fashion-camera-initial-worn-styles.png");
-            if (net.minecraftforge.fml.ModList.get().isLoaded("jei"))
+            if (net.neoforged.fml.ModList.get().isLoaded("jei"))
                 com.rexhub.createapparel.compat.jei.FashionJeiChecks.checkCamera(screen);
             var buttons = screen.children().stream().filter(net.minecraft.client.gui.components.Button.class::isInstance)
                     .map(net.minecraft.client.gui.components.Button.class::cast).toList();
@@ -308,7 +307,7 @@ public final class FashionClientChecks {
         }
         if (cameraStep == 11) {
             var trial = menu.getSlot(topSlot).getItem();
-            if (!menu.getCarried().isEmpty() || !trial.hasTag() || !trial.getTag().getBoolean("CameraTrial") || ++cameraFrames < 4) return false;
+            if (!menu.getCarried().isEmpty() || !com.rexhub.createapparel.item.ItemData.hasData(trial) || !com.rexhub.createapparel.item.ItemData.read(trial).getBoolean("CameraTrial") || ++cameraFrames < 4) return false;
             screenshot("fashion-camera-trial-clothes.png");
             transferClothing(screen, topSlot, PhotographyMenu.INVENTORY_START + 1, left, top);
             cameraStep = 12; return false;
@@ -323,7 +322,7 @@ public final class FashionClientChecks {
             if (!menu.getCarried().isEmpty() || !net.minecraft.world.item.ItemStack.matches(menu.getSlot(topSlot).getItem(), cameraOutfit)) return false;
             mc.getSingleplayerServer().execute(() -> {
                 var actual = mc.getSingleplayerServer().getPlayerList().getPlayers().get(0).getInventory().getItem(10);
-                if (!actual.is(com.rexhub.createapparel.init.ModItems.T_SHIRT.get()) || !actual.hasTag() || !actual.getTag().getBoolean("CameraTrial"))
+                if (!actual.is(com.rexhub.createapparel.init.ModItems.T_SHIRT.get()) || !com.rexhub.createapparel.item.ItemData.hasData(actual) || !com.rexhub.createapparel.item.ItemData.read(actual).getBoolean("CameraTrial"))
                     failure = new AssertionError("Trial operations modified the real owned clothing");
                 cameraOwnedPreserved = true;
             });
@@ -349,24 +348,24 @@ public final class FashionClientChecks {
         if (cameraStep == 16) {
             if (!"tucked".equals(menu.loadout().styleState(com.rexhub.createapparel.garment.GarmentSlot.TOP).styles().get("tuck"))) return false;
             screenshot("fashion-camera-style-selector.png");
-            screen.mouseScrolled(left + 40, top + 70, -1);
-            screen.mouseScrolled(left + 40, top + 70, -1);
-            screen.mouseScrolled(left + 40, top + 70, 1);
+            screen.mouseScrolled(left + 40, top + 70, 0, -1);
+            screen.mouseScrolled(left + 40, top + 70, 0, -1);
+            screen.mouseScrolled(left + 40, top + 70, 0, 1);
             cameraStep = 17; return false;
         }
         if (cameraStep == 17) {
             if (menu.setting(7) == topSlot) return false;
-            screen.mouseScrolled(left + 40, top + 70, 1);
+            screen.mouseScrolled(left + 40, top + 70, 0, 1);
             cameraStep = 18; return false;
         }
         if (cameraStep == 18) {
             if (menu.setting(7) != topSlot) return false;
-            screen.mouseScrolled(left + PhotographyMenuLayout.STYLE_X + 10, top + PhotographyMenuLayout.STYLE_Y + 9, 1);
+            screen.mouseScrolled(left + PhotographyMenuLayout.STYLE_X + 10, top + PhotographyMenuLayout.STYLE_Y + 9, 0, 1);
             cameraStep = 19; return false;
         }
         if (cameraStep == 19) {
             if (!"untucked".equals(menu.loadout().styleState(com.rexhub.createapparel.garment.GarmentSlot.TOP).styles().get("tuck"))) return false;
-            screen.mouseScrolled(left + PhotographyMenuLayout.STYLE_X + 10, top + PhotographyMenuLayout.STYLE_Y + 9, -1);
+            screen.mouseScrolled(left + PhotographyMenuLayout.STYLE_X + 10, top + PhotographyMenuLayout.STYLE_Y + 9, 0, -1);
             cameraStep = 20; return false;
         }
         if (cameraStep == 20) {
@@ -392,9 +391,9 @@ public final class FashionClientChecks {
             screen.keyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER, 0, 0);
             int x = left + PhotographyMenuLayout.SETTINGS_X + 20;
             int y = top + PhotographyMenuLayout.SETTINGS_Y + 7 * PhotographyMenuLayout.BUTTON_STEP + PhotographyMenuLayout.BUTTON_HEIGHT / 2;
-            screen.mouseScrolled(x, y, 1);
-            screen.mouseScrolled(x, y, -1);
-            screen.mouseScrolled(x, y, -1);
+            screen.mouseScrolled(x, y, 0, 1);
+            screen.mouseScrolled(x, y, 0, -1);
+            screen.mouseScrolled(x, y, 0, -1);
             mc.gameMode.handleInventoryMouseClick(menu.containerId, PhotographyMenu.INVENTORY_START, 0,
                     net.minecraft.world.inventory.ClickType.QUICK_MOVE, mc.player);
             cameraStep = 2; return false;

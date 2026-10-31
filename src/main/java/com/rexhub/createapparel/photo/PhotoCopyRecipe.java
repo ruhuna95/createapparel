@@ -11,22 +11,21 @@ import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 
 public final class PhotoCopyRecipe extends CustomRecipe {
-    public PhotoCopyRecipe(ResourceLocation id, CraftingBookCategory category) { super(id, category); }
-    public static boolean manual(CraftingContainer inventory) {
-        return inventory instanceof com.rexhub.createapparel.photo.mixin.CraftingMenuAccessor access && (access.createapparel$craftingMenu() instanceof CraftingMenu
-                || access.createapparel$craftingMenu() instanceof InventoryMenu);
+    public PhotoCopyRecipe(CraftingBookCategory category) { super(category); }
+    public static boolean manual(CraftingInput inventory) {
+        return inventory instanceof ManualCraftingInput input && input.createapparel$isManual();
     }
-    private static ItemStack photo(CraftingContainer inventory) {
+    private static ItemStack photo(CraftingInput inventory) {
         ItemStack photo = ItemStack.EMPTY;
-        for (int index = 0; index < inventory.getContainerSize(); index++) {
+        for (int index = 0; index < inventory.size(); index++) {
             var stack = inventory.getItem(index); if (stack.isEmpty()) continue;
             if (stack.is(PhotoRegistries.ADVERTISING_PHOTO.get()) && photo.isEmpty() && AdvertisingPhotoData.read(stack) != null) photo = stack;
             else return ItemStack.EMPTY;
         }
         return photo;
     }
-    @Override public boolean matches(CraftingContainer inventory, Level level) { return manual(inventory) && !photo(inventory).isEmpty(); }
-    @Override public ItemStack assemble(CraftingContainer inventory, RegistryAccess access) {
+    @Override public boolean matches(CraftingInput inventory, Level level) { return manual(inventory) && !photo(inventory).isEmpty(); }
+    @Override public ItemStack assemble(CraftingInput inventory, net.minecraft.core.HolderLookup.Provider access) {
         var input = photo(inventory); if (input.isEmpty()) return ItemStack.EMPTY;
         return input.copyWithCount(2);
     }

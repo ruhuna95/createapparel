@@ -99,7 +99,7 @@ final class AdvertisementSceneClientChecks {
     }
     private static List<Button> buttons(AdvertisementControlScreen screen) { return screen.children().stream().filter(Button.class::isInstance).map(Button.class::cast).toList(); }
     private static EditBox channel(AdvertisementControlScreen screen) { return screen.children().stream().filter(EditBox.class::isInstance).map(EditBox.class::cast).findFirst().orElseThrow(); }
-    private static void checkHidden(AdvertisementControlScreen screen) { if (net.minecraftforge.fml.ModList.get().isLoaded("jei")) com.rexhub.createapparel.compat.jei.FashionJeiChecks.checkHidden(screen); }
+    private static void checkHidden(AdvertisementControlScreen screen) { if (net.neoforged.fml.ModList.get().isLoaded("jei")) com.rexhub.createapparel.compat.jei.FashionJeiChecks.checkHidden(screen); }
     private static void screenshot(Minecraft mc, String name) throws java.io.IOException {
         try (var image = net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(Path.of(System.getProperty("apparel.fashionTest.projectDir"), "build", name)); }
     }

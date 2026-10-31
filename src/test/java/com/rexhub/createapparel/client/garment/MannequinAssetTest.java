@@ -48,7 +48,7 @@ class MannequinAssetTest {
             bodyPose.translate(0, form.bodyOriginHeight(), 0);
             bodyPose.scale(-MannequinForm.BODY_SCALE, -MannequinForm.BODY_SCALE, MannequinForm.BODY_SCALE);
             List<Vector3f> body = new ArrayList<>();
-            model.renderToBuffer(bodyPose, recordingConsumer(body), 0, 0, 1, 1, 1, 1);
+            model.renderToBuffer(bodyPose, recordingConsumer(body), 0, 0, -1);
             assertEquals(form.displayHeight(), body.stream().mapToDouble(point -> point.y).max().orElseThrow(), 0.00001);
             if (form.hasLegs()) {
                 assertEquals(MannequinForm.PEDESTAL_HEIGHT,
@@ -165,7 +165,7 @@ class MannequinAssetTest {
                 var bodyPose = new PoseStack();
                 bodyPose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(step * 22.5F));
                 body.clear();
-                model.renderToBuffer(bodyPose, bodyConsumer, 0, 0, 1, 1, 1, 1);
+                model.renderToBuffer(bodyPose, bodyConsumer, 0, 0, -1);
                 assertFalse(body.isEmpty());
                 assertTrue(body.stream().noneMatch(vertex -> vertex.y >= (form.modelOriginPixels() - 1) / 16F + 0.0001F),
                         "Rotating body excludes the pedestal bottom");
@@ -178,7 +178,7 @@ class MannequinAssetTest {
         return (com.mojang.blaze3d.vertex.VertexConsumer) java.lang.reflect.Proxy.newProxyInstance(
                 MannequinAssetTest.class.getClassLoader(), new Class<?>[]{com.mojang.blaze3d.vertex.VertexConsumer.class},
                 (proxy, method, args) -> {
-                    if (method.getName().equals("vertex")) {
+                    if (method.getName().equals("addVertex")) {
                         positions.add(new Vector3f(((Number) args[0]).floatValue(),
                                 ((Number) args[1]).floatValue(), ((Number) args[2]).floatValue()));
                     }
@@ -204,7 +204,7 @@ class MannequinAssetTest {
 
     @Test
     void recipesUseArmorStandPlanksAndMatchingDyeAndSlimIsConversionOnly() throws Exception {
-        var recipes = GENERATED.resolve("data/createapparel/recipes");
+        var recipes = GENERATED.resolve("data/createapparel/recipe");
         for (var variant : MannequinVariant.values()) {
             var direct = recipes.resolve(variant.id() + ".json");
             if (variant.armProfile() == ArmProfile.SLIM) {
@@ -212,7 +212,7 @@ class MannequinAssetTest {
             } else {
                 var recipe = json(direct);
                 assertEquals("minecraft:crafting_shaped", recipe.get("type").getAsString());
-                assertEquals("createapparel:" + variant.id(), recipe.getAsJsonObject("result").get("item").getAsString());
+                assertEquals("createapparel:" + variant.id(), recipe.getAsJsonObject("result").get("id").getAsString());
                 var key = recipe.getAsJsonObject("key");
                 assertEquals("minecraft:armor_stand", key.getAsJsonObject("A").get("item").getAsString());
                 assertEquals("minecraft:planks", key.getAsJsonObject("P").get("tag").getAsString());
@@ -230,7 +230,7 @@ class MannequinAssetTest {
                 assertEquals("minecraft:crafting_shapeless", recipe.get("type").getAsString());
                 assertEquals(1, recipe.getAsJsonArray("ingredients").size());
                 assertEquals("createapparel:" + variant.id(), recipe.getAsJsonArray("ingredients").get(0).getAsJsonObject().get("item").getAsString());
-                assertEquals("createapparel:" + other.id(), recipe.getAsJsonObject("result").get("item").getAsString());
+                assertEquals("createapparel:" + other.id(), recipe.getAsJsonObject("result").get("id").getAsString());
             }
         }
     }

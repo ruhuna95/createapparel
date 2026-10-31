@@ -3,10 +3,10 @@ package com.rexhub.createapparel.init;
 import com.simibubi.create.AllCreativeModeTabs;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 public final class ModCreativeModeTabs {
-    public static final RegistryObject<CreativeModeTab> CREATE_APPAREL =
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATE_APPAREL =
             ModRegistries.CREATIVE_MODE_TABS.register("create_apparel", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.createapparel"))
                     .icon(() -> ModItems.COTTON_FABRIC.get().getDefaultInstance())
@@ -14,7 +14,7 @@ public final class ModCreativeModeTabs {
                     .displayItems((parameters, output) -> ModItems.creativeTabItems()
                             .forEach(item -> output.accept(item.get())))
                     .build());
-    public static final RegistryObject<CreativeModeTab> CREATE_APPAREL_GARMENT =
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CREATE_APPAREL_GARMENT =
             ModRegistries.CREATIVE_MODE_TABS.register("create_apparel_garment", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.createapparel.garment"))
                     .icon(() -> ModItems.T_SHIRT.get().getDefaultInstance())

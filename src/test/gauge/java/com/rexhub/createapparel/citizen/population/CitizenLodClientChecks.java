@@ -25,13 +25,13 @@ final class CitizenLodClientChecks {
         var target = new TextureTarget(256, 320, true, Minecraft.ON_OSX);
         var projection = new Matrix4f(RenderSystem.getProjectionMatrix());
         var modelView = RenderSystem.getModelViewStack();
-        modelView.pushPose();
+        modelView.pushMatrix();
         int scenes = 0;
         double maxSilhouette = 0;
         String worst = "";
         var results = new StringBuilder("scene,lod,foreground,changedPixels,silhouettePixels,silhouetteFraction\n");
         try {
-            modelView.setIdentity(); modelView.translate(0, 0, -2000);
+            modelView.identity(); modelView.translate(0, 0, -2000);
             RenderSystem.applyModelViewMatrix();
             mc.gameRenderer.resetProjectionMatrix(new Matrix4f().setOrtho(0, 256, 320, 0, 1000, 3000));
             for (var arm : ArmProfile.values()) for (var chest : ChestProfile.values()) {
@@ -79,7 +79,7 @@ final class CitizenLodClientChecks {
             com.mojang.logging.LogUtils.getLogger().info("CITIZEN_LOD_IMAGES_PASSED scenes={} LOD0exactPixels=true maxSilhouetteFraction={} worst={} profiles=4 poses=6 outfits=7 views=6", scenes, maxSilhouette, worst);
         } finally {
             Files.writeString(output.resolve("comparison.csv"), results);
-            modelView.popPose(); RenderSystem.applyModelViewMatrix(); mc.gameRenderer.resetProjectionMatrix(projection);
+            modelView.popMatrix(); RenderSystem.applyModelViewMatrix(); mc.gameRenderer.resetProjectionMatrix(projection);
             target.destroyBuffers(); mc.getMainRenderTarget().bindWrite(true);
         }
     }

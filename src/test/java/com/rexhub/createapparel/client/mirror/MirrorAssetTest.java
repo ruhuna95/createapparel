@@ -45,10 +45,10 @@ class MirrorAssetTest {
     @Test void reflectionUsesUnclippedProjectionForCullingButClippedProjectionForDrawing() throws IOException {
         String manager = Files.readString(Path.of("src/main/java/com/rexhub/createapparel/client/mirror/MirrorRenderManager.java"));
         assertTrue(manager.contains("MirrorReflectionMath.croppedCullingProjection(captureProjection,"));
-        assertTrue(manager.contains("renderer.prepareCullFrustum(pose, reflectedEye, cullProjection)"));
-        assertFalse(manager.contains("renderer.prepareCullFrustum(pose, reflectedEye, clipped)"));
+        assertTrue(manager.contains("renderer.prepareCullFrustum(reflectedEye, reflectedView, cullProjection)"));
+        assertFalse(manager.contains("renderer.prepareCullFrustum(reflectedEye, reflectedView, clipped)"));
         assertTrue(manager.contains("gameRenderer.resetProjectionMatrix(clipped)"));
-        assertTrue(manager.contains("renderer.renderLevel(pose, partialTick, finishTime, false, captureCamera, gameRenderer, light, clipped)"));
+        assertTrue(manager.contains("renderer.renderLevel(minecraft.getTimer(), false, captureCamera, gameRenderer, light, reflectedView, clipped)"));
         String mixin = Files.readString(Path.of("src/main/java/com/rexhub/createapparel/client/mixin/MirrorLevelRendererMixin.java"));
         assertFalse(mixin.contains("offsetToFullyIncludeCameraCube"));
     }
@@ -79,15 +79,15 @@ class MirrorAssetTest {
         assertTrue(pool.contains("GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, draw)"));
         assertTrue(pool.contains("GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, read)"));
         String manager = Files.readString(Path.of("src/main/java/com/rexhub/createapparel/client/mirror/MirrorRenderManager.java"));
-        for (String restore : List.of("Lighting.setupLevel(mainView.last().pose())", "RenderSystem.setShaderFogStart(fogStart)",
-                "originalTarget.bindWrite(true)", "rendererState.createapparel$endReflection()", "RenderSystem.setInverseViewRotationMatrix(inverseRotation)"))
+        for (String restore : List.of("Lighting.setupLevel()", "RenderSystem.setShaderFogStart(fogStart)",
+                "originalTarget.bindWrite(true)", "rendererState.createapparel$endReflection()", "gameRenderer.resetProjectionMatrix(originalProjection)"))
             assertTrue(manager.contains(restore));
     }
 
     @Test void allElevenWoodsHaveTwoFurnitureItemsAndRecipesUsingTheirOwnPlanks() throws IOException {
         for (String wood : WOODS) for (String furniture : List.of("full_length_mirror", "table_mirror")) {
             String id = wood + "_" + furniture;
-            var recipe = read("data/createapparel/recipes/" + id);
+            var recipe = read("data/createapparel/recipe/" + id);
             assertEquals("minecraft:" + wood + "_planks", recipe.getAsJsonObject("key")
                     .getAsJsonObject(furniture.equals("table_mirror") ? "B" : "W").get("item").getAsString());
             assertEquals("createapparel:mirror_panel", recipe.getAsJsonObject("key").getAsJsonObject("P").get("item").getAsString());
@@ -96,14 +96,14 @@ class MirrorAssetTest {
             var blockstate = read("assets/createapparel/blockstates/" + id).getAsJsonObject("variants");
             assertTrue(blockstate.has("facing=north,half=lower"));
             assertTrue(blockstate.has("facing=south,half=upper"));
-            assertTrue(Files.isRegularFile(GENERATED.resolve("data/createapparel/loot_tables/blocks/" + id + ".json")));
+            assertTrue(Files.isRegularFile(GENERATED.resolve("data/createapparel/loot_table/blocks/" + id + ".json")));
         }
     }
 
     @Test void allWoodDoorsUseTheirOwnDoorRecipeFrameAndDoubleSidedMirror() throws IOException {
         for (String wood : WOODS) {
             String id = wood + "_mirrored_door";
-            var recipe = read("data/createapparel/recipes/" + id);
+            var recipe = read("data/createapparel/recipe/" + id);
             assertEquals("minecraft:" + wood + "_door", recipe.getAsJsonArray("ingredients").get(0)
                     .getAsJsonObject().get("item").getAsString());
             assertEquals(3, recipe.getAsJsonArray("ingredients").size());
@@ -156,10 +156,10 @@ class MirrorAssetTest {
     }
 
     @Test void ironFurnitureUsesIronFramesRecipesLootAndPickaxes() throws IOException {
-        var pickaxes = read("data/minecraft/tags/blocks/mineable/pickaxe").getAsJsonArray("values");
+        var pickaxes = read("data/minecraft/tags/block/mineable/pickaxe").getAsJsonArray("values");
         for (String kind : List.of("full_length_mirror", "table_mirror")) {
             String id = "iron_" + kind;
-            var recipe = read("data/createapparel/recipes/" + id);
+            var recipe = read("data/createapparel/recipe/" + id);
             assertEquals(kind.equals("table_mirror") ? "minecraft:iron_block" : "minecraft:iron_ingot",
                     recipe.getAsJsonObject("key").getAsJsonObject(kind.equals("table_mirror") ? "B" : "W")
                             .get("item").getAsString());
@@ -168,7 +168,7 @@ class MirrorAssetTest {
             assertEquals("minecraft:block/iron_block", read("assets/createapparel/models/block/" + model)
                     .getAsJsonObject("textures").get("wood").getAsString());
             assertTrue(pickaxes.asList().stream().anyMatch(value -> value.getAsString().equals("createapparel:" + id)));
-            assertTrue(Files.isRegularFile(GENERATED.resolve("data/createapparel/loot_tables/blocks/" + id + ".json")));
+            assertTrue(Files.isRegularFile(GENERATED.resolve("data/createapparel/loot_table/blocks/" + id + ".json")));
             assertTrue(read("assets/createapparel/lang/ja_jp").has("block.createapparel." + id));
         }
     }
@@ -205,22 +205,22 @@ class MirrorAssetTest {
     }
 
     @Test void spoutUses250MbAndFallbackMixingIsHeatedAndConfigConditional() throws IOException {
-        var filling = read("data/createapparel/recipes/filling/mirror_panel");
+        var filling = read("data/createapparel/recipe/filling/mirror_panel");
         assertEquals("create:filling", filling.get("type").getAsString());
         assertEquals("minecraft:glass_pane", filling.getAsJsonArray("ingredients").get(0).getAsJsonObject().get("item").getAsString());
         var fluid = filling.getAsJsonArray("ingredients").get(1).getAsJsonObject();
         assertEquals(250, fluid.get("amount").getAsInt());
         assertEquals("createapparel:mirror_coating_fluid", fluid.get("fluid").getAsString());
-        var mixing = read("data/createapparel/recipes/mixing/mirror_coating_fluid");
-        assertEquals("heated", mixing.get("heatRequirement").getAsString());
-        assertEquals("createapparel:mirror_coating_fallback", mixing.getAsJsonArray("conditions").get(0).getAsJsonObject().get("type").getAsString());
+        var mixing = read("data/createapparel/recipe/mixing/mirror_coating_fluid");
+        assertEquals("heated", mixing.get("heat_requirement").getAsString());
+        assertEquals("createapparel:mirror_coating_fallback", mixing.getAsJsonArray("neoforge:conditions").get(0).getAsJsonObject().get("type").getAsString());
         var ingredients = mixing.getAsJsonArray("ingredients");
         assertEquals("create:zinc_nugget", ingredients.get(0).getAsJsonObject().get("item").getAsString());
         assertEquals("minecraft:glowstone_dust", ingredients.get(1).getAsJsonObject().get("item").getAsString());
         assertEquals(1000, ingredients.get(2).getAsJsonObject().get("amount").getAsInt());
         var result = mixing.getAsJsonArray("results").get(0).getAsJsonObject();
         assertEquals(1000, result.get("amount").getAsInt());
-        assertEquals(fluid.get("fluid").getAsString(), result.get("fluid").getAsString());
+        assertEquals(fluid.get("fluid").getAsString(), result.get("id").getAsString());
     }
 
     @Test void fluidBucketAndShaderResourcesAreShippedWithMatchingUniforms() throws IOException {

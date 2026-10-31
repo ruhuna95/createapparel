@@ -31,18 +31,18 @@ import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.client.event.RegisterColorHandlersEvent;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class CreateApparelClient {
     public static final ModelLayerLocation CITIZEN_LAYER = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "citizen"), "main");
@@ -64,11 +64,11 @@ public final class CreateApparelClient {
 
     @SubscribeEvent
     public static void registerMirrorGeometry(ModelEvent.RegisterGeometryLoaders event) {
-        event.register("mirror_tilt", new com.rexhub.createapparel.client.mirror.MirrorTiltModelLoader());
+        event.register(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mirror_tilt"), new com.rexhub.createapparel.client.mirror.MirrorTiltModelLoader());
     }
 
     @SubscribeEvent
-    public static void registerMirrorShader(net.minecraftforge.client.event.RegisterShadersEvent event) {
+    public static void registerMirrorShader(net.neoforged.neoforge.client.event.RegisterShadersEvent event) {
         try {
             event.registerShader(new net.minecraft.client.renderer.ShaderInstance(event.getResourceProvider(),
                         ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mirror"),
@@ -94,40 +94,43 @@ public final class CreateApparelClient {
             com.rexhub.createapparel.client.guide.ApparelItemDescriptions.register();
             net.createmod.ponder.foundation.PonderIndex.addPlugin(
                     new com.rexhub.createapparel.client.ponder.ApparelPonderPlugin());
-            MenuScreens.<WardrobeMenu, WardrobeScreen<WardrobeMenu>>
-                    register(ModMenuTypes.WARDROBE.get(), WardrobeScreen::new);
-            MenuScreens.<MannequinMenu, WardrobeScreen<MannequinMenu>>
-                    register(ModMenuTypes.MANNEQUIN.get(), WardrobeScreen::new);
-            MenuScreens.register(ModMenuTypes.CITIZEN.get(), com.rexhub.createapparel.client.screen.CitizenScreen::new);
-            MenuScreens.register(ModMenuTypes.ROUTE_MARKER.get(), com.rexhub.createapparel.client.screen.RouteMarkerScreen::new);
-            MenuScreens.register(ModMenuTypes.CITIZEN_GAUGE.get(), com.rexhub.createapparel.client.screen.CitizenGaugeScreen::new);
-            MenuScreens.<com.rexhub.createapparel.photo.PhotographyMenu, net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<com.rexhub.createapparel.photo.PhotographyMenu>>register(
-                    com.rexhub.createapparel.photo.PhotoRegistries.PHOTOGRAPHY.get(), (menu, inventory, title) ->
-                    menu.mode() == com.rexhub.createapparel.photo.PhotographyMenu.Mode.EDIT
-                            ? new com.rexhub.createapparel.client.advertisement.PhotoEditScreen(menu, inventory, title)
-                            : new com.rexhub.createapparel.client.advertisement.PhotographyScreen(menu, inventory, title));
-            MenuScreens.register(com.rexhub.createapparel.advertisement.AdvertisementRegistries.CONTROL.get(), com.rexhub.createapparel.client.advertisement.AdvertisementControlScreen::new);
+
         });
     }
 
     @SubscribeEvent
+    public static void registerScreens(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
+            event.<com.rexhub.createapparel.menu.WardrobeMenu, WardrobeScreen<com.rexhub.createapparel.menu.WardrobeMenu>>register(ModMenuTypes.WARDROBE.get(), WardrobeScreen::new);
+            event.<com.rexhub.createapparel.menu.MannequinMenu, WardrobeScreen<com.rexhub.createapparel.menu.MannequinMenu>>register(ModMenuTypes.MANNEQUIN.get(), WardrobeScreen::new);
+            event.register(ModMenuTypes.CITIZEN.get(), com.rexhub.createapparel.client.screen.CitizenScreen::new);
+            event.register(ModMenuTypes.ROUTE_MARKER.get(), com.rexhub.createapparel.client.screen.RouteMarkerScreen::new);
+            event.register(ModMenuTypes.CITIZEN_GAUGE.get(), com.rexhub.createapparel.client.screen.CitizenGaugeScreen::new);
+            event.<com.rexhub.createapparel.photo.PhotographyMenu, net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<com.rexhub.createapparel.photo.PhotographyMenu>>register(
+                    com.rexhub.createapparel.photo.PhotoRegistries.PHOTOGRAPHY.get(), (menu, inventory, title) ->
+                    menu.mode() == com.rexhub.createapparel.photo.PhotographyMenu.Mode.EDIT
+                            ? new com.rexhub.createapparel.client.advertisement.PhotoEditScreen(menu, inventory, title)
+                            : new com.rexhub.createapparel.client.advertisement.PhotographyScreen(menu, inventory, title));
+            event.register(com.rexhub.createapparel.advertisement.AdvertisementRegistries.CONTROL.get(), com.rexhub.createapparel.client.advertisement.AdvertisementControlScreen::new);
+    }
+
+    @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
-        event.register(ModPartialModels.CITIZEN_GAUGE_PANEL.modelLocation());
-        event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.MODEL);
-        event.register(com.rexhub.createapparel.client.renderer.HangerDisplay.CLIP_MODEL);
-        event.register(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation());
-        event.register(ModPartialModels.REARING_ITEM.modelLocation());
-        event.register(ModPartialModels.REARING_FEEDING.modelLocation());
-        event.register(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation());
-        event.register(ModPartialModels.LOOM_SLIDE.modelLocation());
-        event.register(ModPartialModels.LOOM_SLIDE_WITH_THREAD.modelLocation());
-        event.register(ModPartialModels.SEWING_MACHINE_ROTATING.modelLocation());
-        event.register(ModPartialModels.SEWING_MACHINE_PISTON.modelLocation());
-        event.register(ModPartialModels.SEWING_MACHINE_THREAD.modelLocation());
-        event.register(ModPartialModels.WARDROBE_LOWER_LEFT_DOOR.modelLocation());
-        event.register(ModPartialModels.WARDROBE_LOWER_RIGHT_DOOR.modelLocation());
-        event.register(ModPartialModels.WARDROBE_UPPER_LEFT_DOOR.modelLocation());
-        event.register(ModPartialModels.WARDROBE_UPPER_RIGHT_DOOR.modelLocation());
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.CITIZEN_GAUGE_PANEL.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(com.rexhub.createapparel.client.renderer.HangerDisplay.MODEL));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(com.rexhub.createapparel.client.renderer.HangerDisplay.CLIP_MODEL));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.SPINNING_MACHINE_ROTATING.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.REARING_ITEM.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.REARING_FEEDING.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.SPINNING_MACHINE_BOBBIN_THREAD.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.LOOM_SLIDE.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.LOOM_SLIDE_WITH_THREAD.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.SEWING_MACHINE_ROTATING.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.SEWING_MACHINE_PISTON.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.SEWING_MACHINE_THREAD.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.WARDROBE_LOWER_LEFT_DOOR.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.WARDROBE_LOWER_RIGHT_DOOR.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.WARDROBE_UPPER_LEFT_DOOR.modelLocation()));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModPartialModels.WARDROBE_UPPER_RIGHT_DOOR.modelLocation()));
     }
 
     @SubscribeEvent
@@ -166,8 +169,8 @@ public final class CreateApparelClient {
     @SubscribeEvent
     public static void addPlayerLayers(EntityRenderersEvent.AddLayers event) {
         FirstPersonApparelRenderer.reloadModels(event.getEntityModels());
-        for (String skin : event.getSkins()) {
-            net.minecraft.client.renderer.entity.player.PlayerRenderer renderer = event.getPlayerSkin(skin);
+        for (var skin : event.getSkins()) {
+            net.minecraft.client.renderer.entity.player.PlayerRenderer renderer = event.getSkin(skin);
             if (renderer != null) {
                 PlayerApparelLayers.add(renderer);
             }
@@ -184,8 +187,8 @@ public final class CreateApparelClient {
         );
         event.register(
                 (stack, tintIndex) -> tintIndex == 0
-                        ? FabricAttributeMap.color(stack).map(color -> color.tintRgb()).orElse(0xFFFFFF)
-                        : 0xFFFFFF,
+                        ? FabricAttributeMap.color(stack).map(color -> 0xFF000000 | color.tintRgb()).orElse(0xFFFFFFFF)
+                        : 0xFFFFFFFF,
                 ModItems.fabricItems().entrySet().stream()
                         .filter(entry -> entry.getValue().isDyed())
                         .map(entry -> entry.getKey().get())
@@ -208,7 +211,7 @@ public final class CreateApparelClient {
     }
 
     @SubscribeEvent
-    public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerBelow(VanillaGuiOverlay.HOTBAR.id(), "watch", WatchHud::render);
+    public static void registerGuiOverlays(RegisterGuiLayersEvent event) {
+        event.registerBelow(VanillaGuiLayers.HOTBAR, net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "watch"), WatchHud::render);
     }
 }

@@ -8,13 +8,12 @@ import com.rexhub.createapparel.network.ModNetwork;
 import com.rexhub.createapparel.network.RouteViewPacket;
 import com.rexhub.createapparel.network.RouteViewRequestPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class ClientRouteView {
     private static List<RouteViewPacket.Node> nodes = List.of();
     private static List<RouteViewPacket.Edge> edges = List.of();
@@ -61,7 +60,7 @@ public final class ClientRouteView {
         if (receiver.needsFull()) requestedRadius = 0;
     }
 
-    @SubscribeEvent public static void maintenanceHint(net.minecraftforge.client.event.RenderGuiEvent.Post event) {
+    @SubscribeEvent public static void maintenanceHint(net.neoforged.neoforge.client.event.RenderGuiEvent.Post event) {
         var minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.screen != null || !RouteMarkerPermissions.holdingPhone(minecraft.player)
                 || !(minecraft.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit)) return;
@@ -71,14 +70,13 @@ public final class ClientRouteView {
                 minecraft.getWindow().getGuiScaledWidth() / 2, minecraft.getWindow().getGuiScaledHeight() / 2 + 16, 0xFFBB55);
     }
 
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
-    public static void interact(net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) {
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
+    public static void interact(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) {
         if (!event.getLevel().isClientSide) return;
         com.rexhub.createapparel.citizen.route.SmartPhoneRouteEditor.interact(event, selected != null, targetedEdge());
     }
 
-    @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
         var minecraft = Minecraft.getInstance();
         if (observedLevel != minecraft.level) { clear(); observedLevel = minecraft.level; }
         if (minecraft.player == null || !RouteMarkerPermissions.holdingPhone(minecraft.player)) { clear(); return; }

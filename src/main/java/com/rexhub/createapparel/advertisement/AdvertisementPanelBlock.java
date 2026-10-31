@@ -29,6 +29,22 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public final class AdvertisementPanelBlock extends BaseEntityBlock {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
+    public static final com.mojang.serialization.MapCodec<AdvertisementPanelBlock> CODEC = com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance -> instance.group(
+                propertiesCodec(), com.mojang.serialization.Codec.STRING.xmap(Kind::valueOf, Kind::name)
+                        .fieldOf("kind").forGetter(block -> block.kind)
+        ).apply(instance, AdvertisementPanelBlock::new));
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends AdvertisementPanelBlock> codec() {
+        return CODEC;
+    }
+
     public enum Kind { POSTER, BILLBOARD, SIGNAGE }
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     public static final IntegerProperty PART = IntegerProperty.create("part", 0, 1);
@@ -57,7 +73,7 @@ public final class AdvertisementPanelBlock extends BaseEntityBlock {
     @Override public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         if (!(level instanceof ServerLevel server) || !(placer instanceof Player player)
                 || !(level.getBlockEntity(pos) instanceof AdvertisementPanelBlockEntity panel)) return;
-        panel.initialize(player, stack.hasTag() ? stack.getOrCreateTag() : new net.minecraft.nbt.CompoundTag());
+        panel.initialize(player, com.rexhub.createapparel.item.ItemData.hasData(stack) ? com.rexhub.createapparel.item.ItemData.readOrEmpty(stack) : new net.minecraft.nbt.CompoundTag());
         if (kind == Kind.POSTER) {
             var other = pos.above();
             level.setBlock(other, state.setValue(PART, 1), 3);
@@ -92,7 +108,7 @@ public final class AdvertisementPanelBlock extends BaseEntityBlock {
     @Override @SuppressWarnings("deprecation") public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (level.getBlockEntity(pos) instanceof AdvertisementPanelBlockEntity panel) PanelGroupManager.repair(level, panel);
     }
-    @Override @SuppressWarnings("deprecation") public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+     @SuppressWarnings("deprecation") private InteractionResult interact(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (kind != Kind.POSTER && player.getItemInHand(hand).is(asItem())) return InteractionResult.PASS;
         if (kind == Kind.POSTER && !(player.isShiftKeyDown() && player.getItemInHand(hand).is(com.rexhub.createapparel.init.ModItems.SMART_PHONE.get())))
             return InteractionResult.PASS;
@@ -114,13 +130,13 @@ public final class AdvertisementPanelBlock extends BaseEntityBlock {
         var result = new ItemStack(panel.getBlockState().getBlock()); var controller = panel.controller();
         if (controller != null) {
             if (panel.kind() == Kind.SIGNAGE) {
-                result.getOrCreateTag().putInt("AdvertisementDataVersion", 2);
-                result.getOrCreateTag().putString("Channel", controller.channel());
-                if (!controller.sceneLayouts().isEmpty()) result.getOrCreateTag().put("SceneLayouts", controller.content().getCompound("SceneLayouts"));
+                com.rexhub.createapparel.item.ItemData.update(result, customData -> customData.putInt("AdvertisementDataVersion", 2));
+                com.rexhub.createapparel.item.ItemData.update(result, customData -> customData.putString("Channel", controller.channel()));
+                if (!controller.sceneLayouts().isEmpty()) com.rexhub.createapparel.item.ItemData.update(result, customData -> customData.put("SceneLayouts", controller.content().getCompound("SceneLayouts")));
             }
             else if ((panel.kind() != Kind.BILLBOARD || (long) controller.width() * controller.height() == 1)
                     && (controller.localSnapshot().photo() != null || controller.localSnapshot().layoutOverride() != null))
-                result.getOrCreateTag().put("Advertisement", controller.localSnapshot().save());
+                com.rexhub.createapparel.item.ItemData.update(result, customData -> customData.put("Advertisement", controller.localSnapshot().save()));
         }
         return result;
     }
@@ -129,12 +145,12 @@ public final class AdvertisementPanelBlock extends BaseEntityBlock {
         var entity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         return entity instanceof AdvertisementPanelBlockEntity panel ? List.of(drop(panel)) : List.of(new ItemStack(this));
     }
-    @Override public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+    @Override public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide && kind == Kind.POSTER && state.getValue(PART) == 1) {
             var other = posterOther(level, pos, state);
             if (level.getBlockState(other).is(this)) level.destroyBlock(other, !player.isCreative(), player);
         }
-        super.playerWillDestroy(level, pos, state, player);
+        return super.playerWillDestroy(level, pos, state, player);
     }
     @Override @SuppressWarnings("deprecation") public void onRemove(BlockState state, Level level, BlockPos pos, BlockState next, boolean moving) {
         if (!state.is(next.getBlock()) && level instanceof ServerLevel server && level.getBlockEntity(pos) instanceof AdvertisementPanelBlockEntity panel) {

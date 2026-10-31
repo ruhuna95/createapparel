@@ -14,7 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -274,8 +274,8 @@ public final class RetailInspection {
         @Nullable private Job job;
     }
 
-    private record StockKey(Item item, @Nullable CompoundTag tag) {
-        static StockKey of(ItemStack stack) { return new StockKey(stack.getItem(), stack.getTag() == null ? null : stack.getTag().copy()); }
+    private record StockKey(Item item, net.minecraft.core.component.DataComponentPatch components) {
+        static StockKey of(ItemStack stack) { return new StockKey(stack.getItem(), stack.getComponentsPatch()); }
     }
 
     private static final class Job {
@@ -299,7 +299,7 @@ public final class RetailInspection {
                 var stack = storage.getStackInSlot(slot);
                 if (!stack.isEmpty() && stack.getItem() instanceof GarmentItem) {
                     var extracted = storage.extractItem(slot, 1, true);
-                    if (extracted.getCount() == 1 && ItemStack.isSameItemSameTags(stack, extracted)) stock.add(StockKey.of(stack));
+                    if (extracted.getCount() == 1 && ItemStack.isSameItemSameComponents(stack, extracted)) stock.add(StockKey.of(stack));
                 }
                 slot++;
                 used++;

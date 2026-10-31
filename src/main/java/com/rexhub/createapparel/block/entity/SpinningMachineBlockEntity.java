@@ -8,8 +8,8 @@ import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 public final class SpinningMachineBlockEntity extends SingleInputProcessingBlockEntity<SpinningRecipe> {
     public SpinningMachineBlockEntity(BlockPos pos, BlockState state) {

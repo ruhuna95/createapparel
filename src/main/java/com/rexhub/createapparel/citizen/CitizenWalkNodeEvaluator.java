@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
@@ -44,13 +44,13 @@ final class CitizenWalkNodeEvaluator extends WalkNodeEvaluator {
     }
 
     @Override
-    public BlockPathTypes getBlockPathType(BlockGetter level, int x, int y, int z) {
-        if (!CitizenEscalatedTransport.available()) return super.getBlockPathType(level, x, y, z);
+    public PathType getPathType(net.minecraft.world.level.pathfinder.PathfindingContext context, int x, int y, int z) {
+        if (!CitizenEscalatedTransport.available()) return super.getPathType(context, x, y, z);
         var pos = new BlockPos(x, y, z);
-        if (CitizenEscalatedTransport.isWalkway(level.getBlockState(pos))) return BlockPathTypes.BLOCKED;
-        var type = super.getBlockPathType(level, x, y, z);
-        if (type == BlockPathTypes.OPEN && CitizenEscalatedTransport.isWalkway(level.getBlockState(pos.below())))
-            return checkNeighbourBlocks(level, pos.mutable(), BlockPathTypes.WALKABLE);
+        if (CitizenEscalatedTransport.isWalkway(context.getBlockState(pos))) return PathType.BLOCKED;
+        var type = super.getPathType(context, x, y, z);
+        if (type == PathType.OPEN && CitizenEscalatedTransport.isWalkway(context.getBlockState(pos.below())))
+            return checkNeighbourBlocks(context, x, y, z, PathType.WALKABLE);
         return type;
     }
 
@@ -67,7 +67,7 @@ final class CitizenWalkNodeEvaluator extends WalkNodeEvaluator {
             if (!CitizenEscalatedTransport.permitsEntry(axis(next.asBlockPos()), delta)
                     || !CitizenEscalatedTransport.permits(from, to, delta)) continue;
             neighbors[accepted++] = next;
-            if (!preferTransport || next.type != BlockPathTypes.WALKABLE || mob.getPathfindingMalus(next.type) != 0) continue;
+            if (!preferTransport || next.type != PathType.WALKABLE || mob.getPathfindingMalus(next.type) != 0) continue;
             boolean assisted = (from != null && from.along(delta) || to != null && to.along(delta));
             next.costMalus = assisted ? 0 : 0.6F;
         }

@@ -11,15 +11,15 @@ if (providers.gradleProperty('fashionLint').getOrElse('false').toBoolean()) {
     tasks.named('compileJava', JavaCompile) { options.compilerArgs.add('-Xlint:deprecation') }
 }
 
-minecraft.runs {
+neoForge.runs {
     fashionTestClient {
-        parent minecraft.runs.client
-        workingDirectory file('run/fashion-tests/client')
-        property 'forge.logging.console.level', 'info'
-        property 'apparel.fashionTest.client', 'true'
-        property 'apparel.fashionTest.projectDir', projectDir.absolutePath
-        property 'apparel.generateAdvertisementIcons', providers.gradleProperty('generateAdvertisementIcons').getOrElse('false')
-        mods { "${mod_id}" { source sourceSets.fashionTest } }
+        client()
+        gameDirectory = file('run/fashion-tests/client')
+        systemProperty 'forge.logging.console.level', 'info'
+        systemProperty 'apparel.fashionTest.client', 'true'
+        systemProperty 'apparel.fashionTest.projectDir', projectDir.absolutePath
+        systemProperty 'apparel.generateAdvertisementIcons', providers.gradleProperty('generateAdvertisementIcons').getOrElse('false')
+        sourceSet = sourceSets.fashionTest
     }
 }
 

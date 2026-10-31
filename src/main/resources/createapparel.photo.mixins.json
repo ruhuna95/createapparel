@@ -2,8 +2,7 @@
   "required": true,
   "minVersion": "0.8.5",
   "package": "com.rexhub.createapparel.photo.mixin",
-  "compatibilityLevel": "JAVA_17",
-  "refmap": "createapparel.refmap.json",
-  "mixins": ["CraftingMenuAccessor"],
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["CraftingMenuAccessor", "CraftingInputMixin"],
   "injectors": { "defaultRequire": 1 }
 }

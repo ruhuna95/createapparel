@@ -16,13 +16,13 @@ import com.rexhub.createapparel.material.FabricAttribute;
 import net.minecraft.data.PackOutput;
 import net.minecraft.core.Direction;
 import net.minecraft.server.packs.PackType;
-import net.minecraftforge.client.model.generators.ItemModelBuilder;
+import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraftforge.client.model.generators.ItemModelProvider;
-import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -44,7 +44,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
         }
         var dyeModel = withExistingParent("apparel_dye", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/apparel_dye_base"));
-        for (RegistryObject<Item> item : ModRegistries.ITEMS.getEntries()) {
+        for (DeferredHolder<Item, ? extends Item> item : ModRegistries.ITEMS.getEntries()) {
             if (java.util.Set.of("cash_register", "camera", "advertising_photo", "poster", "billboard_panel", "signage_panel", "signage_broadcaster").contains(item.getId().getPath())) continue;
             if (item == ModItems.CITIZEN_GAUGE || com.rexhub.createapparel.init.ModMirrors.ITEMS.containsValue(item)
                     || item == com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_BUCKET) continue;
@@ -83,7 +83,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
         }
     }
 
-    private void dyedFabric(RegistryObject<Item> item, FabricAttribute attribute) {
+    private void dyedFabric(DeferredHolder<Item, ? extends Item> item, FabricAttribute attribute) {
         generatedItem(item, attribute.material().getSerializedName() + "_fabric_tint");
     }
 
@@ -124,7 +124,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
                 .transform(ItemDisplayContext.FIRST_PERSON_LEFT_HAND).rotation(0, 225, 0).scale(0.3F).end();
     }
 
-    private void mannequinModel(RegistryObject<Item> item, MannequinVariant variant) {
+    private void mannequinModel(DeferredHolder<Item, ? extends Item> item, MannequinVariant variant) {
         ItemModelBuilder model = getBuilder(item.getId().getPath()).texture("body", modLoc("item/mannequin/" + variant.color().id()))
                 .texture("particle", "#body");
         mannequinBox(model, -6, -1, -6, 6, 0, 6);
@@ -209,7 +209,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
         }
     }
 
-    private void garmentModel(RegistryObject<Item> item) {
+    private void garmentModel(DeferredHolder<Item, ? extends Item> item) {
         getBuilder(item.getId().getPath()).parent(new ModelFile.UncheckedModelFile(mcLoc("builtin/entity")))
                 .texture("particle", modLoc("item/old_cloth"))
                 .transforms()
@@ -226,7 +226,7 @@ public final class ModItemModelProvider extends ItemModelProvider {
                     .rotation(0, 225, 0).translation(1.13F, 3.2F, 1.13F).scale(0.62F).end();
     }
 
-    private void generatedItem(RegistryObject<Item> item, String textureName) {
+    private void generatedItem(DeferredHolder<Item, ? extends Item> item, String textureName) {
         withExistingParent(item.getId().getPath(), mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/" + textureName));
     }

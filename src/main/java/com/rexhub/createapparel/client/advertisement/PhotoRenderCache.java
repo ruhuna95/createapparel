@@ -35,16 +35,20 @@ public final class PhotoRenderCache {
     private record Key(net.minecraft.nbt.CompoundTag visual, int width, int height, ResourceLocation skin, ArmProfile arms, long generation) { }
     private static final LinkedHashMap<Key, Image> IMAGES = new LinkedHashMap<>(16, 0.75F, true);
     private static final Map<UUID, Skin> SKINS = new HashMap<>();
-    private static final BufferBuilder PHOTO_BUFFER = new BufferBuilder(262144);
+    private static final ByteBufferBuilder PHOTO_BUFFER = new ByteBufferBuilder(262144);
     private static final class Skin {
         ResourceLocation texture; ArmProfile arms; long nextRefresh;
-        Skin(UUID id) { texture = DefaultPlayerSkin.getDefaultSkin(id); arms = DefaultPlayerSkin.getSkinModelName(id).equals("slim") ? ArmProfile.SLIM : ArmProfile.CLASSIC; }
+        Skin(UUID id) { texture = DefaultPlayerSkin.get(id).texture(); arms = DefaultPlayerSkin.get(id).model() == net.minecraft.client.resources.PlayerSkin.Model.SLIM ? ArmProfile.SLIM : ArmProfile.CLASSIC; }
     }
     private static long serial, lastGeneration = -1, lastFrame;
     private static int generated;
     private PhotoRenderCache() { }
     public static void clear() {
-        for (var image : IMAGES.values()) Minecraft.getInstance().getTextureManager().release(image.texture()); IMAGES.clear(); SKINS.clear();
+        for (var image : IMAGES.values()) releaseAfterFrame(image); IMAGES.clear(); SKINS.clear();
+    }
+    private static void releaseAfterFrame(Image image) {
+        var minecraft = Minecraft.getInstance();
+        minecraft.tell(() -> minecraft.getTextureManager().release(image.texture()));
     }
     @javax.annotation.Nullable public static Image image(AdvertisingPhotoData photo, int screenWidth, int screenHeight) {
         var minecraft = Minecraft.getInstance(); long generation = ClientGarmentAssets.INSTANCE.generation();
@@ -54,14 +58,14 @@ public final class PhotoRenderCache {
         int width = Math.max(1, screenWidth * unit), height = Math.max(1, screenHeight * unit);
         var skin = photo.playerId() == null ? null : skin(photo.playerId());
         var visual = photo.save(); visual.remove("PhotoId"); visual.remove("CaptureId");
-        var key = new Key(visual, width, height, skin == null ? DefaultPlayerSkin.getDefaultSkin() : skin.texture,
+        var key = new Key(visual, width, height, skin == null ? DefaultPlayerSkin.getDefaultTexture() : skin.texture,
                 skin == null ? photo.appearance().armProfile() : skin.arms, generation);
         var cached = IMAGES.get(key); if (cached != null) return cached;
         long frame = minecraft.getFrameTimeNs();
         if (frame != lastFrame) { lastFrame = frame; generated = 0; }
         if (generated >= 1) return null; generated++;
         var result = render(photo, width, height, skin); IMAGES.put(key, result);
-        while (IMAGES.size() > 32) { var iterator = IMAGES.entrySet().iterator(); var old = iterator.next().getValue(); iterator.remove(); minecraft.getTextureManager().release(old.texture()); }
+        while (IMAGES.size() > 32) { var iterator = IMAGES.entrySet().iterator(); var old = iterator.next().getValue(); iterator.remove(); releaseAfterFrame(old); }
         return result;
     }
     private static Skin skin(UUID id) {
@@ -69,15 +73,15 @@ public final class PhotoRenderCache {
         var skin = SKINS.computeIfAbsent(id, Skin::new); long now = net.minecraft.Util.getMillis();
         var player = Minecraft.getInstance().level == null ? null : Minecraft.getInstance().level.getPlayerByUUID(id);
         if (player instanceof net.minecraft.client.player.AbstractClientPlayer client) {
-            skin.texture = client.getSkinTextureLocation(); skin.arms = client.getModelName().equals("slim") ? ArmProfile.SLIM : ArmProfile.CLASSIC;
+            skin.texture = client.getSkin().texture(); skin.arms = client.getSkin().model() == net.minecraft.client.resources.PlayerSkin.Model.SLIM ? ArmProfile.SLIM : ArmProfile.CLASSIC;
         }
         if (now >= skin.nextRefresh) {
             skin.nextRefresh = now + 60000;
-            Minecraft.getInstance().getSkinManager().registerSkins(new GameProfile(id, ""), (type, texture, profileTexture) -> {
-                if (type == MinecraftProfileTexture.Type.SKIN) {
-                    skin.texture = texture; skin.arms = "slim".equals(profileTexture.getMetadata("model")) ? ArmProfile.SLIM : ArmProfile.CLASSIC;
-                }
-            }, false);
+            Minecraft.getInstance().getSkinManager().getOrLoad(new GameProfile(id, "")).thenAccept(loaded ->
+                    Minecraft.getInstance().execute(() -> {
+                        skin.texture = loaded.texture();
+                        skin.arms = loaded.model() == net.minecraft.client.resources.PlayerSkin.Model.SLIM ? ArmProfile.SLIM : ArmProfile.CLASSIC;
+                    }));
         }
         return skin;
     }
@@ -85,8 +89,8 @@ public final class PhotoRenderCache {
         var minecraft = Minecraft.getInstance();
         int draw = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING), read = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
         int[] viewport = new int[4]; GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
-        var projection = new Matrix4f(RenderSystem.getProjectionMatrix()); var sorting = RenderSystem.getVertexSorting();
-        var modelView = RenderSystem.getModelViewStack(); modelView.pushPose();
+        var projection = new Matrix4f(RenderSystem.getProjectionMatrix()); var sorting = com.rexhub.createapparel.client.mixin.RenderSystemAccessor.createapparel$vertexSorting();
+        var modelView = RenderSystem.getModelViewStack(); modelView.pushMatrix();
         var previousShader = RenderSystem.getShader(); var previousColor = RenderSystem.getShaderColor().clone();
         int previousTexture = RenderSystem.getShaderTexture(0);
         int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
@@ -107,7 +111,7 @@ public final class PhotoRenderCache {
             int rgb = photo.layout().background().tintRgb(); target.setClearColor((rgb >> 16 & 255) / 255f, (rgb >> 8 & 255) / 255f, (rgb & 255) / 255f, 1);
             target.clear(Minecraft.ON_OSX); target.bindWrite(true);
             RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, width, height, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
-            modelView.setIdentity(); RenderSystem.applyModelViewMatrix(); RenderSystem.enableDepthTest(); RenderSystem.disableCull();
+            modelView.identity(); RenderSystem.applyModelViewMatrix(); RenderSystem.enableDepthTest(); RenderSystem.disableCull();
             RenderSystem.setShaderLights(new org.joml.Vector3f(0.2F, -0.5F, 1).normalize(),
                     new org.joml.Vector3f(-0.2F, 0.4F, 1).normalize());
             ArmProfile arms = skin == null ? photo.appearance().armProfile() : skin.arms;
@@ -137,7 +141,7 @@ public final class PhotoRenderCache {
             com.mojang.blaze3d.platform.GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, draw);
             com.mojang.blaze3d.platform.GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, read);
             RenderSystem.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            RenderSystem.setProjectionMatrix(projection, sorting); modelView.popPose(); RenderSystem.applyModelViewMatrix();
+            RenderSystem.setProjectionMatrix(projection, sorting); modelView.popMatrix(); RenderSystem.applyModelViewMatrix();
             if (depth) RenderSystem.enableDepthTest(); else RenderSystem.disableDepthTest();
             if (blend) RenderSystem.enableBlend(); else RenderSystem.disableBlend();
             if (cull) RenderSystem.enableCull(); else RenderSystem.disableCull();
@@ -185,14 +189,11 @@ public final class PhotoRenderCache {
     }
     private static final class Bounds implements VertexConsumer {
         double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
-        @Override public VertexConsumer vertex(double x, double y, double z) { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); return this; }
-        @Override public VertexConsumer color(int r, int g, int b, int a) { return this; }
-        @Override public VertexConsumer uv(float u, float v) { return this; }
-        @Override public VertexConsumer overlayCoords(int u, int v) { return this; }
-        @Override public VertexConsumer uv2(int u, int v) { return this; }
-        @Override public VertexConsumer normal(float x, float y, float z) { return this; }
-        @Override public void endVertex() { }
-        @Override public void defaultColor(int r, int g, int b, int a) { }
-        @Override public void unsetDefaultColor() { }
+        @Override public VertexConsumer addVertex(float x, float y, float z) { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); return this; }
+        @Override public VertexConsumer setColor(int r, int g, int b, int a) { return this; }
+        @Override public VertexConsumer setUv(float u, float v) { return this; }
+        @Override public VertexConsumer setUv1(int u, int v) { return this; }
+        @Override public VertexConsumer setUv2(int u, int v) { return this; }
+        @Override public VertexConsumer setNormal(float x, float y, float z) { return this; }
     }
 }

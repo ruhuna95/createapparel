@@ -17,8 +17,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -97,25 +97,39 @@ public final class FashionObservationGameTests {
         level.addFreshEntity(mannequin);
         checkDisplayScreens(helper, observer, mannequin.getUUID());
         mannequin.discard();
+        checkPanels(helper, observer, target, 0);
+    }
 
+    private static void checkPanels(GameTestHelper helper, Citizen observer, BlockPos target, int index) {
+        var level = helper.getLevel();
+        var blocks = List.of(AdvertisementRegistries.POSTER.get(), AdvertisementRegistries.BILLBOARD_PANEL.get(),
+                AdvertisementRegistries.SIGNAGE_PANEL.get());
+        if (index == blocks.size()) {
+            checkOtherCitizen(helper, observer, target);
+            return;
+        }
         var snapshot = AdvertisementSnapshot.photo(PhotographyService.snapshot(observer));
-        for (var block : List.of(AdvertisementRegistries.POSTER.get(), AdvertisementRegistries.BILLBOARD_PANEL.get(),
-                AdvertisementRegistries.SIGNAGE_PANEL.get())) {
-            var pos = target.above();
-            level.setBlockAndUpdate(pos, block.defaultBlockState().setValue(AdvertisementPanelBlock.FACING, Direction.NORTH));
-            var panel = (AdvertisementPanelBlockEntity) Objects.requireNonNull(level.getBlockEntity(pos));
-            if (block == AdvertisementRegistries.SIGNAGE_PANEL.get()) {
-                var network = com.rexhub.createapparel.advertisement.AdvertisementNetworkSavedData.get(level);
-                var player = new net.minecraft.server.level.ServerPlayer(level.getServer(), level,
-                        new com.mojang.authlib.GameProfile(UUID.randomUUID(), "observation-test"));
-                String channel = "observation_" + Math.abs(panel.groupId().hashCode());
-                helper.assertTrue(network.publish(player, channel, snapshot), "Signage photo channel is published");
-                panel.channel(channel);
-            } else panel.content(snapshot);
+        var block = blocks.get(index);
+        var pos = target.above();
+        level.setBlockAndUpdate(pos, block.defaultBlockState().setValue(AdvertisementPanelBlock.FACING, Direction.NORTH));
+        var panel = (AdvertisementPanelBlockEntity) Objects.requireNonNull(level.getBlockEntity(pos));
+        if (block == AdvertisementRegistries.SIGNAGE_PANEL.get()) {
+            var network = com.rexhub.createapparel.advertisement.AdvertisementNetworkSavedData.get(level);
+            var player = new net.minecraft.server.level.ServerPlayer(level.getServer(), level,
+                    new com.mojang.authlib.GameProfile(UUID.randomUUID(), "observation-test"), net.minecraft.server.level.ClientInformation.createDefault());
+            String channel = "observation_" + Math.abs(panel.groupId().hashCode());
+            helper.assertTrue(network.publish(player, channel, snapshot), "Signage photo channel is published");
+            panel.channel(channel);
+        } else panel.content(snapshot);
+        helper.runAfterDelay(2, () -> {
             checkDisplayScreens(helper, observer, panel.groupId());
             level.removeBlock(pos, false);
-        }
+            checkPanels(helper, observer, target, index + 1);
+        });
+    }
 
+    private static void checkOtherCitizen(GameTestHelper helper, Citizen observer, BlockPos target) {
+        var level = helper.getLevel();
         var other = Objects.requireNonNull(ModEntities.CITIZEN.get().create(level));
         other.setNoGravity(true);
         other.setPos(Vec3.atBottomCenterOf(target));

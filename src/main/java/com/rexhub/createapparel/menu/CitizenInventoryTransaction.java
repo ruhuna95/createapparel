@@ -47,7 +47,7 @@ final class CitizenInventoryTransaction {
                     carried = current;
                     set(index, ItemStack.EMPTY);
                 } else if (candidate.isItemValid(index, carried) && carried.getCount() == 1) {
-                    if (!current.isEmpty() && ItemStack.isSameItemSameTags(current, carried)) return true;
+                    if (!current.isEmpty() && ItemStack.isSameItemSameComponents(current, carried)) return true;
                     set(index, carried);
                     carried = current;
                 } else return false;
@@ -91,7 +91,7 @@ final class CitizenInventoryTransaction {
         int before = source.getCount();
         for (int index = ApparelMenu.PLAYER_INVENTORY_END - 1; index >= ApparelMenu.PLAYER_INVENTORY_START; index--) {
             ItemStack target = get(index);
-            if (!target.isEmpty() && ItemStack.isSameItemSameTags(source, target)) {
+            if (!target.isEmpty() && ItemStack.isSameItemSameComponents(source, target)) {
                 int amount = Math.min(source.getCount(), target.getMaxStackSize() - target.getCount());
                 if (amount > 0) {
                     ItemStack merged = target.copy();
@@ -115,7 +115,7 @@ final class CitizenInventoryTransaction {
         for (int pass = 0; pass < 2; pass++) {
             for (int index = first; index >= 0 && index < menu.slots.size() && carried.getCount() < carried.getMaxStackSize(); index += direction) {
                 ItemStack source = get(index).copy();
-                if (source.isEmpty() || !ItemStack.isSameItemSameTags(source, carried)
+                if (source.isEmpty() || !ItemStack.isSameItemSameComponents(source, carried)
                         || !AbstractContainerMenu.canItemQuickReplace(menu.slots.get(index), carried, true)
                         || pass == 0 && source.getCount() == source.getMaxStackSize()) continue;
                 int amount = Math.min(source.getCount(), carried.getMaxStackSize() - carried.getCount());

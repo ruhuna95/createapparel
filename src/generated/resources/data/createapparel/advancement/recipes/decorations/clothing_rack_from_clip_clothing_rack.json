@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_clip_clothing_rack": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createapparel:clip_clothing_rack"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "createapparel:clothing_rack_from_clip_clothing_rack"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_clip_clothing_rack"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "createapparel:clothing_rack_from_clip_clothing_rack"
+    ]
+  }
+}

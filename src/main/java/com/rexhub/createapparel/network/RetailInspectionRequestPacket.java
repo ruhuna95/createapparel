@@ -10,7 +10,17 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
-public record RetailInspectionRequestPacket(BlockPos pos, boolean observe) {
+public record RetailInspectionRequestPacket(BlockPos pos, boolean observe) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<RetailInspectionRequestPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "retail_inspection_request_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, RetailInspectionRequestPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), RetailInspectionRequestPacket::decode);
+
+    @Override
+    public Type<RetailInspectionRequestPacket> type() {
+        return TYPE;
+    }
+
     private static final java.util.Map<ServerPlayer, RetailInspectionRequestPacket> PENDING = new java.util.WeakHashMap<>();
     public RetailInspectionRequestPacket(BlockPos pos) { this(pos, true); }
     public void encode(FriendlyByteBuf buffer) { buffer.writeBlockPos(pos); buffer.writeBoolean(observe); }

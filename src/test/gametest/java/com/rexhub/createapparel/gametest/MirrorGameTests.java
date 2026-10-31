@@ -29,8 +29,8 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -42,7 +42,7 @@ public final class MirrorGameTests {
     public static void panelPlacementSupportsAllWallsAndDropsOnSupportLoss(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = position(helper);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         var block = ModMirrors.MIRROR_PANEL.get();
         for (Direction facing : Direction.Plane.HORIZONTAL) {
             var support = pos.relative(facing.getOpposite());
@@ -109,14 +109,14 @@ public final class MirrorGameTests {
         var block = ModMirrors.OAK_FULL_LENGTH_MIRROR.get();
         level.setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
         level.setBlockAndUpdate(pos.above(), Blocks.STONE.defaultBlockState());
-        var context = new BlockPlaceContext(helper.makeMockPlayer(), InteractionHand.MAIN_HAND, new ItemStack(block),
+        var context = new BlockPlaceContext(helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), InteractionHand.MAIN_HAND, new ItemStack(block),
                 new BlockHitResult(Vec3.atCenterOf(pos.below()), Direction.UP, pos.below(), false));
         helper.assertTrue(block.getStateForPlacement(context) == null, "Full mirror rejects obstructed upper space");
         level.removeBlock(pos.above(), false);
         var player = new net.minecraft.server.level.ServerPlayer(level.getServer(), level,
-                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "mirror-test"));
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "mirror-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(level.getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
         for (var mode : new GameType[]{GameType.SURVIVAL, GameType.CREATIVE}) for (boolean upper : new boolean[]{false, true}) {
@@ -157,7 +157,7 @@ public final class MirrorGameTests {
     public static void allWoodDoorsOpenByHandFromEitherHalfAndByRedstone(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = position(helper);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         level.setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
         for (var wood : MirrorWood.values()) {
             var block = (MirroredDoorBlock) ModMirrors.MIRRORED_DOORS.get(wood).get();
@@ -166,10 +166,10 @@ public final class MirrorGameTests {
             block.setPlacedBy(level, pos, state, player, new ItemStack(block));
             for (var clicked : new BlockPos[]{pos, pos.above()}) {
                 var hit = new BlockHitResult(Vec3.atCenterOf(clicked), Direction.NORTH, clicked, false);
-                level.getBlockState(clicked).use(level, player, InteractionHand.MAIN_HAND, hit);
+                com.rexhub.createapparel.TestInteractions.use(level.getBlockState(clicked), level, player, InteractionHand.MAIN_HAND, hit);
                 helper.assertTrue(level.getBlockState(pos).getValue(DoorBlock.OPEN)
                         && level.getBlockState(pos.above()).getValue(DoorBlock.OPEN), "Wood door opens from either half");
-                level.getBlockState(clicked).use(level, player, InteractionHand.MAIN_HAND, hit);
+                com.rexhub.createapparel.TestInteractions.use(level.getBlockState(clicked), level, player, InteractionHand.MAIN_HAND, hit);
                 helper.assertTrue(!level.getBlockState(pos).getValue(DoorBlock.OPEN)
                         && !level.getBlockState(pos.above()).getValue(DoorBlock.OPEN), "Wood door closes both halves");
             }
@@ -204,7 +204,7 @@ public final class MirrorGameTests {
         level.setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
         var state = block.defaultBlockState();
         level.setBlockAndUpdate(pos, state);
-        block.setPlacedBy(level, pos, state, helper.makeMockPlayer(), new ItemStack(block));
+        block.setPlacedBy(level, pos, state, helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), new ItemStack(block));
         level.setBlockAndUpdate(pos.south(), Blocks.REDSTONE_BLOCK.defaultBlockState());
         helper.assertTrue(level.getBlockState(pos).getValue(DoorBlock.OPEN) && level.getBlockState(pos.above()).getValue(DoorBlock.OPEN), "Power opens both mirrored door halves");
         level.removeBlock(pos.south(), false);
@@ -218,7 +218,7 @@ public final class MirrorGameTests {
         helper.assertTrue(ModFluids.MIRROR_COATING_FLUID.get().getBucket() == ModFluids.MIRROR_COATING_BUCKET.get(), "Coating works with standard bucket transport");
         helper.assertTrue(helper.getLevel().getRecipeManager().byKey(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "filling/mirror_panel")).isPresent(), "Spout filling remains available without Destroy");
         helper.assertTrue(OptionalRecipeCondition.MIRROR_FALLBACK.test(
-                        net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY)
+                        net.neoforged.neoforge.common.conditions.ICondition.IContext.EMPTY)
                         == OptionalRecipeRoutes.selection().useFallback(RecipeRouteSelection.Product.MIRROR_COATING, false),
                 "An empty silver context enables fallback regardless of the world config");
         helper.succeed();
@@ -244,7 +244,7 @@ public final class MirrorGameTests {
         helper.assertTrue(drops(helper, full) == 0 && drops(helper, ModMirrors.MIRROR_PANEL.get()) == 0,
                 "Assembly does not drop supported mirrors");
         contraption.getStorage().initialize();
-        var restored = com.simibubi.create.content.contraptions.Contraption.fromNBT(level, contraption.writeNBT(false), false);
+        var restored = com.simibubi.create.content.contraptions.Contraption.fromNBT(level, contraption.writeNBT(com.rexhub.createapparel.TestRegistries.lookup(), false), false);
         restored.addBlocksToWorld(level, new com.simibubi.create.content.contraptions.StructureTransform(support, 0, 0, 0));
         helper.assertTrue(level.getBlockEntity(fullPos) instanceof MirrorBlockEntity
                 && level.getBlockState(fullPos.above()).is(full)

@@ -37,22 +37,22 @@ public final class SignageBroadcasterBlockEntity extends BlockEntity {
                 scenes.isEmpty() ? AdvertisementScenes.DEFAULTS : scenes)) return false;
         this.channel = channel; initialize(player); setChanged(); return true;
     }
-    @Override protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag); tag.putInt("Version", 1); tag.putString("Channel", channel);
+    @Override protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries); tag.putInt("Version", 1); tag.putString("Channel", channel);
         var items = new net.minecraft.nbt.ListTag();
         for (int slot = 0; slot < photos.getContainerSize(); slot++) if (!photos.getItem(slot).isEmpty()) {
-            var item = photos.getItem(slot).save(new CompoundTag()); item.putByte("Slot", (byte) slot); items.add(item);
+            var item = (CompoundTag) photos.getItem(slot).save(registries); item.putByte("Slot", (byte) slot); items.add(item);
         }
         tag.put("Photos", items); if (owner != null) tag.putUUID("Owner", owner);
     }
-    @Override public void load(CompoundTag tag) {
-        super.load(tag); channel = AdvertisementNetworkSavedData.validChannel(tag.getString("Channel")) ? tag.getString("Channel") : "";
+    @Override protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries); channel = AdvertisementNetworkSavedData.validChannel(tag.getString("Channel")) ? tag.getString("Channel") : "";
         owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         photos.clearContent();
         var items = tag.getList("Photos", CompoundTag.TAG_COMPOUND);
         for (int index = 0; index < Math.min(items.size(), AdvertisementScenes.MAX_SCENES); index++) {
             var item = items.getCompound(index); int slot = item.getByte("Slot") & 255;
-            if (slot < photos.getContainerSize() && photos.getItem(slot).isEmpty()) photos.setItem(slot, ItemStack.of(item));
+            if (slot < photos.getContainerSize() && photos.getItem(slot).isEmpty()) photos.setItem(slot, com.rexhub.createapparel.item.ItemData.load(registries, item));
         }
     }
 }

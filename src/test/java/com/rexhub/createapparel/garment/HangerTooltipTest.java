@@ -31,8 +31,8 @@ class HangerTooltipTest {
     void wallHangerAndRackAppendTheTypeHintThroughTheBlockItemTooltipHook() throws IOException {
         for (String block : List.of("WallHangerBlock", "ClothingRackBlock")) {
             String source = Files.readString(Path.of("src/main/java/com/rexhub/createapparel/block/" + block + ".java"));
-            assertTrue(source.contains("void appendHoverText(ItemStack stack, @Nullable BlockGetter level,"), block);
-            assertTrue(source.contains("super.appendHoverText(stack, level, tooltip, flag);"), block);
+            assertTrue(source.contains("void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,"), block);
+            assertTrue(source.contains("super.appendHoverText(stack, context, tooltip, flag);"), block);
             assertTrue(source.contains("tooltip.add(Component.translatable(hangerType.tooltipKey()).withStyle(ChatFormatting.GRAY));"), block);
         }
     }

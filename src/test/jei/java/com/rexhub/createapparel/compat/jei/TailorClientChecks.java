@@ -26,7 +26,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.ZombieVillager;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.data.ModelData;
 
 import java.util.List;
 
@@ -35,13 +35,18 @@ import static com.rexhub.createapparel.compat.jei.JeiClientTestLauncher.check;
 final class TailorClientChecks {
     private TailorClientChecks() { }
 
-    static void audit(IJeiRuntime runtime, RecipeType<AbstractCrushingRecipe> type) {
+    static void audit(IJeiRuntime runtime, RecipeType<net.minecraft.world.item.crafting.RecipeHolder<AbstractCrushingRecipe>> type) {
         var id = ResourceLocation.parse("createapparel:crushing/garments_to_old_cloth");
         var manager = runtime.getRecipeManager();
         var mc = Minecraft.getInstance();
+        for (var fabric : ModItems.fabricItems().keySet()) {
+            var stack = new ItemStack(fabric.get());
+            com.rexhub.createapparel.material.FabricAttributeMap.color(stack).ifPresent(color ->
+                    check(mc.getItemColors().getColor(stack, 0) == (0xFF000000 | color.tintRgb()), "Fabric tint keeps opaque ARGB: " + fabric.getId()));
+        }
         check(mc.getItemRenderer().getModel(new ItemStack(ModItems.OLD_CLOTH.get()), mc.level, mc.player, 0)
                 != mc.getModelManager().getMissingModel(), "Old Cloth item model is baked");
-        var recipes = manager.createRecipeLookup(type).get().filter(recipe -> recipe.getId().equals(id)).toList();
+        var recipes = manager.createRecipeLookup(type).get().filter(recipe -> recipe.id().equals(id)).toList();
         check(recipes.size() == 1, "Exactly one native JEI crushing recipe");
         var factory = runtime.getJeiHelpers().getFocusFactory();
         for (var garment : ModItems.garmentCreativeTabItems()) {
@@ -52,16 +57,16 @@ final class TailorClientChecks {
                 auditCrushingParticle(stack);
                 var focus = factory.createFocus(RecipeIngredientRole.INPUT, VanillaTypes.ITEM_STACK, stack);
                 check(manager.createRecipeLookup(type).limitFocus(List.of(focus)).get()
-                        .anyMatch(recipe -> recipe.getId().equals(id)) == recyclable,
+                        .anyMatch(recipe -> recipe.id().equals(id)) == recyclable,
                         "Native crushing lookup respects accessory exclusions regardless of NBT: " + garment.getId());
             }
         }
         var output = factory.createFocus(RecipeIngredientRole.OUTPUT, VanillaTypes.ITEM_STACK, new ItemStack(ModItems.OLD_CLOTH.get()));
-        check(manager.createRecipeLookup(type).limitFocus(List.of(output)).get().anyMatch(recipe -> recipe.getId().equals(id)),
+        check(manager.createRecipeLookup(type).limitFocus(List.of(output)).get().anyMatch(recipe -> recipe.id().equals(id)),
                 "Old Cloth output lookup");
         var layout = manager.createRecipeLayoutDrawable(manager.getRecipeCategory(type), recipes.get(0), factory.getEmptyFocusGroup()).orElseThrow();
         check(layout.getRecipeSlotsView().getSlotViews(RecipeIngredientRole.OUTPUT).stream().flatMap(slot -> slot.getItemStacks())
-                .anyMatch(stack -> stack.is(ModItems.OLD_CLOTH.get()) && stack.getCount() == 1 && !stack.hasTag()), "Native JEI result");
+                .anyMatch(stack -> stack.is(ModItems.OLD_CLOTH.get()) && stack.getCount() == 1 && !com.rexhub.createapparel.item.ItemData.hasData(stack)), "Native JEI result");
         for (String entity : List.of("villager", "zombie_villager")) {
             var texture = ResourceLocation.parse("createapparel:textures/entity/" + entity + "/profession/tailor.png");
             check(Minecraft.getInstance().getResourceManager().getResource(texture).isPresent(), "Profession overlay exists: " + entity);
@@ -80,10 +85,10 @@ final class TailorClientChecks {
         var particle = new BreakingItemParticle.Provider().createParticle(
                 new ItemParticleOption(ParticleTypes.ITEM, stack), mc.level, 0, 0, 0, 0, 0, 0);
         check(particle != null, "Native item particle is created: " + stack);
-        var buffer = new BufferBuilder(256);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+        var memory = new com.mojang.blaze3d.vertex.ByteBufferBuilder(256);
+        var buffer = new BufferBuilder(memory, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
         particle.render(buffer, mc.gameRenderer.getMainCamera(), 0);
-        var rendered = buffer.end();
+        var rendered = buffer.buildOrThrow();
         try {
             check(rendered.drawState().vertexCount() == 4, "Native crushing particle emits a quad");
             var vertices = rendered.vertexBuffer();
@@ -95,7 +100,8 @@ final class TailorClientChecks {
                         "Native crushing particle samples the old cloth atlas region: " + stack);
             }
         } finally {
-            rendered.release();
+            rendered.close();
+            memory.close();
         }
     }
 
@@ -103,13 +109,18 @@ final class TailorClientChecks {
         var mc = Minecraft.getInstance();
         var villager = new Villager(EntityType.VILLAGER, mc.level);
         villager.setVillagerData(villager.getVillagerData().setProfession(ModVillagers.TAILOR.get()));
-        var menu = new net.minecraft.world.inventory.MerchantMenu(93, mc.player.getInventory(), villager);
+        var menu = new net.minecraft.world.inventory.MerchantMenu(93, mc.player.getInventory());
+        menu.setOffers(mc.getSingleplayerServer().submit(() -> {
+            var trader = new Villager(EntityType.VILLAGER, mc.getSingleplayerServer().overworld());
+            trader.setVillagerData(trader.getVillagerData().setProfession(ModVillagers.TAILOR.get()));
+            return trader.getOffers().copy();
+        }).join());
         menu.setMerchantLevel(1);
         menu.setShowProgressBar(true);
         check(menu.getOffers().size() == 2, "Native merchant menu shows both novice offers");
-        check(menu.getOffers().get(0).getBaseCostA().is(ModItems.OLD_CLOTH.get()), "Fixed old cloth buying offer");
-        check(menu.getOffers().get(0).getBaseCostA().getCount() == 2
-                && menu.getOffers().get(0).getResult().getCount() == 1, "Two old cloth for one emerald");
+        var buying = menu.getOffers().stream().filter(offer -> offer.getBaseCostA().is(ModItems.OLD_CLOTH.get())).findFirst().orElseThrow();
+        check(buying.getBaseCostA().getCount() == 2 && buying.getResult().is(net.minecraft.world.item.Items.EMERALD)
+                && buying.getResult().getCount() == 1, "Two old cloth for one emerald");
         return new net.minecraft.client.gui.screens.inventory.MerchantScreen(menu, mc.player.getInventory(), villager.getDisplayName());
     }
 
@@ -133,8 +144,8 @@ final class TailorClientChecks {
             graphics.fill(0, 0, width, height, 0xFF303238);
             graphics.drawCenteredString(font, title, width / 2, 15, 0xFFFFFF);
             int floor = height / 2 + 45;
-            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, width / 2 - 70, floor, 55, 0, 0, villager);
-            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, width / 2 + 70, floor, 55, 0, 0, zombie);
+            com.rexhub.createapparel.client.screen.EntityPreview.render(graphics, width / 2 - 70, floor, 55, 0, 0, villager);
+            com.rexhub.createapparel.client.screen.EntityPreview.render(graphics, width / 2 + 70, floor, 55, 0, 0, zombie);
             graphics.renderItem(new ItemStack(ModItems.OLD_CLOTH.get()), width / 2 - 8, floor + 15);
             graphics.drawCenteredString(font, ModItems.OLD_CLOTH.get().getDescription(), width / 2, floor + 36, 0xFFFFFF);
             super.render(graphics, mouseX, mouseY, partialTick);

@@ -1,25 +1,25 @@
 package com.rexhub.createapparel.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.ModContainer;
 
 public final class ModConfigs {
-    private static final ForgeConfigSpec COMMON_SPEC;
-    private static final ForgeConfigSpec CLIENT_SPEC;
-    private static final ForgeConfigSpec SERVER_SPEC;
+    private static final ModConfigSpec COMMON_SPEC;
+    private static final ModConfigSpec CLIENT_SPEC;
+    private static final ModConfigSpec SERVER_SPEC;
     public static final Common COMMON;
     public static final Client CLIENT;
     public static final Server SERVER;
 
     static {
-        var common = new ForgeConfigSpec.Builder().configure(Common::new);
+        var common = new ModConfigSpec.Builder().configure(Common::new);
         COMMON = common.getLeft();
         COMMON_SPEC = common.getRight();
-        var client = new ForgeConfigSpec.Builder().configure(Client::new);
+        var client = new ModConfigSpec.Builder().configure(Client::new);
         CLIENT = client.getLeft();
         CLIENT_SPEC = client.getRight();
-        var server = new ForgeConfigSpec.Builder().configure(Server::new);
+        var server = new ModConfigSpec.Builder().configure(Server::new);
         SERVER = server.getLeft();
         SERVER_SPEC = server.getRight();
     }
@@ -27,7 +27,7 @@ public final class ModConfigs {
     private ModConfigs() {
     }
 
-    public static void register(FMLJavaModLoadingContext context) {
+    public static void register(ModContainer context) {
         context.registerConfig(ModConfig.Type.COMMON, COMMON_SPEC, "createapparel-common.toml");
         context.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC, "createapparel-client.toml");
         context.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC, "createapparel-server.toml");
@@ -35,28 +35,28 @@ public final class ModConfigs {
 
     public static final class Common {
         public final com.rexhub.createapparel.fashion.FashionConfig fashion;
-        public final ForgeConfigSpec.IntValue maxNewPathRequestsPerTick;
-        public final ForgeConfigSpec.IntValue maxActiveCitizensPerDimension;
-        public final ForgeConfigSpec.IntValue activityRotationTicks;
-        public final ForgeConfigSpec.IntValue crossingWaitTimeout;
-        public final ForgeConfigSpec.DoubleValue crossingPenalty;
-        public final ForgeConfigSpec.IntValue gatewayTransitCooldown;
-        public final ForgeConfigSpec.IntValue populationGaugeCooldown;
-        public final ForgeConfigSpec.IntValue populationCitizenCooldown;
-        public final ForgeConfigSpec.IntValue populationRetryTicks;
-        public final ForgeConfigSpec.IntValue populationHopTimeout;
-        public final ForgeConfigSpec.IntValue populationMaxHops;
-        public final ForgeConfigSpec.IntValue populationQueryBudget;
-        public final ForgeConfigSpec.IntValue maxLoadedCitizensPerDimension;
-        public final ForgeConfigSpec.IntValue populationSpawnBudget;
-        public final ForgeConfigSpec.IntValue populationMaxChains;
-        public final ForgeConfigSpec.IntValue populationIntentTimeout;
-        public final ForgeConfigSpec.IntValue populationStuckTicks;
-        public final ForgeConfigSpec.IntValue populationStuckRetries;
-        public final ForgeConfigSpec.IntValue populationReturnHomeTicks;
-        public final ForgeConfigSpec.IntValue populationAutonomyTicks;
-        public final ForgeConfigSpec.DoubleValue populationVisitChance;
-        private Common(ForgeConfigSpec.Builder builder) {
+        public final ModConfigSpec.IntValue maxNewPathRequestsPerTick;
+        public final ModConfigSpec.IntValue maxActiveCitizensPerDimension;
+        public final ModConfigSpec.IntValue activityRotationTicks;
+        public final ModConfigSpec.IntValue crossingWaitTimeout;
+        public final ModConfigSpec.DoubleValue crossingPenalty;
+        public final ModConfigSpec.IntValue gatewayTransitCooldown;
+        public final ModConfigSpec.IntValue populationGaugeCooldown;
+        public final ModConfigSpec.IntValue populationCitizenCooldown;
+        public final ModConfigSpec.IntValue populationRetryTicks;
+        public final ModConfigSpec.IntValue populationHopTimeout;
+        public final ModConfigSpec.IntValue populationMaxHops;
+        public final ModConfigSpec.IntValue populationQueryBudget;
+        public final ModConfigSpec.IntValue maxLoadedCitizensPerDimension;
+        public final ModConfigSpec.IntValue populationSpawnBudget;
+        public final ModConfigSpec.IntValue populationMaxChains;
+        public final ModConfigSpec.IntValue populationIntentTimeout;
+        public final ModConfigSpec.IntValue populationStuckTicks;
+        public final ModConfigSpec.IntValue populationStuckRetries;
+        public final ModConfigSpec.IntValue populationReturnHomeTicks;
+        public final ModConfigSpec.IntValue populationAutonomyTicks;
+        public final ModConfigSpec.DoubleValue populationVisitChance;
+        private Common(ModConfigSpec.Builder builder) {
             fashion = new com.rexhub.createapparel.fashion.FashionConfig(builder);
             builder.push("citizenRoutes");
             maxNewPathRequestsPerTick = builder.defineInRange("maxNewPathRequestsPerTick", 4, 1, 64);
@@ -87,10 +87,10 @@ public final class ModConfigs {
     }
 
     public static final class Server {
-        public final ForgeConfigSpec.BooleanValue forceSyntheticFiberFallback;
-        public final ForgeConfigSpec.BooleanValue forceMirrorCoatingFallback;
+        public final ModConfigSpec.BooleanValue forceSyntheticFiberFallback;
+        public final ModConfigSpec.BooleanValue forceMirrorCoatingFallback;
 
-        private Server(ForgeConfigSpec.Builder builder) {
+        private Server(ModConfigSpec.Builder builder) {
             builder.push("recipes");
             forceSyntheticFiberFallback = builder.comment("Also enable heated sugar, slime and water mixing when Destroy is installed; keep the nylon recipe available. Restart the world/server after changing.")
                     .worldRestart().define("forceSyntheticFiberFallback", false);
@@ -103,21 +103,21 @@ public final class ModConfigs {
     public enum MirrorQuality { OFF, LOW, MEDIUM, HIGH }
 
     public static final class Client {
-        public final ForgeConfigSpec.DoubleValue citizenLod0Distance, citizenLod1Distance, citizenLod2Distance, citizenLodHysteresis;
-        public final ForgeConfigSpec.IntValue routeMarkerRenderDistance;
-        public final ForgeConfigSpec.BooleanValue enabled;
-        public final ForgeConfigSpec.EnumValue<MirrorQuality> quality;
-        public final ForgeConfigSpec.IntValue renderDistance;
-        public final ForgeConfigSpec.IntValue maxSurfacesPerFrame;
-        public final ForgeConfigSpec.IntValue recursionDepth;
-        public final ForgeConfigSpec.DoubleValue resolutionScale;
-        public final ForgeConfigSpec.BooleanValue dynamicResolution;
-        public final ForgeConfigSpec.BooleanValue mergeCoplanarMirrors;
-        public final ForgeConfigSpec.BooleanValue adaptiveUpdateRate;
-        public final ForgeConfigSpec.IntValue maxReflectionFps;
-        public final ForgeConfigSpec.IntValue nearbyReflectionFps;
-        public final ForgeConfigSpec.DoubleValue updateBudgetMillis;
-        private Client(ForgeConfigSpec.Builder builder) {
+        public final ModConfigSpec.DoubleValue citizenLod0Distance, citizenLod1Distance, citizenLod2Distance, citizenLodHysteresis;
+        public final ModConfigSpec.IntValue routeMarkerRenderDistance;
+        public final ModConfigSpec.BooleanValue enabled;
+        public final ModConfigSpec.EnumValue<MirrorQuality> quality;
+        public final ModConfigSpec.IntValue renderDistance;
+        public final ModConfigSpec.IntValue maxSurfacesPerFrame;
+        public final ModConfigSpec.IntValue recursionDepth;
+        public final ModConfigSpec.DoubleValue resolutionScale;
+        public final ModConfigSpec.BooleanValue dynamicResolution;
+        public final ModConfigSpec.BooleanValue mergeCoplanarMirrors;
+        public final ModConfigSpec.BooleanValue adaptiveUpdateRate;
+        public final ModConfigSpec.IntValue maxReflectionFps;
+        public final ModConfigSpec.IntValue nearbyReflectionFps;
+        public final ModConfigSpec.DoubleValue updateBudgetMillis;
+        private Client(ModConfigSpec.Builder builder) {
             builder.push("citizenRendering");
             citizenLod0Distance = builder.defineInRange("lod0Distance", 12.0, 1.0, 512.0);
             citizenLod1Distance = builder.defineInRange("lod1Distance", 32.0, 1.0, 512.0);

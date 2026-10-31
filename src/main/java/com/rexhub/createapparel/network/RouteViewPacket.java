@@ -5,14 +5,23 @@ import com.rexhub.createapparel.citizen.route.RouteSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
 import javax.annotation.Nullable;
 import java.util.*;
 
 public record RouteViewPacket(ResourceLocation dimension, long snapshot, int part, boolean last,
                               @Nullable UUID selected, List<Node> nodes, List<Edge> edges,
-                              long baseSnapshot, List<UUID> removedNodes, List<UUID> removedEdges) {
+                              long baseSnapshot, List<UUID> removedNodes, List<UUID> removedEdges) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<RouteViewPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "route_view_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, RouteViewPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), RouteViewPacket::decode);
+
+    @Override
+    public Type<RouteViewPacket> type() {
+        return TYPE;
+    }
+
     public record Node(UUID id, BlockPos pos, RouteMarkerType type, double radius, double tolerance, boolean enabled, @Nullable BlockPos controlPos, boolean on, boolean powered) {
         public Node(UUID id, BlockPos pos, RouteMarkerType type, double radius, double tolerance, boolean enabled, @Nullable BlockPos controlPos) { this(id, pos, type, radius, tolerance, enabled, controlPos, false, false); }
         public Node(UUID id, BlockPos pos, RouteMarkerType type, double radius, double tolerance, boolean enabled) { this(id, pos, type, radius, tolerance, enabled, null); }
@@ -68,5 +77,5 @@ public record RouteViewPacket(ResourceLocation dimension, long snapshot, int par
     }
 
     private static int bounded(int size) { if (size < 0 || size > RouteSettings.VIEW_BATCH_SIZE) throw new IllegalArgumentException("Route view batch too large"); return size; }
-    public void handleClient() { DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.rexhub.createapparel.client.citizen.ClientRouteView.accept(this)); }
+    public void handleClient() { com.rexhub.createapparel.client.citizen.ClientRouteView.accept(this); }
 }

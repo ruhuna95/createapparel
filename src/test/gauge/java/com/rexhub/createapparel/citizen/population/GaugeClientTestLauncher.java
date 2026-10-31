@@ -21,15 +21,14 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.phys.*;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.*;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.*;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.nio.file.Path;
 import java.util.UUID;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class GaugeClientTestLauncher {
     private static final boolean SKIP_CLIPBOARD = Boolean.getBoolean("apparel.gaugeTest.skipClipboard");
     private static final String SUCCESS_MARKER = SKIP_CLIPBOARD ? "CITIZEN_GAUGE_CLIENT_PARTIAL_PASSED" : "CITIZEN_GAUGE_CLIENT_PASSED";
@@ -59,9 +58,9 @@ public final class GaugeClientTestLauncher {
                     && button.getY() == screen.getGuiTop() + screen.getYSize() - 25), "First-frame toggle already offers influx in the gray footer");
         } catch (Throwable exception) { failure = exception; }
     }
-    @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
         if (Boolean.getBoolean("apparel.gaugeTest.renderClient") || Boolean.getBoolean("apparel.gaugeTest.displayPerformance")) return;
-        if (event.phase != TickEvent.Phase.END || stage == 99) return;
+        if (stage == 99) return;
         var mc = Minecraft.getInstance(); if (mc.getOverlay() != null) return;
         try {
             if (failure != null) throw new AssertionError("Server check failed", failure);
@@ -72,12 +71,12 @@ public final class GaugeClientTestLauncher {
                 stage = 1;
                 if (Boolean.getBoolean("apparel.gaugeTest.resume")) {
                     restart = java.nio.file.Files.readAllLines(Path.of(System.getProperty("apparel.gaugeTest.projectDir"), "build/gauge-client-world.txt"));
-                    world = restart.get(0); stage = 80; mc.createWorldOpenFlows().loadLevel(new net.minecraft.client.gui.screens.TitleScreen(), world); return;
+                    world = restart.get(0); stage = 80; mc.createWorldOpenFlows().openWorld(world, () -> mc.setScreen(new net.minecraft.client.gui.screens.TitleScreen())); return;
                 }
                 world = "citizen-gauge-" + System.nanoTime();
                 mc.createWorldOpenFlows().createFreshLevel(world,
                         new LevelSettings("Citizen Gauge QA", GameType.CREATIVE, false, Difficulty.PEACEFUL, true, new GameRules(), WorldDataConfiguration.DEFAULT),
-                        new WorldOptions(0, false, false), registries -> registries.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions());
+                        new WorldOptions(0, false, false), registries -> registries.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions(), new net.minecraft.client.gui.screens.TitleScreen());
                 return;
             }
             if (mc.level == null || mc.player == null || mc.getSingleplayerServer() == null) return;
@@ -137,7 +136,7 @@ public final class GaugeClientTestLauncher {
                     server(() -> {
                         var player = serverPlayer();
                         check(player.isShiftKeyDown(), "Real server receives sneak input");
-                        var tag = player.getMainHandItem().getTag();
+                        var tag = com.rexhub.createapparel.item.ItemData.read(player.getMainHandItem());
                         check(tag != null && tag.hasUUID("GaugeCenterReservation"), "Actual item-use packet reserves the unplaced center");
                         centerReservation = tag.getUUID("GaugeCenterReservation");
                         check(CitizenPopulationManager.get(player.serverLevel()).data().centerClaim(centerReservation).reservedItemCount() == 1,
@@ -147,16 +146,16 @@ public final class GaugeClientTestLauncher {
                         player.inventoryMenu.broadcastChanges();
                     }); advance(147);
                 } }
-                case 147 -> { if (ticks > 10 && !mc.player.getMainHandItem().hasTag()) {
+                case 147 -> { if (ticks > 10 && !com.rexhub.createapparel.item.ItemData.hasData(mc.player.getMainHandItem())) {
                     mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND,
                             new BlockHitResult(Vec3.atCenterOf(CENTER_CHECK_GROUND).add(0, .5, 0), net.minecraft.core.Direction.UP, CENTER_CHECK_GROUND, false));
                     advance(148);
                 } }
                 case 148 -> { if (ticks > 5) {
-                    check(!mc.player.getMainHandItem().hasTag(), "Different blank item stays blank before any wall placement");
+                    check(!com.rexhub.createapparel.item.ItemData.hasData(mc.player.getMainHandItem()), "Different blank item stays blank before any wall placement");
                     server(() -> {
                         var player = serverPlayer(); var data = CitizenPopulationManager.get(player.serverLevel()).data();
-                        check(!player.getMainHandItem().hasTag(), "Actual second item-use packet rejects an unplaced center reservation");
+                        check(!com.rexhub.createapparel.item.ItemData.hasData(player.getMainHandItem()), "Actual second item-use packet rejects an unplaced center reservation");
                         check(!data.centerUsed(CENTER_CHECK_GROUND) && !data.centerAvailable(CENTER_CHECK_GROUND, null)
                                 && data.centerAvailable(CENTER_CHECK_GROUND, centerReservation), "Only the first recorded item owns the pending center");
                     }); worldCapture = "gauge-client-unplaced-center-rejected.png"; advance(143);
@@ -171,14 +170,14 @@ public final class GaugeClientTestLauncher {
                     advance(149);
                 } }
                 case 149 -> { if (ticks > 5 && mc.screen instanceof net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen screen) {
-                    var slot = screen.getMenu().slots.stream().filter(candidate -> candidate.getItem().hasTag()
-                            && candidate.getItem().getTag().hasUUID("GaugeCenterReservation")).findFirst().orElseThrow();
+                    var slot = screen.getMenu().slots.stream().filter(candidate -> com.rexhub.createapparel.item.ItemData.hasData(candidate.getItem())
+                            && com.rexhub.createapparel.item.ItemData.read(candidate.getItem()).hasUUID("GaugeCenterReservation")).findFirst().orElseThrow();
                     check(screen.mouseClicked(screen.getGuiLeft() + slot.x + 8, screen.getGuiTop() + slot.y + 8, 0), "Pick up recorded Gauge in the creative inventory");
                     screen.mouseReleased(screen.getGuiLeft() + slot.x + 8, screen.getGuiTop() + slot.y + 8, 0);
                     advance(150);
                 } }
                 case 150 -> { if (ticks > 3 && mc.screen instanceof net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen screen) {
-                    check(screen.getMenu().getCarried().hasTag() && screen.getMenu().getCarried().getTag().hasUUID("GaugeCenterReservation"), "Recorded Gauge is on the creative cursor");
+                    check(com.rexhub.createapparel.item.ItemData.hasData(screen.getMenu().getCarried()) && com.rexhub.createapparel.item.ItemData.read(screen.getMenu().getCarried()).hasUUID("GaugeCenterReservation"), "Recorded Gauge is on the creative cursor");
                     var trash = screen.getMenu().slots.get(screen.getMenu().slots.size() - 1);
                     check(screen.mouseClicked(screen.getGuiLeft() + trash.x + 8, screen.getGuiTop() + trash.y + 8, 0), "Discard recorded Gauge through the real creative trash slot");
                     screen.mouseReleased(screen.getGuiLeft() + trash.x + 8, screen.getGuiTop() + trash.y + 8, 0);
@@ -192,15 +191,15 @@ public final class GaugeClientTestLauncher {
                         for (int index = 1; index <= 2; index++) {
                             var center = CENTER_CHECK_GROUND.east(index); var id = data.reserveCenter(center, null);
                             check(id != null, "Prepare separate claims for clear-inventory trash");
-                            var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get()); var tag = stack.getOrCreateTag();
+                            var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get()); var tag = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack);
                             tag.putLong("GaugeCenter", center.asLong()); tag.putString("GaugeDimension", player.level().dimension().location().toString());
-                            tag.putUUID("GaugeCenterReservation", id); player.getInventory().setItem(index, stack);
+                            tag.putUUID("GaugeCenterReservation", id); com.rexhub.createapparel.item.ItemData.write(stack, tag); player.getInventory().setItem(index, stack);
                         }
                         player.inventoryMenu.broadcastChanges();
                     }); advance(152);
                 } }
                 case 152 -> { if (ticks > 10 && mc.screen instanceof net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen screen) {
-                    check(screen.getMenu().slots.stream().filter(slot -> slot.getItem().hasTag() && slot.getItem().getTag().hasUUID("GaugeCenterReservation")).count() == 2, "Creative clear-inventory fixture is synchronized");
+                    check(screen.getMenu().slots.stream().filter(slot -> com.rexhub.createapparel.item.ItemData.hasData(slot.getItem()) && com.rexhub.createapparel.item.ItemData.read(slot.getItem()).hasUUID("GaugeCenterReservation")).count() == 2, "Creative clear-inventory fixture is synchronized");
                     var trash = screen.getMenu().slots.get(screen.getMenu().slots.size() - 1);
                     var click = screen.getClass().getDeclaredMethod("slotClicked", net.minecraft.world.inventory.Slot.class, int.class, int.class, net.minecraft.world.inventory.ClickType.class);
                     click.setAccessible(true); click.invoke(screen, trash, trash.index, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE);
@@ -212,15 +211,15 @@ public final class GaugeClientTestLauncher {
                         check(data.centerAvailable(CENTER_CHECK_GROUND.east(), null) && data.centerAvailable(CENTER_CHECK_GROUND.east(2), null), "Native clear-inventory trash releases every discarded Gauge claim");
                         var center = CENTER_CHECK_GROUND.east(3); var id = data.reserveCenter(center, null, 3);
                         check(id != null, "Prepare palette discard reservation"); centerReservation = id;
-                        var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get(), 3); var tag = stack.getOrCreateTag();
+                        var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get(), 3); var tag = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack);
                         tag.putLong("GaugeCenter", center.asLong()); tag.putString("GaugeDimension", player.level().dimension().location().toString());
-                        tag.putUUID("GaugeCenterReservation", id); player.getInventory().setItem(1, stack);
+                        tag.putUUID("GaugeCenterReservation", id); com.rexhub.createapparel.item.ItemData.write(stack, tag); player.getInventory().setItem(1, stack);
                         player.inventoryMenu.broadcastChanges();
                     }); advance(154);
                 } }
                 case 154 -> { if (ticks > 10 && mc.screen instanceof net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen screen) {
-                    var slot = screen.getMenu().slots.stream().filter(candidate -> candidate.getItem().hasTag()
-                            && candidate.getItem().getTag().hasUUID("GaugeCenterReservation")).findFirst().orElseThrow();
+                    var slot = screen.getMenu().slots.stream().filter(candidate -> com.rexhub.createapparel.item.ItemData.hasData(candidate.getItem())
+                            && com.rexhub.createapparel.item.ItemData.read(candidate.getItem()).hasUUID("GaugeCenterReservation")).findFirst().orElseThrow();
                     screen.mouseClicked(screen.getGuiLeft() + slot.x + 8, screen.getGuiTop() + slot.y + 8, 0);
                     screen.mouseReleased(screen.getGuiLeft() + slot.x + 8, screen.getGuiTop() + slot.y + 8, 0);
                     var select = screen.getClass().getDeclaredMethod("selectTab", net.minecraft.world.item.CreativeModeTab.class);
@@ -240,7 +239,7 @@ public final class GaugeClientTestLauncher {
                     check(screen.getMenu().getCarried().getCount() == 2, "Right clicking creative palette discards exactly one carried gauge");
                     server(() -> {
                         var data = CitizenPopulationManager.get(serverPlayer().serverLevel()).data();
-                        var entries = data.save(new CompoundTag()).getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND);
+                        var entries = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND);
                         boolean found = false;
                         for (var entry : entries) { var tag = (CompoundTag) entry;
                             if (tag.getUUID("Id").equals(centerReservation)) { check(tag.getInt("Items") == 2, "Palette packet subtracts only one reservation"); found = true; }
@@ -362,7 +361,7 @@ public final class GaugeClientTestLauncher {
                 case 36 -> { if (ticks > 5 && mc.screen instanceof CitizenGaugeScreen screen) {
                     var fields = screen.children().stream().filter(net.minecraft.client.gui.components.EditBox.class::isInstance)
                             .map(net.minecraft.client.gui.components.EditBox.class::cast).toList();
-                    fields.get(2).moveCursorToStart(); fields.get(2).setHighlightPos(CitizenGauge.MAX_NAME_LENGTH);
+                    fields.get(2).moveCursorToStart(false); fields.get(2).setHighlightPos(CitizenGauge.MAX_NAME_LENGTH);
                     check(fields.get(2).getHighlighted().length() == CitizenGauge.MAX_NAME_LENGTH, "Flat input preserves native text selection");
                     fields.get(2).insertText(DISTRICT_NAME); fields.get(1).setValue("0");
                     check(fields.get(2).getValue().equals(DISTRICT_NAME), "Long name can be replaced with a shorter name");
@@ -390,7 +389,7 @@ public final class GaugeClientTestLauncher {
                     check(com.rexhub.createapparel.client.renderer.CitizenGaugeRenderer.ITEM_ICON_SCALE == .2578125F, "Wall icon scale matches Factory Gauge's flat item transform");
                     check(screen.children().stream().filter(child -> child instanceof com.simibubi.create.foundation.gui.widget.IconButton button && button.visible).count() == 3,
                             "Source only exposes connect, relocate and save");
-                    check(!screen.mouseScrolled(screen.getGuiLeft() + 80, screen.getGuiTop() + 40, 1), "Removed Source slots do not scroll");
+                    check(!screen.mouseScrolled(screen.getGuiLeft() + 80, screen.getGuiTop() + 40, 0, 1), "Removed Source slots do not scroll");
                     check(screen.children().stream().filter(child -> child instanceof Button button && button.visible).count() == 1,
                             "Flow GUI exposes one mode switch without adding footer buttons");
                     check(mc.getResourceManager().getResource(com.rexhub.createapparel.client.citizen.DistrictGaugeIcon.INFLUX).isPresent()
@@ -419,7 +418,7 @@ public final class GaugeClientTestLauncher {
                     var player = serverPlayer(); var citizen = (Citizen) player.serverLevel().getEntity(citizenId); check(citizen != null, "Citizen present");
                     CitizenPopulationManager.get(player.serverLevel()).flags(citizen, false, false);
                     player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
-                    net.minecraftforge.network.NetworkHooks.openScreen(player, new net.minecraft.world.SimpleMenuProvider((id, inventory, viewer) -> new CitizenMenu(id, inventory, citizen),
+                    player.openMenu( new net.minecraft.world.SimpleMenuProvider((id, inventory, viewer) -> new CitizenMenu(id, inventory, citizen),
                             net.minecraft.network.chat.Component.literal("Citizen")), buffer -> buffer.writeVarInt(citizenId));
                 }); } }
                 case 8 -> { if (mc.screen instanceof CitizenScreen && mc.player.containerMenu instanceof CitizenMenu menu) {
@@ -456,11 +455,11 @@ public final class GaugeClientTestLauncher {
                     capture = "gauge-client-citizen-unlimited.png"; advance(114);
                 } }
                 case 114 -> { if (ticks > 5 && capture == null && mc.screen instanceof CitizenScreen screen) {
-                    check(screen.mouseScrolled(screen.getGuiLeft() + 250, screen.getGuiTop() + 61, -1), "Radius wheel handles unlimited to one"); advance(111);
+                    check(screen.mouseScrolled(screen.getGuiLeft() + 250, screen.getGuiTop() + 61, 0, -1), "Radius wheel handles unlimited to one"); advance(111);
                 } }
                 case 111 -> { if (ticks > 15 && mc.screen instanceof CitizenScreen screen && mc.player.containerMenu instanceof CitizenMenu menu) {
                     check(menu.citizen().citizenState().behavior().wanderRadius() == 1, "Radius wheel increments dash to one");
-                    check(screen.mouseScrolled(screen.getGuiLeft() + 250, screen.getGuiTop() + 61, 1), "Radius wheel handles one to unlimited"); advance(112);
+                    check(screen.mouseScrolled(screen.getGuiLeft() + 250, screen.getGuiTop() + 61, 0, 1), "Radius wheel handles one to unlimited"); advance(112);
                 } }
                 case 112 -> { if (ticks > 15 && mc.screen instanceof CitizenScreen screen && mc.player.containerMenu instanceof CitizenMenu menu) {
                     check(menu.citizen().citizenState().behavior().unlimitedWander(), "Radius wheel decrements one to dash");
@@ -501,7 +500,7 @@ public final class GaugeClientTestLauncher {
                         var marker = routes.register((com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity) level.getBlockEntity(pos))
                                 .withDistrict(markerHome);
                         routes.data().put(marker);
-                        net.minecraftforge.network.NetworkHooks.openScreen(player, new net.minecraft.world.SimpleMenuProvider(
+                        player.openMenu( new net.minecraft.world.SimpleMenuProvider(
                                 (id, inventory, viewer) -> new RouteMarkerMenu(id, inventory, marker.id(), pos), net.minecraft.network.chat.Component.literal("Route Marker")),
                                 buffer -> { buffer.writeUUID(marker.id()); buffer.writeBlockPos(pos); });
                     });
@@ -523,7 +522,7 @@ public final class GaugeClientTestLauncher {
                 } }
                 case 102 -> { if (ticks > 20 && mc.screen instanceof RouteMarkerScreen screen && mc.player.containerMenu instanceof RouteMarkerMenu menu) {
                     check(menu.info().getString("DistrictName").equals(DISTRICT_NAME), "Range expansion automatically assigns Normal Marker affiliation");
-                    check(screen.mouseScrolled(screen.getGuiLeft() + 220, screen.getGuiTop() + 42, -1), "Type selector wheel operates from the first settings row"); advance(103);
+                    check(screen.mouseScrolled(screen.getGuiLeft() + 220, screen.getGuiTop() + 42, 0, -1), "Type selector wheel operates from the first settings row"); advance(103);
                 } }
                 case 103 -> { if (ticks > 20 && mc.screen instanceof RouteMarkerScreen screen && mc.player.containerMenu instanceof RouteMarkerMenu menu) {
                     check(menu.info().getCompound("Marker").getString("Type").equals("GATEWAY") && menu.info().getCompound("Marker").getUUID("DistrictId").equals(markerHome), "Changing type retains affiliation");
@@ -535,7 +534,7 @@ public final class GaugeClientTestLauncher {
                     capture = "gauge-client-marker-gateway-destinations.png"; advance(104);
                 } }
                 case 104 -> { if (ticks > 10 && capture == null && mc.screen instanceof RouteMarkerScreen screen) {
-                    check(screen.mouseScrolled(screen.getGuiLeft() + 120, screen.getGuiTop() + 70, -1), "Gateway destination list scrolls without a new server query");
+                    check(screen.mouseScrolled(screen.getGuiLeft() + 120, screen.getGuiTop() + 70, 0, -1), "Gateway destination list scrolls without a new server query");
                     capture = "gauge-client-marker-gateway-scrolled.png"; advance(105);
                 } }
                 case 105 -> { if (ticks > 10 && capture == null && mc.screen instanceof RouteMarkerScreen screen) {
@@ -569,7 +568,7 @@ public final class GaugeClientTestLauncher {
                         level.setBlock(pos.above(), ModBlocks.WARDROBE.get().defaultBlockState().setValue(
                                 com.rexhub.createapparel.block.WardrobeBlock.HALF, net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER), 3);
                         var wardrobe = (com.rexhub.createapparel.block.entity.WardrobeBlockEntity) level.getBlockEntity(pos);
-                        net.minecraftforge.network.NetworkHooks.openScreen(player, new net.minecraft.world.SimpleMenuProvider(
+                        player.openMenu( new net.minecraft.world.SimpleMenuProvider(
                                 (id, inventory, viewer) -> new WardrobeMenu(id, inventory, wardrobe), net.minecraft.network.chat.Component.literal("Wardrobe")), pos);
                     });
                 } }
@@ -585,7 +584,7 @@ public final class GaugeClientTestLauncher {
                 case 43 -> { if (ticks > 20 && mc.level.getEntity(mannequinId) instanceof Mannequin) {
                     advance(44); server(() -> {
                         var player = serverPlayer(); var mannequin = (Mannequin) player.serverLevel().getEntity(mannequinId);
-                        net.minecraftforge.network.NetworkHooks.openScreen(player, new net.minecraft.world.SimpleMenuProvider(
+                        player.openMenu( new net.minecraft.world.SimpleMenuProvider(
                                 (id, inventory, viewer) -> new MannequinMenu(id, inventory, mannequin), net.minecraft.network.chat.Component.literal("Mannequin")), buffer -> buffer.writeVarInt(mannequinId));
                     });
                 } }
@@ -596,14 +595,14 @@ public final class GaugeClientTestLauncher {
                     mc.player.closeContainer(); mc.setScreen(new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player)); advance(46);
                 } }
                 case 46 -> { if (ticks > 15) {
-                    if (net.minecraftforge.fml.ModList.get().isLoaded("jei")) com.rexhub.createapparel.compat.jei.GaugeJeiClientChecks.assertInventoryVisible(mc.screen);
+                    if (net.neoforged.fml.ModList.get().isLoaded("jei")) com.rexhub.createapparel.compat.jei.GaugeJeiClientChecks.assertInventoryVisible(mc.screen);
                     mc.setScreen(null); advance(11);
                 } }
                 case 11 -> { if (ticks > 20 && capture == null) {
                     mc.player.closeContainer(); advance(19); server(() -> {
                         var player = serverPlayer(); var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get());
-                        stack.getOrCreateTag().putLong("GaugeCenter", new BlockPos(0, 71, 6).asLong());
-                        stack.getOrCreateTag().putString("GaugeDimension", player.level().dimension().location().toString());
+                        com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putLong("GaugeCenter", new BlockPos(0, 71, 6).asLong()));
+                        com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putString("GaugeDimension", player.level().dimension().location().toString()));
                         player.setItemInHand(InteractionHand.MAIN_HAND, stack); player.connection.teleport(.5, 71, -2.5, 0, 10);
                     });
                 } }
@@ -805,17 +804,17 @@ public final class GaugeClientTestLauncher {
                 com.rexhub.createapparel.block.CitizenGaugeBlock.slotCenter(mc.level.getBlockState(pos), 0)), net.minecraft.core.Direction.NORTH, pos, false);
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hit);
     }
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void screenshot(ScreenEvent.Render.Post event) {
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST) public static void screenshot(ScreenEvent.Render.Post event) {
         if (capture == null) return;
         try {
-            if (!(event.getScreen() instanceof RouteMarkerScreen) && net.minecraftforge.fml.ModList.get().isLoaded("jei"))
+            if (!(event.getScreen() instanceof RouteMarkerScreen) && net.neoforged.fml.ModList.get().isLoaded("jei"))
                 com.rexhub.createapparel.compat.jei.GaugeJeiClientChecks.assertHidden(event.getScreen());
             if (capture.startsWith("gauge-client-tooltip-")) {
                 var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get());
-                stack.getOrCreateTag().putLong("GaugeCenter", new BlockPos(4, 70, 6).asLong());
+                com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putLong("GaugeCenter", new BlockPos(4, 70, 6).asLong()));
                 var minecraft = Minecraft.getInstance();
                 var lines = capture.endsWith("-shift.png") ? com.rexhub.createapparel.client.guide.GaugeTooltipClientChecks.expanded(stack)
-                        : stack.getTooltipLines(minecraft.player, net.minecraft.world.item.TooltipFlag.NORMAL);
+                        : stack.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(minecraft.level), minecraft.player, net.minecraft.world.item.TooltipFlag.NORMAL);
                 event.getGuiGraphics().renderComponentTooltip(minecraft.font, lines, 40, 40);
             }
             event.getGuiGraphics().flush();
@@ -846,7 +845,7 @@ public final class GaugeClientTestLauncher {
             capture = null;
         } catch (Exception error) { failure = error; }
     }
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void worldScreenshot(RenderGuiEvent.Post event) {
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST) public static void worldScreenshot(RenderGuiEvent.Post event) {
         if (worldCapture == null) return;
         try {
             event.getGuiGraphics().flush();

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "N": {
+      "item": "minecraft:iron_nugget"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    " N ",
+    "SSS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:wall_hanger"
+  }
+}

@@ -255,7 +255,7 @@ class SkirtCollectionAssetTest {
         var japanese = json(GENERATED.resolve("assets/createapparel/lang/ja_jp.json"));
         for (String shape : SHAPES) for (String length : lengths(shape)) {
             String id = shape + "_skirt_" + length;
-            var recipe = json(GENERATED.resolve("data/createapparel/recipes/" + id + ".json"));
+            var recipe = json(GENERATED.resolve("data/createapparel/recipe/" + id + ".json"));
             assertEquals("createapparel:sewing", recipe.get("type").getAsString());
             assertEquals("createapparel:" + id, recipe.getAsJsonObject("result").get("id").getAsString());
             int fabricCount = switch (length) {
@@ -273,7 +273,7 @@ class SkirtCollectionAssetTest {
             assertTrue(japanese.has(key));
             if (length.equals("knee")) assertFalse(english.get(key).getAsString().contains("Knee"));
         }
-        assertFalse(Files.exists(GENERATED.resolve("data/createapparel/recipes/a_line_skirt.json")));
+        assertFalse(Files.exists(GENERATED.resolve("data/createapparel/recipe/a_line_skirt.json")));
         assertFalse(Files.exists(GENERATED.resolve("assets/createapparel/models/item/a_line_skirt.json")));
     }
 }

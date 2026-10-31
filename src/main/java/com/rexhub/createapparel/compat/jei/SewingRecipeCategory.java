@@ -38,5 +38,5 @@ final class SewingRecipeCategory extends ApparelRecipeCategory<SewingRecipeDispl
     }
 
     @Override
-    public ResourceLocation getRegistryName(SewingRecipeDisplay recipe) { return recipe.recipe().getId(); }
+    public ResourceLocation getRegistryName(SewingRecipeDisplay recipe) { return recipe.id(); }
 }

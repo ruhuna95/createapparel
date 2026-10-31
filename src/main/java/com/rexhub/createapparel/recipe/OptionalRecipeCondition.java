@@ -1,19 +1,20 @@
 package com.rexhub.createapparel.recipe;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.MapCodec;
 import com.rexhub.createapparel.CreateApparel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.common.crafting.conditions.IConditionSerializer;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.common.conditions.ICondition;
 
 import java.util.List;
 
 public final class OptionalRecipeCondition implements ICondition {
-    private static final TagKey<Item> SILVER_INGOTS = ItemTags.create(ResourceLocation.parse("forge:ingots/silver"));
+    private static final TagKey<Item> SILVER_INGOTS = ItemTags.create(ResourceLocation.parse("c:ingots/silver"));
     public static final OptionalRecipeCondition SYNTHETIC_FALLBACK = new OptionalRecipeCondition(
             "synthetic_fiber_fallback", RecipeRouteSelection.Product.SYNTHETIC_FIBER, true);
     public static final OptionalRecipeCondition SYNTHETIC_DESTROY = new OptionalRecipeCondition(
@@ -33,17 +34,20 @@ public final class OptionalRecipeCondition implements ICondition {
         this.fallback = fallback;
     }
 
-    public static void register() {
+    private final MapCodec<OptionalRecipeCondition> codec = MapCodec.unit(this);
+
+    public static void register(IEventBus bus) {
+        DeferredRegister<MapCodec<? extends ICondition>> serializers =
+                DeferredRegister.create(NeoForgeRegistries.Keys.CONDITION_CODECS, CreateApparel.MOD_ID);
         for (var condition : List.of(SYNTHETIC_FALLBACK, SYNTHETIC_DESTROY, MIRROR_FALLBACK, MIRROR_DESTROY)) {
-            CraftingHelper.register(new IConditionSerializer<OptionalRecipeCondition>() {
-                @Override public void write(JsonObject json, OptionalRecipeCondition value) { }
-                @Override public OptionalRecipeCondition read(JsonObject json) { return condition; }
-                @Override public ResourceLocation getID() { return condition.id; }
-            });
+            serializers.register(condition.id.getPath(), () -> condition.codec);
         }
+        serializers.register(bus);
     }
 
-    @Override public ResourceLocation getID() { return id; }
+    public ResourceLocation getID() { return id; }
+
+    @Override public MapCodec<? extends ICondition> codec() { return codec; }
 
     @Override public boolean test(IContext context) {
         boolean silverAvailable = product != RecipeRouteSelection.Product.MIRROR_COATING || !context.getTag(SILVER_INGOTS).isEmpty();

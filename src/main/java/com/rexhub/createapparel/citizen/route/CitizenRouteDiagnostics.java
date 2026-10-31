@@ -3,11 +3,11 @@ package com.rexhub.createapparel.citizen.route;
 import com.rexhub.createapparel.CreateApparel;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class CitizenRouteDiagnostics {
     private CitizenRouteDiagnostics() { }
 

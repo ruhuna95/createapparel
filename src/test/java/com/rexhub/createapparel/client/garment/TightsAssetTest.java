@@ -100,7 +100,7 @@ class TightsAssetTest {
 
     @Test
     void recipeUsesTwoFabricAndOneThread() throws IOException {
-        var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/tights.json"));
+        var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/tights.json"));
         assertEquals(2, recipe.getAsJsonObject("fabric").get("count").getAsInt());
         assertEquals(JsonParser.parseString("[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/wool\",\"createapparel:fabrics/synthetic\"]"),
                 recipe.getAsJsonObject("fabric").get("tag"));

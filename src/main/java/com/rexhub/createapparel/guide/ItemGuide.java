@@ -3,7 +3,7 @@ package com.rexhub.createapparel.guide;
 import com.rexhub.createapparel.garment.GarmentItem;
 import com.rexhub.createapparel.item.MannequinItem;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Locale;
 
@@ -43,7 +43,7 @@ public enum ItemGuide {
     public static ItemGuide forItem(Item item) {
         if (item instanceof GarmentItem) return GARMENT;
         if (item instanceof MannequinItem) return MANNEQUIN;
-        var id = ForgeRegistries.ITEMS.getKey(item);
+        var id = BuiltInRegistries.ITEM.getKey(item);
         if (id == null || !id.getNamespace().equals("createapparel")) {
             throw new IllegalArgumentException("Not an Apparel item: " + id);
         }

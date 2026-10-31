@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "create:iron_sheet"
+    }
+  },
+  "pattern": [
+    "III",
+    "S S",
+    "I I"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:clothing_rack"
+  }
+}

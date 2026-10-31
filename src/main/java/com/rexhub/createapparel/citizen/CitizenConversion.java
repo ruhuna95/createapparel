@@ -36,17 +36,17 @@ public final class CitizenConversion {
             prepared.setAge(age);
             try {
                 prepared.setAppearance(selected.appearance());
-                prepared.loadout().deserializeNBT(snapshot.createLoadout(selected.garment()).serializeNBT());
+                prepared.loadout().deserializeNBT(level.registryAccess(), snapshot.createLoadout(selected.garment()).serializeNBT(level.registryAccess()));
             } catch (RuntimeException exception) {
                 LogUtils.getLogger().warn("Citizen selected preset failed; trying built-in fallback: {}", exception.getMessage());
                 var fallback = CitizenPresetSelector.fallback();
                 prepared.setAppearance(fallback.appearance());
-                prepared.loadout().deserializeNBT(snapshot.createLoadout(fallback.garment()).serializeNBT());
+                prepared.loadout().deserializeNBT(level.registryAccess(), snapshot.createLoadout(fallback.garment()).serializeNBT(level.registryAccess()));
             }
             if (!CitizenCoverage.isCovered(prepared.loadout())) throw new IllegalStateException("Prepared Citizen lacks coverage");
             citizen = ModEntities.CITIZEN.get().create(level);
             if (citizen == null) throw new IllegalStateException("Citizen factory returned null");
-            citizen.citizenState().deserializeNBT(prepared.serializeNBT());
+            citizen.citizenState().deserializeNBT(level.registryAccess(), prepared.serializeNBT(level.registryAccess()));
             citizen.moveTo(villager.getX(), villager.getY(), villager.getZ(), villager.getYRot(), villager.getXRot());
             citizen.yBodyRot = villager.yBodyRot;
             citizen.yHeadRot = villager.yHeadRot;
@@ -60,8 +60,8 @@ public final class CitizenConversion {
             citizen.syncState();
             CitizenState restored = new CitizenState();
             CompoundTag saved = citizen.saveWithoutId(new CompoundTag());
-            restored.deserializeNBT(saved);
-            if (!CitizenCoverage.isCovered(restored.loadout()) || !restored.serializeNBT().equals(prepared.serializeNBT())) {
+            restored.deserializeNBT(level.registryAccess(), saved);
+            if (!CitizenCoverage.isCovered(restored.loadout()) || !restored.serializeNBT(level.registryAccess()).equals(prepared.serializeNBT(level.registryAccess()))) {
                 throw new IllegalStateException("Citizen state did not survive save validation");
             }
             if (!addEntity.test(citizen) || citizen.isRemoved()) throw new IllegalStateException("Citizen spawn was rejected");

@@ -10,7 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkHooks;
 import java.util.UUID;
 
 public final class PhotographyService {
@@ -47,7 +46,7 @@ public final class PhotographyService {
             if (now < player.getPersistentData().getLong("ApparelPhotographyRequestAfter")) return;
             player.getPersistentData().putLong("ApparelPhotographyRequestAfter", now + 100);
             var preview = snapshot(subject);
-            NetworkHooks.openScreen(subject, new SimpleMenuProvider((id, inventory, viewer) ->
+            subject.openMenu(new SimpleMenuProvider((id, inventory, viewer) ->
                     PhotographyMenu.consent(id, inventory, preview, player.getId(), slot), Component.translatable("screen.createapparel.photo.consent")),
                     buffer -> PhotographyMenu.writeOpening(buffer, PhotographyMenu.Mode.CONSENT, preview, player.getId(), slot, 0));
             return;
@@ -58,7 +57,7 @@ public final class PhotographyService {
         if (!validTarget(player, target) || !player.getInventory().getItem(slot).is(PhotoRegistries.CAMERA.get())) return;
         if (target instanceof Citizen citizen && !citizen.interaction().canBegin(player)) return;
         var preview = snapshot(target); int cost = target instanceof Citizen citizen ? quote(citizen) : 0;
-        NetworkHooks.openScreen(player, new SimpleMenuProvider((id, inventory, viewer) ->
+        player.openMenu(new SimpleMenuProvider((id, inventory, viewer) ->
                 PhotographyMenu.capture(id, inventory, preview, target.getId(), slot, cost), Component.translatable("screen.createapparel.photo.capture")),
                 buffer -> PhotographyMenu.writeOpening(buffer, PhotographyMenu.Mode.CAPTURE, preview, target.getId(), slot, cost));
     }
@@ -89,7 +88,7 @@ public final class PhotographyService {
     }
     private static boolean sameAppearance(ItemStack owned, ItemStack preview) {
         if (owned.isEmpty() || preview.isEmpty() || owned.getItem() != preview.getItem()) return false;
-        var id = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(owned.getItem());
+        var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(owned.getItem());
         var definition = id == null ? null : com.rexhub.createapparel.garment.GarmentDefinitionManager.get(id).orElse(null);
         if (definition == null) return false;
         try {

@@ -15,7 +15,6 @@ uniform sampler2D Sampler2;
 
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
-uniform mat3 IViewRotMat;
 uniform int FogShape;
 
 
@@ -29,7 +28,7 @@ out vec4 normal;
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
 
-    vertexDistance = fog_distance(ModelViewMat, IViewRotMat * Position, FogShape);
+    vertexDistance = fog_distance(Position, FogShape);
     vec3 n = normalize(Normal);
     float key = max(0.0, dot(normalize(vec3(-0.35, 0.8, 1.0)), n));
     float fill = max(0.0, dot(normalize(vec3(0.65, 0.2, 0.65)), n));

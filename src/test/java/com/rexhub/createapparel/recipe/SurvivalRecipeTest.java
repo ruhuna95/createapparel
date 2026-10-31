@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SurvivalRecipeTest {
-    private static final Path RECIPES = Path.of("src/generated/resources/data/createapparel/recipes");
+    private static final Path RECIPES = Path.of("src/generated/resources/data/createapparel/recipe");
 
     @Test
     void productionEquipmentAndPatternHaveCraftingRecipesAndUnlocks() throws IOException {
@@ -23,9 +23,9 @@ class SurvivalRecipeTest {
             var recipe = json(RECIPES.resolve(item + ".json"));
             assertTrue(Set.of("minecraft:crafting_shaped", "minecraft:crafting_shapeless")
                     .contains(recipe.get("type").getAsString()), item);
-            assertEquals("createapparel:" + item, recipe.getAsJsonObject("result").get("item").getAsString());
+            assertEquals("createapparel:" + item, recipe.getAsJsonObject("result").get("id").getAsString());
             String category = item.equals("wardrobe") ? "decorations" : "misc";
-            var advancement = json(Path.of("src/generated/resources/data/createapparel/advancements/recipes/"
+            var advancement = json(Path.of("src/generated/resources/data/createapparel/advancement/recipes/"
                     + category + "/" + item + ".json"));
             assertTrue(advancement.getAsJsonObject("criteria").size() >= 2, item);
             assertEquals("createapparel:" + item, advancement.getAsJsonObject("rewards")
@@ -83,10 +83,10 @@ class SurvivalRecipeTest {
                 var ingredients = recipe.getAsJsonArray("ingredients");
                 assertEquals(1, ingredients.size());
                 assertEquals("createapparel:" + source, ingredients.get(0).getAsJsonObject().get("item").getAsString());
-                assertEquals("createapparel:" + result, recipe.getAsJsonObject("result").get("item").getAsString());
+                assertEquals("createapparel:" + result, recipe.getAsJsonObject("result").get("id").getAsString());
                 assertEquals(1, recipe.getAsJsonObject("result").has("count")
                         ? recipe.getAsJsonObject("result").get("count").getAsInt() : 1);
-                var advancement = json(Path.of("src/generated/resources/data/createapparel/advancements/recipes/decorations/"
+                var advancement = json(Path.of("src/generated/resources/data/createapparel/advancement/recipes/decorations/"
                         + name + ".json"));
                 assertTrue(advancement.getAsJsonObject("criteria").has("has_" + source));
                 assertEquals("createapparel:" + name, advancement.getAsJsonObject("rewards")
@@ -178,18 +178,18 @@ class SurvivalRecipeTest {
         items.forEach((symbol, item) -> assertEquals(item.startsWith("#") ? item.substring(1) : item,
                 key.getAsJsonObject(symbol).get(item.startsWith("#") ? "tag" : "item").getAsString()));
         var result = recipe.getAsJsonObject("result");
-        assertEquals("createapparel:" + name, result.get("item").getAsString());
+        assertEquals("createapparel:" + name, result.get("id").getAsString());
         assertEquals(1, result.has("count") ? result.get("count").getAsInt() : 1);
     }
 
     private static void assertCasingUnlock(String name) throws IOException {
-        var advancement = json(Path.of("src/generated/resources/data/createapparel/advancements/recipes/misc/"
+        var advancement = json(Path.of("src/generated/resources/data/createapparel/advancement/recipes/misc/"
                 + name + ".json"));
         var criteria = advancement.getAsJsonObject("criteria");
         assertFalse(criteria.has("has_andesite_alloy"));
         assertEquals("create:andesite_casing", criteria.getAsJsonObject("has_andesite_casing")
                 .getAsJsonObject("conditions").getAsJsonArray("items").get(0).getAsJsonObject()
-                .getAsJsonArray("items").get(0).getAsString());
+                .get("items").getAsString());
     }
 
     private static void counts(String name, int fabric, int thread) throws IOException {

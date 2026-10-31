@@ -211,7 +211,7 @@ public final class CitizenRouteSavedData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         tag.putLong("TerritoryRevision", territoryRevision);
         tag.putInt("SchemaVersion", 1);
         tag.putLong("RouteGraphVersion", routeGraphVersion);

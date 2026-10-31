@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_casing"
+    },
+    "R": {
+      "item": "create:redstone_link"
+    },
+    "T": {
+      "item": "create:electron_tube"
+    }
+  },
+  "pattern": [
+    " T ",
+    "RBR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:signage_broadcaster"
+  }
+}

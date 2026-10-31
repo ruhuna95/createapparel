@@ -25,8 +25,8 @@ class WardrobeTooltipTest {
     @Test
     void blockItemTooltipHookAppendsTheGrayUsageHint() throws IOException {
         String source = Files.readString(Path.of("src/main/java/com/rexhub/createapparel/block/WardrobeBlock.java"));
-        assertTrue(source.contains("void appendHoverText(ItemStack stack, @Nullable BlockGetter level,"));
-        assertTrue(source.contains("super.appendHoverText(stack, level, tooltip, flag);"));
+        assertTrue(source.contains("void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context,"));
+        assertTrue(source.contains("super.appendHoverText(stack, context, tooltip, flag);"));
         assertTrue(source.contains("tooltip.add(Component.translatable(\"tooltip.createapparel.wardrobe.change_clothes\").withStyle(ChatFormatting.GRAY));"));
     }
 }

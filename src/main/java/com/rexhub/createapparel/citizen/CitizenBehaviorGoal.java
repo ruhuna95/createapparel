@@ -9,7 +9,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
@@ -109,7 +109,7 @@ public final class CitizenBehaviorGoal extends Goal {
         }
         if (!following && distance <= START_DISTANCE_SQUARED) return;
         following = true;
-        if (distance >= FollowOwnerGoal.TELEPORT_WHEN_DISTANCE_IS * FollowOwnerGoal.TELEPORT_WHEN_DISTANCE_IS) {
+        if (distance >= 12.0F * 12.0F) {
             citizen.getNavigation().stop();
             lastTargetPosition = null;
             if (teleportDelay <= 0) {
@@ -163,7 +163,7 @@ public final class CitizenBehaviorGoal extends Goal {
         var level = citizen.level();
         if (!level.isInWorldBounds(pos) || !level.isInWorldBounds(pos.above())
                 || !CitizenNavigation.hasLoadedRegion(level, pos, 1)) return false;
-        if (WalkNodeEvaluator.getBlockPathTypeStatic(level, pos.mutable()) != BlockPathTypes.WALKABLE
+        if (WalkNodeEvaluator.getPathTypeStatic(citizen, pos) != PathType.WALKABLE
                 || level.getBlockState(pos.below()).getBlock() instanceof LeavesBlock) return false;
         var destination = new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         var bounds = citizen.getBoundingBox().move(destination.subtract(citizen.position()));

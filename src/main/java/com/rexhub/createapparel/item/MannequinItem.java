@@ -45,7 +45,7 @@ public final class MannequinItem extends Item {
             if (mannequin == null) return InteractionResult.FAIL;
             float yaw = Mth.floor((Mth.wrapDegrees(context.getRotation() - 180) + 22.5F) / 45) * 45;
             mannequin.moveTo(location.x, location.y, location.z, yaw, 0);
-            if (context.getItemInHand().hasCustomHoverName()) {
+            if (context.getItemInHand().has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)) {
                 mannequin.setCustomName(context.getItemInHand().getHoverName());
             }
             if (!serverLevel.addFreshEntity(mannequin)) return InteractionResult.FAIL;

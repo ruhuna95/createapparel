@@ -32,15 +32,14 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Objects;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class EscalatedManualClient {
     private static int stage;
     private static volatile boolean prepared;
@@ -52,8 +51,8 @@ public final class EscalatedManualClient {
     private EscalatedManualClient() { }
 
     @SubscribeEvent
-    public static void tick(TickEvent.ClientTickEvent event) {
-        if (!Boolean.getBoolean("apparel.escalatedClient") || event.phase != TickEvent.Phase.END) return;
+    public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
+        if (!Boolean.getBoolean("apparel.escalatedClient")) return;
         var mc = Minecraft.getInstance();
         if (stage == 3) {
             if (prepared && ++readyTicks % 20 == 0 && mc.getSingleplayerServer() != null)
@@ -76,7 +75,7 @@ public final class EscalatedManualClient {
                     new net.minecraft.world.level.LevelSettings("Escalated 手動確認", net.minecraft.world.level.GameType.CREATIVE,
                             false, net.minecraft.world.Difficulty.PEACEFUL, true, new GameRules(), net.minecraft.world.level.WorldDataConfiguration.DEFAULT),
                     new WorldOptions(29, false, false), access -> access.registryOrThrow(Registries.WORLD_PRESET)
-                            .getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions());
+                            .getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions(), new net.minecraft.client.gui.screens.TitleScreen());
             return;
         }
         if (mc.player == null || mc.level == null || mc.getSingleplayerServer() == null) return;
@@ -165,7 +164,7 @@ public final class EscalatedManualClient {
     }
 
     private static BlockState block(String id, Direction facing) {
-        return Objects.requireNonNull(ForgeRegistries.BLOCKS.getValue(ResourceLocation.fromNamespaceAndPath("escalated", id)))
+        return Objects.requireNonNull(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("escalated", id)))
                 .defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, facing);
     }
 

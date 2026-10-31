@@ -20,18 +20,18 @@ class OldClothRecipeTest {
 
     @Test
     void recyclingUsesOneNativeCrushingRecipeWithoutNbtOrChance() throws Exception {
-        var recipe = json(GENERATED.resolve("data/createapparel/recipes/crushing/garments_to_old_cloth.json"));
+        var recipe = json(GENERATED.resolve("data/createapparel/recipe/crushing/garments_to_old_cloth.json"));
         assertEquals("create:crushing", recipe.get("type").getAsString());
-        assertEquals(100, recipe.get("processingTime").getAsInt());
+        assertEquals(100, recipe.get("processing_time").getAsInt());
         assertEquals(1, recipe.getAsJsonArray("ingredients").size());
         assertEquals("createapparel:recyclable_garments", recipe.getAsJsonArray("ingredients")
                 .get(0).getAsJsonObject().get("tag").getAsString());
         var outputs = recipe.getAsJsonArray("results");
         assertEquals(1, outputs.size());
         var result = outputs.get(0).getAsJsonObject();
-        assertEquals(Set.of("item"), result.keySet());
-        assertEquals("createapparel:old_cloth", result.get("item").getAsString());
-        var tag = json(GENERATED.resolve("data/createapparel/tags/items/recyclable_garments.json"));
+        assertEquals(Set.of("id"), result.keySet());
+        assertEquals("createapparel:old_cloth", result.get("id").getAsString());
+        var tag = json(GENERATED.resolve("data/createapparel/tags/item/recyclable_garments.json"));
         var values = StreamSupport.stream(tag.getAsJsonArray("values").spliterator(), false)
                 .map(value -> value.getAsString()).collect(Collectors.toSet());
         assertTrue(values.size() > 100);

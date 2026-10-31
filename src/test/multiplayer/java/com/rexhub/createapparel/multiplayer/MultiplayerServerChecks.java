@@ -28,16 +28,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.util.Objects;
 import java.util.UUID;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class MultiplayerServerChecks {
     static final BlockPos BASE = new BlockPos(1024, 80, 1024);
     static final BlockPos HANGER = BASE.offset(0, 1, 3);
@@ -54,9 +51,9 @@ public final class MultiplayerServerChecks {
     private MultiplayerServerChecks() { }
 
     @SubscribeEvent
-    public static void tick(TickEvent.ServerTickEvent event) {
-        if (!Boolean.getBoolean("apparel.multiplayer.server") || event.phase != TickEvent.Phase.END || done) return;
-        var server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+    public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        if (!Boolean.getBoolean("apparel.multiplayer.server") || done) return;
+        var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
         if (server == null) return;
         try {
             if (started == 0) started = System.nanoTime();
@@ -80,7 +77,7 @@ public final class MultiplayerServerChecks {
                     if (Boolean.getBoolean("apparel.multiplayer.resume")) {
                         level.getChunkAt(BASE);
                         if (level.getEntity(CITIZEN) == null || level.getEntity(MANNEQUIN) == null) return;
-                        var expected = NbtIo.readCompressed(MultiplayerProbe.ROOT.resolve("persisted.nbt").toFile());
+                        var expected = NbtIo.readCompressed(MultiplayerProbe.ROOT.resolve("persisted.nbt"), net.minecraft.nbt.NbtAccounter.unlimitedHeap());
                         MultiplayerProbe.require(fixture(level).equals(expected.getCompound("Fixture")), "Restart changed saved fixture identity, equipment or graph");
                         MultiplayerProbe.require(playerSnapshot(server).equals(expected.getList("Players", CompoundTag.TAG_COMPOUND)), "Restart changed player equipment, colors or styles");
                         for (var player : new ServerPlayer[]{a, b}) {
@@ -113,8 +110,8 @@ public final class MultiplayerServerChecks {
                 case 1 -> {
                     if (!acknowledged()) return;
                     var wardrobe = (WardrobeBlockEntity) level.getBlockEntity(WARDROBE);
-                    NetworkHooks.openScreen(a, Objects.requireNonNull(wardrobe), WARDROBE);
-                    NetworkHooks.openScreen(b, wardrobe, WARDROBE);
+                    a.openMenu(Objects.requireNonNull(wardrobe), WARDROBE);
+                    b.openMenu(wardrobe, WARDROBE);
                     publish(server, 2, "wardrobe-actions", true);
                 }
                 case 2 -> {
@@ -179,7 +176,7 @@ public final class MultiplayerServerChecks {
                     if (!acknowledged()) return;
                     var persisted = new CompoundTag();
                     persisted.put("Fixture", fixture(level)); persisted.put("Players", playerSnapshot(server));
-                    NbtIo.writeCompressed(persisted, MultiplayerProbe.ROOT.resolve("persisted.nbt").toFile());
+                    NbtIo.writeCompressed(persisted, MultiplayerProbe.ROOT.resolve("persisted.nbt"));
                     server.saveEverything(false, true, true);
                     publish(server, 30, "finish", true);
                 }
@@ -224,7 +221,7 @@ public final class MultiplayerServerChecks {
         level.setBlock(WARDROBE, wardrobeState, Block.UPDATE_CLIENTS);
         level.setBlock(WARDROBE.above(), wardrobeState.setValue(WardrobeBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
         level.setBlockAndUpdate(LOOM, ModBlocks.LOOM.get().defaultBlockState());
-        Objects.requireNonNull(level.getBlockEntity(LOOM)).getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(IllegalStateException::new)
+        Objects.requireNonNull(level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, LOOM, null))
                 .insertItem(0, new ItemStack(ModItems.COTTON_THREAD.get()), false);
         var citizen = Objects.requireNonNull(ModEntities.CITIZEN.get().create(level));
         citizen.setUUID(CITIZEN); citizen.setNoAi(true); citizen.setPersistenceRequired();
@@ -250,15 +247,15 @@ public final class MultiplayerServerChecks {
 
     private static CompoundTag fixture(ServerLevel level) {
         var tag = new CompoundTag();
-        for (var entry : java.util.Map.of("Hanger", HANGER, "Rack", RACK).entrySet()) tag.put(entry.getKey(), Objects.requireNonNull(level.getBlockEntity(entry.getValue())).getUpdateTag());
+        for (var entry : java.util.Map.of("Hanger", HANGER, "Rack", RACK).entrySet()) tag.put(entry.getKey(), Objects.requireNonNull(level.getBlockEntity(entry.getValue())).getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()));
         tag.putBoolean("Thread", level.getBlockState(LOOM).getValue(LoomBlock.THREAD_VISIBLE));
         var citizen = (Citizen) Objects.requireNonNull(level.getEntity(CITIZEN));
         tag.putUUID("Citizen", CITIZEN);
-        tag.put("CitizenTop", citizen.citizenState().loadout().getStack(GarmentSlot.TOP).save(new CompoundTag()));
+        tag.put("CitizenTop", citizen.citizenState().loadout().getStack(GarmentSlot.TOP).save(com.rexhub.createapparel.TestRegistries.lookup()));
         tag.putString("CitizenAge", citizen.citizenState().age().name());
         var mannequin = (Mannequin) Objects.requireNonNull(level.getEntity(MANNEQUIN));
         tag.putUUID("Mannequin", MANNEQUIN);
-        tag.put("MannequinState", mannequin.mannequinState().serializeNBT());
+        tag.put("MannequinState", mannequin.mannequinState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
         var nodes = new ListTag();
         var data = CitizenRouteManager.get(level).data();
         for (int i = 0; i < 3; i++) {
@@ -283,7 +280,7 @@ public final class MultiplayerServerChecks {
         var players = new ListTag();
         for (var player : server.getPlayerList().getPlayers().stream().sorted(java.util.Comparator.comparing(ServerPlayer::getScoreboardName)).toList()) {
             var tag = new CompoundTag(); tag.putUUID("Id", player.getUUID()); tag.putString("Dimension", player.level().dimension().location().toString());
-            tag.put("Top", apparel(player).getStack(GarmentSlot.TOP).save(new CompoundTag()));
+            tag.put("Top", apparel(player).getStack(GarmentSlot.TOP).save(com.rexhub.createapparel.TestRegistries.lookup()));
             tag.putString("Sleeves", stage == 2 ? "rolled" : apparel(player).styleState(GarmentSlot.TOP).styles().getOrDefault("sleeves", ""));
             players.add(tag);
         }

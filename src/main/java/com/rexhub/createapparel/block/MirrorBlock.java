@@ -15,6 +15,13 @@ import org.joml.Matrix4f;
 import java.util.List;
 
 public final class MirrorBlock extends BaseEntityBlock implements MirrorSurfaceProvider {
+    public static final com.mojang.serialization.MapCodec<MirrorBlock> CODEC = simpleCodec(MirrorBlock::new);
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends MirrorBlock> codec() {
+        return CODEC;
+    }
+
     private static final List<MirrorGeometry> SURFACES = java.util.Arrays.stream(Direction.values()).map(direction -> {
         var rotation = new Matrix4f().translation(0.5F, 0.5F, 0.5F);
         switch (direction) {

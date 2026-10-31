@@ -51,9 +51,14 @@ public final class AdvertisementPanelRenderer implements BlockEntityRenderer<Adv
     }
     private static void vertex(com.mojang.blaze3d.vertex.VertexConsumer consumer, PoseStack pose, Vec3 point,
                                float u, float v, net.minecraft.core.Direction facing, int light, int alpha) {
-        consumer.vertex(pose.last().pose(), (float) point.x, (float) point.y, (float) point.z).color(255, 255, 255, alpha)
-                .uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light)
-                .normal(pose.last().normal(), facing.getStepX(), 0, facing.getStepZ()).endVertex();
+        consumer.addVertex(pose.last().pose(), (float) point.x, (float) point.y, (float) point.z).setColor(255, 255, 255, alpha)
+                .setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light)
+                .setNormal(pose.last(), facing.getStepX(), 0, facing.getStepZ());
     }
     @Override public int getViewDistance() { return 128; }
+
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(AdvertisementPanelBlockEntity blockEntity) {
+        return blockEntity.getRenderBoundingBox();
+    }
 }

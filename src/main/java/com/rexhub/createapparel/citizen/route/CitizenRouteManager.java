@@ -8,7 +8,7 @@ import com.rexhub.createapparel.init.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
 import javax.annotation.Nullable;
 import java.util.*;
@@ -38,7 +38,7 @@ public final class CitizenRouteManager {
 
     private CitizenRouteManager(ServerLevel level) {
         this.level = level;
-        data = level.getDataStorage().computeIfAbsent(CitizenRouteSavedData::load, CitizenRouteSavedData::new, CitizenRouteSavedData.NAME);
+        data = level.getDataStorage().computeIfAbsent(new net.minecraft.world.level.saveddata.SavedData.Factory<>(CitizenRouteSavedData::new, (tag, registries) -> CitizenRouteSavedData.load(tag)), CitizenRouteSavedData.NAME);
         planner = new CitizenRoutePlanner(this);
     }
 
@@ -250,7 +250,7 @@ public final class CitizenRouteManager {
     public boolean safeEndpoint(Citizen citizen, BlockPos pos) {
         if (!level.isInWorldBounds(pos) || !level.isInWorldBounds(pos.above()) || !level.getWorldBorder().isWithinBounds(pos)
                 || !CitizenNavigation.hasLoadedRegion(level, pos, 1) || !level.getFluidState(pos).isEmpty()
-                || citizen.getNavigation().getNodeEvaluator().getBlockPathType(level, pos.getX(), pos.getY(), pos.getZ()) != BlockPathTypes.WALKABLE) return false;
+                || citizen.getNavigation().getNodeEvaluator().getPathType(citizen, pos) != PathType.WALKABLE) return false;
         var bounds = citizen.getBoundingBox().move(Vec3.atBottomCenterOf(pos).subtract(citizen.position()));
         return level.getWorldBorder().isWithinBounds(bounds) && level.noCollision(citizen, bounds);
     }

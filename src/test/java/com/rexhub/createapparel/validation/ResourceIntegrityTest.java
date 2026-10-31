@@ -68,13 +68,13 @@ class ResourceIntegrityTest {
     @Test
     void localRecipeAndItemTagReferencesExistAndTagsHaveNoCycles() throws Exception {
         Map<ResourceLocation, JsonObject> tags = new HashMap<>();
-        String directory = "data/createapparel/tags/items";
+        String directory = "data/createapparel/tags/item";
         for (Path file : ProjectResources.files(directory, ".json")) {
             tags.put(ProjectResources.id(file, directory, ".json"), ProjectResources.json(file));
         }
         assertFalse(tags.isEmpty());
         for (var tag : tags.keySet()) validateTag(tag, tags, new HashSet<>());
-        for (Path file : ProjectResources.files("data/createapparel/recipes", ".json")) {
+        for (Path file : ProjectResources.files("data/createapparel/recipe", ".json")) {
             validateRecipeTags(ProjectResources.json(file), tags);
         }
     }

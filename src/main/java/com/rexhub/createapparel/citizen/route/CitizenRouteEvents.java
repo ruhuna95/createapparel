@@ -4,31 +4,30 @@ import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.entity.Citizen;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.level.ChunkEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class CitizenRouteEvents {
     private CitizenRouteEvents() { }
 
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
     public static void interact(PlayerInteractEvent.RightClickBlock event) { SmartPhoneRouteEditor.interact(event); }
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
     public static void attack(PlayerInteractEvent.LeftClickBlock event) {
         if (RouteMarkerPermissions.holdingPhone(event.getEntity())
                 && !RouteMarkerPermissions.canEditRoutes(event.getEntity(), net.minecraft.world.InteractionHand.MAIN_HAND)
                 && event.getLevel().getBlockState(event.getPos()).getBlock() instanceof com.rexhub.createapparel.block.CitizenRouteMarkerBlock) event.setCanceled(true);
     }
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
-    public static void breakMarker(net.minecraftforge.event.level.BlockEvent.BreakEvent event) {
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
+    public static void breakMarker(net.neoforged.neoforge.event.level.BlockEvent.BreakEvent event) {
         if (RouteMarkerPermissions.holdingPhone(event.getPlayer())
                 && !RouteMarkerPermissions.canEditRoutes(event.getPlayer(), net.minecraft.world.InteractionHand.MAIN_HAND)
                 && event.getState().getBlock() instanceof com.rexhub.createapparel.block.CitizenRouteMarkerBlock) event.setCanceled(true);
@@ -43,16 +42,16 @@ public final class CitizenRouteEvents {
             CitizenRouteManager.get(level).planner().cancel(citizen);
         }
     }
-    @SubscribeEvent public static void tick(TickEvent.LevelTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel level) {
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel level) {
             CitizenActivityScheduler.get(level).tick();
             CitizenPathfindingScheduler.get(level).tick();
             CitizenRouteManager.get(level).tickMaintenance();
             RouteViewSynchronization.tick(level);
         }
     }
-    @SubscribeEvent public static void playerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) SmartPhoneRouteEditor.tick(player);
+    @SubscribeEvent public static void playerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (event.getEntity() instanceof ServerPlayer player) SmartPhoneRouteEditor.tick(player);
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         SmartPhoneRouteEditor.logout(event.getEntity().getUUID());

@@ -17,6 +17,12 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class SilkwormRearingTrayBlock extends HorizontalShaftMachineBlock
         implements IBE<SilkwormRearingTrayBlockEntity> {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
     public static final double STRESS_IMPACT = 4;
     private static final VoxelShape BODY_SHAPE = Shapes.or(
             Block.box(1, 12, 1, 15, 16, 15), Block.box(4, 4, 4, 12, 12, 12),
@@ -27,9 +33,9 @@ public final class SilkwormRearingTrayBlock extends HorizontalShaftMachineBlock
 
     public SilkwormRearingTrayBlock(Properties properties) { super(properties); }
 
-    @Override
+
     @SuppressWarnings("deprecation")
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+    private InteractionResult interact(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
         if (level.isClientSide) return InteractionResult.SUCCESS;
         return onBlockEntityUse(level, pos, tray -> tray.interact(player, hand));
@@ -44,13 +50,13 @@ public final class SilkwormRearingTrayBlock extends HorizontalShaftMachineBlock
 
     @Override
     @SuppressWarnings("deprecation")
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide && player.getAbilities().instabuild) {
             withBlockEntityDo(level, pos, tray -> {
                 if (tray.hasStoredContents()) Block.popResource(level, pos, tray.storedItem());
             });
         }
-        super.playerWillDestroy(level, pos, state, player);
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
     @Override

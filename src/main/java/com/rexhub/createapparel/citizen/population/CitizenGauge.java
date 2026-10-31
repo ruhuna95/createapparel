@@ -36,7 +36,7 @@ public record CitizenGauge(UUID id, BlockPos pos, @Nullable UUID districtId, @Nu
         this(id, pos, districtId, center, range, target, cooldownUntil, resolving, slot, name, Flow.INFLUX);
     }
     public static String normalizedName(String name, UUID districtId) {
-        if (name.length() > MAX_NAME_LENGTH || name.chars().anyMatch(character -> !net.minecraft.SharedConstants.isAllowedChatCharacter((char) character)))
+        if (name.length() > MAX_NAME_LENGTH || name.chars().anyMatch(character -> !net.minecraft.util.StringUtil.isAllowedChatCharacter((char) character)))
             throw new IllegalArgumentException("Invalid District name");
         String trimmed = name.strip();
         return trimmed.isEmpty() ? districtId.toString() : trimmed;

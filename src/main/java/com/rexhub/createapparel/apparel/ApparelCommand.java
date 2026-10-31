@@ -33,10 +33,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class ApparelCommand {
     private static final String NO_COLOR = "none";
     private static final SimpleCommandExceptionType NO_CAPABILITY = new SimpleCommandExceptionType(
@@ -172,7 +172,7 @@ public final class ApparelCommand {
     }
 
     private static boolean isMetalAccessory(CommandContext<CommandSourceStack> context) {
-        return ForgeRegistries.ITEMS.getValue(ResourceLocationArgument.getId(context, "garment_item"))
+        return BuiltInRegistries.ITEM.get(ResourceLocationArgument.getId(context, "garment_item"))
                 instanceof MetalAccessoryItem;
     }
 
@@ -278,7 +278,7 @@ public final class ApparelCommand {
         ResourceLocation garmentId = ResourceLocationArgument.getId(context, "garment_item");
         GarmentDefinition definition = GarmentDefinitionManager.get(garmentId)
                 .orElseThrow(() -> UNKNOWN_GARMENT.create(garmentId));
-        Item item = ForgeRegistries.ITEMS.getValue(garmentId);
+        Item item = BuiltInRegistries.ITEM.get(garmentId);
         if (!(item instanceof GarmentItem)) {
             throw UNKNOWN_GARMENT.create(garmentId);
         }
@@ -422,7 +422,7 @@ public final class ApparelCommand {
             if (stack.isEmpty()) {
                 throw EMPTY_SLOT.create(slot.getSerializedName());
             }
-            ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
             GarmentDefinition definition = itemId == null
                     ? null
                     : GarmentDefinitionManager.get(itemId).orElse(null);
@@ -551,7 +551,7 @@ public final class ApparelCommand {
     }
 
     private static ApparelInventory getInventory(ServerPlayer player) throws CommandSyntaxException {
-        return ApparelCapabilities.get(player).resolve().orElseThrow(NO_CAPABILITY::create);
+        return ApparelCapabilities.get(player).orElseThrow(NO_CAPABILITY::create);
     }
 
     private static GarmentSlot getGarmentSlot(CommandContext<CommandSourceStack> context)

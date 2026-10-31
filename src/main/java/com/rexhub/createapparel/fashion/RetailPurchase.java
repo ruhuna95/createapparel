@@ -3,8 +3,8 @@ package com.rexhub.createapparel.fashion;
 import com.rexhub.createapparel.entity.Citizen;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import javax.annotation.Nullable;
 
 public final class RetailPurchase {
@@ -16,13 +16,13 @@ public final class RetailPurchase {
         for (var storage : register.storages()) {
             for (int index = 0; index < storage.getSlots(); index++) {
                 ItemStack stack = storage.getStackInSlot(index);
-                if (stack.isEmpty() || exact && !ItemStack.isSameItemSameTags(stack, citizen.citizenState().fashion().desiredGarment())) continue;
+                if (stack.isEmpty() || exact && !ItemStack.isSameItemSameComponents(stack, citizen.citizenState().fashion().desiredGarment())) continue;
                 var definition = citizen.citizenState().loadout().definition(stack).orElse(null);
                 if (definition == null) continue;
                 var slot = requiredSlot == null ? definition.defaultSlot() : requiredSlot;
                 if (!FashionEvaluator.eligible(citizen, stack, slot)) continue;
                 ItemStack simulated = storage.extractItem(index, 1, true);
-                if (simulated.getCount() != 1 || !ItemStack.isSameItemSameTags(simulated, stack)) continue;
+                if (simulated.getCount() != 1 || !ItemStack.isSameItemSameComponents(simulated, stack)) continue;
                 double weight = FashionEvaluator.attractiveness(simulated, demand);
                 total += weight;
                 if (citizen.getRandom().nextDouble() * total < weight) selected = new Candidate(storage, index, slot, simulated.copy());
@@ -33,9 +33,9 @@ public final class RetailPurchase {
     public static boolean purchase(Citizen citizen, CashRegisterBlockEntity register, Candidate candidate) {
         if (!register.isOpen() || !FashionEvaluator.eligible(citizen, candidate.stack(), candidate.slot())) return false;
         var simulated = candidate.storage().extractItem(candidate.index(), 1, true);
-        if (simulated.getCount() != 1 || !ItemStack.isSameItemSameTags(simulated, candidate.stack())) return false;
+        if (simulated.getCount() != 1 || !ItemStack.isSameItemSameComponents(simulated, candidate.stack())) return false;
         var extracted = candidate.storage().extractItem(candidate.index(), 1, false);
-        if (extracted.getCount() != 1 || !ItemStack.isSameItemSameTags(extracted, candidate.stack())) {
+        if (extracted.getCount() != 1 || !ItemStack.isSameItemSameComponents(extracted, candidate.stack())) {
             if (!extracted.isEmpty()) {
                 var remainder = ItemHandlerHelper.insertItemStacked(candidate.storage(), extracted, false);
                 if (!remainder.isEmpty()) net.minecraft.world.Containers.dropItemStack(citizen.level(), register.getBlockPos().getX() + 0.5,

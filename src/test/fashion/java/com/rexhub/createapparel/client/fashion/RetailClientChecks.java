@@ -50,7 +50,7 @@ public final class RetailClientChecks {
             if (!register.linkStorage(STORAGE)) throw new AssertionError("Retail client storage did not link");
             var seatPos = REGISTER.north();
             level.setBlockAndUpdate(seatPos, AllBlocks.SEATS.get(DyeColor.WHITE).getDefaultState());
-            var seat = new SeatEntity(level, seatPos); seat.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(seat);
+            var seat = new SeatEntity(level); seat.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(seat);
             var cashier = Objects.requireNonNull(EntityType.COW.create(level));
             cashier.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(cashier); cashier.startRiding(seat, true); cashierId = cashier.getId();
             var mannequin = Objects.requireNonNull(ModEntities.FULL_MANNEQUIN_WHITE_CLASSIC.get().create(level));
@@ -124,7 +124,7 @@ public final class RetailClientChecks {
             if (mc.player.isHolding(ModItems.SMART_PHONE.get())) return false;
             if (Outliner.getInstance().getOutlines().containsKey(new ClientRetailView.LinkOutline("apparel_retail_seat"))) throw new AssertionError("Highlights must clear after releasing the phone");
             if (!has(lines, "closed")) throw new AssertionError("Goggles should work without holding the phone");
-            var tooltip = new ItemStack(FashionRegistries.CASH_REGISTER_ITEM.get()).getTooltipLines(mc.player, net.minecraft.world.item.TooltipFlag.NORMAL);
+            var tooltip = new ItemStack(FashionRegistries.CASH_REGISTER_ITEM.get()).getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(net.minecraft.client.Minecraft.getInstance().level), mc.player, net.minecraft.world.item.TooltipFlag.NORMAL);
             if (tooltip.stream().anyMatch(line -> line.getString().contains(net.minecraft.client.resources.language.I18n.get("create.tooltip.keyShift"))))
                 throw new AssertionError("The register still offers Shift details");
             var ui = PonderUI.of(FashionRegistries.CASH_REGISTER_ITEM.getId()); mc.setScreen(ui);
@@ -136,7 +136,8 @@ public final class RetailClientChecks {
             ui.getActiveScene().forEachWorldEntity(net.minecraft.world.entity.npc.Villager.class, cashier -> {
                 cashiers[0]++;
                 if (!(cashier.getVehicle() instanceof SeatEntity seat)) throw new AssertionError("Ponder cashier is not riding its seat");
-                double expectedY = seat.getY() + seat.getPassengersRidingOffset() + cashier.getMyRidingOffset() + SeatEntity.getCustomEntitySeatOffset(cashier);
+                double expectedY = seat.getPassengerRidingPosition(cashier).y - cashier.getVehicleAttachmentPoint(seat).y
+                        + 1.0 / 16 + SeatEntity.getCustomEntitySeatOffset(cashier);
                 if (Math.abs(cashier.getY() - expectedY) > 0.001) throw new AssertionError("Ponder cashier is embedded below its riding position");
             });
             if (cashiers[0] != 1) throw new AssertionError("Ponder cashier is missing");
@@ -157,11 +158,13 @@ public final class RetailClientChecks {
                     throw new AssertionError("Retail language checks could not reconnect storage");
                 lookAt(level.getServer().getPlayerList().getPlayers().get(0), Vec3.atCenterOf(REGISTER), new Vec3(-0.5, -60, -0.5));
             });
+            mc.setScreen(new net.minecraft.client.gui.screens.options.LanguageSelectScreen(null, mc.options, mc.getLanguageManager()));
             mc.getLanguageManager().setSelected("ja_jp"); mc.options.languageCode = "ja_jp";
             reload = mc.reloadResourcePacks(); stage = 8; ticks = 0;
         } else if (stage == 8) {
             if (!reload.isDone()) return false;
             reload.join();
+            if (mc.screen instanceof net.minecraft.client.gui.screens.options.LanguageSelectScreen) mc.setScreen(null);
             if (has(lines, "checking") || !lines.get(2).getString().contains(Component.translatable("tooltip.createapparel.register.connected", 1).getString())) return false;
             if (!has(lines, "closed") || !lines.get(0).getString().strip().equals("閉店中")) throw new AssertionError("Japanese goggles status is missing");
             screenshot(mc, "retail-goggles-ja.png");

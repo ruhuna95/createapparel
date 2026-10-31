@@ -20,7 +20,7 @@ import java.util.Deque;
 
 @Mixin(LevelRenderer.class)
 public abstract class MirrorLevelRendererMixin implements MirrorLevelRendererAccess {
-    @Shadow @Final private ObjectArrayList<Object> renderChunksInFrustum;
+    @Shadow @Final private ObjectArrayList<Object> visibleSections;
     @Shadow private Frustum cullingFrustum;
     @Shadow private int renderedEntities;
     @Shadow private int culledEntities;
@@ -30,15 +30,15 @@ public abstract class MirrorLevelRendererMixin implements MirrorLevelRendererAcc
 
     @Override public void createapparel$beginReflection() {
         var chunks = createapparel$reflectionChunkLists.pollFirst();
-        if (chunks == null) chunks = new ObjectArrayList<>(renderChunksInFrustum.size());
-        chunks.addAll(renderChunksInFrustum);
+        if (chunks == null) chunks = new ObjectArrayList<>(visibleSections.size());
+        chunks.addAll(visibleSections);
         createapparel$reflectionStates.push(new Snapshot(chunks, cullingFrustum, renderedEntities, culledEntities));
     }
 
     @Override public void createapparel$endReflection() {
         var previous = createapparel$reflectionStates.pop();
-        renderChunksInFrustum.clear();
-        renderChunksInFrustum.addAll(previous.chunks());
+        visibleSections.clear();
+        visibleSections.addAll(previous.chunks());
         cullingFrustum = previous.frustum();
         renderedEntities = previous.renderedEntities();
         culledEntities = previous.culledEntities();
@@ -53,7 +53,7 @@ public abstract class MirrorLevelRendererMixin implements MirrorLevelRendererAcc
         callback.cancel();
     }
 
-    @Inject(method = "compileChunks", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "compileSections", at = @At("HEAD"), cancellable = true)
     private void createapparel$reuseCompiledChunks(Camera camera, CallbackInfo callback) {
         if (MirrorRenderManager.INSTANCE.isRenderingReflection()) callback.cancel();
     }

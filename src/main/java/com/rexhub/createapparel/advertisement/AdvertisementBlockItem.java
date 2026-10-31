@@ -8,7 +8,7 @@ public final class AdvertisementBlockItem extends BlockItem {
     public AdvertisementBlockItem(Block block, Properties properties) { super(block, properties); }
 
     @Override public boolean isFoil(ItemStack stack) {
-        return stack.hasTag() && AdvertisementSnapshot.load(stack.getOrCreateTag().getCompound("Advertisement")).photo() != null
+        return com.rexhub.createapparel.item.ItemData.hasData(stack) && AdvertisementSnapshot.load(com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getCompound("Advertisement")).photo() != null
                 || super.isFoil(stack);
     }
 }

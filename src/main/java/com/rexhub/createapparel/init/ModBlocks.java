@@ -9,71 +9,71 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.function.Supplier;
 
 public final class ModBlocks {
-    public static final RegistryObject<Block> CITIZEN_GAUGE = ModRegistries.BLOCKS.register("citizen_gauge",
-            () -> new com.rexhub.createapparel.block.CitizenGaugeBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).strength(3).noOcclusion()));
-    public static final RegistryObject<Block> CITIZEN_ROUTE_MARKER = routeMarker("citizen_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.NORMAL);
-    public static final RegistryObject<Block> GATEWAY_ROUTE_MARKER = routeMarker("gateway_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.GATEWAY);
-    public static final RegistryObject<Block> CROSSING_ROUTE_MARKER = routeMarker("crossing_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.CROSSING);
+    public static final DeferredHolder<Block, Block> CITIZEN_GAUGE = ModRegistries.BLOCKS.register("citizen_gauge",
+            () -> new com.rexhub.createapparel.block.CitizenGaugeBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3).noOcclusion()));
+    public static final DeferredHolder<Block, Block> CITIZEN_ROUTE_MARKER = routeMarker("citizen_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.NORMAL);
+    public static final DeferredHolder<Block, Block> GATEWAY_ROUTE_MARKER = routeMarker("gateway_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.GATEWAY);
+    public static final DeferredHolder<Block, Block> CROSSING_ROUTE_MARKER = routeMarker("crossing_route_marker", com.rexhub.createapparel.citizen.route.RouteMarkerType.CROSSING);
 
-    private static RegistryObject<Block> routeMarker(String name, com.rexhub.createapparel.citizen.route.RouteMarkerType type) {
+    private static DeferredHolder<Block, Block> routeMarker(String name, com.rexhub.createapparel.citizen.route.RouteMarkerType type) {
         return ModRegistries.BLOCKS.register(name, () -> new com.rexhub.createapparel.block.CitizenRouteMarkerBlock(
                 BlockBehaviour.Properties.of().strength(0.2F).noCollission().noOcclusion().noLootTable(), type));
     }
 
-    public static final RegistryObject<Block> SILKWORM_REARING_TRAY = ModRegistries.BLOCKS.register(
+    public static final DeferredHolder<Block, Block> SILKWORM_REARING_TRAY = ModRegistries.BLOCKS.register(
             "silkworm_rearing_tray",
             () -> new com.rexhub.createapparel.block.SilkwormRearingTrayBlock(
                     BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.STONE)
                             .sound(net.minecraft.world.level.block.SoundType.WOOD).strength(1.5F).noOcclusion())
     );
-    public static final RegistryObject<Block> CLOTHING_RACK = ModRegistries.BLOCKS.register("clothing_rack",
+    public static final DeferredHolder<Block, Block> CLOTHING_RACK = ModRegistries.BLOCKS.register("clothing_rack",
             () -> new com.rexhub.createapparel.block.ClothingRackBlock(
                     BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL)
                             .sound(net.minecraft.world.level.block.SoundType.METAL).strength(2.0F).noOcclusion()));
-    public static final RegistryObject<Block> WALL_HANGER = ModRegistries.BLOCKS.register("wall_hanger",
+    public static final DeferredHolder<Block, Block> WALL_HANGER = ModRegistries.BLOCKS.register("wall_hanger",
             () -> new com.rexhub.createapparel.block.WallHangerBlock(
-                    BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion()));
-    public static final RegistryObject<Block> CLIP_CLOTHING_RACK = ModRegistries.BLOCKS.register("clip_clothing_rack",
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion()));
+    public static final DeferredHolder<Block, Block> CLIP_CLOTHING_RACK = ModRegistries.BLOCKS.register("clip_clothing_rack",
             () -> new com.rexhub.createapparel.block.ClothingRackBlock(
                     BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL)
                             .sound(net.minecraft.world.level.block.SoundType.METAL).strength(2.0F).noOcclusion(),
                     com.rexhub.createapparel.garment.HangerType.CLIP));
-    public static final RegistryObject<Block> CLIP_WALL_HANGER = ModRegistries.BLOCKS.register("clip_wall_hanger",
+    public static final DeferredHolder<Block, Block> CLIP_WALL_HANGER = ModRegistries.BLOCKS.register("clip_wall_hanger",
             () -> new com.rexhub.createapparel.block.WallHangerBlock(
-                    BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion(),
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).strength(1.5F).noOcclusion(),
                     com.rexhub.createapparel.garment.HangerType.CLIP));
-    public static final RegistryObject<Block> COTTON_CROP = registerCrop(
+    public static final DeferredHolder<Block, Block> COTTON_CROP = registerCrop(
             "cotton_crop",
             () -> ModItems.COTTON_SEEDS.get()
     );
-    public static final RegistryObject<Block> FLAX_CROP = registerCrop(
+    public static final DeferredHolder<Block, Block> FLAX_CROP = registerCrop(
             "flax_crop",
             () -> ModItems.FLAX_SEEDS.get()
     );
-    public static final RegistryObject<Block> HEMP_CROP = registerCrop(
+    public static final DeferredHolder<Block, Block> HEMP_CROP = registerCrop(
             "hemp_crop",
             () -> ModItems.HEMP_SEEDS.get()
     );
-    public static final RegistryObject<Block> SPINNING_MACHINE = ModRegistries.BLOCKS.register(
+    public static final DeferredHolder<Block, Block> SPINNING_MACHINE = ModRegistries.BLOCKS.register(
             "spinning_machine",
-            () -> new SpinningMachineBlock(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion())
+            () -> new SpinningMachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).noOcclusion())
     );
-    public static final RegistryObject<Block> LOOM = ModRegistries.BLOCKS.register(
+    public static final DeferredHolder<Block, Block> LOOM = ModRegistries.BLOCKS.register(
             "loom",
-            () -> new LoomBlock(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion())
+            () -> new LoomBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).noOcclusion())
     );
-    public static final RegistryObject<Block> SEWING_MACHINE = ModRegistries.BLOCKS.register(
+    public static final DeferredHolder<Block, Block> SEWING_MACHINE = ModRegistries.BLOCKS.register(
             "sewing_machine",
-            () -> new SewingMachineBlock(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion())
+            () -> new SewingMachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).noOcclusion())
     );
-    public static final RegistryObject<Block> WARDROBE = ModRegistries.BLOCKS.register(
+    public static final DeferredHolder<Block, Block> WARDROBE = ModRegistries.BLOCKS.register(
             "wardrobe",
-            () -> new WardrobeBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).noOcclusion())
+            () -> new WardrobeBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).noOcclusion())
     );
 
     private ModBlocks() {
@@ -82,10 +82,10 @@ public final class ModBlocks {
     public static void bootstrap() {
     }
 
-    private static RegistryObject<Block> registerCrop(String name, Supplier<? extends ItemLike> seed) {
+    private static DeferredHolder<Block, Block> registerCrop(String name, Supplier<? extends ItemLike> seed) {
         return ModRegistries.BLOCKS.register(
                 name,
-                () -> new ApparelCropBlock(BlockBehaviour.Properties.copy(Blocks.WHEAT), seed)
+                () -> new ApparelCropBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT), seed)
         );
     }
 }

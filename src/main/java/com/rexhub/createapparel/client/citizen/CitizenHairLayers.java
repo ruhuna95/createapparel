@@ -94,8 +94,8 @@ public final class CitizenHairLayers {
 
     private static void vertex(PoseStack.Pose pose, VertexConsumer vertices, Vector3f point, float u, float v,
                                Vector3f normal, int light, int overlay) {
-        vertices.vertex(pose.pose(), point.x / 16, point.y / 16, point.z / 16).color(255, 255, 255, 255).uv(u / 64, v / 32)
-                .overlayCoords(overlay).uv2(light).normal(pose.normal(), normal.x, normal.y, normal.z).endVertex();
+        vertices.addVertex(pose.pose(), point.x / 16, point.y / 16, point.z / 16).setColor(255, 255, 255, 255).setUv(u / 64, v / 32)
+                .setOverlay(overlay).setLight(light).setNormal(pose, normal.x, normal.y, normal.z);
     }
 
     private static boolean hasVisiblePixel(Layer layer, Opacity opacity) {

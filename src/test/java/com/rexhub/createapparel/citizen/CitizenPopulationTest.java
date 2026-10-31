@@ -27,7 +27,7 @@ class CitizenPopulationTest {
         assertEquals(owner, data.reserveCenter(center, owner)); assertTrue(data.centerAvailable(center, owner));
         assertEquals(version, data.version());
         assertNotNull(new CitizenPopulationSavedData().reserveCenter(center, null));
-        data = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        data = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertNull(data.reserveCenter(center, null)); assertTrue(data.centerAvailable(center, owner));
         var next = data.reserveCenter(center.east(), owner); assertNotNull(next); assertNotEquals(owner, next);
         data.releaseCenter(UUID.randomUUID()); assertFalse(data.centerAvailable(center, null));
@@ -39,18 +39,18 @@ class CitizenPopulationTest {
     @Test void wallRegistrationConsumesPendingCenterAndOldSavesAndInvalidClaimsRemainReadable() {
         var data = new CitizenPopulationSavedData(); var home = district(0, 0); var owner = data.reserveCenter(home.center(), null);
         data.put(home); assertTrue(data.centerUsed(home.center())); assertFalse(data.centerAvailable(home.center(), owner));
-        assertTrue(data.save(new CompoundTag()).getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND).isEmpty());
+        assertTrue(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND).isEmpty());
         data.remove(home.id()); assertTrue(data.centerAvailable(home.center(), null));
-        var legacy = data.save(new CompoundTag()); legacy.remove("CenterReservations"); legacy.putInt("SchemaVersion", 3);
+        var legacy = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); legacy.remove("CenterReservations"); legacy.putInt("SchemaVersion", 3);
         assertNotNull(CitizenPopulationSavedData.load(legacy).reserveCenter(home.center(), null));
-        data.put(home); var saved = data.save(new CompoundTag()); var claims = new net.minecraft.nbt.ListTag();
+        data.put(home); var saved = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); var claims = new net.minecraft.nbt.ListTag();
         var claim = new CompoundTag(); claim.putLong("Center", home.center().asLong()); claim.putUUID("Id", owner); claims.add(claim);
         claim = claim.copy(); claim.putLong("Center", home.center().east().asLong()); claims.add(claim);
         var duplicateId = claim.copy(); duplicateId.putLong("Center", home.center().west().asLong()); claims.add(duplicateId);
         var duplicateCenter = claim.copy(); duplicateCenter.putUUID("Id", UUID.randomUUID()); claims.add(duplicateCenter);
         claims.add(new CompoundTag()); saved.put("CenterReservations", claims);
         var restored = CitizenPopulationSavedData.load(saved);
-        assertEquals(1, restored.save(new CompoundTag()).getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND).size());
+        assertEquals(1, restored.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND).size());
         assertFalse(restored.centerAvailable(home.center(), owner)); assertTrue(restored.centerAvailable(home.center().east(), owner));
         assertTrue(restored.centerAvailable(home.center().west(), null));
         restored.releaseCenter(owner); assertTrue(restored.centerAvailable(home.center().east(), null));
@@ -63,7 +63,7 @@ class CitizenPopulationTest {
         assertEquals(id, data.reserveCenter(center, id, 4));
         data.releaseCenter(id, 0); data.releaseCenter(id, -1); data.releaseCenter(UUID.randomUUID(), 1);
         data.releaseCenter(id, 1); assertFalse(data.centerAvailable(center, null));
-        data = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        data = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         data.releaseCenter(id, 2); assertFalse(data.centerAvailable(center, null));
         data.releaseCenter(id, 1); assertTrue(data.centerAvailable(center, null)); assertEquals(version, data.version());
         id = data.reserveCenter(center, null, 3);
@@ -77,10 +77,10 @@ class CitizenPopulationTest {
 
     @Test void oldReservationsWithUnknownItemCountsRequireOwnerRefreshRatherThanFreeingOtherCopies() {
         var data = new CitizenPopulationSavedData(); var center = new BlockPos(0, 64, 0); var id = data.reserveCenter(center, null, 3);
-        var tag = data.save(new CompoundTag()); tag.getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).remove("Items");
+        var tag = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); tag.getList("CenterReservations", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).remove("Items");
         data = CitizenPopulationSavedData.load(tag); data.releaseCenter(id, 1);
         assertFalse(data.centerAvailable(center, null));
-        data = CitizenPopulationSavedData.load(data.save(new CompoundTag())); data.releaseCenter(id, 2);
+        data = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); data.releaseCenter(id, 2);
         assertFalse(data.centerAvailable(center, null)); assertNull(data.reserveCenter(center, null, 1));
         var refreshed = data.reserveCenter(center, id, 2); assertNotNull(refreshed); assertNotEquals(id, refreshed);
         assertFalse(data.centerAvailable(center, id)); assertTrue(data.centerAvailable(center, refreshed));
@@ -111,7 +111,7 @@ class CitizenPopulationTest {
         var moved = data.gauge(home.id()).relocate(new BlockPos(28000000, 70, 28000000), 0); data.put(moved);
         assertTrue(data.centerUsed(center));
         var duplicate = CitizenGauge.create(new BlockPos(1, 70, 0), center); data.put(duplicate);
-        data = CitizenPopulationSavedData.load(data.save(new CompoundTag())); assertTrue(data.centerUsed(center));
+        data = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); assertTrue(data.centerUsed(center));
         data.remove(home.id()); assertTrue(data.centerUsed(center));
         data.remove(duplicate.id()); assertFalse(data.centerUsed(center));
         var source = CitizenGauge.create(new BlockPos(3, 70, 0), null); data.put(source);
@@ -229,7 +229,7 @@ class CitizenPopulationTest {
         assertEquals(first, data.physicalDistrict(new Vec3(-.5, -100, -64.5)));
         assertNull(data.physicalDistrict(new Vec3(0, 64, -64.5)));
         data.remove(first.id()); assertEquals(second, data.physicalDistrict(Vec3.atCenterOf(second.center())));
-        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(second, restored.physicalDistrict(Vec3.atCenterOf(second.center())));
         assertEquals(List.of(second), restored.inChunk(new net.minecraft.world.level.ChunkPos(second.pos()).toLong()));
     }
@@ -294,7 +294,7 @@ class CitizenPopulationTest {
         for (int slot = 0; slot < 4; slot++) data.put(CitizenGauge.create(pos, new BlockPos(slot, 60, 0), slot).settings(10 + slot, slot));
         assertEquals(4, data.atAll(pos).size());
         var a = data.at(pos, 1); var b = data.at(pos, 3); data.link(a.id(), b.id());
-        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(a, restored.at(pos, 1)); assertEquals(b, restored.at(pos, 3)); assertTrue(restored.linked(a.id()).contains(b.id()));
         assertThrows(IllegalArgumentException.class, () -> data.put(CitizenGauge.create(pos, null, 1)));
         assertThrows(IllegalArgumentException.class, () -> CitizenGauge.create(pos, null, 4));
@@ -315,7 +315,7 @@ class CitizenPopulationTest {
         assertEquals(a.id(), moved.id()); assertEquals(a.districtId(), moved.districtId()); assertEquals(a.center(), moved.center());
         assertEquals(a.range(), moved.range()); assertEquals(a.target(), moved.target()); assertEquals(120, moved.cooldownUntil());
         assertTrue(data.linked(a.id()).contains(b.id())); assertEquals(1, data.population(a.districtId()));
-        assertEquals(moved, CitizenPopulationSavedData.load(data.save(new CompoundTag())).district(a.districtId()));
+        assertEquals(moved, CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())).district(a.districtId()));
     }
     @Test void gaugeIdentityRangeAndZeroTargetSurviveSaving() {
         var gauge = district(-17, 0); var data = new CitizenPopulationSavedData(); data.put(gauge);
@@ -324,7 +324,7 @@ class CitizenPopulationTest {
         assertFalse(CitizenGauge.create(BlockPos.ZERO, null).save().contains("Target"));
         assertTrue(gauge.contains(new Vec3(-16.5, -60, 0.5))); assertTrue(gauge.contains(new Vec3(-6.5, 300, 0.5)));
         assertFalse(gauge.contains(new Vec3(-6, 64, 0.5)));
-        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(gauge, restored.district(gauge.districtId())); assertEquals(gauge, restored.at(gauge.pos()));
         restored.remove(gauge.id()); var replacement = CitizenGauge.create(gauge.pos(), gauge.center()); restored.put(replacement);
         assertNotEquals(gauge.id(), replacement.id()); assertNotEquals(gauge.districtId(), replacement.districtId());
@@ -357,7 +357,7 @@ class CitizenPopulationTest {
         assertTrue(data.link(source.id(), a.id())); assertTrue(data.link(a.id(), b.id())); assertFalse(data.link(a.id(), a.id())); assertFalse(data.link(a.id(), source.id()));
         var id = UUID.randomUUID(); data.register(id, new CitizenPopulationState(a.districtId(), false, true, 2400));
         data.register(id, new CitizenPopulationState(a.districtId(), false, true, 2400)); assertEquals(1, data.population(a.districtId()));
-        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(1, restored.population(a.districtId())); assertTrue(restored.citizen(id).force());
         assertEquals(Set.of(a.id()), restored.linked(source.id())); assertEquals(Set.of(source.id(), b.id()), restored.linked(a.id()));
         restored.remove(a.id()); assertTrue(restored.linked(source.id()).isEmpty()); assertTrue(restored.linked(b.id()).isEmpty());
@@ -369,8 +369,8 @@ class CitizenPopulationTest {
         data.register(id, state.district(b.districtId(), 10)); assertEquals(0, data.population(a.districtId())); assertEquals(1, data.population(b.districtId()));
         data.register(id, state.flags(true, true)); assertEquals(0, data.population(b.districtId())); assertNull(data.citizen(id).districtId());
         data.removeCitizen(id); assertNull(data.citizen(id));
-        var entity = new CitizenState(); entity.setPopulation(state); var restored = new CitizenState(); restored.deserializeNBT(entity.serializeNBT());
-        assertEquals(state, restored.population()); restored.deserializeNBT(new CompoundTag()); assertEquals(CitizenPopulationState.DEFAULT, restored.population());
+        var entity = new CitizenState(); entity.setPopulation(state); var restored = new CitizenState(); restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), entity.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
+        assertEquals(state, restored.population()); restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), new CompoundTag()); assertEquals(CitizenPopulationState.DEFAULT, restored.population());
     }
     @Test void eachHopOwnsItsReservationsAndProgressTimeout() {
         var a = UUID.randomUUID(); var b = UUID.randomUUID(); var c = UUID.randomUUID();
@@ -411,7 +411,7 @@ class CitizenPopulationTest {
         assertEquals(version + 1, data.version());
         data.put(named.resolve(true).cooldown(100));
         assertEquals(version + 1, data.version());
-        assertEquals("中央地区", CitizenPopulationSavedData.load(data.save(new CompoundTag())).gauge(gauge.id()).name());
+        assertEquals("中央地区", CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())).gauge(gauge.id()).name());
     }
     @Test void namePacketRoundTripsWithinTheBoundedNameLength() {
         var packet = new CitizenGaugeActionPacket(7, UUID.randomUUID(), 123, CitizenGaugeActionPacket.Action.SETTINGS, 12, 7, null, "中央地区");
@@ -429,7 +429,7 @@ class CitizenPopulationTest {
         var data = new CitizenPopulationSavedData(); var gauge = district(0, 10); data.put(gauge);
         var id = UUID.randomUUID(); var chain = UUID.randomUUID(); data.register(id, new CitizenPopulationState(gauge.districtId(), false, false, 0));
         data.reserve(id, chain); assertEquals(chain, data.reservation(id));
-        var tag = data.save(new CompoundTag());
+        var tag = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup());
         assertFalse(tag.getList("Citizens", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).contains("TransferReservation"));
         tag.getList("Citizens", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).putUUID("TransferReservation", chain);
         var restored = CitizenPopulationSavedData.load(tag);

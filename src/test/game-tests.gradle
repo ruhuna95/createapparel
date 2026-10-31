@@ -1,0 +1,179 @@
+sourceSets {
+    ['gameTest': 'gametest', 'routeTest': 'route', 'recipeTest': 'recipe', 'jeiTest': 'jei'].each { name, directory ->
+        create(name) {
+            java.setSrcDirs(["src/test/${directory}/java"])
+            resources.setSrcDirs(["src/test/${directory}/resources"])
+            compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+            runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+        }
+    }
+}
+
+def gameTestDirectory = file("run/gametest/${System.currentTimeMillis()}")
+def routeTestDirectory = file("run/route-tests/${System.currentTimeMillis()}")
+def recipeTestCase = providers.gradleProperty('recipeTestCase').getOrElse('A')
+def recipeTestFlags = [A: [false, false], B: [true, true], C: [false, false],
+                       D: [true, true], E: [true, false], F: [false, true]]
+if (!recipeTestFlags.containsKey(recipeTestCase)) throw new GradleException('recipeTestCase must be A-F')
+def recipeTestDirectory = file('run/phase25/server-' + recipeTestCase + '/' +
+        providers.gradleProperty('recipeTestRunId').getOrElse(System.currentTimeMillis().toString()))
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test) { useJUnitPlatform() }
+
+neoForge.runs {
+        gameTestServer { type = 'gameTestServer'; gameDirectory = gameTestDirectory; sourceSet = sourceSets.gameTest }
+        jeiTestServer {
+            type = 'gameTestServer'
+            gameDirectory = file('run/phase23-server')
+            sourceSet = sourceSets.jeiTest
+            systemProperty 'apparel.jeiTest.server', 'true'
+        }
+        jeiTestClient {
+            client()
+            gameDirectory = file('run/phase23-client-' + providers.gradleProperty('jeiEnabled').getOrElse('true'))
+            sourceSet = sourceSets.jeiTest
+            systemProperty 'apparel.jeiTest.projectDir', projectDir.absolutePath
+            systemProperty 'apparel.jeiTest.mirrorFallback', providers.gradleProperty('jeiMirrorFallback').getOrElse('false')
+        }
+        routeTestServer {
+            type = 'gameTestServer'
+            gameDirectory = routeTestDirectory
+            sourceSet = sourceSets.routeTest
+            systemProperty 'apparel.routeTest.names', providers.gradleProperty('routeTests').getOrElse('')
+        }
+        recipeTestServer {
+            type = 'gameTestServer'
+            gameDirectory = recipeTestDirectory
+            sourceSet = sourceSets.recipeTest
+            systemProperty 'apparel.recipeTest.destroy', providers.gradleProperty('destroyEnabled').getOrElse('false')
+            systemProperty 'apparel.recipeTest.silver', providers.gradleProperty('silverEnabled').getOrElse('true')
+            systemProperty 'apparel.recipeTest.synthetic', recipeTestFlags[recipeTestCase][0].toString()
+            systemProperty 'apparel.recipeTest.mirror', recipeTestFlags[recipeTestCase][1].toString()
+        }
+}
+
+tasks.register('copyGameTestStructures', Copy) {
+    from('src/test/resources/gameteststructures') { into 'gameteststructures' }
+    from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
+    into gameTestDirectory
+    doFirst { logger.lifecycle("GameTest directory: ${gameTestDirectory}") }
+}
+
+tasks.matching { it.name == 'prepareGameTestServerRun' }.configureEach {
+    dependsOn 'copyGameTestStructures'
+}
+
+tasks.register('copyRouteTestStructures', Copy) {
+    from('src/test/resources/gameteststructures') { into 'gameteststructures' }
+    from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
+    into routeTestDirectory
+}
+
+tasks.matching { it.name == 'prepareRouteTestServerRun' }.configureEach {
+    dependsOn 'copyRouteTestStructures'
+}
+
+tasks.matching { it.name == 'runRouteTestServer' }.configureEach {
+    doFirst { ext.routeTestStartedAt = System.currentTimeMillis() }
+    doLast {
+        def log = new File(routeTestDirectory, 'logs/latest.log')
+        if (!log.isFile() || log.lastModified() < routeTestStartedAt ||
+                !(log.getText('UTF-8') =~ /All \d+ required tests passed/).find()) {
+            throw new GradleException("Citizen route GameTests did not pass; see ${log}")
+        }
+    }
+}
+
+tasks.register('prepareRecipeTestWorld') {
+    doLast {
+        copy {
+            from 'src/test/resources/gameteststructures'
+            into new File(recipeTestDirectory, 'gameteststructures')
+        }
+        def config = new File(recipeTestDirectory, 'world/serverconfig/createapparel-server.toml')
+        config.parentFile.mkdirs()
+        config.setText("[recipes]\nforceSyntheticFiberFallback = ${recipeTestFlags[recipeTestCase][0]}\n" +
+                "forceMirrorCoatingFallback = ${recipeTestFlags[recipeTestCase][1]}\n", 'UTF-8')
+        logger.lifecycle("Phase25 case ${recipeTestCase}: ${recipeTestDirectory}")
+    }
+}
+
+tasks.matching { it.name == 'prepareRecipeTestServerRun' }.configureEach {
+    dependsOn 'prepareRecipeTestWorld'
+}
+
+tasks.matching { it.name == 'runRecipeTestServer' }.configureEach {
+    doFirst { ext.recipeTestStartedAt = System.currentTimeMillis() }
+    doLast {
+        def log = new File(recipeTestDirectory, 'logs/latest.log')
+        if (!log.isFile() || log.lastModified() < recipeTestStartedAt ||
+                !(log.getText('UTF-8') =~ /All \d+ required tests passed/).find()) {
+            throw new GradleException("Optional recipe GameTests did not pass; see ${log}")
+        }
+    }
+}
+
+tasks.register('copyJeiTestStructures', Copy) {
+    from 'src/test/resources/gameteststructures'
+    into 'run/phase23-server/gameteststructures'
+}
+
+tasks.matching { it.name == 'prepareJeiTestServerRun' }.configureEach {
+    dependsOn 'copyJeiTestStructures'
+}
+
+tasks.matching { it.name == 'runJeiTestClient' }.configureEach {
+    def mode = providers.gradleProperty('jeiEnabled').getOrElse('true').toBoolean() ? 'jei' : 'no_jei'
+    def result = layout.buildDirectory.file("phase23/client-${mode}-passed.txt")
+    doFirst { delete result.get().asFile }
+    doLast {
+        if (!result.get().asFile.exists()) {
+            throw new GradleException('JEI client checks failed; see build/phase23 and the client log.')
+        }
+    }
+}
+
+apply from: 'src/test/citizen-gauge-tests.gradle'
+apply from: 'src/test/fashion-tests.gradle'
+apply from: 'src/test/multiplayer-tests.gradle'
+apply from: 'src/test/escalated-tests.gradle'
+apply from: 'src/test/recipe-tests.gradle'
+
+sourceSets.matching { it.name != 'main' && it.name != 'test' }.all {
+    neoForge.addModdingDependenciesTo(it)
+    configurations.named(implementationConfigurationName) { extendsFrom configurations.implementation }
+    configurations.named(runtimeOnlyConfigurationName) { extendsFrom configurations.runtimeOnly, configurations.localRuntime }
+}
+neoForge.addModdingDependenciesTo(sourceSets.test)
+sourceSets.matching { it.name != 'main' }.all {
+    java.srcDir 'src/test/shared/java'
+}
+['routeTest', 'recipeTest', 'jeiTest', 'gaugeTest'].each { name ->
+    sourceSets.named(name) { runtimeClasspath += sourceSets.gameTest.output }
+}
+configurations.testImplementation.extendsFrom configurations.implementation
+configurations.testRuntimeOnly.extendsFrom configurations.runtimeOnly, configurations.localRuntime
+neoForge.runs.configureEach { run ->
+    if (run.sourceSet.get() != sourceSets.main) {
+        def testSources = run.sourceSet.get()
+        def testModName = "${mod_id}_${run.name}"
+        def testMod = neoForge.mods.findByName(testModName)
+        if (testMod == null) {
+            testMod = neoForge.mods.create(testModName)
+            testMod.sourceSet sourceSets.main
+            testMod.sourceSet testSources
+            if (run.type.get() == 'gameTestServer' && testSources != sourceSets.gameTest)
+                testMod.sourceSet sourceSets.gameTest
+        }
+        loadedMods = [testMod]
+    } else {
+        loadedMods = [neoForge.mods.getByName(mod_id)]
+    }
+}
+
+neoForge.runs.gameTestServer.systemProperty 'apparel.gameTest.names', providers.gradleProperty('gameTests').getOrElse('')

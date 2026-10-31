@@ -17,8 +17,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +69,7 @@ public class ApparelLoadout extends ItemStackHandler {
 
     public Optional<GarmentDefinition> definition(ItemStack stack) {
         if (!(stack.getItem() instanceof GarmentItem)) return Optional.empty();
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id == null ? Optional.empty() : definitionLookup.apply(id);
     }
 
@@ -220,7 +220,7 @@ public class ApparelLoadout extends ItemStackHandler {
     public ApparelLoadout copy() {
         ApparelLoadout copy = new ApparelLoadout(allowedSlots);
         copy.setDefinitionLookup(definitionLookup);
-        copy.deserializeNBT(serializeNBT().copy());
+        copy.copyContentsFrom(this);
         return copy;
     }
 
@@ -229,10 +229,28 @@ public class ApparelLoadout extends ItemStackHandler {
             ItemStack stack = candidate.getStack(slot);
             if (!stack.isEmpty() && (!isItemValid(slot.ordinal(), stack) || stack.getCount() != 1)) return false;
         }
-        CompoundTag next = candidate.serializeNBT().copy();
-        if (!serializeNBT().equals(next)) {
-            deserializeNBT(next);
+        boolean changed = dataVersion != candidate.dataVersion || !styleStates.equals(candidate.styleStates)
+                || !sameStacks(stacks, candidate.stacks) || !sameStacks(pendingReturns, candidate.pendingReturns);
+        if (changed) {
+            copyContentsFrom(candidate);
             notifyChanged();
+        }
+        return true;
+    }
+
+    protected final void copyContentsFrom(ApparelLoadout source) {
+        for (int slot = 0; slot < SLOT_COUNT; slot++) stacks.set(slot, source.getStackInSlot(slot).copy());
+        pendingReturns.clear();
+        source.pendingReturns.forEach(stack -> pendingReturns.add(stack.copy()));
+        styleStates.clear();
+        styleStates.putAll(source.styleStates);
+        dataVersion = source.dataVersion;
+    }
+
+    private static boolean sameStacks(List<ItemStack> left, List<ItemStack> right) {
+        if (left.size() != right.size()) return false;
+        for (int index = 0; index < left.size(); index++) {
+            if (!ItemStack.matches(left.get(index), right.get(index))) return false;
         }
         return true;
     }
@@ -277,11 +295,11 @@ public class ApparelLoadout extends ItemStackHandler {
     }
 
     @Override
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = super.serializeNBT();
+    public CompoundTag serializeNBT(net.minecraft.core.HolderLookup.Provider registries) {
+        CompoundTag tag = super.serializeNBT(registries);
         tag.putInt("ApparelDataVersion", dataVersion);
         ListTag pending = new ListTag();
-        pendingReturns.forEach(stack -> pending.add(stack.save(new CompoundTag())));
+        pendingReturns.forEach(stack -> pending.add(stack.save(registries)));
         tag.put("ApparelPendingReturns", pending);
         CompoundTag styles = new CompoundTag();
         styleStates.forEach((slot, state) -> {
@@ -294,16 +312,16 @@ public class ApparelLoadout extends ItemStackHandler {
     }
 
     @Override
-    public void deserializeNBT(CompoundTag tag) {
-        CompoundTag normalizedTag = tag.copy();
+    public void deserializeNBT(net.minecraft.core.HolderLookup.Provider registries, CompoundTag tag) {
+        CompoundTag normalizedTag = com.rexhub.createapparel.item.ItemData.upgradeInventory(registries, tag).copy();
         normalizedTag.putInt("Size", SLOT_COUNT);
         suppressChangeNotification = true;
         try {
-            super.deserializeNBT(normalizedTag);
+            super.deserializeNBT(registries, normalizedTag);
             dataVersion = tag.getInt("ApparelDataVersion");
             pendingReturns.clear();
             for (var entry : tag.getList("ApparelPendingReturns", CompoundTag.TAG_COMPOUND)) {
-                ItemStack stack = ItemStack.of((CompoundTag) entry);
+                ItemStack stack = com.rexhub.createapparel.item.ItemData.load(registries, (CompoundTag) entry);
                 if (!stack.isEmpty()) pendingReturns.add(stack);
             }
             styleStates.clear();
@@ -322,7 +340,7 @@ public class ApparelLoadout extends ItemStackHandler {
     public void migrateLegacyCoats() {
         if (dataVersion >= DATA_VERSION) return;
         ItemStack outer = getStack(GarmentSlot.OUTER);
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(outer.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(outer.getItem());
         if (!outer.isEmpty() && id != null && id.getNamespace().equals("createapparel")
                 && LEGACY_COATS.contains(id.getPath()) && isItemValid(GarmentSlot.COAT.ordinal(), outer)
                 && !isItemValid(GarmentSlot.OUTER.ordinal(), outer)) {
@@ -367,7 +385,7 @@ public class ApparelLoadout extends ItemStackHandler {
 
     public static Optional<GarmentSlot> defaultSlot(ItemStack stack) {
         if (!(stack.getItem() instanceof GarmentItem)) return Optional.empty();
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id == null ? Optional.empty() : GarmentDefinitionManager.get(id).map(GarmentDefinition::defaultSlot);
     }
 

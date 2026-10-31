@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:weaving",
+  "ingredients": [
+    {
+      "tag": "createapparel:threads/silk"
+    }
+  ],
+  "processing_time": 1200,
+  "results": [
+    {
+      "id": "createapparel:silk_fabric"
+    }
+  ]
+}

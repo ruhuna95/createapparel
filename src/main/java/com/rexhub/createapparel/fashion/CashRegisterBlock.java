@@ -17,6 +17,19 @@ import net.minecraft.world.phys.BlockHitResult;
 import javax.annotation.Nullable;
 
 public final class CashRegisterBlock extends BaseEntityBlock {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
+    public static final com.mojang.serialization.MapCodec<CashRegisterBlock> CODEC = simpleCodec(CashRegisterBlock::new);
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends CashRegisterBlock> codec() {
+        return CODEC;
+    }
+
     public CashRegisterBlock(Properties properties) {
         super(properties); registerDefaultState(stateDefinition.any().setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH));
     }
@@ -28,8 +41,8 @@ public final class CashRegisterBlock extends BaseEntityBlock {
     }
     @Override @SuppressWarnings("deprecation") public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
     @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) { return new CashRegisterBlockEntity(pos, state); }
-    @Override @SuppressWarnings("deprecation")
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+     @SuppressWarnings("deprecation")
+    private InteractionResult interact(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!player.getAbilities().mayBuild || !level.mayInteract(player, pos)) return InteractionResult.FAIL;
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

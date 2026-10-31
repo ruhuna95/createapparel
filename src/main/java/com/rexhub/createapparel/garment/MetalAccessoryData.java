@@ -22,7 +22,7 @@ public record MetalAccessoryData(MetalColor metalColor, Gem gem) implements Garm
     }
 
     public static MetalAccessoryData fromStack(ItemStack stack) {
-        CompoundTag root = stack.getTag();
+        CompoundTag root = com.rexhub.createapparel.item.ItemData.read(stack);
         return root == null || !root.contains(TAG_NAME, CompoundTag.TAG_COMPOUND)
                 ? DEFAULT : fromNBT(root.getCompound(TAG_NAME));
     }
@@ -43,9 +43,10 @@ public record MetalAccessoryData(MetalColor metalColor, Gem gem) implements Garm
 
     @Override
     public void write(ItemStack stack) {
-        CompoundTag root = stack.getOrCreateTag();
+        CompoundTag root = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack);
         root.remove(GarmentData.TAG_NAME);
         root.put(TAG_NAME, serializeNBT());
+        com.rexhub.createapparel.item.ItemData.write(stack, root);
     }
 
     @Override

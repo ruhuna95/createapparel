@@ -103,7 +103,7 @@ class InnerGarmentAssetTest {
     @Test
     void sewingIncludesSyntheticWithOneFabricAndOneThread() throws IOException {
         for (String garment : GARMENTS) {
-            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + garment + ".json"));
+            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/" + garment + ".json"));
             assertEquals("createapparel:sewing", recipe.get("type").getAsString());
             assertEquals("createapparel:" + garment, recipe.getAsJsonObject("result").get("id").getAsString());
             assertEquals(JsonParser.parseString("[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/silk\",\"createapparel:fabrics/synthetic\"]"),

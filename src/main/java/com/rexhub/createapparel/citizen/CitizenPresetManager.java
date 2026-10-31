@@ -15,9 +15,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraftforge.common.crafting.conditions.ICondition;
+import net.neoforged.neoforge.common.conditions.ICondition;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.slf4j.Logger;
 
 import java.util.Collections;
@@ -70,9 +70,9 @@ public final class CitizenPresetManager extends SimplePreparableReloadListener<M
         }
 
         public ApparelLoadout createLoadout(CitizenGarmentPreset preset) {
-            return preset.createLoadout(id -> Optional.ofNullable(definitions.get(id)), ForgeRegistries.ITEMS::getValue,
+            return preset.createLoadout(id -> Optional.ofNullable(definitions.get(id)), BuiltInRegistries.ITEM::get,
                     (id, material) -> materials.getOrDefault(id, Set.of()).contains(material),
-                    stack -> lowerCoveringTops.contains(ForgeRegistries.ITEMS.getKey(stack.getItem())));
+                    stack -> lowerCoveringTops.contains(BuiltInRegistries.ITEM.getKey(stack.getItem())));
         }
     }
 
@@ -104,13 +104,13 @@ public final class CitizenPresetManager extends SimplePreparableReloadListener<M
         GarmentDefinitionManager.all().forEach(definition -> definitions.put(definition.id(), definition));
         Set<ResourceLocation> lowerCoveringTops = new HashSet<>();
         tags.getTag(ModTags.Items.CITIZEN_LOWER_COVERING_TOPS).forEach(holder ->
-                lowerCoveringTops.add(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(holder.value()))));
+                lowerCoveringTops.add(Objects.requireNonNull(BuiltInRegistries.ITEM.getKey(holder.value()))));
         snapshot = validate(objects, definitions, materialSupport(), lowerCoveringTops);
     }
 
     private Map<ResourceLocation, Set<FabricMaterial>> materialSupport() {
         Map<ResourceLocation, Set<FabricMaterial>> result = new HashMap<>();
-        for (SewingRecipe recipe : recipes.getAllRecipesFor(SewingRecipe.recipeType())) {
+        for (SewingRecipe recipe : recipes.getAllRecipesFor(SewingRecipe.recipeType()).stream().map(net.minecraft.world.item.crafting.RecipeHolder::value).toList()) {
             ModItems.fabricItems().forEach((item, attribute) -> {
                 if (attribute.isDyed() && recipe.fabricTags().stream()
                         .anyMatch(tag -> tags.getTag(tag).stream().anyMatch(holder -> holder.value() == item.get()))) {

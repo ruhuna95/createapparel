@@ -18,10 +18,10 @@ import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 import java.util.Optional;
 
@@ -47,18 +47,18 @@ public final class AdditionalDyeGameTests {
         var grid = new TransientCraftingContainer(menu, 3, 3);
         for (var color : ModItems.apparelDyes().keySet()) {
             var recipe = (ShapelessRecipe) helper.getLevel().getRecipeManager().byKey(
-                    id("apparel_dyes/" + color.getSerializedName() + "_dye")).orElseThrow();
+                    id("apparel_dyes/" + color.getSerializedName() + "_dye")).orElseThrow().value();
             for (boolean reversed : new boolean[]{false, true}) {
                 grid.clearContent();
                 for (int index = 0; index < recipe.getIngredients().size(); index++) {
                     grid.setItem(reversed ? 8 - index : index, recipe.getIngredients().get(index).getItems()[0].copy());
                 }
-                helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Dye matches in either order: " + color);
-                var result = recipe.assemble(grid, helper.getLevel().registryAccess());
+                helper.assertTrue(recipe.matches(grid.asCraftInput(), helper.getLevel()), "Dye matches in either order: " + color);
+                var result = recipe.assemble(grid.asCraftInput(), helper.getLevel().registryAccess());
                 helper.assertTrue(result.getCount() == recipe.getIngredients().size(), "Dye count is conserved");
                 helper.assertTrue(FabricColor.fromDye(result).orElseThrow() == color, "Correct dye color");
                 grid.setItem(reversed ? 8 : 0, ItemStack.EMPTY);
-                helper.assertTrue(!recipe.matches(grid, helper.getLevel()), "Missing dye cannot craft");
+                helper.assertTrue(!recipe.matches(grid.asCraftInput(), helper.getLevel()), "Missing dye cannot craft");
             }
         }
         helper.succeed();
@@ -67,7 +67,7 @@ public final class AdditionalDyeGameTests {
     @GameTest(template = "apparel_state", batch = "apparel_state")
     public static void allColorsResolveAndSurvivePatternSewingAndGarmentPersistence(GameTestHelper helper) {
         var level = helper.getLevel();
-        var recipe = (SewingRecipe) level.getRecipeManager().byKey(id("t_shirt")).orElseThrow();
+        var recipe = (SewingRecipe) level.getRecipeManager().byKey(id("t_shirt")).orElseThrow().value();
         var definition = GarmentDefinitionManager.get(ModItems.T_SHIRT.getId()).orElseThrow();
         var inventory = new ItemStackHandler(3);
         var wrapper = new RecipeWrapper(inventory);
@@ -79,7 +79,7 @@ public final class AdditionalDyeGameTests {
                 helper.assertTrue(FabricAttributeMap.color(fabric).orElseThrow() == color, "Fabric static color");
             }
             var pattern = new ItemStack(ModItems.SEWING_PATTERN.get());
-            var data = new PatternData(recipe.getId(), "plain", Optional.of(color), Optional.of(FabricColor.PLUM));
+            var data = new PatternData(com.rexhub.createapparel.TestRecipes.id(recipe), "plain", Optional.of(color), Optional.of(FabricColor.PLUM));
             data.write(pattern);
             helper.assertTrue(data.equals(PatternData.fromStack(pattern).orElseThrow()), "Pattern colors round-trip");
             inventory.setStackInSlot(0, new ItemStack(ModItems.dyedFabric(FabricMaterial.COTTON, color).get(), recipe.getFabricCount()));
@@ -89,7 +89,7 @@ public final class AdditionalDyeGameTests {
             var garment = recipe.assemble(wrapper, level.registryAccess());
             var expected = new GarmentData(FabricMaterial.COTTON, "plain", color, Optional.of(color), Optional.of(FabricColor.PLUM));
             helper.assertTrue(expected.equals(GarmentData.fromStack(garment, definition)), "Sewing inherits all colors");
-            var restored = ItemStack.of(garment.save(new net.minecraft.nbt.CompoundTag()));
+            var restored = com.rexhub.createapparel.item.ItemData.load(com.rexhub.createapparel.TestRegistries.lookup(), (net.minecraft.nbt.CompoundTag) garment.save(com.rexhub.createapparel.TestRegistries.lookup()));
             helper.assertTrue(expected.equals(GarmentData.fromStack(restored, definition)), "Garment colors survive persistence");
         }
         helper.assertTrue(FabricColor.fromDye(new ItemStack(Items.STONE)).isEmpty(), "Non-dyes have no color");

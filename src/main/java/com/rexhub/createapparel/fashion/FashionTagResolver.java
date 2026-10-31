@@ -4,7 +4,7 @@ import com.rexhub.createapparel.garment.GarmentAppearance;
 import com.rexhub.createapparel.garment.GarmentDefinition;
 import com.rexhub.createapparel.garment.GarmentDefinitionManager;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +15,7 @@ public final class FashionTagResolver {
     public static Map<String, FashionDesignModifier> modifiers() { return modifiers; }
     public static void acceptModifiers(Map<String, FashionDesignModifier> next) { modifiers = Map.copyOf(next); }
     public static Set<FashionTag> resolve(ItemStack stack) {
-        var id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        var id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         var definition = id == null ? null : GarmentDefinitionManager.get(id).orElse(null);
         return definition == null ? Set.of() : resolve(definition, GarmentAppearance.fromStack(stack, definition).design());
     }

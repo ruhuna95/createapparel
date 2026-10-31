@@ -1,15 +1,15 @@
 package com.rexhub.createapparel.fashion;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class FashionConfig {
-    public final ForgeConfigSpec.IntValue observationTicks, shoppingTicks, purchaseCooldown, failureCooldown, eventBudget, storageSlotLimit;
-    public final ForgeConfigSpec.DoubleValue sameCitizenPoints, otherCitizenPoints, sameMannequinPoints, otherMannequinPoints,
+    public final ModConfigSpec.IntValue observationTicks, shoppingTicks, purchaseCooldown, failureCooldown, eventBudget, storageSlotLimit;
+    public final ModConfigSpec.DoubleValue sameCitizenPoints, otherCitizenPoints, sameMannequinPoints, otherMannequinPoints,
             sameAdvertisementPoints, otherAdvertisementPoints, pointScale, impulseChance, shoppingChance,
             styleWeight, climateWeight, coldTemperature, hotTemperature;
-    public final ForgeConfigSpec.IntValue photographyBaseCost, photographyExtra, maxPanels, maxChannels;
+    public final ModConfigSpec.IntValue photographyBaseCost, photographyExtra, maxPanels, maxChannels;
 
-    public FashionConfig(ForgeConfigSpec.Builder builder) {
+    public FashionConfig(ModConfigSpec.Builder builder) {
         builder.push("fashionRetail");
         observationTicks = builder.defineInRange("observationTicks", 200, 20, 72000);
         shoppingTicks = builder.defineInRange("shoppingTicks", 600, 20, 72000);

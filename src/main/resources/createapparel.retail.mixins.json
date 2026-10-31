@@ -2,8 +2,7 @@
   "required": true,
   "minVersion": "0.8.5",
   "package": "com.rexhub.createapparel.fashion.mixin",
-  "compatibilityLevel": "JAVA_17",
-  "refmap": "createapparel.refmap.json",
+  "compatibilityLevel": "JAVA_21",
   "mixins": ["RetailBlockEntityMixin", "RetailLevelMixin", "RetailItemHandlerMixin", "RetailCarriedSlotMixin"],
   "injectors": { "defaultRequire": 1 }
 }

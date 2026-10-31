@@ -18,6 +18,12 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class SewingMachineBlock extends HorizontalShaftMachineBlock
         implements IBE<SewingMachineBlockEntity> {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
     public static final double STRESS_IMPACT = 8.0;
 
     public SewingMachineBlock(Properties properties) {
@@ -40,9 +46,9 @@ public final class SewingMachineBlock extends HorizontalShaftMachineBlock
         return face == state.getValue(HORIZONTAL_FACING).getOpposite();
     }
 
-    @Override
+
     @SuppressWarnings("deprecation")
-    public InteractionResult use(
+    private InteractionResult interact(
             BlockState state,
             Level level,
             BlockPos pos,

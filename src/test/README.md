@@ -6,11 +6,11 @@
 .\src\test\run-multiplayer.ps1 -Offline
 ```
 
-Java 17を使用する。専用source setの`src/test/multiplayer/`と`multiplayer-tests.gradle`で、127.0.0.1だけに待ち受ける通常Dedicated Serverと、異なる名前のClient A/Bを別JVMで起動する。新規の`run/multiplayer-tests/<RunId>/`だけを使用し、既存RunIdの上書きは拒否する。ポートの既定値は25585で、必要なら`-Port`を指定する。
+Java 21を使用し、`JAVA_HOME`もJDK 21へ設定する。専用source setの`src/test/multiplayer/`と`multiplayer-tests.gradle`で、127.0.0.1だけに待ち受ける通常Dedicated Serverと、異なる名前のClient A/Bを別JVMで起動する。新規の`run/multiplayer-tests/<RunId>/`だけを使用し、既存RunIdの上書きは拒否する。ポートの既定値は25585で、必要なら`-Port`を指定する。開発環境ではNeoForgeのIDE実行判定を使用し、EULA承諾ファイルは自動作成しない。
 
 Apparelの自己／他Player同期、同じWardrobeからの実C2Sスタイル変更、Mannequin／Wall Hanger／Rack／Citizenの変更同期、Loomの糸表示、通常／Gateway／CrossingのRoute View、死亡と実Respawn、次元移動と再Tracking、両ClientとServerの実Chunk unload／reloadを検査する。続いて同じWorldを別JVMで再起動し、保存されたEntity UUID・装備・表示・Marker IDと再Login同期を照合する。操作指示・期待値・完了通知だけを共有ファイルへ出し、Clientの同期状態は製品の通信経路から受け取った状態で検査する。
 
-全プロセスの起動前にコンパイル・リソース準備を完了し、ForgeGradleのRunConfigから生成した引数でJavaを起動する。試験中に別のGradleから共有`build/resources`を更新しない。ログは`build/multiplayer-<RunId>-<initial|resume>-<Server|ClientA|ClientB>.log`。成功結果は同RunId内の`<initial|resume>-<server|A|B>-passed.txt`全6件で確認する。Launcherの終了コードだけを成功判定にしない。
+全プロセスの起動前にコンパイル・リソース準備を完了し、ModDevGradleが準備した引数でJavaを起動する。試験中に別のGradleから共有`build/resources`を更新しない。ログは`build/multiplayer-<RunId>-<initial|resume>-<Server|ClientA|ClientB>.log`。成功結果は同RunId内の`<initial|resume>-<server|A|B>-passed.txt`全6件で確認する。Launcherの終了コードだけを成功判定にしない。
 
 初回の3成功結果がそろった後、再起動試験だけを続行する場合は`-RunId <既存ID> -ResumeOnly`を指定できる。既存の再起動結果があるRunIdは上書きしない。cold LoginがTimeoutした場合は開始時だけ最大3回の再接続をログに記録し、接続後の切断は再接続で隠さない。
 
@@ -20,7 +20,7 @@ Citizen WALK／Gateway移動／Crossing待機／迂回と予算の詳細は既�
 
 ## Escalatedと市民の地形移動
 
-`CitizenEscalatedGameTests`は実Escalated 1.2.1（Minecraft 1.20.1／Forge／Create 6.0.8）を使い、通常床より少し迂回する自動歩道の優先選択、成人WALK／子供WANDERでの立ち乗りと降車後の歩行、エスカレーター上下搬送、実モーターの停止・逆転、乗車中の動力停止を検査する。自由歩行での逆進入回避と実迂回、上下エスカレーターの逆走経路除外、動的反転による古い経路の無効化、256rpmで中間目標を越えて降車しても引き返さないことも含む。Escalatedは専用runtimeだけに追加し、通常起動と配布JARには含めない。
+`CitizenEscalatedGameTests`は実Escalated 1.3.2（Minecraft 1.21.1／NeoForge／Create 6.0.10）を使い、通常床より少し迂回する自動歩道の優先選択、成人WALK／子供WANDERでの立ち乗りと降車後の歩行、エスカレーター上下搬送、実モーターの停止・逆転、乗車中の動力停止を検査する。自由歩行での逆進入回避と実迂回、上下エスカレーターの逆走経路除外、動的反転による古い経路の無効化、256rpmで中間目標を越えて降車しても引き返さないことも含む。Escalatedは専用runtimeだけに追加し、通常起動と配布JARには含めない。
 
 64rpmで目的地が自動歩道の横へ2ブロックずれたWALK／WANDERと子供の木製自動歩道について、到着前の逆戻りを0.03ブロックの許容差で検出する。上下それぞれのエスカレーターと横の階段を使い、下段→上段→下段→上段の3区間を実移動し、目的地の更新が継続することも確認する。片道到着だけで往復成功とは扱わない。
 
@@ -28,7 +28,7 @@ Citizen WALK／Gateway移動／Crossing待機／迂回と予算の詳細は既�
 
 入口までの迂回を含む実経路長にも既定の16block制限を維持する。横2block・前方14blockの自由歩行では、入口経由が制限を超えるため通常床を選べることを専用試験で確認する。優先利用を要求する自由歩行試験は前方13blockとし、範囲内で実乗車・到着・降車後の逆戻り禁止を検査する。診断用に32blockを渡す照会は試験内だけで、製品の探索距離は変更しない。
 
-公式公開JAR `escalated-1.2.1+create.6.0.8-mc.1.20.1-forge.jar`を`run/route-tests/dependencies/escalated-1.2.1.jar`へ置く。SHA1は`0e371200b2c77d21aec10f646ce6533a7d94c221`。
+`-PescalatedTests=true`により公式Modrinth版`maven.modrinth:escalated:vJ49zRJl`をテストruntimeへ取得する。旧Forge版JARの手動配置は不要。
 
 ```powershell
 .\gradlew.bat runRouteTestServer -PjeiEnabled=false -PescalatedTests=true --offline
@@ -175,12 +175,14 @@ JEI有効の`runFashionTestClient`はCreate標準デプロイヤーでの写真U
 
 ## 一括検証
 
-Minecraft 1.20.1 / Forge 47.4.10 / Java 17を使用する。PowerShellでは事前にJava 17の`JAVA_HOME`を設定する。
-化学連携APIのコンパイル用に、後述のDestroy・Petrolparkの指定2 JARを`run/phase25/dependencies/`へ配置する。
-これらは`compileOnly`の開発依存で、通常Client／Serverのruntimeや配布JARには含めない。
+1.21.1ではGameTest構造物が自動的にBarrierで囲まれる。既存`apparel_state`は外側の空間も使うfixtureのため、16×8×16のロード範囲を予約し、テスト開始時にそのBarrierだけを除去する。Citizen用の明示的な部屋・壁・障害物は保持する。`-PgameTests=<methodName,...>`で共通GameTestを選択できる。
+
+Minecraft 1.21.1 / NeoForge 21.1.265 / Java 21を使用する。PowerShellでは事前にJava 21の`JAVA_HOME`を設定する。
+化学連携APIのコンパイル用Destroy・PetrolparkはGradleが取得する。
+これらは`compileOnly`の開発依存で、明示的に有効化しない限り通常Client／Serverのruntimeや配布JARには含めない。
 
 ```powershell
-$env:JAVA_HOME = 'C:\Program Files\Java\jdk-17'
+$env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.12.1'
 .\src\test\validate.ps1
 ```
 
@@ -256,11 +258,11 @@ ForgeのGameTest起動は、設定を省略するとランダムseedの通常地
 
 未通知のVoid消去の回復は`/createapparel gauge reservations list [page]`／`inspect <UUID>`／`release <UUID>`。現在Dimensionが対象なので他Dimensionは`/execute in <dimension> run ...`を使う。経過時間や未ロードだけでは自動解除しない。`OBSERVED`は所持の完全な証明ではなく、オフライン／未ロード保管品やTrash Cansの復元履歴も考慮して明示解除する。
 
-Trash Cans実MODのQAは`run/gauge-tests/dependencies/`へ公式配布の次の3 JARを置き、`.\gradlew.bat -PjeiEnabled=false -PgaugeTrash=true runGaugeTestServer`を使う。通常のruntime・配布依存には追加しない。
+Trash Cans実MODのQAは`.\gradlew.bat -PjeiEnabled=false -PgaugeTrash=true runGaugeTestServer`を使う。以下のNeoForge版を公式Modrinthからテストruntimeへ取得し、通常のruntime・配布依存には追加しない。
 
-- `trashcans-1.1.1a-forge-mc1.20.4.jar`（配布メタデータおよび実起動で1.20.1対応を確認）
-- `supermartijn642corelib-1.1.25a-forge-mc1.20.1.jar`
-- `supermartijn642configlib-1.1.8-forge-mc1.20.jar`
+- Trash Cans 1.1.2 / NeoForge（TbzPls06）
+- SuperMartijn642's Core Lib 1.1.26 / NeoForge（HGyYs7Z4）
+- SuperMartijn642's Config Lib 1.1.8 / NeoForge（qKL9jM75）
 
 Capabilityのsimulate／実投入、空Gauge／記録済み1個・3個、実Hopper、ドロップItemEntity→Hopper、Create Funnelを通して検証する。復元履歴中は予約を維持し、履歴をネイティブAPIで完全削除してからOPコマンドで中心を再利用する。FunnelはSmartBlockEntityの初期化を20tick待ってから実APIを呼ぶ。直接ItemEntityをTrash Canの上へ置くだけで削除する機能はこのMODの入口ではない。
 
@@ -413,17 +415,7 @@ Destroyまたは共通銀Tagがなければ亜鉛製法を自動で使用する�
 .\src\test\validate.ps1 -OptionalRecipes -Destroy
 ```
 
-Destroyを使うruntime検証では、`run/phase25/dependencies/`へ以下の3 JARを配置する。
-`-PoptionalIntegrationModsDir=<directory>`で配置先を変更できる。配布JARの必須依存には追加しない。
-
-- Destroy `destroy-1.20.1-0.1.4.jar`（下記PRの検証版）
-- Petrolpark's Library `petrolpark-1.20.1-1.4.24.jar`（同PRの同梱版）
-- The Silver Age `thesilverage-forge-1.20.1-1.3.0.jar`
-
-Create6.0.8では公開版Destroy0.1.3が削除済み`TagGen.tagBlockAndItem`呼び出しで起動に失敗した。
-検証には[Destroy PR #775](https://github.com/Petrolpark-Mods/Destroy/pull/775)の添付`mods.zip`を使用する。
-この0.1.4は公開安定版ではなく、PRの互換修正版である。公開版0.1.3の動作保証と混同しない。
-JARはローカルの検証専用であり、Create: Apparelの配布物には含めない。
+`-PdestroyEnabled=true`で[NHblock714/Destroy fork 0.4.4](https://github.com/NHblock714/Destroy/releases/tag/v0.4.4)とPetrolpark's Library 1.5.0を取得する。銀ありの専用テストには[The Silver Age 1.21.1 / 1.2.0](https://modrinth.com/mod/the-silver-age/version/zKe6RVwW)を追加する。銀MODはテストruntime限定で、Create: Apparelの配布物や必須依存には含めない。旧Forge用JARの手動配置は不要。
 
 ケースA/BはDestroyなし、C〜FはDestroy＋銀あり。C/EはMirrorをDestroy製法のみ、D/FはDestroy＋Fallbackとする。
 `-PsilverEnabled=false`は検証runtimeからThe Silver Ageだけを外す。C/Dで鏡の自動FallbackとNylon製法の継続を確認する。

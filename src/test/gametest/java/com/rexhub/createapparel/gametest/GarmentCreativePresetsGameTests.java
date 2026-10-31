@@ -13,8 +13,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -28,7 +28,7 @@ public final class GarmentCreativePresetsGameTests {
         tab.buildContents(new CreativeModeTab.ItemDisplayParameters(
                 FeatureFlags.DEFAULT_FLAGS, true, helper.getLevel().registryAccess()));
         var entries = tab.getDisplayItems().stream().map(ItemStack::getItem).toList();
-        var expected = ModItems.creativeTabItems().stream().map(net.minecraftforge.registries.RegistryObject::get).toList();
+        var expected = ModItems.creativeTabItems().stream().map(net.neoforged.neoforge.registries.DeferredHolder::get).toList();
         helper.assertTrue(entries.equals(expected), "The native main tab preserves the complete configured item order");
         helper.assertTrue(new java.util.HashSet<>(entries).size() == entries.size(), "Every main-tab item appears once");
         helper.assertTrue(entries.subList(0, 4).equals(java.util.List.of(
@@ -71,20 +71,20 @@ public final class GarmentCreativePresetsGameTests {
             helper.assertTrue(expected.isPresent(), "Every creative garment must have a preset: " + item.getId());
             helper.assertTrue(expected.get().equals(GarmentAppearance.fromStack(stack, definition)),
                     "Creative tab must include preset NBT: " + item.getId());
-            var saved = ItemStack.of(stack.save(new net.minecraft.nbt.CompoundTag()));
+            var saved = com.rexhub.createapparel.item.ItemData.load(com.rexhub.createapparel.TestRegistries.lookup(), (net.minecraft.nbt.CompoundTag) stack.save(com.rexhub.createapparel.TestRegistries.lookup()));
             helper.assertTrue(expected.get().equals(GarmentAppearance.fromStack(saved, definition)),
                     "Preset must survive ItemStack persistence");
             ItemStack ordinary = item.get().getDefaultInstance();
-            helper.assertTrue(!ordinary.hasTag(), "Ordinary default stack must remain uncolored");
+            helper.assertTrue(!com.rexhub.createapparel.item.ItemData.hasData(ordinary), "Ordinary default stack must remain uncolored");
             helper.assertTrue(GarmentAppearance.defaultFor(ordinary, definition)
                             .equals(GarmentAppearance.fromStack(ordinary, definition)),
                     "Ordinary default appearance must remain unchanged");
             ItemStack first = GarmentCreativePresets.create(item);
             ItemStack second = GarmentCreativePresets.create(item);
-            var before = second.getTag().copy();
-            first.getTag().remove(GarmentData.TAG_NAME);
-            first.getTag().remove(MetalAccessoryData.TAG_NAME);
-            helper.assertTrue(second.getTag().equals(before), "Preset stacks must not share mutable NBT");
+            var before = com.rexhub.createapparel.item.ItemData.read(second).copy();
+            com.rexhub.createapparel.item.ItemData.update(first, tagData -> tagData.remove(GarmentData.TAG_NAME));
+            com.rexhub.createapparel.item.ItemData.update(first, tagData -> tagData.remove(MetalAccessoryData.TAG_NAME));
+            helper.assertTrue(com.rexhub.createapparel.item.ItemData.read(second).equals(before), "Preset stacks must not share mutable NBT");
         }
         helper.succeed();
     }

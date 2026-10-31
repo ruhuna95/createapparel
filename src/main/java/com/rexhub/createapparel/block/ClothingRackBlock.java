@@ -28,6 +28,22 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public final class ClothingRackBlock extends BaseEntityBlock {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
+    public static final com.mojang.serialization.MapCodec<ClothingRackBlock> CODEC = com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance -> instance.group(
+                propertiesCodec(), com.mojang.serialization.Codec.STRING.xmap(HangerType::valueOf, HangerType::name)
+                        .fieldOf("hangerType").forGetter(block -> block.hangerType)
+        ).apply(instance, ClothingRackBlock::new));
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends ClothingRackBlock> codec() {
+        return CODEC;
+    }
+
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
     public static final EnumProperty<RackMountType> MOUNT = EnumProperty.create("mount", RackMountType.class);
@@ -55,8 +71,9 @@ public final class ClothingRackBlock extends BaseEntityBlock {
     public HangerType hangerType() { return hangerType; }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, java.util.List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, level, tooltip, flag);
+    public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, java.util.List<Component> tooltip, TooltipFlag flag) {
+        var level = context.level();
+        super.appendHoverText(stack, context, tooltip, flag);
         tooltip.add(Component.translatable(hangerType.tooltipKey()).withStyle(ChatFormatting.GRAY));
     }
 
@@ -64,10 +81,7 @@ public final class ClothingRackBlock extends BaseEntityBlock {
         return state.getValue(MOUNT).isSlotUsable(state.getValue(LEFT_CONNECTED), state.getValue(RIGHT_CONNECTED), slot);
     }
 
-    @Override
-    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientBlockExtensions> consumer) {
-        consumer.accept(new com.rexhub.createapparel.client.particle.DisplayFurnitureClientExtensions());
-    }
+
 
     public static BlockPos lowerPos(BlockPos pos, BlockState state) {
         return state.getValue(HALF) == DoubleBlockHalf.LOWER ? pos : pos.below();
@@ -96,7 +110,7 @@ public final class ClothingRackBlock extends BaseEntityBlock {
     private static boolean chunkAvailable(LevelReader level, BlockPos pos) {
         return level.getChunk(net.minecraft.core.SectionPos.blockToSectionCoord(pos.getX()),
                 net.minecraft.core.SectionPos.blockToSectionCoord(pos.getZ()),
-                net.minecraft.world.level.chunk.ChunkStatus.FULL, false) != null;
+                net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) != null;
     }
 
     @Nullable
@@ -219,7 +233,7 @@ public final class ClothingRackBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide && player.isCreative() && state.getValue(HALF) == DoubleBlockHalf.UPPER) {
             BlockPos lower = pos.below();
             BlockState lowerState = level.getBlockState(lower);
@@ -228,7 +242,7 @@ public final class ClothingRackBlock extends BaseEntityBlock {
                 level.levelEvent(player, 2001, lower, Block.getId(lowerState));
             }
         }
-        super.playerWillDestroy(level, pos, state, player);
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
     @Override
@@ -241,9 +255,9 @@ public final class ClothingRackBlock extends BaseEntityBlock {
         super.onRemove(state, level, pos, replacement, moving);
     }
 
-    @Override
+
     @SuppressWarnings("deprecation")
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+    private InteractionResult interact(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
         if (player.isShiftKeyDown()) return InteractionResult.PASS;
         BlockPos lower = lowerPos(pos, state);

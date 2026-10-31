@@ -32,10 +32,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +54,7 @@ public final class TailorGameTests {
 
     @GameTest(template = "apparel_state", batch = "tailor")
     public static void recyclingTagExactlyTracksGarmentsAndIgnoresNbt(GameTestHelper helper) {
-        var recipe = helper.getLevel().getRecipeManager().byKey(RECYCLING).orElseThrow();
+        var recipe = helper.getLevel().getRecipeManager().byKey(RECYCLING).orElseThrow().value();
         helper.assertTrue(recipe.getType() == AllRecipeTypes.CRUSHING.getType(), "Native Create crushing recipe");
         var crushing = (com.simibubi.create.content.kinetics.crusher.CrushingRecipe) recipe;
         helper.assertTrue(crushing.getProcessingDuration() == 100, "100 tick duration");
@@ -70,13 +70,13 @@ public final class TailorGameTests {
             if (!(entry.get() instanceof GarmentItem)) continue;
             for (var input : List.of(stack, GarmentCreativePresets.create(entry))) {
                 inventory.setStackInSlot(0, input.copy());
-                inventory.getStackInSlot(0).getOrCreateTag().putString("RecyclingTest", "discard");
+                com.rexhub.createapparel.item.ItemData.update(inventory.getStackInSlot(0), tag -> tag.putString("RecyclingTest", "discard"));
                 helper.assertTrue(crushing.matches(wrapper, helper.getLevel()) == recyclable,
                         "NBT does not change crushing eligibility: " + entry.getId());
                 if (!recyclable) continue;
-                var outputs = crushing.rollResults();
+                var outputs = crushing.rollResults(helper.getLevel().random);
                 helper.assertTrue(outputs.size() == 1 && outputs.get(0).is(ModItems.OLD_CLOTH.get())
-                        && outputs.get(0).getCount() == 1 && !outputs.get(0).hasTag(), "One clean scrap at 100% chance");
+                        && outputs.get(0).getCount() == 1 && !com.rexhub.createapparel.item.ItemData.hasData(outputs.get(0)), "One clean scrap at 100% chance");
                 helper.assertTrue(helper.getLevel().getRecipeManager().getRecipeFor(
                         AllRecipeTypes.MILLING.getType(), wrapper, helper.getLevel()).isEmpty(), "No millstone recycling");
             }
@@ -93,14 +93,14 @@ public final class TailorGameTests {
         crusher.crushingspeed = 4;
         for (var garment : List.of(ModItems.T_SHIRT, ModItems.TRENCH_COAT, ModItems.SNEAKERS)) {
             var stack = GarmentCreativePresets.create(garment);
-            stack.getOrCreateTag().putString("OwnerHistory", "discard");
+            com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putString("OwnerHistory", "discard"));
             helper.assertTrue(crusher.inventory.insertItem(0, stack, false).isEmpty(), "Crusher accepts garment");
-            helper.assertTrue(crusher.findRecipe().orElseThrow().getId().equals(RECYCLING), "Native recipe selection");
+            helper.assertTrue(crusher.findRecipe().orElseThrow().id().equals(RECYCLING), "Native recipe selection");
             for (int tick = 0; tick < 100 && !crusher.inventory.appliedRecipe; tick++) crusher.tick();
             helper.assertTrue(crusher.inventory.appliedRecipe, "Native crusher applied its recipe");
             helper.assertTrue(crusher.inventory.getStackInSlot(0).isEmpty(), "Garment consumed");
             var result = crusher.inventory.getStackInSlot(1);
-            helper.assertTrue(result.is(ModItems.OLD_CLOTH.get()) && result.getCount() == 1 && !result.hasTag(), "Native clean output");
+            helper.assertTrue(result.is(ModItems.OLD_CLOTH.get()) && result.getCount() == 1 && !com.rexhub.createapparel.item.ItemData.hasData(result), "Native clean output");
             crusher.inventory.clear();
         }
         helper.succeed();
@@ -204,7 +204,7 @@ public final class TailorGameTests {
         restored.load(saved);
         helper.assertTrue(restored.getVillagerData().getProfession() == ModVillagers.TAILOR.get()
                 && restored.getVillagerData().getLevel() == 5, "Profession and level persist");
-        helper.assertTrue(restored.getOffers().createTag().equals(villager.getOffers().createTag()), "Exact persistent offers");
+        helper.assertTrue(net.minecraft.world.item.trading.MerchantOffers.CODEC.encodeStart(helper.getLevel().registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), restored.getOffers()).getOrThrow().equals(net.minecraft.world.item.trading.MerchantOffers.CODEC.encodeStart(helper.getLevel().registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), villager.getOffers()).getOrThrow()), "Exact persistent offers");
         helper.assertTrue(restored.getDisplayName().getString().equals("Tailor"), "Forge profession translation key");
         helper.succeed();
     }
@@ -235,9 +235,9 @@ public final class TailorGameTests {
         var recipes = helper.getLevel().getRecipeManager().getAllRecipesFor(com.rexhub.createapparel.recipe.SewingRecipe.recipeType());
         helper.assertTrue(!recipes.isEmpty(), "Loaded production recipes");
         for (var recipe : recipes) {
-            int materialCost = recipe.getFabricCount() * threadPerEmerald + recipe.getThreadCount() * fabricPerEmerald;
+            int materialCost = recipe.value().getFabricCount() * threadPerEmerald + recipe.value().getThreadCount() * fabricPerEmerald;
             helper.assertTrue(materialCost * clothPerEmerald >= denominator,
-                    "Purchased sewing inputs cost at least the recycled result: " + recipe.getId());
+                    "Purchased sewing inputs cost at least the recycled result: " + recipe.id());
         }
         helper.assertTrue(4 / clothPerEmerald < 2 + 1, "Four gloves return two emeralds for three spent on fabric and thread");
         helper.succeed();
@@ -253,7 +253,7 @@ public final class TailorGameTests {
         helper.assertTrue(emerald.is(Items.EMERALD) && emerald.getCount() == 1 && offer.getCostB().isEmpty(), "One emerald, no second cost");
         helper.assertTrue(offer.getMaxUses() == (oldCloth ? 16 : 12) && offer.getXp() == xp
                 && offer.getPriceMultiplier() == 0.05F, "Uses, experience and vanilla pricing");
-        helper.assertTrue(!material.hasTag(), "Trades use plain item stacks");
+        helper.assertTrue(!com.rexhub.createapparel.item.ItemData.hasData(material), "Trades use plain item stacks");
     }
 
     private static final class AdvancingVillager extends Villager {

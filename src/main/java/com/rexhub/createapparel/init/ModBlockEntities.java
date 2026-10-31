@@ -5,29 +5,29 @@ import com.rexhub.createapparel.block.entity.SewingMachineBlockEntity;
 import com.rexhub.createapparel.block.entity.SpinningMachineBlockEntity;
 import com.rexhub.createapparel.block.entity.WardrobeBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 public final class ModBlockEntities {
-    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.CitizenGaugeBlockEntity>> CITIZEN_GAUGE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.rexhub.createapparel.block.entity.CitizenGaugeBlockEntity>> CITIZEN_GAUGE =
             ModRegistries.BLOCK_ENTITY_TYPES.register("citizen_gauge", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.CitizenGaugeBlockEntity::new, ModBlocks.CITIZEN_GAUGE.get()).build(null));
-    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity>> CITIZEN_ROUTE_MARKER =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity>> CITIZEN_ROUTE_MARKER =
             ModRegistries.BLOCK_ENTITY_TYPES.register("citizen_route_marker", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.CitizenRouteMarkerBlockEntity::new, ModBlocks.CITIZEN_ROUTE_MARKER.get(),
                     ModBlocks.GATEWAY_ROUTE_MARKER.get(), ModBlocks.CROSSING_ROUTE_MARKER.get()).build(null));
-    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.SilkwormRearingTrayBlockEntity>> SILKWORM_REARING_TRAY =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.rexhub.createapparel.block.entity.SilkwormRearingTrayBlockEntity>> SILKWORM_REARING_TRAY =
             ModRegistries.BLOCK_ENTITY_TYPES.register("silkworm_rearing_tray", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.SilkwormRearingTrayBlockEntity::new,
                     ModBlocks.SILKWORM_REARING_TRAY.get()).build(null));
-    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.ClothingRackBlockEntity>> CLOTHING_RACK =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.rexhub.createapparel.block.entity.ClothingRackBlockEntity>> CLOTHING_RACK =
             ModRegistries.BLOCK_ENTITY_TYPES.register("clothing_rack", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.ClothingRackBlockEntity::new,
                     ModBlocks.CLOTHING_RACK.get(), ModBlocks.CLIP_CLOTHING_RACK.get()).build(null));
-    public static final RegistryObject<BlockEntityType<com.rexhub.createapparel.block.entity.WallHangerBlockEntity>> WALL_HANGER =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.rexhub.createapparel.block.entity.WallHangerBlockEntity>> WALL_HANGER =
             ModRegistries.BLOCK_ENTITY_TYPES.register("wall_hanger", () -> BlockEntityType.Builder.of(
                     com.rexhub.createapparel.block.entity.WallHangerBlockEntity::new,
                     ModBlocks.WALL_HANGER.get(), ModBlocks.CLIP_WALL_HANGER.get()).build(null));
-    public static final RegistryObject<BlockEntityType<SpinningMachineBlockEntity>> SPINNING_MACHINE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SpinningMachineBlockEntity>> SPINNING_MACHINE =
             ModRegistries.BLOCK_ENTITY_TYPES.register(
                     "spinning_machine",
                     () -> BlockEntityType.Builder.of(
@@ -35,7 +35,7 @@ public final class ModBlockEntities {
                             ModBlocks.SPINNING_MACHINE.get()
                     ).build(null)
             );
-    public static final RegistryObject<BlockEntityType<LoomBlockEntity>> LOOM =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LoomBlockEntity>> LOOM =
             ModRegistries.BLOCK_ENTITY_TYPES.register(
                     "loom",
                     () -> BlockEntityType.Builder.of(
@@ -43,7 +43,7 @@ public final class ModBlockEntities {
                             ModBlocks.LOOM.get()
                     ).build(null)
             );
-    public static final RegistryObject<BlockEntityType<SewingMachineBlockEntity>> SEWING_MACHINE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SewingMachineBlockEntity>> SEWING_MACHINE =
             ModRegistries.BLOCK_ENTITY_TYPES.register(
                     "sewing_machine",
                     () -> BlockEntityType.Builder.of(
@@ -51,7 +51,7 @@ public final class ModBlockEntities {
                             ModBlocks.SEWING_MACHINE.get()
                     ).build(null)
             );
-    public static final RegistryObject<BlockEntityType<WardrobeBlockEntity>> WARDROBE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<WardrobeBlockEntity>> WARDROBE =
             ModRegistries.BLOCK_ENTITY_TYPES.register(
                     "wardrobe",
                     () -> BlockEntityType.Builder.of(
@@ -64,5 +64,14 @@ public final class ModBlockEntities {
     }
 
     public static void bootstrap() {
+    }
+
+    public static void registerCapabilities(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {
+        var capability = net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK;
+        event.registerBlockEntity(capability, SPINNING_MACHINE.get(), (entity, side) -> entity.itemHandler());
+        event.registerBlockEntity(capability, LOOM.get(), (entity, side) -> entity.itemHandler());
+        event.registerBlockEntity(capability, SEWING_MACHINE.get(), (entity, side) -> entity.itemHandler());
+        event.registerBlockEntity(capability, SILKWORM_REARING_TRAY.get(), (entity, side) -> entity.itemHandler());
+        event.registerBlockEntity(capability, CLOTHING_RACK.get(), (entity, side) -> entity.isRemoved() ? null : entity.itemHandler());
     }
 }

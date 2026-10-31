@@ -97,7 +97,6 @@ public final class WardrobeBlockEntity extends BlockEntity implements MenuProvid
         return new WardrobeMenu(containerId, playerInventory, this);
     }
 
-    @Override
     public AABB getRenderBoundingBox() {
         return new AABB(
                 worldPosition.getX(),

@@ -13,9 +13,8 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import java.util.*;
 
 public final class GaugeInteractions {
@@ -24,7 +23,7 @@ public final class GaugeInteractions {
     private GaugeInteractions() { }
     public static void clear(UUID player) {
         if (SELECTED.remove(player) == null) return;
-        var server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
         var target = server == null ? null : server.getPlayerList().getPlayer(player);
         if (target != null) sendSelection(target, new net.minecraft.nbt.CompoundTag(), new UUID(0, 0));
     }
@@ -47,7 +46,7 @@ public final class GaugeInteractions {
                 && !player.blockActionRestricted(level, pos, player.gameMode.getGameModeForPlayer());
     }
     public static boolean protectedEdit(ServerPlayer player, BlockPos pos) {
-        return canModify(player, pos) && !MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(player.level(), pos, player.level().getBlockState(pos), player));
+        return canModify(player, pos) && !NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(player.level(), pos, player.level().getBlockState(pos), player)).isCanceled();
     }
     public static boolean canEdit(ServerPlayer player, UUID id, BlockPos pos) {
         return canModify(player, pos) && player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(pos)) <= 64
@@ -118,7 +117,7 @@ public final class GaugeInteractions {
         if (!entity.hasPanel(slot)) {
             if (player.isShiftKeyDown() || !(player.getItemInHand(hand).getItem() instanceof CitizenGaugeItem item)) return InteractionResult.PASS;
             var stack = player.getItemInHand(hand);
-            if (stack.hasTag() && stack.getTag().contains("GaugeCenter") && CitizenGaugeItem.center(stack, level) == null) return InteractionResult.FAIL;
+            if (com.rexhub.createapparel.item.ItemData.hasData(stack) && com.rexhub.createapparel.item.ItemData.read(stack).contains("GaugeCenter") && CitizenGaugeItem.center(stack, level) == null) return InteractionResult.FAIL;
             return item.place(new net.minecraft.world.item.context.BlockPlaceContext(player, hand, stack, hit));
         }
         var manager = CitizenPopulationManager.get(server.serverLevel());
@@ -128,7 +127,7 @@ public final class GaugeInteractions {
         if (player.getItemInHand(hand).getItem() instanceof CitizenGaugeItem && player.isShiftKeyDown()) {
             beginLink(server, gauge.id(), hand, true); return InteractionResult.CONSUME;
         }
-        NetworkHooks.openScreen(server, new SimpleMenuProvider((id, inventory, viewer) -> new CitizenGaugeMenu(id, inventory, gauge.id(), pos),
+        server.openMenu(new SimpleMenuProvider((id, inventory, viewer) -> new CitizenGaugeMenu(id, inventory, gauge.id(), pos),
                 Component.translatable("block.createapparel.citizen_gauge")), buffer -> {
                     buffer.writeUUID(gauge.id()); buffer.writeBlockPos(pos);
                     var openingInfo = gauge.save();

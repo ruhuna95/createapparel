@@ -26,7 +26,6 @@ import com.simibubi.create.content.kinetics.mixer.CompactingRecipe;
 import com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import net.minecraft.data.PackOutput;
-import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
@@ -41,7 +40,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -89,7 +88,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     private static final int MILLING_DURATION = 100;
     private void mirrorRecipes() {
-        register(consumer -> new ProcessingRecipeBuilder<>(com.simibubi.create.content.fluids.transfer.FillingRecipe::new,
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(com.simibubi.create.content.fluids.transfer.FillingRecipe::new,
                 asResource("mirror_panel")).require(Items.GLASS_PANE)
                 .require(com.rexhub.createapparel.init.ModFluids.MIRROR_COATING_FLUID.get(), 250)
                 .output(com.rexhub.createapparel.init.ModMirrors.MIRROR_PANEL.get()).build(consumer));
@@ -166,8 +165,8 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             ModTags.Items.FABRICS_SYNTHETIC
     );
 
-    public ModRecipeProvider(PackOutput output) {
-        super(output, CreateApparel.MOD_ID);
+    public ModRecipeProvider(PackOutput output, java.util.concurrent.CompletableFuture<net.minecraft.core.HolderLookup.Provider> registries) {
+        super(output, registries, CreateApparel.MOD_ID);
         register(OptionalIntegrationRecipes::build);
         register(FashionRecipes::build);
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.CITIZEN_GAUGE.get(), 2)
@@ -176,7 +175,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .define('M', AllItems.PRECISION_MECHANISM.get()).define('B', AllBlocks.BRASS_CASING.get())
                 .unlockedBy("has_precision_mechanism", InventoryChangeTrigger.TriggerInstance.hasItems(AllItems.PRECISION_MECHANISM.get()))
                 .save(consumer, asResource("citizen_gauge")));
-        register(consumer -> net.minecraft.data.recipes.SpecialRecipeBuilder.special(ModRecipeTypes.GAUGE_RESET.get())
+        register(consumer -> net.minecraft.data.recipes.SpecialRecipeBuilder.special(com.rexhub.createapparel.recipe.GaugeResetRecipe::new)
                 .save(consumer, asResource("citizen_gauge_reset_manual_only").toString()));
         register(consumer -> MechanicalCraftingRecipeBuilder.shapedRecipe(ModItems.SMART_PHONE.get())
                 .patternLine("GGG").patternLine("TRT").patternLine("CPC").patternLine("TRT").patternLine("BBB")
@@ -191,7 +190,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .define('A', AllBlocks.ANDESITE_CASING.get())
                 .unlockedBy("has_andesite_casing", InventoryChangeTrigger.TriggerInstance.hasItems(AllBlocks.ANDESITE_CASING.get()))
                 .save(consumer, asResource("silkworm_rearing_tray")));
-        register(consumer -> consumer.accept(new SilkwormRearingFinishedRecipe(asResource("silkworm_rearing/cocoon"))));
+        register(consumer -> new SilkwormRearingFinishedRecipe(asResource("silkworm_rearing/cocoon")).save(consumer));
         mannequinRecipes();
         register(consumer -> ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.WALL_HANGER.get())
                 .pattern(" N ").pattern("SSS").define('N', Items.IRON_NUGGET).define('S', Items.STICK)
@@ -250,14 +249,14 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_WOOL,
                         ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 1, 1);
         for (FabricColor color : FabricColor.values()) {
-            register(consumer -> consumer.accept(new WatchFinishedRecipe(
-                    asResource("watch/" + color.getSerializedName()), color)));
+            register(consumer -> new WatchFinishedRecipe(
+                    asResource("watch/" + color.getSerializedName()), color).save(consumer));
         }
 
         milling("cotton_boll", ModItems.COTTON_BOLL, ModItems.COTTON_FIBER);
         milling("flax", ModItems.FLAX, ModItems.FLAX_FIBER);
         milling("hemp", ModItems.HEMP, ModItems.HEMP_FIBER);
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 com.simibubi.create.content.kinetics.crusher.CrushingRecipe::new,
                 asResource("garments_to_old_cloth"))
                 .require(ModTags.Items.RECYCLABLE_GARMENTS)
@@ -265,7 +264,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .duration(100)
                 .build(consumer));
 
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 MixingRecipe::new,
                 asResource("leather_fabric")
         )
@@ -518,12 +517,12 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
                         ModTags.Items.FABRICS_LEATHER, ModTags.Items.FABRICS_SYNTHETIC), 3, 2);
         for (FabricColor color : FabricColor.values()) {
-            register(consumer -> consumer.accept(new EyewearFinishedRecipe(
+            register(consumer -> new EyewearFinishedRecipe(
                     asResource("glasses/" + color.getSerializedName()), color,
-                    ModItems.GLASSES.getId(), Items.GLASS_PANE)));
-            register(consumer -> consumer.accept(new EyewearFinishedRecipe(
+                    ModItems.GLASSES.getId(), Items.GLASS_PANE).save(consumer));
+            register(consumer -> new EyewearFinishedRecipe(
                     asResource("sunglasses/" + color.getSerializedName()), color,
-                    ModItems.SUNGLASSES.getId(), Items.BLACK_STAINED_GLASS_PANE)));
+                    ModItems.SUNGLASSES.getId(), Items.BLACK_STAINED_GLASS_PANE).save(consumer));
         }
         sewing("zipup_hoodie", ModItems.ZIPUP_HOODIE,
                 List.of(ModTags.Items.FABRICS_COTTON, ModTags.Items.FABRICS_HEMP,
@@ -575,14 +574,14 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .save(consumer, asResource("wardrobe")));
     }
 
-    private void metalAccessory(String recipeName, RegistryObject<Item> accessory,
-                                RegistryObject<Item> goldBase, RegistryObject<Item> silverBase, int nuggetCount) {
+    private void metalAccessory(String recipeName, DeferredHolder<Item, Item> accessory,
+                                DeferredHolder<Item, Item> goldBase, DeferredHolder<Item, Item> silverBase, int nuggetCount) {
         for (MetalColor metal : MetalColor.values()) {
-            RegistryObject<Item> base = metal == MetalColor.GOLD ? goldBase : silverBase;
+            DeferredHolder<Item, Item> base = metal == MetalColor.GOLD ? goldBase : silverBase;
             Ingredient nugget = metal == MetalColor.GOLD ? Ingredient.of(Items.GOLD_NUGGET)
                     : Ingredient.of(ModTags.Items.SILVER_ACCESSORY_NUGGETS);
             register(consumer -> {
-                var builder = new ProcessingRecipeBuilder<>(CompactingRecipe::new,
+                var builder = new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(CompactingRecipe::new,
                         asResource(base.getId().getPath()));
                 for (int index = 0; index < nuggetCount; index++) {
                     builder.require(nugget);
@@ -593,7 +592,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 register(consumer -> {
                     ItemStack result = new ItemStack(accessory.get());
                     new MetalAccessoryData(metal, gem).write(result);
-                    new ProcessingRecipeBuilder<>(DeployerApplicationRecipe::new,
+                    new com.simibubi.create.content.kinetics.deployer.ItemApplicationRecipe.Builder<>(DeployerApplicationRecipe::new,
                             asResource(recipeName + "/" + metal.getSerializedName() + "_" + gem.getSerializedName()))
                             .require(base.get()).require(gem.tag()).output(result).build(consumer);
                 });
@@ -606,7 +605,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             Supplier<? extends ItemLike> input,
             Supplier<? extends ItemLike> output
     ) {
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 MillingRecipe::new,
                 asResource(recipeName)
         )
@@ -621,7 +620,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             TagKey<Item> input,
             Supplier<? extends ItemLike> output
     ) {
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 SpinningRecipe::new,
                 asResource(recipeName)
         )
@@ -636,7 +635,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             Supplier<? extends ItemLike> input,
             Supplier<? extends ItemLike> output
     ) {
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 SpinningRecipe::new,
                 asResource(recipeName)
         )
@@ -651,7 +650,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
             TagKey<Item> input,
             Supplier<? extends ItemLike> output
     ) {
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 WeavingRecipe::new,
                 asResource(recipeName)
         )
@@ -674,7 +673,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     private void dyeing(FabricMaterial material, FabricColor color) {
         String outputName = color.getSerializedName() + "_" + material.getSerializedName() + "_fabric";
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 MixingRecipe::new,
                 asResource("dyeing/" + outputName)
         )
@@ -687,7 +686,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     private void decolorizing(FabricMaterial material) {
         String outputName = material.getSerializedName() + "_fabric";
-        register(consumer -> new ProcessingRecipeBuilder<>(
+        register(consumer -> new com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder<>(
                 MixingRecipe::new,
                 asResource("decolorizing/" + outputName)
         )
@@ -699,12 +698,12 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
 
     private void sewing(
             String recipeName,
-            RegistryObject<Item> result,
+            DeferredHolder<Item, Item> result,
             List<TagKey<Item>> fabricTags,
             int fabricCount,
             int threadCount
     ) {
-        register(consumer -> consumer.accept(new SewingFinishedRecipe(
+        register(consumer -> new SewingFinishedRecipe(
                 asResource(recipeName),
                 fabricTags,
                 fabricCount,
@@ -712,7 +711,7 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 threadCount,
                 ModItems.SEWING_PATTERN.getId(),
                 result.getId()
-        )));
+        ).save(consumer));
     }
 
     private static Ingredient standardFabricIngredient(FabricMaterial material, boolean dyedOnly) {
@@ -722,173 +721,47 @@ public final class ModRecipeProvider extends BaseRecipeProvider {
                 .map(entry -> entry.getKey().get().getDefaultInstance()));
     }
 
-    private record EyewearFinishedRecipe(ResourceLocation id, FabricColor color,
-                                         ResourceLocation resultId, Item glassPane) implements FinishedRecipe {
-        @Override
-        public void serializeRecipeData(JsonObject json) {
-            json.addProperty("category", "equipment");
-            JsonArray pattern = new JsonArray();
-            pattern.add(" C ");
-            pattern.add("GIG");
-            json.add("pattern", pattern);
-            JsonObject key = new JsonObject();
-            key.add("G", Ingredient.of(glassPane).toJson());
-            key.add("I", Ingredient.of(Items.IRON_NUGGET).toJson());
-            key.add("C", Ingredient.of(ModItems.dye(color)).toJson());
-            json.add("key", key);
-            JsonObject result = new JsonObject();
-            result.addProperty("item", resultId.toString());
-            result.addProperty("count", 1);
-            result.addProperty("nbt", "{GarmentData:{material:\"" + FabricMaterial.SYNTHETIC.getSerializedName()
-                    + "\",design:\"plain\",primary_color:\""
-                    + color.getSerializedName() + "\"}}");
-            json.add("result", result);
-        }
-
-        @Override
-        public ResourceLocation getId() {
-            return id;
-        }
-
-        @Override
-        public RecipeSerializer<?> getType() {
-            return RecipeSerializer.SHAPED_RECIPE;
-        }
-
-        @Override
-        @Nullable
-        public JsonObject serializeAdvancement() {
-            return null;
-        }
-
-        @Override
-        @Nullable
-        public ResourceLocation getAdvancementId() {
-            return null;
+    private record EyewearFinishedRecipe(ResourceLocation id, FabricColor color, ResourceLocation resultId, Item glassPane) {
+        void save(net.minecraft.data.recipes.RecipeOutput output) {
+            var result = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(resultId));
+            new com.rexhub.createapparel.garment.GarmentData(FabricMaterial.SYNTHETIC, "plain", color,
+                    java.util.Optional.empty(), java.util.Optional.empty()).write(result);
+            var pattern = net.minecraft.world.item.crafting.ShapedRecipePattern.of(java.util.Map.of(
+                    'G', Ingredient.of(glassPane), 'I', Ingredient.of(Items.IRON_NUGGET),
+                    'C', Ingredient.of(ModItems.dye(color))), " C ", "GIG");
+            output.accept(id, new net.minecraft.world.item.crafting.ShapedRecipe("",
+                    net.minecraft.world.item.crafting.CraftingBookCategory.EQUIPMENT, pattern, result), null);
         }
     }
 
-    private record WatchFinishedRecipe(ResourceLocation id, FabricColor color) implements FinishedRecipe {
-        @Override
-        public void serializeRecipeData(JsonObject json) {
-            json.addProperty("category", "equipment");
-            JsonArray pattern = new JsonArray();
-            pattern.add(" C ");
-            pattern.add("IPI");
-            pattern.add(" D ");
-            json.add("pattern", pattern);
-            JsonObject key = new JsonObject();
-            key.add("C", Ingredient.of(Items.CLOCK).toJson());
-            key.add("I", Ingredient.of(Items.IRON_NUGGET).toJson());
-            key.add("P", Ingredient.of(AllItems.PRECISION_MECHANISM.get()).toJson());
-            key.add("D", Ingredient.of(ModItems.dye(color)).toJson());
-            json.add("key", key);
-            JsonObject result = new JsonObject();
-            result.addProperty("item", ModItems.WATCH.getId().toString());
-            result.addProperty("count", 1);
-            result.addProperty("nbt", "{GarmentData:{material:\"synthetic\",design:\"plain\",primary_color:\""
-                    + color.getSerializedName() + "\"}}");
-            json.add("result", result);
-        }
-
-        @Override
-        public ResourceLocation getId() {
-            return id;
-        }
-
-        @Override
-        public RecipeSerializer<?> getType() {
-            return RecipeSerializer.SHAPED_RECIPE;
-        }
-
-        @Override
-        @Nullable
-        public JsonObject serializeAdvancement() {
-            return null;
-        }
-
-        @Override
-        @Nullable
-        public ResourceLocation getAdvancementId() {
-            return null;
+    private record WatchFinishedRecipe(ResourceLocation id, FabricColor color) {
+        void save(net.minecraft.data.recipes.RecipeOutput output) {
+            var result = new ItemStack(ModItems.WATCH.get());
+            new com.rexhub.createapparel.garment.GarmentData(FabricMaterial.SYNTHETIC, "plain", color,
+                    java.util.Optional.empty(), java.util.Optional.empty()).write(result);
+            var pattern = net.minecraft.world.item.crafting.ShapedRecipePattern.of(java.util.Map.of(
+                    'C', Ingredient.of(Items.CLOCK), 'I', Ingredient.of(Items.IRON_NUGGET),
+                    'P', Ingredient.of(AllItems.PRECISION_MECHANISM.get()), 'D', Ingredient.of(ModItems.dye(color))),
+                    " C ", "IPI", " D ");
+            output.accept(id, new net.minecraft.world.item.crafting.ShapedRecipe("",
+                    net.minecraft.world.item.crafting.CraftingBookCategory.EQUIPMENT, pattern, result), null);
         }
     }
 
-    private record SilkwormRearingFinishedRecipe(ResourceLocation id) implements FinishedRecipe {
-        @Override
-        public void serializeRecipeData(JsonObject json) {
-            json.add("food", Ingredient.of(ModTags.Items.SILKWORM_FOOD).toJson());
-            json.addProperty("food_count", 1);
-            JsonObject result = new JsonObject();
-            result.addProperty("item", ModItems.COCOON.getId().toString());
-            result.addProperty("count", 1);
-            json.add("result", result);
-            json.addProperty("processing_time", com.rexhub.createapparel.entity.Silkworm.COCOONING_DURATION_TICKS);
+    private record SilkwormRearingFinishedRecipe(ResourceLocation id) {
+        void save(net.minecraft.data.recipes.RecipeOutput output) {
+            output.accept(id, new com.rexhub.createapparel.recipe.SilkwormRearingRecipe(
+                    Ingredient.of(ModTags.Items.SILKWORM_FOOD), 1, new ItemStack(ModItems.COCOON.get()),
+                    com.rexhub.createapparel.entity.Silkworm.COCOONING_DURATION_TICKS), null);
         }
-
-        @Override
-        public ResourceLocation getId() { return id; }
-
-        @Override
-        public RecipeSerializer<?> getType() { return ModRecipeTypes.SILKWORM_REARING.getSerializer(); }
-
-        @Override
-        @Nullable
-        public JsonObject serializeAdvancement() { return null; }
-
-        @Override
-        @Nullable
-        public ResourceLocation getAdvancementId() { return null; }
     }
 
-    private record SewingFinishedRecipe(
-            ResourceLocation id,
-            List<TagKey<Item>> fabricTags,
-            int fabricCount,
-            List<TagKey<Item>> threadTags,
-            int threadCount,
-            ResourceLocation pattern,
-            ResourceLocation result
-    ) implements FinishedRecipe {
-        @Override
-        public void serializeRecipeData(JsonObject json) {
-            json.add("fabric", requirement(fabricTags, fabricCount));
-            json.add("thread", requirement(threadTags, threadCount));
-            json.addProperty("pattern", pattern.toString());
-            JsonObject resultJson = new JsonObject();
-            resultJson.addProperty("id", result.toString());
-            json.add("result", resultJson);
-        }
-
-        @Override
-        public ResourceLocation getId() {
-            return id;
-        }
-
-        @Override
-        public RecipeSerializer<?> getType() {
-            return ModRecipeTypes.SEWING.getSerializer();
-        }
-
-        @Override
-        @Nullable
-        public JsonObject serializeAdvancement() {
-            return null;
-        }
-
-        @Override
-        @Nullable
-        public ResourceLocation getAdvancementId() {
-            return null;
-        }
-
-        private static JsonObject requirement(List<TagKey<Item>> tags, int count) {
-            JsonArray values = new JsonArray();
-            tags.forEach(tag -> values.add(tag.location().toString()));
-            JsonObject requirement = new JsonObject();
-            requirement.add("tag", values);
-            requirement.addProperty("count", count);
-            return requirement;
+    private record SewingFinishedRecipe(ResourceLocation id, List<TagKey<Item>> fabricTags, int fabricCount,
+            List<TagKey<Item>> threadTags, int threadCount, ResourceLocation pattern, ResourceLocation result) {
+        void save(net.minecraft.data.recipes.RecipeOutput output) {
+            output.accept(id, new com.rexhub.createapparel.recipe.SewingRecipe(
+                    new com.rexhub.createapparel.recipe.SewingRecipe.ItemRequirement(fabricTags, fabricCount),
+                    new com.rexhub.createapparel.recipe.SewingRecipe.ItemRequirement(threadTags, threadCount), pattern, result), null);
         }
     }
 }

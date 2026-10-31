@@ -27,9 +27,8 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -46,7 +45,7 @@ public final class ClothingRackGameTests {
         var state = ModBlocks.CLOTHING_RACK.get().defaultBlockState().setValue(ClothingRackBlock.FACING, facing)
                 .setValue(ClothingRackBlock.MOUNT, mount);
         level.setBlockAndUpdate(pos, state);
-        state.getBlock().setPlacedBy(level, pos, state, helper.makeMockPlayer(), new ItemStack(ModItems.CLOTHING_RACK.get()));
+        state.getBlock().setPlacedBy(level, pos, state, helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), new ItemStack(ModItems.CLOTHING_RACK.get()));
         return (ClothingRackBlockEntity) level.getBlockEntity(pos);
     }
 
@@ -63,7 +62,7 @@ public final class ClothingRackGameTests {
     private static ClothingRackBlockEntity extendWall(GameTestHelper helper, BlockPos source, Direction side) {
         var item = (ClothingRackItem) ModItems.CLOTHING_RACK.get();
         var upper = source.above();
-        var context = new BlockPlaceContext(helper.makeMockPlayer(), InteractionHand.MAIN_HAND, new ItemStack(item),
+        var context = new BlockPlaceContext(helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), InteractionHand.MAIN_HAND, new ItemStack(item),
                 new BlockHitResult(Vec3.atCenterOf(upper), side, upper, false));
         helper.assertTrue(item.place(context).consumesAction(), "Rack item extends wall rack forward without own wall");
         var result = helper.getLevel().getBlockEntity(source.relative(side));
@@ -131,7 +130,7 @@ public final class ClothingRackGameTests {
                 .setValue(ClothingRackBlock.RIGHT_CONNECTED, true);
         var virtualPos = new BlockPos(0, 80, 15);
         var actualChunk = helper.getLevel().getChunk(net.minecraft.core.SectionPos.blockToSectionCoord(base(helper).getX()),
-                net.minecraft.core.SectionPos.blockToSectionCoord(base(helper).getZ()), net.minecraft.world.level.chunk.ChunkStatus.FULL, false);
+                net.minecraft.core.SectionPos.blockToSectionCoord(base(helper).getZ()), net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false);
         var reader = (net.minecraft.world.level.LevelReader) java.lang.reflect.Proxy.newProxyInstance(
                 net.minecraft.world.level.LevelReader.class.getClassLoader(), new Class<?>[]{net.minecraft.world.level.LevelReader.class},
                 (proxy, method, args) -> {
@@ -231,7 +230,7 @@ public final class ClothingRackGameTests {
     @GameTest(template = "display_furniture", batch = "clothing_rack")
     public static void sneakingFloorPlacementRemainsIsolatedAfterUpdatesAndSave(GameTestHelper helper) {
         var item = (ClothingRackItem) ModItems.CLOTHING_RACK.get();
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         var pos = base(helper);
         var floor = pos.below();
         helper.getLevel().setBlockAndUpdate(floor, Blocks.STONE.defaultBlockState());
@@ -309,9 +308,9 @@ public final class ClothingRackGameTests {
     @GameTest(template = "display_furniture", batch = "clothing_rack")
     public static void itemHandlerFiltersSimulatesExtractsAndSynchronizes(GameTestHelper helper) {
         var rack = place(helper, base(helper), Direction.NORTH, RackMountType.FLOOR);
-        var handler = rack.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElseThrow(() -> new IllegalStateException("Missing handler"));
+        var handler = java.util.Optional.ofNullable(rack.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, rack.getBlockPos(), Direction.UP)).orElseThrow(() -> new IllegalStateException("Missing handler"));
         helper.assertTrue(handler.getSlots() == 4, "Four independent physical slots");
-        for (Direction side : Direction.values()) helper.assertTrue(rack.getCapability(ForgeCapabilities.ITEM_HANDLER, side).isPresent(), "All sides expose handler");
+        for (Direction side : Direction.values()) helper.assertTrue(java.util.Optional.ofNullable(rack.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, rack.getBlockPos(), side)).isPresent(), "All sides expose handler");
         var garment = new ItemStack(ModItems.T_SHIRT.get());
         helper.assertTrue(!handler.insertItem(0, garment, false).isEmpty() && !handler.insertItem(3, garment, false).isEmpty(), "Support slots reject");
         helper.assertTrue(!handler.insertItem(1, new ItemStack(Items.STONE), false).isEmpty(), "Ordinary item rejected");
@@ -322,18 +321,22 @@ public final class ClothingRackGameTests {
         helper.assertTrue(handler.insertItem(1, garment.copyWithCount(3), false).getCount() == 2, "Slot keeps only one garment");
         helper.assertTrue(!handler.insertItem(1, garment, false).isEmpty(), "Occupied slot rejects second garment");
         var client = new ClothingRackBlockEntity(base(helper), rack.getBlockState());
-        client.handleUpdateTag(rack.getUpdateTag());
+        client.handleUpdateTag(rack.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(ItemStack.matches(client.garment(1), garment), "External insertion syncs display tag");
         var packet = rack.getUpdatePacket();
-        helper.assertTrue(packet.getTag() != null, "External insertion produces packet state");
-        client.load(packet.getTag());
+        helper.assertTrue((packet).getTag() != null, "External insertion produces packet state");
+        client.loadWithComponents(packet.getTag(), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(ItemStack.matches(client.garment(1), garment), "Packet syncs display stack");
         helper.assertTrue(!handler.extractItem(1, 1, true).isEmpty() && !rack.garment(1).isEmpty(), "Extraction simulation unchanged");
         helper.assertTrue(handler.extractItem(1, 1, false).getCount() == 1 && rack.garment(1).isEmpty(), "Extraction supported");
-        rack.invalidateCaps();
-        helper.assertTrue(!rack.getCapability(ForgeCapabilities.ITEM_HANDLER).isPresent(), "Invalidated capability unavailable");
-        rack.reviveCaps();
-        helper.assertTrue(rack.getCapability(ForgeCapabilities.ITEM_HANDLER).isPresent(), "Revived capability available");
+        var capabilityCache = net.neoforged.neoforge.capabilities.BlockCapabilityCache.create(
+                net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, helper.getLevel(), rack.getBlockPos(), null);
+        helper.assertTrue(capabilityCache.getCapability() != null, "Placed rack exposes its capability");
+        var savedState = rack.getBlockState();
+        helper.getLevel().removeBlock(rack.getBlockPos(), false);
+        helper.assertTrue(capabilityCache.getCapability() == null, "Removal invalidates the cached capability");
+        helper.getLevel().setBlockAndUpdate(rack.getBlockPos(), savedState);
+        helper.assertTrue(capabilityCache.getCapability() != null, "Replacement refreshes the cached capability");
         helper.succeed();
     }
 
@@ -357,9 +360,9 @@ public final class ClothingRackGameTests {
     @GameTest(template = "display_furniture", batch = "clothing_rack")
     public static void upperAndLowerPlayerBreakOnlyOneUnitInBothGameModes(GameTestHelper helper) {
         var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "rack-test"));
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "rack-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override
             public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
@@ -392,7 +395,7 @@ public final class ClothingRackGameTests {
 
     @GameTest(template = "display_furniture", batch = "clothing_rack")
     public static void placementFaceDeterminesMountAndUpperSideExtendsAtSameHeight(GameTestHelper helper) {
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         var item = (ClothingRackItem) ModItems.CLOTHING_RACK.get();
         var pos = base(helper);
         helper.getLevel().setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
@@ -437,8 +440,8 @@ public final class ClothingRackGameTests {
     public static void savedChunkDataRebuildsInventoryAndConnections(GameTestHelper helper) {
         var rack = place(helper, base(helper), Direction.NORTH, RackMountType.WALL);
         fill(helper, rack);
-        var saved = rack.saveWithFullMetadata();
-        var restored = (ClothingRackBlockEntity) BlockEntity.loadStatic(base(helper), rack.getBlockState(), saved);
+        var saved = rack.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup());
+        var restored = (ClothingRackBlockEntity) BlockEntity.loadStatic(base(helper), rack.getBlockState(), saved, com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(restored != null && restored.inventory().getSlots() == 4, "NBT restores four slots");
         if (restored == null) throw new IllegalStateException("Missing restored rack");
         for (int slot = 0; slot < 4; slot++) helper.assertTrue(ItemStack.matches(restored.garment(slot), rack.garment(slot)), "Every saved stack restored");
@@ -465,10 +468,10 @@ public final class ClothingRackGameTests {
         helper.getLevel().setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
         var state = ModBlocks.CLIP_CLOTHING_RACK.get().defaultBlockState();
         helper.getLevel().setBlockAndUpdate(pos, state);
-        state.getBlock().setPlacedBy(helper.getLevel(), pos, state, helper.makeMockPlayer(), new ItemStack(ModItems.CLIP_CLOTHING_RACK.get()));
+        state.getBlock().setPlacedBy(helper.getLevel(), pos, state, helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), new ItemStack(ModItems.CLIP_CLOTHING_RACK.get()));
         var rack = (ClothingRackBlockEntity) helper.getLevel().getBlockEntity(pos);
         if (rack == null) throw new IllegalStateException("Missing clip rack");
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         player.setPos(Vec3.atCenterOf(base(helper)));
         var upperPos = rack.getBlockPos().above();
@@ -478,20 +481,20 @@ public final class ClothingRackGameTests {
         var hit = new BlockHitResult(point, Direction.NORTH, upperPos, false);
         var garment = new ItemStack(ModItems.DENIM_PANTS.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, garment);
-        helper.assertTrue(upper.use(helper.getLevel(), player, InteractionHand.MAIN_HAND, hit).consumesAction()
+        helper.assertTrue(com.rexhub.createapparel.TestInteractions.use(upper, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit).consumesAction()
                 && garment.isEmpty() && !rack.garment(2).isEmpty() && rack.garment(1).isEmpty(), "Click fills target hanger only");
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.T_SHIRT.get()));
-        helper.assertTrue(!upper.use(helper.getLevel(), player, InteractionHand.MAIN_HAND, hit).consumesAction()
+        helper.assertTrue(!com.rexhub.createapparel.TestInteractions.use(upper, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit).consumesAction()
                 && rack.garment(1).isEmpty(), "Occupied target never falls back");
         var poleHit = new BlockHitResult(Vec3.atLowerCornerOf(upperPos).add(0.25, 0.875, 0.5), Direction.NORTH, upperPos, false);
-        helper.assertTrue(!upper.use(helper.getLevel(), player, InteractionHand.MAIN_HAND, poleHit).consumesAction(), "Pole click does not insert");
+        helper.assertTrue(!com.rexhub.createapparel.TestInteractions.use(upper, helper.getLevel(), player, InteractionHand.MAIN_HAND, poleHit).consumesAction(), "Pole click does not insert");
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
         player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
         int before = drops(helper, ModItems.DENIM_PANTS.get());
-        helper.assertTrue(upper.use(helper.getLevel(), player, InteractionHand.OFF_HAND, hit).consumesAction()
+        helper.assertTrue(com.rexhub.createapparel.TestInteractions.use(upper, helper.getLevel(), player, InteractionHand.OFF_HAND, hit).consumesAction()
                 && rack.garment(2).isEmpty(), "Bare hand takes chosen garment");
         helper.assertTrue(drops(helper, ModItems.DENIM_PANTS.get()) == before + 1, "Full inventory drops one garment");
-        helper.assertTrue(!upper.use(helper.getLevel(), player, InteractionHand.OFF_HAND, hit).consumesAction()
+        helper.assertTrue(!com.rexhub.createapparel.TestInteractions.use(upper, helper.getLevel(), player, InteractionHand.OFF_HAND, hit).consumesAction()
                 && drops(helper, ModItems.DENIM_PANTS.get()) == before + 1, "Repeated take cannot duplicate");
         helper.succeed();
     }
@@ -533,10 +536,10 @@ public final class ClothingRackGameTests {
         var point = ArmInteractionPoint.create(helper.getLevel(), base(helper), rack.getBlockState());
         helper.assertTrue(point != null, "Arm point exists");
         if (point == null) throw new IllegalStateException("Missing rack arm point");
-        helper.assertTrue(point.getSlotCount() == 4, "Arm uses unit inventory");
-        helper.assertTrue(point.insert(new ItemStack(ModItems.T_SHIRT.get()), false).isEmpty(), "Arm inserts valid garment");
-        helper.assertTrue(!point.insert(new ItemStack(ModItems.BRA.get()), false).isEmpty(), "Arm rejects unsupported garment");
-        helper.assertTrue(point.extract(1, false).is(ModItems.T_SHIRT.get()) && rack.garment(1).isEmpty(), "Arm extracts garment");
+        helper.assertTrue(point.getSlotCount(com.rexhub.createapparel.TestArms.create(helper.getLevel())) == 4, "Arm uses unit inventory");
+        helper.assertTrue(point.insert(com.rexhub.createapparel.TestArms.create(helper.getLevel()), new ItemStack(ModItems.T_SHIRT.get()), false).isEmpty(), "Arm inserts valid garment");
+        helper.assertTrue(!point.insert(com.rexhub.createapparel.TestArms.create(helper.getLevel()), new ItemStack(ModItems.BRA.get()), false).isEmpty(), "Arm rejects unsupported garment");
+        helper.assertTrue(point.extract(com.rexhub.createapparel.TestArms.create(helper.getLevel()), 1, false).is(ModItems.T_SHIRT.get()) && rack.garment(1).isEmpty(), "Arm extracts garment");
         helper.assertTrue(helper.getLevel().getBlockEntity(base(helper).above()) == null, "Upper has no duplicate handler");
         helper.succeed();
     }

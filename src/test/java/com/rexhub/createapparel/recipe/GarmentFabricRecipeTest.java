@@ -14,7 +14,7 @@ class GarmentFabricRecipeTest {
     @Test
     void everyGarmentHasARecipeWithExplicitNonEmptyUniqueFabricTags() throws IOException {
         Path definitions = Path.of("src/main/resources/data/createapparel/garments");
-        Path recipes = Path.of("src/generated/resources/data/createapparel/recipes");
+        Path recipes = Path.of("src/generated/resources/data/createapparel/recipe");
         try (var paths = Files.list(definitions)) {
             var garments = paths.filter(path -> path.toString().endsWith(".json")).toList();
             assertFalse(garments.isEmpty());

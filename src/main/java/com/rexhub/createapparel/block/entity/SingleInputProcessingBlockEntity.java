@@ -18,23 +18,19 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.CombinedInvWrapper;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<RecipeWrapper>>
+abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<RecipeWrapper, ?>>
         extends KineticBlockEntity {
     private final ItemStackHandler inputInventory;
     private final InputInventoryHandler inventoryHandler;
-    private LazyOptional<IItemHandler> itemCapability;
 
     private int remainingProcessingTicks;
     private boolean processing;
@@ -49,7 +45,6 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
         super(type, pos, state);
         inputInventory = createInputInventory();
         inventoryHandler = new InputInventoryHandler();
-        itemCapability = LazyOptional.of(() -> inventoryHandler);
     }
 
     private ItemStackHandler createInputInventory() {
@@ -166,7 +161,7 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
         }
 
         inputInventory.extractItem(0, requiredInputCount(), false);
-        recipe.rollResults().forEach(result -> MachineOutputTransport.eject(this, result));
+        recipe.rollResults(level.random).forEach(result -> MachineOutputTransport.eject(this, result));
 
         remainingProcessingTicks = 0;
         activeRecipe = null;
@@ -225,34 +220,24 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
     }
 
     @Override
-    protected void write(CompoundTag compound, boolean clientPacket) {
-        compound.put("InputInventory", inputInventory.serializeNBT());
+    protected void write(CompoundTag compound, net.minecraft.core.HolderLookup.Provider registries, boolean clientPacket) {
+        compound.put("InputInventory", inputInventory.serializeNBT(registries));
         compound.putInt("ProcessingTicks", remainingProcessingTicks);
         compound.putBoolean("Processing", processing);
-        super.write(compound, clientPacket);
+        super.write(compound, registries, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag compound, boolean clientPacket) {
-        inputInventory.deserializeNBT(compound.getCompound("InputInventory"));
+    protected void read(CompoundTag compound, net.minecraft.core.HolderLookup.Provider registries, boolean clientPacket) {
+        inputInventory.deserializeNBT(registries, com.rexhub.createapparel.item.ItemData.upgradeInventory(registries, compound.getCompound("InputInventory")));
         remainingProcessingTicks = compound.getInt("ProcessingTicks");
         processing = compound.getBoolean("Processing");
         activeRecipe = null;
         recipeCache.invalidate();
-        super.read(compound, clientPacket);
+        super.read(compound, registries, clientPacket);
     }
 
-    @Override
-    public void invalidate() {
-        super.invalidate();
-        itemCapability.invalidate();
-    }
 
-    @Override
-    public void reviveCaps() {
-        super.reviveCaps();
-        itemCapability = LazyOptional.of(() -> inventoryHandler);
-    }
 
     @Override
     public void destroy() {
@@ -262,12 +247,8 @@ abstract class SingleInputProcessingBlockEntity<R extends ProcessingRecipe<Recip
         }
     }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-        if (capability == ForgeCapabilities.ITEM_HANDLER) {
-            return itemCapability.cast();
-        }
-        return super.getCapability(capability, side);
+    public IItemHandler itemHandler() {
+        return inventoryHandler;
     }
 
     private final class InputInventoryHandler extends CombinedInvWrapper {

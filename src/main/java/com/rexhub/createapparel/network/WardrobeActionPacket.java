@@ -17,7 +17,17 @@ public record WardrobeActionPacket(
         GarmentSlot garmentSlot,
         String styleCategory,
         String styleValue
-) {
+) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<WardrobeActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "wardrobe_action_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, WardrobeActionPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), WardrobeActionPacket::decode);
+
+    @Override
+    public Type<WardrobeActionPacket> type() {
+        return TYPE;
+    }
+
     private static final int MAX_STYLE_NAME_LENGTH = 64;
 
     public WardrobeActionPacket {

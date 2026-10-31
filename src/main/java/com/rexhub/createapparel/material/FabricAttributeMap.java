@@ -3,7 +3,7 @@ package com.rexhub.createapparel.material;
 import com.rexhub.createapparel.init.ModItems;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -40,7 +40,7 @@ public final class FabricAttributeMap {
         synchronized (FabricAttributeMap.class) {
             if (attributes == null) {
                 IdentityHashMap<Item, FabricAttribute> resolved = new IdentityHashMap<>();
-                for (Map.Entry<RegistryObject<Item>, FabricAttribute> entry : ModItems.fabricItems().entrySet()) {
+                for (Map.Entry<DeferredHolder<Item, Item>, FabricAttribute> entry : ModItems.fabricItems().entrySet()) {
                     FabricAttribute previous = resolved.put(entry.getKey().get(), entry.getValue());
                     if (previous != null) {
                         throw new IllegalStateException("A fabric item has more than one static attribute mapping");

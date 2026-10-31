@@ -13,8 +13,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -32,13 +32,16 @@ public final class ApparelInventoryGameTests {
                 java.util.Optional.of(com.rexhub.createapparel.material.FabricColor.RED),
                 java.util.Optional.of(com.rexhub.createapparel.material.FabricColor.YELLOW));
         data.write(shirt);
-        var legacy = shirt.getOrCreateTagElement(GarmentData.TAG_NAME);
+        var legacyRoot = com.rexhub.createapparel.item.ItemData.readOrEmpty(shirt);
+        var legacy = legacyRoot.getCompound(GarmentData.TAG_NAME);
         var styles = new net.minecraft.nbt.CompoundTag();
         styles.putString("sleeves", "unknown_legacy_value");
         legacy.put("style", styles);
+        legacyRoot.put(GarmentData.TAG_NAME, legacy);
+        com.rexhub.createapparel.item.ItemData.write(shirt, legacyRoot);
         helper.assertTrue(data.equals(GarmentData.fromStack(shirt, definition)), "Legacy style must not affect item data");
         data.write(shirt);
-        helper.assertTrue(!shirt.getOrCreateTagElement(GarmentData.TAG_NAME).contains("style"), "Item write must omit style");
+        helper.assertTrue(!com.rexhub.createapparel.item.ItemData.readOrEmpty(shirt).getCompound(GarmentData.TAG_NAME).contains("style"), "Item write must omit style");
         inventory.setChangeListener(() -> {
             for (GarmentSlot slot : GarmentSlot.values()) {
                 helper.assertTrue(inventory.getStack(slot).isEmpty() == !inventory.copyStyles().containsKey(slot),
@@ -50,17 +53,17 @@ public final class ApparelInventoryGameTests {
         inventory.insertItem(GarmentSlot.TOP.ordinal(), shirt, false);
         helper.assertTrue("normal".equals(inventory.styleState(GarmentSlot.TOP).styles().get("sleeves")), "Equip defaults");
         helper.assertTrue(inventory.setStyle(GarmentSlot.TOP, "sleeves", "rolled"), "Select rolled");
-        var saved = inventory.serializeNBT();
+        var saved = inventory.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         ApparelInventory restored = new ApparelInventory();
-        restored.deserializeNBT(saved);
+        restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), saved);
         helper.assertTrue(restored.copyStyles().equals(inventory.copyStyles()), "Load saved equipped styles after stacks");
         var legacyInventory = saved.copy();
         legacyInventory.remove("ApparelStyles");
-        restored.deserializeNBT(legacyInventory);
+        restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), legacyInventory);
         helper.assertTrue("normal".equals(restored.styleState(GarmentSlot.TOP).styles().get("sleeves")), "Legacy inventory initializes defaults");
         restored.copyFrom(inventory);
         helper.assertTrue(restored.copyStyles().equals(inventory.copyStyles()), "Clone keeps equipped styles");
-        FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+        net.minecraft.network.RegistryFriendlyByteBuf buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
         try {
             new ApparelInventorySyncPacket(1, inventory.copyContents(), inventory.copyStyles(), false, false,
                     inventory.armProfile(), inventory.chestProfile(), inventory.skinTone()).encode(buffer);
@@ -102,13 +105,13 @@ public final class ApparelInventoryGameTests {
         helper.assertTrue(!inventory.setStyle(GarmentSlot.TOP, "sleeves", "rolled"), "Forbidden style rejected");
         helper.assertTrue(inventory.setStyle(GarmentSlot.OUTER, "sleeves", "rolled"), "Slot styles are independent");
         ApparelInventory loaded = new ApparelInventory();
-        loaded.deserializeNBT(inventory.serializeNBT());
+        loaded.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), inventory.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
         helper.assertTrue(loaded.copyStyles().equals(inventory.copyStyles()), "Multiple slot styles survive load");
-        var stale = loaded.serializeNBT();
+        var stale = loaded.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         stale.getCompound("ApparelStyles").getCompound("top").putString("sleeves", "rolled");
         stale.getCompound("ApparelStyles").getCompound("outer").putString("tuck", "tucked");
         stale.getCompound("ApparelStyles").getCompound("outer").putString("open", "opened");
-        loaded.deserializeNBT(stale);
+        loaded.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), stale);
         helper.assertTrue(loaded.styleState(GarmentSlot.OUTER).styles().equals(java.util.Map.of("sleeves", "rolled")), "Load drops obsolete OUTER styles");
         helper.assertTrue("normal".equals(loaded.styleState(GarmentSlot.TOP).styles().get("sleeves")), "Load reconciles constraints last");
         loaded.extractItem(GarmentSlot.OUTER.ordinal(), 1, false);

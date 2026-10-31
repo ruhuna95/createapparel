@@ -8,26 +8,20 @@ sourceSets {
 }
 
 if (providers.gradleProperty('escalatedTests').getOrElse('false').toBoolean()) {
-    repositories {
-        flatDir {
-            dirs project.file('run/route-tests/dependencies')
-            content { includeGroup 'local.escalated' }
-        }
-    }
     dependencies {
-        routeTestRuntimeOnly fg.deobf('local.escalated:escalated:1.2.1')
-        escalatedClientTestRuntimeOnly fg.deobf('local.escalated:escalated:1.2.1')
+        routeTestRuntimeOnly 'maven.modrinth:escalated:vJ49zRJl'
+        escalatedClientTestRuntimeOnly 'maven.modrinth:escalated:vJ49zRJl'
     }
-    minecraft.runs.routeTestServer.property 'apparel.escalatedTests', 'true'
+    neoForge.runs.routeTestServer.systemProperty 'apparel.escalatedTests', 'true'
 }
 
-minecraft.runs {
+neoForge.runs {
     escalatedClient {
-        parent minecraft.runs.client
-        workingDirectory file('run/escalated-client')
-        property 'forge.logging.console.level', 'info'
-        property 'apparel.escalatedClient', 'true'
-        mods { "${mod_id}" { source sourceSets.escalatedClientTest } }
+        client()
+        gameDirectory = file('run/escalated-client')
+        systemProperty 'forge.logging.console.level', 'info'
+        systemProperty 'apparel.escalatedClient', 'true'
+        sourceSet = sourceSets.escalatedClientTest
     }
 }
 

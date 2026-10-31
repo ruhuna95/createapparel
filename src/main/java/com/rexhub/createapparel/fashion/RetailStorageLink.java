@@ -10,8 +10,8 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -74,9 +74,8 @@ final class RetailStorageLink {
         if (updated.isEmpty()) return false;
         members = updated;
         if (complete) {
-            var capability = source.getCapability(ForgeCapabilities.ITEM_HANDLER);
-            handler = capability.resolve().orElse(null);
-            if (handler != null) RetailStorageLinks.watch(level, source.getBlockPos(), capability);
+            handler = level.getCapability(Capabilities.ItemHandler.BLOCK, source.getBlockPos(), null);
+            if (handler != null) RetailStorageLinks.watch(level, source.getBlockPos());
         }
         return true;
     }

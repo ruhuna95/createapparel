@@ -3,7 +3,7 @@ package com.rexhub.createapparel.fashion.mixin;
 import com.rexhub.createapparel.fashion.RetailInspection;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,8 +24,8 @@ public abstract class RetailItemHandlerMixin {
     private void createapparel$extracted(int slot, int amount, boolean simulate, CallbackInfoReturnable<ItemStack> callback) {
         if (!simulate && !callback.getReturnValue().isEmpty()) RetailInspection.handlerChanged((ItemStackHandler) (Object) this);
     }
-    @Inject(method = "deserializeNBT(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"))
-    private void createapparel$loaded(CompoundTag tag, CallbackInfo callback) {
+    @Inject(method = "deserializeNBT(Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"))
+    private void createapparel$loaded(net.minecraft.core.HolderLookup.Provider registries, CompoundTag tag, CallbackInfo callback) {
         RetailInspection.handlerChanged((ItemStackHandler) (Object) this);
     }
 }

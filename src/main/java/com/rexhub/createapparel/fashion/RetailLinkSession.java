@@ -29,7 +29,7 @@ public final class RetailLinkSession {
         var session = SESSIONS.get(player);
         if (session == null || player.getInventory().selected != session.slot()
                 || !player.getItemInHand(session.hand()).is(ModItems.SMART_PHONE.get())
-                || !ItemStack.isSameItemSameTags(player.getItemInHand(session.hand()), session.phone())) {
+                || !ItemStack.isSameItemSameComponents(player.getItemInHand(session.hand()), session.phone())) {
             clear(player);
             return null;
         }

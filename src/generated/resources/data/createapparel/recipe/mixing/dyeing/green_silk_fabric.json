@@ -1,0 +1,122 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    [
+      {
+        "item": "createapparel:silk_fabric"
+      },
+      {
+        "item": "createapparel:white_silk_fabric"
+      },
+      {
+        "item": "createapparel:orange_silk_fabric"
+      },
+      {
+        "item": "createapparel:magenta_silk_fabric"
+      },
+      {
+        "item": "createapparel:light_blue_silk_fabric"
+      },
+      {
+        "item": "createapparel:yellow_silk_fabric"
+      },
+      {
+        "item": "createapparel:lime_silk_fabric"
+      },
+      {
+        "item": "createapparel:pink_silk_fabric"
+      },
+      {
+        "item": "createapparel:gray_silk_fabric"
+      },
+      {
+        "item": "createapparel:light_gray_silk_fabric"
+      },
+      {
+        "item": "createapparel:cyan_silk_fabric"
+      },
+      {
+        "item": "createapparel:purple_silk_fabric"
+      },
+      {
+        "item": "createapparel:blue_silk_fabric"
+      },
+      {
+        "item": "createapparel:brown_silk_fabric"
+      },
+      {
+        "item": "createapparel:green_silk_fabric"
+      },
+      {
+        "item": "createapparel:red_silk_fabric"
+      },
+      {
+        "item": "createapparel:black_silk_fabric"
+      },
+      {
+        "item": "createapparel:cream_silk_fabric"
+      },
+      {
+        "item": "createapparel:beige_silk_fabric"
+      },
+      {
+        "item": "createapparel:greige_silk_fabric"
+      },
+      {
+        "item": "createapparel:tan_silk_fabric"
+      },
+      {
+        "item": "createapparel:navy_silk_fabric"
+      },
+      {
+        "item": "createapparel:cerulean_silk_fabric"
+      },
+      {
+        "item": "createapparel:sky_silk_fabric"
+      },
+      {
+        "item": "createapparel:olive_silk_fabric"
+      },
+      {
+        "item": "createapparel:khaki_silk_fabric"
+      },
+      {
+        "item": "createapparel:forest_silk_fabric"
+      },
+      {
+        "item": "createapparel:mint_silk_fabric"
+      },
+      {
+        "item": "createapparel:burgundy_silk_fabric"
+      },
+      {
+        "item": "createapparel:coral_silk_fabric"
+      },
+      {
+        "item": "createapparel:rose_silk_fabric"
+      },
+      {
+        "item": "createapparel:mustard_silk_fabric"
+      },
+      {
+        "item": "createapparel:lavender_silk_fabric"
+      },
+      {
+        "item": "createapparel:plum_silk_fabric"
+      }
+    ],
+    {
+      "item": "minecraft:green_dye"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "results": [
+    {
+      "id": "createapparel:green_silk_fabric"
+    }
+  ]
+}

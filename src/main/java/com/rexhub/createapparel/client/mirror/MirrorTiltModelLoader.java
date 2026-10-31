@@ -6,8 +6,8 @@ import net.minecraft.client.renderer.block.model.BlockElement;
 import net.minecraft.client.renderer.block.model.BlockElementRotation;
 import net.minecraft.core.Direction;
 import net.minecraft.util.GsonHelper;
-import net.minecraftforge.client.model.ElementsModel;
-import net.minecraftforge.client.model.geometry.IGeometryLoader;
+import net.neoforged.neoforge.client.model.ElementsModel;
+import net.neoforged.neoforge.client.model.geometry.IGeometryLoader;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;

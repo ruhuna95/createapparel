@@ -41,7 +41,7 @@ public final class RouteEdgePicking {
         if (nativeHit.getType() == HitResult.Type.BLOCK
                 && player.level().getBlockState(nativeHit.getBlockPos()).getBlock() instanceof CitizenRouteMarkerBlock) return null;
         var eye = player.getEyePosition();
-        var end = nativeHit.getType() == HitResult.Type.MISS ? eye.add(player.getLookAngle().scale(player.getBlockReach())) : nativeHit.getLocation();
+        var end = nativeHit.getType() == HitResult.Type.MISS ? eye.add(player.getLookAngle().scale(player.blockInteractionRange())) : nativeHit.getLocation();
         Candidate selected = null;
         double nearest = Double.POSITIVE_INFINITY;
         for (var edge : candidates) {

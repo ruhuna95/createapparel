@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:spinning",
+  "ingredients": [
+    {
+      "tag": "createapparel:fibers/plant/hemp"
+    }
+  ],
+  "processing_time": 400,
+  "results": [
+    {
+      "id": "createapparel:hemp_thread"
+    }
+  ]
+}

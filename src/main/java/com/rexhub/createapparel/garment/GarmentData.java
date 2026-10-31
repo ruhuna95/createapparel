@@ -49,7 +49,7 @@ public record GarmentData(
     }
 
     public static GarmentData fromStackStrict(ItemStack stack, GarmentDefinition definition) {
-        CompoundTag root = stack.getTag();
+        CompoundTag root = com.rexhub.createapparel.item.ItemData.read(stack);
         if (root == null || !root.contains(TAG_NAME)) {
             return defaultFor(definition);
         }
@@ -76,9 +76,10 @@ public record GarmentData(
         tag.putString("primary_color", primaryColor.getSerializedName());
         secondaryColor.ifPresent(color -> tag.putString("secondary_color", color.getSerializedName()));
         accentColor.ifPresent(color -> tag.putString("accent_color", color.getSerializedName()));
-        CompoundTag root = stack.getOrCreateTag();
+        CompoundTag root = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack);
         root.remove(MetalAccessoryData.TAG_NAME);
         root.put(TAG_NAME, tag);
+        com.rexhub.createapparel.item.ItemData.write(stack, root);
     }
 
     @Override

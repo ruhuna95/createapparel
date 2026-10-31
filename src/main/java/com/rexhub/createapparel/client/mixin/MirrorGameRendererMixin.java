@@ -16,13 +16,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(GameRenderer.class)
 public abstract class MirrorGameRendererMixin {
-    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;)V"))
-    private void createapparel$renderMirrors(LevelRenderer renderer, PoseStack view, float partialTick, long finishTime,
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"))
+    private void createapparel$renderMirrors(LevelRenderer renderer, net.minecraft.client.DeltaTracker delta,
                                             boolean outline, Camera camera, GameRenderer gameRenderer, LightTexture light,
-                                            Matrix4f projection, Operation<Void> original) {
+                                            Matrix4f viewMatrix, Matrix4f projection, Operation<Void> original) {
+        var view = new PoseStack();
+        view.mulPose(viewMatrix);
+        float partialTick = delta.getGameTimeDeltaPartialTick(false);
+        long finishTime = net.minecraft.Util.getNanos();
         var mirrors = MirrorRenderManager.INSTANCE;
         mirrors.beginFrame(view, camera);
-        original.call(renderer, view, partialTick, finishTime, outline, camera, gameRenderer, light, projection);
+        original.call(renderer, delta, outline, camera, gameRenderer, light, viewMatrix, projection);
         mirrors.finishFrame(renderer, view, partialTick, finishTime, camera, gameRenderer, light, projection);
     }
 

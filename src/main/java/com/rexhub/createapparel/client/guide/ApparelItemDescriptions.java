@@ -59,7 +59,7 @@ public final class ApparelItemDescriptions {
     }
 
     static void appendGaugeState(java.util.List<Component> tooltip, net.minecraft.world.item.ItemStack stack) {
-        var tag = stack.getTag();
+        var tag = com.rexhub.createapparel.item.ItemData.read(stack);
         boolean recorded = tag != null && tag.contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG);
         tooltip.add(Component.translatable("screen.createapparel.gauge." + (recorded ? "district"
                 : tag != null && tag.getBoolean("GaugeOutflow") ? "outflow" : "source")));

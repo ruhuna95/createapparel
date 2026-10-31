@@ -22,7 +22,7 @@ class CitizenOptimizationTest {
         data.releaseCenter(id, 8); assertNotNull(data.centerClaim(id));
         data.verifyCenter(id, "minecraft:overworld", 0, Long.MAX_VALUE - 1);
         assertEquals(GaugeCenterReservation.State.DIMENSION_MISMATCH, data.centerClaim(id).state());
-        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(data.centerClaim(id), restored.centerClaim(id)); assertFalse(restored.centerAvailable(center, null));
         assertTrue(restored.releaseOrphanCenter(id)); assertTrue(restored.centerAvailable(center, null));
     }
@@ -92,7 +92,7 @@ class CitizenOptimizationTest {
     @Test void reservationMetadataPersistsWithoutExpiringOfflineStorageAndConflictsNeedExplicitRelease() {
         var data = new CitizenPopulationSavedData(); var center = new BlockPos(1, 64, 1);
         var id = data.reserveCenter(center, null, 2, "minecraft:overworld", 50); data.verifyCenter(id, "minecraft:overworld", 1, 1000000);
-        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag())); var claim = restored.centerClaim(id);
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); var claim = restored.centerClaim(id);
         assertEquals(50, claim.createdAt()); assertEquals(1000000, claim.lastVerifiedAt()); assertEquals(2, claim.reservedItemCount());
         assertEquals("minecraft:overworld", claim.dimension()); assertFalse(restored.centerAvailable(center, null));
         restored.verifyCenter(id, "minecraft:overworld", 3, 1000001); restored.releaseCenter(id, 3);
@@ -131,7 +131,7 @@ class CitizenOptimizationTest {
         var data = new CitizenPopulationSavedData(); var original = district(0); data.put(original); data.moving(original.id(), true);
         var owner = UUID.randomUUID(); assertTrue(data.bindMoving(original.id(), owner)); assertFalse(data.bindMoving(original.id(), UUID.randomUUID()));
         var replacement = CitizenGauge.create(original.pos(), null); data.put(replacement);
-        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        var restored = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertTrue(restored.ownedByContraption(original.id(), owner)); assertEquals(replacement.id(), restored.at(original.pos()).id());
         var moved = original.relocate(original.pos().east(8), 0); restored.put(moved); restored.moving(original.id(), false);
         assertEquals(moved.id(), restored.at(moved.pos()).id()); assertEquals(replacement.id(), restored.at(original.pos()).id());
@@ -144,15 +144,15 @@ class CitizenOptimizationTest {
         assertTrue(data.bindMoving(first.id(), owner)); assertTrue(data.bindMoving(second.id(), owner)); assertTrue(data.bindMoving(third.id(), other));
         assertFalse(data.bindMoving(first.id(), other)); data.movingLocation(owner, 1234L); data.movingLocation(other, 5678L);
         data.movingLocation(UUID.randomUUID(), 9999L);
-        var saved = data.save(new CompoundTag()); assertEquals(2, saved.getList("MovingOwners", 10).size());
+        var saved = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); assertEquals(2, saved.getList("MovingOwners", 10).size());
         var restored = CitizenPopulationSavedData.load(saved);
         assertEquals(Set.of(first.id(), second.id()), new HashSet<>(restored.ownedMovingGauges(owner)));
         assertEquals(1234L, restored.movingChunk(first.id())); assertEquals(1234L, restored.movingChunk(second.id())); assertEquals(5678L, restored.movingChunk(third.id()));
         assertTrue(restored.bindMoving(first.id(), owner)); restored.movingLocation(owner, 42L); assertEquals(42L, restored.movingChunk(second.id()));
         restored.moving(first.id(), false); assertNull(restored.movingOwner(first.id())); assertNull(restored.movingChunk(first.id()));
         assertEquals(List.of(second.id()), restored.ownedMovingGauges(owner)); restored.remove(second.id());
-        assertTrue(restored.ownedMovingGauges(owner).isEmpty()); assertEquals(1, restored.save(new CompoundTag()).getList("MovingOwners", 10).size());
-        var legacy = data.save(new CompoundTag()); legacy.remove("MovingOwners"); legacy.putInt("SchemaVersion", 6);
+        assertTrue(restored.ownedMovingGauges(owner).isEmpty()); assertEquals(1, restored.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getList("MovingOwners", 10).size());
+        var legacy = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); legacy.remove("MovingOwners"); legacy.putInt("SchemaVersion", 6);
         var migrated = CitizenPopulationSavedData.load(legacy); assertTrue(migrated.ownedByContraption(first.id(), owner));
         assertNull(migrated.movingChunk(first.id())); assertEquals(2, migrated.ownedMovingGauges(owner).size());
     }
@@ -160,12 +160,12 @@ class CitizenOptimizationTest {
         var data = new CitizenPopulationSavedData(); var home = district(0).settings(32, 1); var peer = district(80).settings(32, 0);
         data.put(home); data.put(peer); data.link(home.id(), peer.id()); var resident = UUID.randomUUID();
         data.register(resident, new CitizenPopulationState(home.districtId(), false, false, 0));
-        var tag = data.save(new CompoundTag()); tag.getList("Gauges", 10).remove(0);
+        var tag = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); tag.getList("Gauges", 10).remove(0);
         var restored = CitizenPopulationSavedData.load(tag);
         assertEquals(Set.of(home.id()), restored.linked(peer.id())); assertEquals(home.districtId(), restored.citizen(resident).districtId());
         assertEquals(1, restored.unresolvedGaugeReferences()); assertEquals(1, restored.unresolvedDistricts());
         restored.networks().request(peer.id()); restored.networks().tick(64); assertFalse(restored.networks().cached(peer.id()).saturated());
-        restored = CitizenPopulationSavedData.load(restored.save(new CompoundTag())); restored.put(home);
+        restored = CitizenPopulationSavedData.load(restored.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); restored.put(home);
         assertEquals(Set.of(peer.id()), restored.linked(home.id())); assertEquals(1, restored.population(home.districtId()));
         assertEquals(0, restored.unresolvedGaugeReferences()); assertEquals(0, restored.unresolvedDistricts());
         restored.networks().request(home.id()); restored.networks().tick(64); assertTrue(restored.networks().cached(home.id()).saturated());
@@ -173,7 +173,7 @@ class CitizenOptimizationTest {
     }
     @Test void conflictingDuplicateGaugeIdsCannotRelocateOrOverwriteTheFirstSavedRecord() {
         var data = new CitizenPopulationSavedData(); var home = district(0); data.put(home);
-        var tag = data.save(new CompoundTag()); tag.getList("Gauges", 10).add(home.relocate(home.pos().east(8), 1).save());
+        var tag = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); tag.getList("Gauges", 10).add(home.relocate(home.pos().east(8), 1).save());
         var restored = CitizenPopulationSavedData.load(tag);
         assertEquals(home, restored.gauge(home.id())); assertNotNull(restored.at(home.pos())); assertNull(restored.at(home.pos().east(8), 1));
     }

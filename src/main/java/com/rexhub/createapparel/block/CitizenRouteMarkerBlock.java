@@ -25,6 +25,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public final class CitizenRouteMarkerBlock extends BaseEntityBlock {
+    public static final com.mojang.serialization.MapCodec<CitizenRouteMarkerBlock> CODEC = com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance -> instance.group(
+                propertiesCodec(), com.mojang.serialization.Codec.STRING.xmap(RouteMarkerType::valueOf, RouteMarkerType::name)
+                        .fieldOf("type").forGetter(block -> block.type)
+        ).apply(instance, CitizenRouteMarkerBlock::new));
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends CitizenRouteMarkerBlock> codec() {
+        return CODEC;
+    }
+
     private static final VoxelShape GUIDE = box(4, 0, 4, 12, 4, 12);
     private final RouteMarkerType type;
 
@@ -47,7 +57,7 @@ public final class CitizenRouteMarkerBlock extends BaseEntityBlock {
     }
     @Override @SuppressWarnings("deprecation") public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) { return Shapes.empty(); }
     @Override @SuppressWarnings("deprecation") public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) { return supported(level, pos); }
-    @Override @SuppressWarnings("deprecation") public boolean isPathfindable(BlockState state, BlockGetter level, BlockPos pos, PathComputationType pathType) { return true; }
+    @Override protected boolean isPathfindable(BlockState state, PathComputationType pathType) { return true; }
 
     @Override
     @SuppressWarnings("deprecation")

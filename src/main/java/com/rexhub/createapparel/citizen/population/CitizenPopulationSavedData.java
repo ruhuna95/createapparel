@@ -323,7 +323,7 @@ public final class CitizenPopulationSavedData extends SavedData {
         var entries = residents.get(district); if (entries == null) return;
         entries.remove(citizen); if (entries.isEmpty()) residents.remove(district);
     }
-    @Override public CompoundTag save(CompoundTag tag) {
+    @Override public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         tag.putInt("SchemaVersion", 7);
         tag.put("Territory", territory.save());
         var pendingCenters = new ListTag();

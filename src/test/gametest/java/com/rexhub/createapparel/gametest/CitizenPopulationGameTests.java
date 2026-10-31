@@ -23,7 +23,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.*;
-import net.minecraftforge.gametest.*;
+import net.neoforged.neoforge.gametest.*;
 import java.util.*;
 
 @GameTestHolder(CreateApparel.MOD_ID)
@@ -125,10 +125,10 @@ public final class CitizenPopulationGameTests {
         var outflow = population.data().gauge(influx.id());
         var entity = (CitizenGaugeBlockEntity) helper.getLevel().getBlockEntity(influx.pos());
         helper.assertTrue(outflow.outflow() && entity.outflow(0), "Authoritative role updates wall icon state");
-        var restored = new CitizenGaugeBlockEntity(influx.pos(), entity.getBlockState()); restored.load(entity.saveWithFullMetadata());
-        helper.assertTrue(restored.outflow(0) && entity.panelItem(0).getOrCreateTag().getBoolean("GaugeOutflow"), "Block entity and recovered item preserve outflow");
-        helper.assertTrue(CitizenPopulationSavedData.load(population.data().save(new CompoundTag())).gauge(influx.id()).outflow(), "SavedData preserves role");
-        var client = new CitizenGaugeBlockEntity(influx.pos(), entity.getBlockState()); client.load(entity.getUpdateTag());
+        var restored = new CitizenGaugeBlockEntity(influx.pos(), entity.getBlockState()); restored.loadWithComponents(entity.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
+        helper.assertTrue(restored.outflow(0) && com.rexhub.createapparel.item.ItemData.readOrEmpty(entity.panelItem(0)).getBoolean("GaugeOutflow"), "Block entity and recovered item preserve outflow");
+        helper.assertTrue(CitizenPopulationSavedData.load(population.data().save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())).gauge(influx.id()).outflow(), "SavedData preserves role");
+        var client = new CitizenGaugeBlockEntity(influx.pos(), entity.getBlockState()); client.loadWithComponents(entity.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(client.outflow(0), "Client block entity update carries the role");
         var home = gauge(helper, 20, 8, false); population.flow(home.id(), CitizenGauge.Flow.OUTFLOW);
         helper.assertTrue(!population.data().gauge(home.id()).source(), "District identity cannot be replaced through flow action");
@@ -240,7 +240,7 @@ public final class CitizenPopulationGameTests {
             helper.assertTrue(entity.panelCount() == 4 && !entity.initialize(3, null), "Maximum four; occupied panel cannot be overwritten");
             var a = manager(helper).data().at(pos, 0); var b = manager(helper).data().at(pos, 3);
             helper.assertTrue(manager(helper).link(a.id(), b.id()), "Same wall block panels link independently");
-            var restored = new CitizenGaugeBlockEntity(pos, state); restored.load(entity.saveWithFullMetadata());
+            var restored = new CitizenGaugeBlockEntity(pos, state); restored.loadWithComponents(entity.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
             helper.assertTrue(restored.panelCount() == 4 && b.id().equals(restored.gaugeId(3)), "All panel identities survive BE reload");
             var drops = net.minecraft.world.level.block.Block.getDrops(state, level, pos, entity);
             helper.assertTrue(drops.size() == 4, "Whole-block loot returns all four panels");
@@ -343,7 +343,7 @@ public final class CitizenPopulationGameTests {
                 var other = gauge(helper, 14, 8, false); population.settings(other.id(), 4, 0);
                 helper.runAfterDelay(10, () -> {
                     helper.assertTrue(other.districtId().equals(routes.data().marker(ids.get(2)).districtId()), "Midpoint partition gives overlap block to the closer District");
-                    var saved = population.data().save(new CompoundTag());
+                    var saved = population.data().save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup());
                     helper.assertTrue(saved.getInt("SchemaVersion") == 7 && saved.getCompound("Territory").contains("Seeds"), "Territory policy and seeds are persisted for maps");
                     var restored = CitizenPopulationSavedData.load(saved);
                     helper.assertTrue(other.districtId().equals(restored.territory().districtAt(positions.get(2))), "Exact block ownership survives reload without terrain access");
@@ -390,7 +390,7 @@ public final class CitizenPopulationGameTests {
         helper.assertTrue(menu.info().getList("Destinations", net.minecraft.nbt.Tag.TAG_COMPOUND).isEmpty(), "Unlink immediately removes cached destination");
         population.link(a.id(), b.id()); population.remove(b.id()); menu.sendInfo(player);
         helper.assertTrue(menu.info().getList("Destinations", net.minecraft.nbt.Tag.TAG_COMPOUND).isEmpty(), "Deleting linked District removes cached destination");
-        var restored = CitizenRouteSavedData.load(routes.data().save(new CompoundTag()));
+        var restored = CitizenRouteSavedData.load(routes.data().save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         helper.assertTrue(a.districtId().equals(restored.marker(node.id()).districtId()) && b.districtId().equals(restored.marker(arrival.id()).districtId()), "All marker affiliations survive SavedData reload");
         helper.succeed();
     }
@@ -474,9 +474,9 @@ public final class CitizenPopulationGameTests {
         helper.succeed();
     }
     private static ServerPlayer player(GameTestHelper helper, Vec3 position) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "gauge-test"));
+        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "gauge-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
         player.setGameMode(GameType.SURVIVAL); player.setPos(position); player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.CITIZEN_GAUGE.get())); return player;
@@ -500,12 +500,12 @@ public final class CitizenPopulationGameTests {
         room(helper); var center = helper.absolutePos(new BlockPos(10, 0, 10)); var level = helper.getLevel();
         var stack = legacyRecordedGauge(helper, center, 3); var data = manager(helper).data();
         var tooltip = new ArrayList<net.minecraft.network.chat.Component>();
-        stack.getItem().appendHoverText(stack, level, tooltip, net.minecraft.world.item.TooltipFlag.NORMAL);
+        stack.getItem().appendHoverText(stack, net.minecraft.world.item.Item.TooltipContext.of(level), tooltip, net.minecraft.world.item.TooltipFlag.NORMAL);
         helper.assertTrue(tooltip.size() == 1 && tooltip.get(0).getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents centerLine
                 && centerLine.getKey().equals("message.createapparel.gauge.center") && center.toShortString().equals(centerLine.getArgs()[0]), "Recorded location remains visible without Shift or usage explanations");
         var first = new net.minecraft.world.entity.item.ItemEntity(level, center.getX() + .5, center.getY() + 1, center.getZ() + .5, stack.split(1));
         level.addFreshEntity(first); first.hurt(level.damageSources().lava(), 100);
-        helper.assertTrue(first.isRemoved() && !data.centerAvailable(center, null) && stack.getOrCreateTag().hasUUID("GaugeCenterReservation"), "Losing one split item preserves the other two items' reservation");
+        helper.assertTrue(first.isRemoved() && !data.centerAvailable(center, null) && com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).hasUUID("GaugeCenterReservation"), "Losing one split item preserves the other two items' reservation");
         CitizenGaugeItem.releaseDestroyedReservation(first);
         helper.assertTrue(!data.centerAvailable(center, null), "Repeated destruction notification does not subtract twice");
         var last = new net.minecraft.world.entity.item.ItemEntity(level, center.getX() + 2.5, center.getY() + 1, center.getZ() + .5, stack);
@@ -530,24 +530,24 @@ public final class CitizenPopulationGameTests {
     public static void cancelledExpirationPickupAndChunkUnloadDoNotReleaseAStoredGauge(GameTestHelper helper) {
         room(helper); var level = helper.getLevel(); var data = manager(helper).data();
         var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = recordedGauge(helper, center, 1);
-        var ticket = stack.getOrCreateTag().getUUID("GaugeCenterReservation");
+        var ticket = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getUUID("GaugeCenterReservation");
         var item = new net.minecraft.world.entity.item.ItemEntity(level, center.getX() + .5, center.getY() + 1, center.getZ() + .5, stack);
         level.addFreshEntity(item); item.lifespan = 1;
-        java.util.function.Consumer<net.minecraftforge.event.entity.item.ItemExpireEvent> cancellation = event -> {
-            if (event.getEntity() == item) { event.setCanceled(true); event.setExtraLife(100); }
+        java.util.function.Consumer<net.neoforged.neoforge.event.entity.item.ItemExpireEvent> cancellation = event -> {
+            if (event.getEntity() == item) { event.setExtraLife(100); }
         };
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.addListener(net.minecraftforge.eventbus.api.EventPriority.LOWEST, cancellation);
-        try { item.tick(); } finally { net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancellation); }
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, cancellation);
+        try { item.tick(); } finally { net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(cancellation); }
         helper.assertTrue(!item.isRemoved() && !data.centerAvailable(center, null), "Late cancellation of expiration preserves the item and reservation");
         item.remove(net.minecraft.world.entity.Entity.RemovalReason.UNLOADED_TO_CHUNK);
         helper.assertTrue(!data.centerAvailable(center, null), "Chunk unloading does not mean the item was destroyed");
         var reloaded = new net.minecraft.world.entity.item.ItemEntity(level, center.getX() + .5, center.getY() + 1, center.getZ() + .5, stack.copy());
         level.addFreshEntity(reloaded); reloaded.setNoPickUpDelay(); var player = player(helper, reloaded.position()); player.getInventory().clearContent();
         reloaded.playerTouch(player);
-        helper.assertTrue(reloaded.isRemoved() && !data.centerAvailable(center, null) && player.getInventory().getItem(0).getOrCreateTag().hasUUID("GaugeCenterReservation"), "Pickup transfers the item rather than releasing its reservation");
+        helper.assertTrue(reloaded.isRemoved() && !data.centerAvailable(center, null) && com.rexhub.createapparel.item.ItemData.readOrEmpty(player.getInventory().getItem(0)).hasUUID("GaugeCenterReservation"), "Pickup transfers the item rather than releasing its reservation");
         var chest = helper.absolutePos(new BlockPos(14, 1, 10)); level.setBlock(chest, Blocks.CHEST.defaultBlockState(), 3);
         ((net.minecraft.world.level.block.entity.ChestBlockEntity) level.getBlockEntity(chest)).setItem(0, player.getInventory().removeItemNoUpdate(0));
-        helper.assertTrue(!data.centerAvailable(center, null) && CitizenPopulationSavedData.load(data.save(new CompoundTag())).centerAvailable(center, ticket), "Container storage and reload preserve the reservation owner");
+        helper.assertTrue(!data.centerAvailable(center, null) && CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())).centerAvailable(center, ticket), "Container storage and reload preserve the reservation owner");
         data.releaseCenter(ticket); helper.succeed();
     }
     private static ItemStack recordedGauge(GameTestHelper helper, BlockPos center, int count) {
@@ -561,8 +561,9 @@ public final class CitizenPopulationGameTests {
         var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get(), count);
         var id = manager(helper).data().reserveCenter(center, null, count, helper.getLevel().dimension().location().toString(), helper.getLevel().getGameTime());
         helper.assertTrue(id != null, "Restores a legacy multi-item reservation fixture");
-        var tag = stack.getOrCreateTag(); tag.putLong("GaugeCenter", center.asLong());
+        var tag = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack); tag.putLong("GaugeCenter", center.asLong());
         tag.putString("GaugeDimension", helper.getLevel().dimension().location().toString()); tag.putUUID("GaugeCenterReservation", id);
+        com.rexhub.createapparel.item.ItemData.write(stack, tag);
         return stack;
     }
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
@@ -570,12 +571,12 @@ public final class CitizenPopulationGameTests {
         room(helper); var level = helper.getLevel(); var data = manager(helper).data();
         var center = helper.absolutePos(new BlockPos(10, 0, 10)); var stack = legacyRecordedGauge(helper, center, 3);
         var player = player(helper, Vec3.atCenterOf(center));
-        net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem(player, stack.split(1), InteractionHand.MAIN_HAND);
+        net.neoforged.neoforge.event.EventHooks.onPlayerDestroyItem(player, stack.split(1), InteractionHand.MAIN_HAND);
         helper.assertTrue(!data.centerAvailable(center, null), "Forge's common destruction event preserves surviving split items");
-        net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem(player, stack, null);
+        net.neoforged.neoforge.event.EventHooks.onPlayerDestroyItem(player, stack, null);
         helper.assertTrue(data.centerAvailable(center, null), "MODs emitting Forge's destruction event release the final reservation");
         var home = CitizenGauge.create(helper.absolutePos(new BlockPos(14, 1, 10)), center); data.put(home);
-        net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem(player, stack, InteractionHand.MAIN_HAND);
+        net.neoforged.neoforge.event.EventHooks.onPlayerDestroyItem(player, stack, InteractionHand.MAIN_HAND);
         helper.assertTrue(data.centerUsed(center) && data.gauge(home.id()) != null, "Destruction notification never deletes an active district");
         data.remove(home.id()); helper.succeed();
     }
@@ -584,7 +585,7 @@ public final class CitizenPopulationGameTests {
         room(helper); var level = helper.getLevel(); var data = manager(helper).data();
         for (int width : new int[]{2, 3}) {
             var center = helper.absolutePos(new BlockPos(10 + width, 0, 10)); var stack = legacyRecordedGauge(helper, center, 3);
-            stack.setHoverName(net.minecraft.network.chat.Component.literal("Custom Gauge")); stack.getOrCreateTag().putInt("OtherModData", 42);
+            stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Custom Gauge")); com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putInt("OtherModData", 42));
             var player = player(helper, Vec3.atCenterOf(center)); player.getInventory().clearContent();
             net.minecraft.world.inventory.AbstractContainerMenu menu;
             if (width == 2) menu = player.inventoryMenu;
@@ -595,15 +596,15 @@ public final class CitizenPopulationGameTests {
             player.containerMenu = menu;
             var grid = (net.minecraft.world.inventory.CraftingContainer) menu.getSlot(1).container;
             grid.setItem(grid.getContainerSize() - 1, stack);
-            var recipe = level.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, grid, level).orElseThrow();
-            helper.assertTrue(recipe instanceof com.rexhub.createapparel.recipe.GaugeResetRecipe
+            var recipe = level.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, grid.asCraftInput(), level).orElseThrow();
+            helper.assertTrue(recipe.value() instanceof com.rexhub.createapparel.recipe.GaugeResetRecipe
                     && com.simibubi.create.AllRecipeTypes.shouldIgnoreInAutomation(recipe), "Reset uses the registered manual-only recipe in either grid");
             for (int preview = 0; preview < 5; preview++) {
-                helper.assertTrue(recipe.matches(grid, level), "Preview continues matching without consuming input");
-                var output = recipe.assemble(grid, level.registryAccess()); recipe.getRemainingItems(grid);
-                helper.assertTrue(output.getCount() == 1 && output.getOrCreateTag().getInt("OtherModData") == 42
+                helper.assertTrue(recipe.value().matches(grid.asCraftInput(), level), "Preview continues matching without consuming input");
+                var output = recipe.value().assemble(grid.asCraftInput(), level.registryAccess()); recipe.value().getRemainingItems(grid.asCraftInput());
+                helper.assertTrue(output.getCount() == 1 && com.rexhub.createapparel.item.ItemData.readOrEmpty(output).getInt("OtherModData") == 42
                         && output.getHoverName().getString().equals("Custom Gauge") && !output.hasFoil()
-                        && !output.getOrCreateTag().contains("GaugeCenterReservation") && !output.getOrCreateTag().contains("GaugeDimension"), "Preview strips only gauge recording and retains unrelated metadata");
+                        && !com.rexhub.createapparel.item.ItemData.readOrEmpty(output).contains("GaugeCenterReservation") && !com.rexhub.createapparel.item.ItemData.readOrEmpty(output).contains("GaugeDimension"), "Preview strips only gauge recording and retains unrelated metadata");
             }
             helper.assertTrue(!data.centerAvailable(center, null) && stack.getCount() == 3 && stack.hasFoil(), "Preview never releases a reservation or mutates input");
             var resultSlot = menu.getSlot(0); var first = resultSlot.remove(1); resultSlot.onTake(player, first);
@@ -629,8 +630,8 @@ public final class CitizenPopulationGameTests {
         grid.setItem(0, stale);
         var result = menu.getSlot(0).remove(1); menu.getSlot(0).onTake(player, result);
         helper.assertTrue(data.gauge(home.id()) != null && data.centerUsed(center), "Resetting a stale item never deletes a wall district");
-        var flow = new ItemStack(ModItems.CITIZEN_GAUGE.get()); flow.getOrCreateTag().putBoolean("GaugeOutflow", true); grid.setItem(0, flow);
-        helper.assertTrue(!menu.getSlot(0).getItem().isEmpty() && !menu.getSlot(0).getItem().hasTag(), "Outflow also resets to the blank default influx gauge");
+        var flow = new ItemStack(ModItems.CITIZEN_GAUGE.get()); com.rexhub.createapparel.item.ItemData.update(flow, tagData -> tagData.putBoolean("GaugeOutflow", true)); grid.setItem(0, flow);
+        helper.assertTrue(!menu.getSlot(0).getItem().isEmpty() && !com.rexhub.createapparel.item.ItemData.hasData(menu.getSlot(0).getItem()), "Outflow also resets to the blank default influx gauge");
         grid.setItem(1, new ItemStack(net.minecraft.world.item.Items.STICK));
         helper.assertTrue(menu.getSlot(0).getItem().isEmpty(), "Extra ingredients prevent reset");
         grid.clearContent(); grid.setItem(0, new ItemStack(ModItems.CITIZEN_GAUGE.get()));
@@ -645,22 +646,22 @@ public final class CitizenPopulationGameTests {
         var ground = new BlockHitResult(Vec3.atCenterOf(center).add(0, .5, 0), Direction.UP, center, false);
         var recorded = owner.getMainHandItem();
         helper.assertTrue(recorded.useOn(new UseOnContext(owner, InteractionHand.MAIN_HAND, ground)).consumesAction(), "First blank item records and reserves the ground");
-        var ticket = recorded.getOrCreateTag().getUUID("GaugeCenterReservation");
+        var ticket = com.rexhub.createapparel.item.ItemData.readOrEmpty(recorded).getUUID("GaugeCenterReservation");
         helper.assertTrue(!data.centerUsed(center) && !data.centerAvailable(center, null), "Reservation exists before any wall district exists");
         var second = player(helper, owner.position()); second.setShiftKeyDown(true);
-        var blank = new ItemStack(ModItems.CITIZEN_GAUGE.get(), 2); blank.getOrCreateTag().putBoolean("GaugeOutflow", true);
+        var blank = new ItemStack(ModItems.CITIZEN_GAUGE.get(), 2); com.rexhub.createapparel.item.ItemData.update(blank, tagData -> tagData.putBoolean("GaugeOutflow", true));
         second.setItemInHand(InteractionHand.MAIN_HAND, blank); var before = blank.copy();
         helper.assertTrue(blank.useOn(new UseOnContext(second, InteractionHand.MAIN_HAND, ground)) == net.minecraft.world.InteractionResult.FAIL
                 && ItemStack.matches(before, blank), "A different blank item cannot record the reserved center; NBT and count remain unchanged");
-        var reloaded = CitizenPopulationSavedData.load(data.save(new CompoundTag()));
+        var reloaded = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         helper.assertTrue(!reloaded.centerAvailable(center, null) && reloaded.centerAvailable(center, ticket), "Reservation owner survives SavedData reload");
         owner.setShiftKeyDown(false);
         helper.assertTrue(!recorded.useOn(new UseOnContext(owner, InteractionHand.MAIN_HAND, ground)).consumesAction()
                 && data.centerAvailable(center, ticket) && !data.centerAvailable(center, null), "Failed floor placement retains the reservation");
         var wall = helper.absolutePos(new BlockPos(20, 1, 10)); level.setBlock(wall, Blocks.STONE.defaultBlockState(), 3);
         var placement = new BlockHitResult(Vec3.atCenterOf(wall).add(0, 0, -.5), Direction.NORTH, wall, false);
-        blank.getOrCreateTag().putLong("GaugeCenter", center.asLong());
-        blank.getOrCreateTag().putString("GaugeDimension", level.dimension().location().toString());
+        com.rexhub.createapparel.item.ItemData.update(blank, tagData -> tagData.putLong("GaugeCenter", center.asLong()));
+        com.rexhub.createapparel.item.ItemData.update(blank, tagData -> tagData.putString("GaugeDimension", level.dimension().location().toString()));
         second.setShiftKeyDown(false); before = blank.copy();
         helper.assertTrue(blank.useOn(new UseOnContext(second, InteractionHand.MAIN_HAND, placement)) == net.minecraft.world.InteractionResult.FAIL
                 && ItemStack.matches(before, blank) && level.getBlockState(wall.north()).isAir(), "Legacy recorded item cannot steal another item's reservation");
@@ -677,14 +678,14 @@ public final class CitizenPopulationGameTests {
         var player = player(helper, Vec3.atCenterOf(a).add(0, 1, 2)); player.setShiftKeyDown(true); var stack = player.getMainHandItem();
         var first = new UseOnContext(player, InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(a).add(0, .5, 0), Direction.UP, a, false));
         var next = new UseOnContext(player, InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(b).add(0, .5, 0), Direction.UP, b, false));
-        helper.assertTrue(stack.useOn(first).consumesAction(), "First reservation succeeds"); var ticket = stack.getOrCreateTag().getUUID("GaugeCenterReservation");
-        helper.assertTrue(stack.useOn(first).consumesAction() && ticket.equals(stack.getOrCreateTag().getUUID("GaugeCenterReservation")), "Owner can record the same center idempotently");
+        helper.assertTrue(stack.useOn(first).consumesAction(), "First reservation succeeds"); var ticket = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getUUID("GaugeCenterReservation");
+        helper.assertTrue(stack.useOn(first).consumesAction() && ticket.equals(com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getUUID("GaugeCenterReservation")), "Owner can record the same center idempotently");
         var other = data.reserveCenter(b, null); var before = stack.copy();
         helper.assertTrue(stack.useOn(next) == net.minecraft.world.InteractionResult.FAIL && ItemStack.matches(before, stack)
                 && data.centerAvailable(a, ticket) && !data.centerAvailable(a, null), "Failed rerecording preserves the old claim and item");
         data.releaseCenter(other);
         helper.assertTrue(stack.useOn(next).consumesAction() && data.centerAvailable(a, null) && !data.centerAvailable(b, null), "Successful rerecording releases only the previous center");
-        data.releaseCenter(stack.getOrCreateTag().getUUID("GaugeCenterReservation")); helper.succeed();
+        data.releaseCenter(com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getUUID("GaugeCenterReservation")); helper.succeed();
     }
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
     public static void usedDistrictCenterRejectsRecordingAndStaleItemPlacementWithoutChangingItem(GameTestHelper helper) {
@@ -692,7 +693,7 @@ public final class CitizenPopulationGameTests {
         var center = home.center(); level.setBlock(center, Blocks.STONE.defaultBlockState(), 3);
         var player = player(helper, Vec3.atCenterOf(center).add(0, 1, 2)); player.setShiftKeyDown(true);
         var stack = new ItemStack(ModItems.CITIZEN_GAUGE.get(), 2); player.setItemInHand(InteractionHand.MAIN_HAND, stack);
-        stack.getOrCreateTag().putBoolean("GaugeOutflow", true);
+        com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putBoolean("GaugeOutflow", true));
         var before = stack.copy();
         var ground = new UseOnContext(player, InteractionHand.MAIN_HAND,
                 new BlockHitResult(Vec3.atCenterOf(center).add(0, .5, 0), Direction.UP, center, false));
@@ -703,7 +704,7 @@ public final class CitizenPopulationGameTests {
         helper.assertTrue(stack.useOn(nearby).consumesAction() && free.equals(CitizenGaugeItem.center(stack, level)), "Other centers remain recordable even inside the existing district range");
         before = stack.copy();
         helper.assertTrue(stack.useOn(ground) == net.minecraft.world.InteractionResult.FAIL && ItemStack.matches(before, stack), "Rejected rerecording preserves the old center");
-        stack.getOrCreateTag().putLong("GaugeCenter", center.asLong()); before = stack.copy(); player.setShiftKeyDown(false);
+        com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putLong("GaugeCenter", center.asLong())); before = stack.copy(); player.setShiftKeyDown(false);
         var wall = helper.absolutePos(new BlockPos(22, 1, 8)); level.setBlock(wall, Blocks.STONE.defaultBlockState(), 3);
         player.setPos(Vec3.atCenterOf(wall).add(0, 0, -2));
         var placement = new UseOnContext(player, InteractionHand.MAIN_HAND,
@@ -715,7 +716,7 @@ public final class CitizenPopulationGameTests {
                 && !level.getChunkSource().hasChunk(far.getX() >> 4, far.getZ() >> 4), "Unloaded district still reserves its center without loading its chunk");
         population.remove(home.id());
         helper.assertTrue(stack.useOn(ground).consumesAction() && center.equals(CitizenGaugeItem.center(stack, level)), "Removing the district releases its center for reuse");
-        population.data().releaseCenter(stack.getOrCreateTag().getUUID("GaugeCenterReservation")); helper.succeed();
+        population.data().releaseCenter(com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getUUID("GaugeCenterReservation")); helper.succeed();
     }
     @GameTest(template = "citizen_behavior", batch = "citizen_population")
     public static void centerRecordingPlacementAndBreakingKeepCoordinatesButNotIdentity(GameTestHelper helper) {
@@ -760,7 +761,7 @@ public final class CitizenPopulationGameTests {
         room(helper); var a = gauge(helper, 10, 10, false); var citizen = citizen(helper, a); var manager = manager(helper);
         manager.leave(citizen, false);
         helper.assertTrue(manager.data().population(a.districtId()) == 1, "Unload retains logical population");
-        var restored = CitizenPopulationSavedData.load(manager.data().save(new CompoundTag()));
+        var restored = CitizenPopulationSavedData.load(manager.data().save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         helper.assertTrue(restored.population(a.districtId()) == 1, "World reload retains unloaded population");
         citizen.citizenState().setPopulation(CitizenPopulationState.DEFAULT); manager.join(citizen); manager.join(citizen);
         helper.assertTrue(manager.data().population(a.districtId()) == 1 && a.districtId().equals(citizen.citizenState().population().districtId()), "Rejoin reconciles registry without duplicates");
@@ -859,15 +860,15 @@ public final class CitizenPopulationGameTests {
         room(helper); var gauge = gauge(helper, 10, 10, false); var population = manager(helper);
         population.settings(gauge.id(), 3, 0, "Central District");
         var entity = (CitizenGaugeBlockEntity) helper.getLevel().getBlockEntity(gauge.pos()); entity.initialize(1, null);
-        var received = new CitizenGaugeBlockEntity(gauge.pos(), entity.getBlockState()); received.load(entity.getUpdateTag());
+        var received = new CitizenGaugeBlockEntity(gauge.pos(), entity.getBlockState()); received.loadWithComponents(entity.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(received.districtStatus(0) != null && received.districtStatus(0).name().equals("Central District")
                 && received.districtStatus(0).satisfied(), "Zero target and zero population are green");
         helper.assertTrue(received.districtStatus(0).districtId().equals(gauge.districtId()), "District icon UUID is synchronized with its own panel");
         helper.assertTrue(received.hasPanel(1) && received.districtStatus(1) == null, "Source sibling has no District lamp or hover status");
         var resident = UUID.randomUUID(); population.data().register(resident, new CitizenPopulationState(gauge.districtId(), false, false, 0));
-        received.load(entity.getUpdateTag());
+        received.loadWithComponents(entity.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(received.districtStatus(0).population() == 1 && !received.districtStatus(0).satisfied(), "Excess population is synchronized red");
-        population.settings(gauge.id(), 3, 2); received.load(entity.getUpdateTag());
+        population.settings(gauge.id(), 3, 2); received.loadWithComponents(entity.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(received.districtStatus(0).target() == 2 && !received.districtStatus(0).satisfied(), "Deficit population is red and rename is retained");
         helper.assertTrue(received.districtStatus(0).name().equals("Central District"), "Settings preserve District name");
         helper.assertTrue(received.districtStatus(0).districtId().equals(gauge.districtId()), "Population and settings do not change the District icon identity");
@@ -941,7 +942,7 @@ public final class CitizenPopulationGameTests {
         });
     }
 
-    @GameTest(template = "citizen_behavior", batch = "citizen_population", timeoutTicks = 400)
+    @GameTest(template = "citizen_behavior", batch = "citizen_population_limit", timeoutTicks = 400)
     public static void sourcePausesAtTheLoadedLimitAndResumesWithoutDeletingCitizens(GameTestHelper helper) {
         room(helper); var source = gauge(helper, 5, 5, true); var target = gauge(helper, 20, 10, false); var population = manager(helper);
         var fillers = new ArrayList<Citizen>();

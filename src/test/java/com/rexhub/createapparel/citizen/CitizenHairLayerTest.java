@@ -99,11 +99,11 @@ class CitizenHairLayerTest {
         var uv = new ArrayList<float[]>();
         var vertices = (VertexConsumer) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{VertexConsumer.class},
                 (proxy, method, arguments) -> {
-                    if (method.getName().equals("vertex") && arguments.length == 4) {
+                    if (method.getName().equals("addVertex") && arguments.length == 4) {
                         points.add(new float[]{(float) arguments[1], (float) arguments[2], (float) arguments[3]});
-                    } else if (method.getName().equals("normal") && arguments.length == 4) {
+                    } else if (method.getName().equals("setNormal") && arguments.length == 4) {
                         normals.add(new float[]{(float) arguments[1], (float) arguments[2], (float) arguments[3]});
-                    } else if (method.getName().equals("uv")) {
+                    } else if (method.getName().equals("setUv")) {
                         uv.add(new float[]{(float) arguments[0], (float) arguments[1]});
                     }
                     return method.getReturnType() == void.class ? null : proxy;
@@ -206,11 +206,11 @@ class CitizenHairLayerTest {
         var uvs = new ArrayList<float[]>();
         var vertices = (VertexConsumer) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{VertexConsumer.class},
                 (proxy, method, arguments) -> {
-                    if (method.getName().equals("vertex") && arguments.length == 4) {
+                    if (method.getName().equals("addVertex") && arguments.length == 4) {
                         points.add(new Vector3f((float) arguments[1], (float) arguments[2], (float) arguments[3]).mul(16));
-                    } else if (method.getName().equals("normal") && arguments.length == 4) {
+                    } else if (method.getName().equals("setNormal") && arguments.length == 4) {
                         normals.add(new Vector3f((float) arguments[1], (float) arguments[2], (float) arguments[3]));
-                    } else if (method.getName().equals("uv")) {
+                    } else if (method.getName().equals("setUv")) {
                         uvs.add(new float[]{(float) arguments[0], (float) arguments[1]});
                     }
                     return method.getReturnType() == void.class ? null : proxy;

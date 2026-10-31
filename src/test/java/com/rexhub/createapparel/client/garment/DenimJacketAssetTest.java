@@ -201,7 +201,7 @@ class DenimJacketAssetTest {
 
     @Test
     void recipeUsesSixFabricAndTwoThreadsWithExplicitSynthetic() throws IOException {
-        var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/denim_jacket.json"));
+        var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/denim_jacket.json"));
         assertEquals(6, recipe.getAsJsonObject("fabric").get("count").getAsInt());
         assertEquals(2, recipe.getAsJsonObject("thread").get("count").getAsInt());
         assertEquals(List.of("createapparel:fabrics/cotton", "createapparel:fabrics/hemp", "createapparel:fabrics/synthetic"),

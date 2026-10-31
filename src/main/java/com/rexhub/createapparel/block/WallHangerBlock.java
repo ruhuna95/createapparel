@@ -27,6 +27,22 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public final class WallHangerBlock extends BaseEntityBlock {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
+    public static final com.mojang.serialization.MapCodec<WallHangerBlock> CODEC = com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance -> instance.group(
+                propertiesCodec(), com.mojang.serialization.Codec.STRING.xmap(HangerType::valueOf, HangerType::name)
+                        .fieldOf("hangerType").forGetter(block -> block.hangerType)
+        ).apply(instance, WallHangerBlock::new));
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends WallHangerBlock> codec() {
+        return CODEC;
+    }
+
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     private final java.util.Map<Direction, VoxelShape> shapes = new java.util.EnumMap<>(Direction.class);
     private final HangerType hangerType;
@@ -48,15 +64,13 @@ public final class WallHangerBlock extends BaseEntityBlock {
     public HangerType hangerType() { return hangerType; }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, java.util.List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, level, tooltip, flag);
+    public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, java.util.List<Component> tooltip, TooltipFlag flag) {
+        var level = context.level();
+        super.appendHoverText(stack, context, tooltip, flag);
         tooltip.add(Component.translatable(hangerType.tooltipKey()).withStyle(ChatFormatting.GRAY));
     }
 
-    @Override
-    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientBlockExtensions> consumer) {
-        consumer.accept(new com.rexhub.createapparel.client.particle.DisplayFurnitureClientExtensions());
-    }
+
 
     @Nullable
     @Override
@@ -83,9 +97,9 @@ public final class WallHangerBlock extends BaseEntityBlock {
                 ? Blocks.AIR.defaultBlockState() : super.updateShape(state, direction, neighbor, level, pos, neighborPos);
     }
 
-    @Override
+
     @SuppressWarnings("deprecation")
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+    private InteractionResult interact(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
         if (player.isShiftKeyDown()) return InteractionResult.PASS;
         if (!(level.getBlockEntity(pos) instanceof WallHangerBlockEntity hanger)) return InteractionResult.PASS;

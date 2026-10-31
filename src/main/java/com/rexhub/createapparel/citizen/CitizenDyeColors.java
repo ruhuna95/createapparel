@@ -21,7 +21,6 @@ public final class CitizenDyeColors {
     }
 
     public static int rgb(DyeColor color) {
-        float[] channels = color.getTextureDiffuseColors();
-        return Math.round(channels[0] * 255) << 16 | Math.round(channels[1] * 255) << 8 | Math.round(channels[2] * 255);
+        return color.getTextureDiffuseColor() & 0xFFFFFF;
     }
 }

@@ -1,0 +1,16 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {
+      "tag": "createapparel:silver_accessory_nuggets"
+    },
+    {
+      "tag": "createapparel:silver_accessory_nuggets"
+    }
+  ],
+  "results": [
+    {
+      "id": "createapparel:silver_bracelet_base"
+    }
+  ]
+}

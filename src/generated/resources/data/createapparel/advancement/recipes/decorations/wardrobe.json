@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_clothing_rack": {
+      "conditions": {
+        "items": [
+          {
+            "items": "createapparel:clothing_rack"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "createapparel:wardrobe"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_clothing_rack"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "createapparel:wardrobe"
+    ]
+  }
+}

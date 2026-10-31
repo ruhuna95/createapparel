@@ -15,16 +15,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.level.ChunkEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.BiPredicate;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class GaugeWireRouter {
     private record Plane(Direction facing, int normal) {
         private static Plane of(BlockState state, BlockPos pos) {
@@ -90,7 +90,7 @@ public final class GaugeWireRouter {
         var router = ROUTERS.computeIfAbsent(level, key -> new GaugeWireRouter());
         if (router.chunks.isEmpty()) {
             var chunk = level.getChunkSource().getChunk(entity.getBlockPos().getX() >> 4, entity.getBlockPos().getZ() >> 4,
-                    net.minecraft.world.level.chunk.ChunkStatus.FULL, false);
+                    net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false);
             if (chunk instanceof LevelChunk loaded) router.chunks.put(loaded.getPos(), new WeakReference<>(loaded));
         }
         long time = level.getGameTime();

@@ -6,42 +6,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class ApparelInventoryEvents {
-    private static final ResourceLocation CAPABILITY_ID = ResourceLocation.fromNamespaceAndPath(
-            CreateApparel.MOD_ID,
-            "apparel_inventory"
-    );
 
     private ApparelInventoryEvents() {
-    }
-
-    @SubscribeEvent
-    public static void attachCapabilities(AttachCapabilitiesEvent<Entity> event) {
-        if (!(event.getObject() instanceof Player player)) {
-            return;
-        }
-        ApparelInventoryProvider provider = new ApparelInventoryProvider(player);
-        event.addCapability(CAPABILITY_ID, provider);
-        event.addListener(provider::invalidate);
-    }
-
-    @SubscribeEvent
-    public static void clonePlayer(PlayerEvent.Clone event) {
-        Player original = event.getOriginal();
-        original.reviveCaps();
-        try {
-            ApparelCapabilities.get(original).ifPresent(source ->
-                    ApparelCapabilities.get(event.getEntity()).ifPresent(target -> target.copyFrom(source))
-            );
-        } finally {
-            original.invalidateCaps();
-        }
     }
 
     @SubscribeEvent
@@ -58,9 +30,8 @@ public final class ApparelInventoryEvents {
     }
 
     @SubscribeEvent
-    public static void recoverPendingItems(net.minecraftforge.event.TickEvent.PlayerTickEvent event) {
-        if (event.phase == net.minecraftforge.event.TickEvent.Phase.END
-                && event.player instanceof ServerPlayer player && player.tickCount % 20 == 0) {
+    public static void recoverPendingItems(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (event.getEntity() instanceof ServerPlayer player && player.tickCount % 20 == 0) {
             ApparelCapabilities.get(player).ifPresent(inventory -> inventory.returnPendingItems(player));
         }
     }

@@ -20,7 +20,7 @@ public final class CitizenSpawnInitialization {
         var selected = CitizenPresetSelector.select(catalog, age, random);
         try {
             prepared.setAppearance(selected.appearance());
-            prepared.loadout().deserializeNBT(catalog.createLoadout(selected.garment()).serializeNBT());
+            prepared.loadout().deserializeNBT(citizen.registryAccess(), catalog.createLoadout(selected.garment()).serializeNBT(citizen.registryAccess()));
         } catch (RuntimeException exception) {
             com.mojang.logging.LogUtils.getLogger().warn("Citizen spawn preset failed; using built-in fallback: {}", exception.getMessage());
             var fallback = CitizenPresetSelector.fallback();
@@ -28,7 +28,7 @@ public final class CitizenSpawnInitialization {
             CitizenOutfitPreset.DEFAULT.equip(prepared);
         }
         if (!CitizenCoverage.isCovered(prepared.loadout())) throw new IllegalStateException("Citizen spawn lacks upper or lower coverage");
-        citizen.citizenState().deserializeNBT(prepared.serializeNBT());
+        citizen.citizenState().deserializeNBT(citizen.registryAccess(), prepared.serializeNBT(citizen.registryAccess()));
         citizen.syncState();
     }
 }

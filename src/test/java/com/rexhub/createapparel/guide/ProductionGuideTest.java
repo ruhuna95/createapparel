@@ -168,7 +168,7 @@ class ProductionGuideTest {
     @Test
     void productionTemplateHasFiveByFiveBasePlateAndAirForExternalDrives() throws IOException {
         try (var stream = Files.newInputStream(Path.of("src/generated/resources/assets/createapparel/ponder/production.nbt"))) {
-            var root = NbtIo.readCompressed(stream);
+            var root = NbtIo.readCompressed(stream, net.minecraft.nbt.NbtAccounter.unlimitedHeap());
             assertEquals(7, root.getList("size", 3).getInt(0));
             assertEquals(6, root.getList("size", 3).getInt(1));
             assertEquals(7, root.getList("size", 3).getInt(2));
@@ -212,14 +212,14 @@ class ProductionGuideTest {
 
     @Test
     void showcasedRecipesKeepTheirDocumentedInputs() throws IOException {
-        Path recipes = Path.of("src/generated/resources/data/createapparel/recipes");
+        Path recipes = Path.of("src/generated/resources/data/createapparel/recipe");
         var shirt = JsonParser.parseString(Files.readString(recipes.resolve("t_shirt.json"))).getAsJsonObject();
         assertEquals(3, shirt.getAsJsonObject("fabric").get("count").getAsInt());
         assertEquals(1, shirt.getAsJsonObject("thread").get("count").getAsInt());
         for (String name : List.of("dyeing/blue_cotton_fabric", "dyeing/navy_cotton_fabric", "decolorizing/cotton_fabric")) {
             var recipe = JsonParser.parseString(Files.readString(recipes.resolve("mixing/" + name + ".json"))).getAsJsonObject();
             assertEquals("create:mixing", recipe.get("type").getAsString());
-            assertFalse(recipe.has("heatRequirement"));
+            assertFalse(recipe.has("heat_requirement"));
             var water = recipe.getAsJsonArray("ingredients").asList().stream()
                     .filter(element -> element.isJsonObject())
                     .map(element -> element.getAsJsonObject()).filter(element -> element.has("fluid")).findFirst().orElseThrow();

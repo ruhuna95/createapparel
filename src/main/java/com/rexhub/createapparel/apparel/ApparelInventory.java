@@ -79,13 +79,17 @@ public final class ApparelInventory extends ApparelLoadout {
     }
 
     public void copyFrom(ApparelInventory source) {
-        deserializeNBT(source.serializeNBT());
+        copyContentsFrom(source);
+        chestProfile = source.chestProfile;
+        skinTone = source.skinTone;
+        forceSkin = source.forceSkin;
+        forceHideArmor = source.forceHideArmor;
         armProfile = source.armProfile;
     }
 
     @Override
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = super.serializeNBT();
+    public CompoundTag serializeNBT(net.minecraft.core.HolderLookup.Provider registries) {
+        CompoundTag tag = super.serializeNBT(registries);
         tag.putString(CHEST_PROFILE_TAG, chestProfile.getSerializedName());
         tag.putString(SKIN_TONE_TAG, skinTone.getSerializedName());
         tag.putBoolean(FORCE_SKIN_TAG, forceSkin);
@@ -94,8 +98,8 @@ public final class ApparelInventory extends ApparelLoadout {
     }
 
     @Override
-    public void deserializeNBT(CompoundTag tag) {
-        super.deserializeNBT(tag);
+    public void deserializeNBT(net.minecraft.core.HolderLookup.Provider registries, CompoundTag tag) {
+        super.deserializeNBT(registries, tag);
         if (tag.contains(CHEST_PROFILE_TAG, CompoundTag.TAG_STRING)) {
             chestProfile = ChestProfile.fromSerializedName(tag.getString(CHEST_PROFILE_TAG));
         }

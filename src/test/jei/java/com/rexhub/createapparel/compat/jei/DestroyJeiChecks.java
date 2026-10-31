@@ -1,7 +1,7 @@
 package com.rexhub.createapparel.compat.jei;
 
-import com.petrolpark.destroy.chemistry.legacy.LegacyElement;
-import com.petrolpark.destroy.core.chemistry.recipe.ReactionRecipe;
+import petrolpark.mc.destroy.chemistry.legacy.LegacyElement;
+import petrolpark.mc.destroy.core.chemistry.recipe.ReactionRecipe;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -18,9 +18,9 @@ final class DestroyJeiChecks {
         var mc = Minecraft.getInstance();
         boolean selected = mc.level.getRecipeManager().byKey(ResourceLocation.parse(
                 "createapparel:mixing/mirror_coating_fluid_from_destroy")).isPresent();
-        var type = runtime.getRecipeManager().getRecipeType(ResourceLocation.parse("destroy:reaction"), ReactionRecipe.class).orElseThrow();
+        var type = mezz.jei.api.recipe.RecipeType.<ReactionRecipe>createRecipeHolderType(ResourceLocation.parse("destroy:reaction"));
         var reactions = runtime.getRecipeManager().createRecipeLookup(type).get()
-                .map(recipe -> recipe.getReaction().getFullId()).filter(id -> id.startsWith("createapparel:"))
+                .map(recipe -> recipe.value().getReaction().getFullId()).filter(id -> id.startsWith("createapparel:"))
                 .collect(Collectors.toSet());
         check(reactions.equals(selected ? Set.of("createapparel:silver_dissolution", "createapparel:silver_ammonia_complexation")
                 : Set.of()), "Destroy chemical JEI recipes follow the synchronized final recipe: " + reactions);

@@ -7,7 +7,17 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
 public record MannequinActionPacket(int containerId, Action action, GarmentSlot slot,
-                                    String category, String value, int delta) {
+                                    String category, String value, int delta) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<MannequinActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "mannequin_action_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, MannequinActionPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), MannequinActionPacket::decode);
+
+    @Override
+    public Type<MannequinActionPacket> type() {
+        return TYPE;
+    }
+
     public enum Action { POSE_STEP, STYLE, ROTATION_STEP }
     public static MannequinActionPacket poseStep(int containerId, int delta) {
         return new MannequinActionPacket(containerId, Action.POSE_STEP, GarmentSlot.HEAD, "", "", delta);

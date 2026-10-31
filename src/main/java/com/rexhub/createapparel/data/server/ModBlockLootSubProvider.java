@@ -10,13 +10,13 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.Set;
 
 public final class ModBlockLootSubProvider extends BlockLootSubProvider {
-    public ModBlockLootSubProvider() {
-        super(Set.of(), FeatureFlags.REGISTRY.allFlags());
+    public ModBlockLootSubProvider(net.minecraft.core.HolderLookup.Provider registries) {
+        super(Set.of(), FeatureFlags.REGISTRY.allFlags(), registries);
     }
 
     @Override
@@ -47,9 +47,9 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
                         net.minecraft.world.level.storage.loot.LootPool.lootPool()
                                 .setRolls(net.minecraft.world.level.storage.loot.providers.number.ConstantValue.exactly(1))
                                 .add(net.minecraft.world.level.storage.loot.entries.LootItem.lootTableItem(ModBlocks.SILKWORM_REARING_TRAY.get())
-                                        .apply(net.minecraft.world.level.storage.loot.functions.CopyNbtFunction
-                                                .copyData(net.minecraft.world.level.storage.loot.providers.nbt.ContextNbtProvider.BLOCK_ENTITY)
-                                                .copy("TrayData", "BlockEntityTag.TrayData")))));
+                                        .apply(net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction
+                                                .copyComponents(net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction.Source.BLOCK_ENTITY)
+                                                .include(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA)))));
         dropSelf(ModBlocks.LOOM.get());
         dropSelf(ModBlocks.SEWING_MACHINE.get());
         dropSelf(ModBlocks.WALL_HANGER.get());
@@ -75,6 +75,6 @@ public final class ModBlockLootSubProvider extends BlockLootSubProvider {
 
     @Override
     protected Iterable<Block> getKnownBlocks() {
-        return ModRegistries.BLOCKS.getEntries().stream().map(RegistryObject::get).toList();
+        return ModRegistries.BLOCKS.getEntries().stream().<Block>map(DeferredHolder::get).toList();
     }
 }

@@ -11,11 +11,12 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-final class PhotoCopyRecipeExtension implements ICraftingCategoryExtension {
+final class PhotoCopyRecipeExtension implements ICraftingCategoryExtension<com.rexhub.createapparel.photo.PhotoCopyRecipe> {
     private static final int CENTER_CRAFTING_SLOT = 4;
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, ICraftingGridHelper helper, IFocusGroup focuses) {
+    public void setRecipe(net.minecraft.world.item.crafting.RecipeHolder<com.rexhub.createapparel.photo.PhotoCopyRecipe> recipe,
+                          IRecipeLayoutBuilder builder, ICraftingGridHelper helper, IFocusGroup focuses) {
         ItemStack photo = focuses.getItemStackFocuses()
                 .map(focus -> focus.getTypedValue().getIngredient())
                 .filter(stack -> stack.is(PhotoRegistries.ADVERTISING_PHOTO.get()) && AdvertisingPhotoData.read(stack) != null)
@@ -31,8 +32,8 @@ final class PhotoCopyRecipeExtension implements ICraftingCategoryExtension {
     }
 
     @Override
-    public int getWidth() { return 1; }
+    public int getWidth(net.minecraft.world.item.crafting.RecipeHolder<com.rexhub.createapparel.photo.PhotoCopyRecipe> recipe) { return 1; }
 
     @Override
-    public int getHeight() { return 1; }
+    public int getHeight(net.minecraft.world.item.crafting.RecipeHolder<com.rexhub.createapparel.photo.PhotoCopyRecipe> recipe) { return 1; }
 }

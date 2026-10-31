@@ -7,15 +7,14 @@ import com.rexhub.createapparel.init.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.*;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.gametest.*;
+import net.neoforged.bus.api.*;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.gametest.*;
 import java.util.*;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class CitizenPerformanceGameTests {
     private static final List<Citizen> CITIZENS = new ArrayList<>();
     private static long[] ticks;
@@ -48,11 +47,11 @@ public final class CitizenPerformanceGameTests {
         }
         fixtureStarted = System.nanoTime();
     }
-    @SubscribeEvent(priority = EventPriority.HIGHEST) public static void begin(TickEvent.ServerTickEvent event) {
-        if (helper != null && event.phase == TickEvent.Phase.START) started = System.nanoTime();
+    @SubscribeEvent(priority = EventPriority.HIGHEST) public static void begin(net.neoforged.neoforge.event.tick.ServerTickEvent.Pre event) {
+        if (helper != null) started = System.nanoTime();
     }
-    @SubscribeEvent(priority = EventPriority.LOWEST) public static void end(TickEvent.ServerTickEvent event) {
-        if (helper == null || event.phase != TickEvent.Phase.END) return;
+    @SubscribeEvent(priority = EventPriority.LOWEST) public static void end(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        if (helper == null) return;
         elapsed++;
         if (!sampling) {
             if (elapsed < 120 || Boolean.getBoolean("apparel.gaugeTest.performanceSteady") && System.nanoTime() - fixtureStarted < 10_000_000_000L) return;
@@ -78,8 +77,8 @@ public final class CitizenPerformanceGameTests {
         }
         test.assertTrue(CITIZENS.stream().allMatch(c -> c.isAlive() && c.tickCount >= ticks.length), "Every loaded Citizen actually ticks");
         if (!CITIZENS.isEmpty()) {
-            var persisted = CITIZENS.get(0).citizenState().serializeNBT(); var restored = new CitizenState(); restored.deserializeNBT(persisted);
-            test.assertTrue(persisted.equals(restored.serializeNBT()), "Diagnostic switches do not damage saved Citizen state or equipment");
+            var persisted = CITIZENS.get(0).citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()); var restored = new CitizenState(); restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), persisted);
+            test.assertTrue(persisted.equals(restored.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Diagnostic switches do not damage saved Citizen state or equipment");
         }
         var sorted = ticks.clone(); Arrays.sort(sorted);
         LogUtils.getLogger().info(String.format(Locale.ROOT, "CITIZEN_CPU_PROFILE count=%d samples=%d meanMs=%.6f p95Ms=%.6f p99Ms=%.6f goalDisabled=%s autonomyDisabled=%s populationDisabled=%s plannerDisabled=%s profile=%s%n%s",

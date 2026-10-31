@@ -11,8 +11,8 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.IQuadTransformer;
-import net.minecraftforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.IQuadTransformer;
+import net.neoforged.neoforge.client.model.data.ModelData;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 
@@ -76,7 +76,7 @@ class HangerBlockModelTest {
                 var model = HangerBlockModel.rackModel(source, HangerType.NORMAL, mount, slot, facing);
                 assertSame(model, HangerBlockModel.rackModel(source, HangerType.NORMAL, mount, slot, facing));
                 assertEquals(6, model.getQuads(null, null, random, ModelData.EMPTY, null).size());
-                assertTrue(model.useAmbientOcclusion(null, null));
+                assertEquals(net.neoforged.neoforge.common.util.TriState.DEFAULT, model.useAmbientOcclusion(null, null, null));
                 for (Direction side : Direction.values())
                     assertTrue(model.getQuads(null, side, random, ModelData.EMPTY, null).isEmpty());
             }

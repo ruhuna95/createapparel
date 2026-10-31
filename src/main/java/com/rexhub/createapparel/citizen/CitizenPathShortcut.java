@@ -3,7 +3,7 @@ package com.rexhub.createapparel.citizen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -18,7 +18,7 @@ final class CitizenPathShortcut {
         var from = mob.position();
         var delta = target.subtract(from);
         if (!mob.onGround() || Math.abs(delta.y) > EPSILON || delta.horizontalDistanceSqr() > 144
-                || mob.getPathfindingMalus(BlockPathTypes.WALKABLE) != 0) return false;
+                || mob.getPathfindingMalus(PathType.WALKABLE) != 0) return false;
         var level = mob.level();
         var body = mob.getBoundingBox();
         var swept = body.expandTowards(delta);
@@ -46,7 +46,7 @@ final class CitizenPathShortcut {
             var top = boxes.get(0);
             if (top.minX > EPSILON || top.minZ > EPSILON || top.maxX < 1 - EPSILON || top.maxZ < 1 - EPSILON
                     || Math.abs(supportY + top.maxY - from.y) > EPSILON
-                    || WalkNodeEvaluator.getBlockPathTypeStatic(level, support.above().mutable()) != BlockPathTypes.WALKABLE) return false;
+                    || WalkNodeEvaluator.getPathTypeStatic(mob, support.above()) != PathType.WALKABLE) return false;
             for (int y = supportY; y < Mth.ceil(body.maxY); y++) {
                 if (!level.getFluidState(new BlockPos(x, y, z)).isEmpty()) return false;
             }

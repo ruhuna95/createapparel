@@ -12,17 +12,16 @@ import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.Mod;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class JeiClientTestLauncher {
     private static int ticks;
     private static boolean started;
@@ -32,8 +31,8 @@ public final class JeiClientTestLauncher {
     private static boolean disconnecting;
 
     @SubscribeEvent
-    public static void tick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || finished || disconnecting) return;
+    public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
+        if (finished || disconnecting) return;
         var mc = Minecraft.getInstance();
         try {
             if (!started && mc.screen != null && mc.getOverlay() == null) {
@@ -56,7 +55,7 @@ public final class JeiClientTestLauncher {
             if (!started || mc.level == null || mc.player == null) return;
             if (++ticks > 6000) throw new AssertionError("JEI client tests timed out");
             if (ticks < 60) return;
-            var tabs = net.minecraftforge.common.CreativeModeTabRegistry.getSortedCreativeModeTabs();
+            var tabs = net.neoforged.neoforge.common.CreativeModeTabRegistry.getSortedCreativeModeTabs();
             int create = tabs.indexOf(com.simibubi.create.AllCreativeModeTabs.BASE_CREATIVE_TAB.get());
             int palettes = tabs.indexOf(com.simibubi.create.AllCreativeModeTabs.PALETTES_CREATIVE_TAB.get());
             int apparel = tabs.indexOf(com.rexhub.createapparel.init.ModCreativeModeTabs.CREATE_APPAREL.get());
@@ -83,7 +82,7 @@ public final class JeiClientTestLauncher {
                     disconnecting = true;
                     try {
                         mc.level.disconnect();
-                        mc.clearLevel(new net.minecraft.client.gui.screens.TitleScreen());
+                        mc.disconnect(new net.minecraft.client.gui.screens.TitleScreen());
                     } finally {
                         disconnecting = false;
                     }
@@ -117,7 +116,7 @@ public final class JeiClientTestLauncher {
                 new LevelSettings("Phase23 JEI tests", GameType.CREATIVE, false, Difficulty.PEACEFUL, true,
                         new GameRules(), WorldDataConfiguration.DEFAULT),
                 new WorldOptions(23, false, false), registries -> registries.registryOrThrow(Registries.WORLD_PRESET)
-                        .getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions());
+                        .getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions(), new net.minecraft.client.gui.screens.TitleScreen());
     }
 
     @SubscribeEvent

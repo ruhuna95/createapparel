@@ -1,0 +1,35 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "createapparel:mirror_coating_destroy"
+    },
+    {
+      "type": "neoforge:not",
+      "value": {
+        "type": "neoforge:tag_empty",
+        "tag": "c:ingots/silver"
+      }
+    }
+  ],
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "type": "createapparel:mirror_mixture",
+      "amount": 900,
+      "max_concentration": 1.1,
+      "min_concentration": 0.9,
+      "molecule": "createapparel:diamminesilver_i"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 100,
+      "fluid": "create:honey"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1000,
+      "id": "createapparel:mirror_coating_fluid"
+    }
+  ]
+}

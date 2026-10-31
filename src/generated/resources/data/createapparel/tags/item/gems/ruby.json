@@ -1,0 +1,9 @@
+{
+  "values": [
+    "minecraft:redstone",
+    {
+      "id": "#c:gems/ruby",
+      "required": false
+    }
+  ]
+}

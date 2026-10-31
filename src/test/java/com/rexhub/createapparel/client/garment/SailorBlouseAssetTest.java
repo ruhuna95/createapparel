@@ -318,7 +318,7 @@ class SailorBlouseAssetTest {
         Path generated = Path.of("src/generated/resources");
         for (String variant : List.of("shortsleeves", "longsleeves")) {
             String garment = "sailor_blouse_" + variant;
-            var recipe = json(generated.resolve("data/createapparel/recipes/" + garment + ".json"));
+            var recipe = json(generated.resolve("data/createapparel/recipe/" + garment + ".json"));
             assertEquals("createapparel:sewing", recipe.get("type").getAsString());
             assertEquals("createapparel:" + garment, recipe.getAsJsonObject("result").get("id").getAsString());
             assertEquals(4, recipe.getAsJsonObject("fabric").get("count").getAsInt());

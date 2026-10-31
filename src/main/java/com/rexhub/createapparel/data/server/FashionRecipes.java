@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 public final class FashionRecipes {
     private FashionRecipes() { }
-    public static void build(Consumer<FinishedRecipe> consumer) {
+    public static void build(RecipeOutput consumer) {
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, FashionRegistries.CASH_REGISTER_ITEM.get()).pattern(" GT").pattern("IRI").pattern("III")
                 .define('G', Items.GLASS_PANE).define('T', AllItems.ELECTRON_TUBE.get()).define('I', AllItems.IRON_SHEET.get()).define('R', Items.REDSTONE)
                 .unlockedBy("has_iron", InventoryChangeTrigger.TriggerInstance.hasItems(Items.IRON_INGOT)).save(consumer);
@@ -30,9 +30,9 @@ public final class FashionRecipes {
         ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, AdvertisementRegistries.SIGNAGE_BROADCASTER_ITEM.get()).pattern(" T ").pattern("RBR")
                 .define('T', AllItems.ELECTRON_TUBE.get()).define('R', AllBlocks.REDSTONE_LINK.get()).define('B', AllBlocks.BRASS_CASING.get())
                 .unlockedBy("has_brass", InventoryChangeTrigger.TriggerInstance.hasItems(AllItems.BRASS_SHEET.get())).save(consumer);
-        SpecialRecipeBuilder.special(AdvertisementRegistries.PHOTO_COPY.get()).save(consumer, "createapparel:photo_copy_manual_only");
+        SpecialRecipeBuilder.special(com.rexhub.createapparel.photo.PhotoCopyRecipe::new).save(consumer, "createapparel:photo_copy_manual_only");
         for (var media : java.util.List.of(AdvertisementRegistries.POSTER_ITEM, AdvertisementRegistries.BILLBOARD_PANEL_ITEM)) {
-            new com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder<>(
+            new com.simibubi.create.content.kinetics.deployer.ItemApplicationRecipe.Builder<>(
                     com.rexhub.createapparel.advertisement.AdPrintingDeployerRecipe::new,
                     net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("createapparel", media.getId().getPath() + "_printing"))
                     .require(media.get()).require(PhotoRegistries.ADVERTISING_PHOTO.get()).toolNotConsumed().output(media.get()).build(consumer);

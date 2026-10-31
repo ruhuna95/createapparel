@@ -48,7 +48,7 @@ public final class CitizenPopulationManager implements CitizenGatewayAccess {
 
     private CitizenPopulationManager(ServerLevel level) {
         this.level = level;
-        data = level.getDataStorage().computeIfAbsent(CitizenPopulationSavedData::load, CitizenPopulationSavedData::new, CitizenPopulationSavedData.NAME);
+        data = level.getDataStorage().computeIfAbsent(new net.minecraft.world.level.saveddata.SavedData.Factory<>(CitizenPopulationSavedData::new, (tag, registries) -> CitizenPopulationSavedData.load(tag)), CitizenPopulationSavedData.NAME);
         data.gauges().forEach(gauge -> queue(gauge.id()));
         var routes = CitizenRouteManager.get(level);
         routes.setGatewayAccess(this);

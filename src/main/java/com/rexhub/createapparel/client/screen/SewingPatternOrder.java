@@ -57,10 +57,12 @@ final class SewingPatternOrder {
             "backpack", "daypack", "crossbody_bag", "necktie", "wristband", "gloves"
     ).stream().map(path -> ResourceLocation.fromNamespaceAndPath("createapparel", path)).toList();
 
-    static final Comparator<SewingRecipe> RECIPES = Comparator
+    static Comparator<SewingRecipe> recipes(java.util.function.Function<SewingRecipe, ResourceLocation> ids) {
+        return Comparator
             .comparingInt((SewingRecipe recipe) -> rank(recipe.getResultId()))
             .thenComparing(recipe -> recipe.getResultId().toString())
-            .thenComparing(recipe -> recipe.getId().toString());
+            .thenComparing(recipe -> ids.apply(recipe).toString());
+    }
 
     private SewingPatternOrder() { }
 

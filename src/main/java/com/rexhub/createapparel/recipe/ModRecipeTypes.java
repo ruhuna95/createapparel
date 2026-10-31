@@ -2,16 +2,16 @@ package com.rexhub.createapparel.recipe;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.init.ModRegistries;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder.ProcessingRecipeFactory;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeSerializer;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Factory;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
+import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -22,15 +22,15 @@ public enum ModRecipeTypes implements IRecipeTypeInfo {
     WEAVING(WeavingRecipe::new),
     SEWING(() -> new SewingRecipe.Serializer());
 
-    public static final RegistryObject<RecipeSerializer<GaugeResetRecipe>> GAUGE_RESET = ModRegistries.RECIPE_SERIALIZERS.register(
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<GaugeResetRecipe>> GAUGE_RESET = ModRegistries.RECIPE_SERIALIZERS.register(
             "citizen_gauge_reset", () -> new net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<>(GaugeResetRecipe::new));
 
     private final ResourceLocation id;
-    private final RegistryObject<RecipeSerializer<?>> serializer;
-    private final RegistryObject<RecipeType<?>> type;
+    private final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<?>> serializer;
+    private final DeferredHolder<RecipeType<?>, RecipeType<?>> type;
 
-    ModRecipeTypes(ProcessingRecipeFactory<?> factory) {
-        this(() -> new ProcessingRecipeSerializer<>(factory));
+    ModRecipeTypes(Factory<?> factory) {
+        this(() -> new StandardProcessingRecipe.Serializer<>(factory));
     }
 
     ModRecipeTypes(Supplier<RecipeSerializer<?>> serializerFactory) {
@@ -59,11 +59,12 @@ public enum ModRecipeTypes implements IRecipeTypeInfo {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends RecipeType<?>> T getType() {
-        return (T) type.get();
+    public <I extends RecipeInput, R extends Recipe<I>> RecipeType<R> getType() {
+        return (RecipeType<R>) type.get();
     }
 
-    public <C extends Container, T extends Recipe<C>> Optional<T> find(C inventory, Level level) {
-        return level.getRecipeManager().getRecipeFor(getType(), inventory, level);
+    public <C extends RecipeInput, T extends Recipe<C>> Optional<T> find(C inventory, Level level) {
+        return level.getRecipeManager().getRecipeFor(this.<C, T>getType(), inventory, level)
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value);
     }
 }

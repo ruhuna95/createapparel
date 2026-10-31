@@ -19,6 +19,7 @@ public final class SewingMachineGoggleTooltip {
                                       ItemStack pattern, @Nullable Level level) {
         Optional<SewingRecipe> configuredRecipe = level == null ? Optional.empty() : PatternData.fromStack(pattern)
                 .flatMap(data -> level.getRecipeManager().byKey(data.recipe()))
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
                 .filter(SewingRecipe.class::isInstance)
                 .map(SewingRecipe.class::cast)
                 .filter(recipe -> recipe.matchesPatternItem(pattern));

@@ -54,24 +54,23 @@ public final class WallHangerBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.put("Garment", garment.save(new CompoundTag()));
+    protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.put("Garment", garment.saveOptional(registries));
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        garment = ItemStack.of(tag.getCompound("Garment"));
+    protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        garment = com.rexhub.createapparel.item.ItemData.load(registries, tag.getCompound("Garment"));
     }
 
     @Override
-    public CompoundTag getUpdateTag() { return saveWithoutMetadata(); }
+    public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
 
-    @Override
     public AABB getRenderBoundingBox() {
         return new AABB(worldPosition).inflate(0.6, 1.5, 0.6);
     }

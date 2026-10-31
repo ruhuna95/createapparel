@@ -52,17 +52,17 @@ public final class MannequinState {
         changeListener.run();
     }
 
-    public CompoundTag serializeNBT() {
+    public CompoundTag serializeNBT(net.minecraft.core.HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
-        tag.put("ApparelLoadout", loadout.serializeNBT());
+        tag.put("ApparelLoadout", loadout.serializeNBT(registries));
         tag.putString("PosePreset", pose.id());
         tag.putInt("BodyRotationStep", bodyRotationStep);
         if (linkedRegister != null) tag.put("LinkedRegister", linkedRegister.save());
         return tag;
     }
 
-    public void deserializeNBT(CompoundTag tag, MannequinForm form) {
-        loadout.deserializeNBT(tag.getCompound("ApparelLoadout"));
+    public void deserializeNBT(net.minecraft.core.HolderLookup.Provider registries, CompoundTag tag, MannequinForm form) {
+        loadout.deserializeNBT(registries, tag.getCompound("ApparelLoadout"));
         pose = PosePreset.read(tag.getString("PosePreset"), form);
         int step = tag.getInt("BodyRotationStep");
         bodyRotationStep = step >= 0 && step < ROTATION_STEPS ? step : 0;

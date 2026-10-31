@@ -9,13 +9,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class CitizenRenderClientChecks {
     private static int stage, ticks, total;
     private static volatile boolean ready;
@@ -28,9 +27,9 @@ public final class CitizenRenderClientChecks {
     private static net.minecraft.client.renderer.texture.DynamicTexture oldTexture;
     private CitizenRenderClientChecks() { }
 
-    @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
         if (!Boolean.getBoolean("apparel.gaugeTest.renderClient") || Boolean.getBoolean("apparel.gaugeTest.displayPerformance")
-                || event.phase != TickEvent.Phase.END || stage == 99) return;
+                || stage == 99) return;
         var mc = Minecraft.getInstance();
         if (mc.getOverlay() != null) return;
         try {
@@ -47,7 +46,7 @@ public final class CitizenRenderClientChecks {
                         new net.minecraft.world.level.LevelSettings("Citizen Render QA", net.minecraft.world.level.GameType.CREATIVE, false,
                                 net.minecraft.world.Difficulty.PEACEFUL, false, new net.minecraft.world.level.GameRules(),
                                 net.minecraft.world.level.WorldDataConfiguration.DEFAULT), new WorldOptions(86, false, false),
-                        access -> access.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions());
+                        access -> access.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions(), new net.minecraft.client.gui.screens.TitleScreen());
                 return;
             }
             if (mc.player == null || mc.level == null || mc.getSingleplayerServer() == null) return;
@@ -65,7 +64,7 @@ public final class CitizenRenderClientChecks {
                         citizen.setUUID(new UUID(86, i)); citizen.setNoAi(true);
                         citizen.moveTo(21 + i % 7, -60, -2, 180, 0);
                         citizen.setBehavior(CitizenBehaviorState.posed(PosePreset.WALKING));
-                        citizen.citizenState().loadout().deserializeNBT(EnvelopeRenderClientChecks.outfit(i % 7).serializeNBT());
+                        citizen.citizenState().loadout().deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), EnvelopeRenderClientChecks.outfit(i % 7).serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
                         level.addFreshEntity(citizen); citizen.syncState(); CITIZENS.add(citizen);
                     }
                 });

@@ -1,11 +1,11 @@
 {
-  "loader": "forge:composite",
+  "loader": "neoforge:composite",
   "children": {
     "body": {
       "parent": "createapparel:block/wardrobe/lower_body"
     },
     "doors": {
-      "loader": "forge:obj",
+      "loader": "neoforge:obj",
       "model": "createapparel:models/block/wardrobe/lower_open_doors.obj",
       "flip_v": true,
       "automatic_culling": false,

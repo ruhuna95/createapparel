@@ -60,7 +60,7 @@ public final class MannequinRenderer extends EntityRenderer<Mannequin> {
             }
         }
         model.renderToBuffer(poseStack, vertices,
-                light, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
+                light, OverlayTexture.NO_OVERLAY, -1);
         CommonGarmentRenderer.renderHumanoid(new GarmentRenderContext(model, cached.snapshot()),
                 poseStack, buffer, light, OverlayTexture.NO_OVERLAY);
         poseStack.popPose();

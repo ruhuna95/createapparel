@@ -208,7 +208,7 @@ public final class PhotographyScreen extends AbstractContainerScreen<Photography
     }
 
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
         if (!selectionMenu.isOpen()) {
             renderTooltip(graphics, mouseX, mouseY);
@@ -219,7 +219,7 @@ public final class PhotographyScreen extends AbstractContainerScreen<Photography
         selectionMenu.render(graphics, mouseX, mouseY);
     }
 
-    @Override public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    @Override public boolean mouseScrolled(double mouseX, double mouseY, double horizontalScroll, double delta) {
         if (selectionMenu.mouseScrolled(delta)) return true;
         if (delta != 0) {
             int index = 0;
@@ -243,7 +243,7 @@ public final class PhotographyScreen extends AbstractContainerScreen<Photography
             updateStyles();
             send(PhotographyMenu.SELECT_SLOT_ACTION + next.ordinal()); return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, horizontalScroll, delta);
     }
     @Override public boolean mouseClicked(double mouseX, double mouseY, int button) {
         return selectionMenu.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button);

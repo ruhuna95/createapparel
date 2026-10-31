@@ -13,10 +13,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -27,9 +27,9 @@ public final class SilverIntegrationGameTests {
     public static void silverAccessoryBasesAcceptIronAndCommonSilverNuggets(GameTestHelper helper) {
         var nuggets = new java.util.ArrayList<net.minecraft.world.item.Item>();
         nuggets.add(Items.IRON_NUGGET);
-        var silverTag = ItemTags.create(ResourceLocation.parse("forge:nuggets/silver"));
+        var silverTag = ItemTags.create(ResourceLocation.parse("c:nuggets/silver"));
         if (Boolean.getBoolean("apparel.recipeTest.destroy") && Boolean.getBoolean("apparel.recipeTest.silver")) {
-            var silver = ForgeRegistries.ITEMS.getValue(ResourceLocation.parse("thesilverage:silver_nugget"));
+            var silver = BuiltInRegistries.ITEM.get(ResourceLocation.parse("thesilverage:silver_nugget"));
             helper.assertTrue(silver != null && silver != Items.AIR && new ItemStack(silver).is(silverTag),
                     "The requested silver mod supplies a nugget through the common tag");
             nuggets.add(silver);
@@ -37,7 +37,7 @@ public final class SilverIntegrationGameTests {
         for (var base : java.util.List.of(ModItems.SILVER_NECKLACE_BASE, ModItems.SILVER_BRACELET_BASE)) {
             int count = base == ModItems.SILVER_NECKLACE_BASE ? 3 : 2;
             var recipe = (CompactingRecipe) helper.getLevel().getRecipeManager().byKey(ResourceLocation.parse(
-                    "createapparel:compacting/" + base.getId().getPath())).orElseThrow();
+                    "createapparel:compacting/" + base.getId().getPath())).orElseThrow().value();
             for (var ingredient : recipe.getIngredients()) {
                 helper.assertTrue(!ingredient.test(new ItemStack(Items.BARRIER)),
                         "An absent optional silver tag must not add an empty-tag barrier ingredient");
@@ -68,14 +68,15 @@ public final class SilverIntegrationGameTests {
         var recipes = new java.util.HashMap<ResourceLocation, com.google.gson.JsonElement>();
         for (String path : java.util.List.of("mixing/mirror_coating_fluid_from_destroy", "mixing/mirror_coating_fluid",
                 "mixing/synthetic_fiber", "synthetic_fiber_from_nylon")) {
-            var resource = resources.getResource(ResourceLocation.parse("createapparel:recipes/" + path + ".json")).orElseThrow();
+            var resource = resources.getResource(ResourceLocation.parse("createapparel:recipe/" + path + ".json")).orElseThrow();
             try (var reader = new java.io.InputStreamReader(resource.open(), java.nio.charset.StandardCharsets.UTF_8)) {
                 recipes.put(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, path), com.google.gson.JsonParser.parseReader(reader));
             }
         }
         var probe = new net.minecraft.world.item.crafting.RecipeManager(
-                net.minecraftforge.common.crafting.conditions.ICondition.IContext.EMPTY) {
+                helper.getLevel().registryAccess()) {
             void load() {
+                injectContext(net.neoforged.neoforge.common.conditions.ICondition.IContext.EMPTY, helper.getLevel().registryAccess());
                 apply(recipes, resources, net.minecraft.util.profiling.InactiveProfiler.INSTANCE);
             }
         };
@@ -114,13 +115,13 @@ public final class SilverIntegrationGameTests {
         helper.assertTrue(ModList.get().isLoaded("thesilverage") == expectedSilver, "The requested silver-mod fixture is actually loaded");
         if (expectedSilver) {
             helper.assertTrue(ModList.get().isLoaded("thesilverage"), "The requested silver mod is actually loaded");
-            var silver = ForgeRegistries.ITEMS.getValue(ResourceLocation.parse("thesilverage:silver_ingot"));
-            var tag = ForgeRegistries.ITEMS.tags().getTag(ItemTags.create(ResourceLocation.parse("forge:ingots/silver")));
+            var silver = BuiltInRegistries.ITEM.get(ResourceLocation.parse("thesilverage:silver_ingot"));
+            var tag = com.rexhub.createapparel.TestRegistries.items(ItemTags.create(ResourceLocation.parse("c:ingots/silver")));
             helper.assertTrue(silver != null && silver != Items.AIR && tag.contains(silver),
                     "The Silver Age provides silver through the common tag");
         } else {
-            helper.assertTrue(ForgeRegistries.ITEMS.tags().getTag(ItemTags.create(
-                    ResourceLocation.parse("forge:ingots/silver"))).isEmpty(), "The no-silver fixture has an empty common silver tag");
+            helper.assertTrue(com.rexhub.createapparel.TestRegistries.items(ItemTags.create(
+                    ResourceLocation.parse("c:ingots/silver"))).isEmpty(), "The no-silver fixture has an empty common silver tag");
         }
         helper.succeed();
     }

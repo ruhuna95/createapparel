@@ -34,7 +34,11 @@ public final class SewingRecipeInputIndex {
     }
 
     public static synchronized void rebuild(RecipeManager manager) {
-        INDICES.put(manager, new SewingRecipeInputIndex(manager.getAllRecipesFor(SewingRecipe.recipeType())));
+        var recipes = manager.getAllRecipesFor(SewingRecipe.recipeType()).stream().map(holder -> {
+            holder.value().bindId(holder.id());
+            return holder.value();
+        }).toList();
+        INDICES.put(manager, new SewingRecipeInputIndex(recipes));
     }
 
     public boolean acceptsFabric(ItemStack stack) {

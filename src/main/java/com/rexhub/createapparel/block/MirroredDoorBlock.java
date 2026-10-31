@@ -17,8 +17,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public final class MirroredDoorBlock extends DoorBlock implements EntityBlock, MirrorSurfaceProvider {
-    public MirroredDoorBlock(Properties properties) { super(properties, BlockSetType.IRON); }
-    public MirroredDoorBlock(Properties properties, BlockSetType type) { super(properties, type); }
+    public MirroredDoorBlock(Properties properties) { super(BlockSetType.IRON, properties); }
+    public MirroredDoorBlock(Properties properties, BlockSetType type) { super(type, properties); }
 
     @Nullable @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

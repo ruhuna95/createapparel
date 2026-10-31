@@ -2,7 +2,7 @@ package com.rexhub.createapparel.entity;
 
 import com.rexhub.createapparel.garment.GarmentItem;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraftforge.fluids.FluidType;
+import net.neoforged.neoforge.fluids.FluidType;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.init.ModEntities;
 import com.rexhub.createapparel.init.ModItems;
@@ -29,7 +29,6 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkHooks;
 import java.util.List;
 
 public final class Mannequin extends LivingEntity {
@@ -57,28 +56,28 @@ public final class Mannequin extends LivingEntity {
 
     public MannequinVariant variant() { return variant; }
     public MannequinState mannequinState() { return mannequinState; }
-    @Override public void onAddedToWorld() {
-        super.onAddedToWorld();
+    @Override public void onAddedToLevel() {
+        super.onAddedToLevel();
         com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
     }
     public long lastHitTime() { return lastHit; }
 
     public void syncState() {
-        if (!level().isClientSide) entityData.set(DATA_STATE, mannequinState.serializeNBT(), true);
+        if (!level().isClientSide) entityData.set(DATA_STATE, mannequinState.serializeNBT(registryAccess()), true);
         com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        entityData.define(DATA_STATE, new CompoundTag());
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_STATE, new CompoundTag());
     }
 
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
         if (DATA_STATE.equals(key) && level().isClientSide && mannequinState != null) {
-            mannequinState.deserializeNBT(entityData.get(DATA_STATE), variant.form());
+            mannequinState.deserializeNBT(registryAccess(), entityData.get(DATA_STATE), variant.form());
             com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
         }
     }
@@ -86,22 +85,19 @@ public final class Mannequin extends LivingEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.put("MannequinState", mannequinState.serializeNBT());
+        tag.put("MannequinState", mannequinState.serializeNBT(registryAccess()));
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        mannequinState.deserializeNBT(tag.getCompound("MannequinState"), variant.form());
+        mannequinState.deserializeNBT(registryAccess(), tag.getCompound("MannequinState"), variant.form());
         if (!level().isClientSide) mannequinState.loadout().migrateLegacyCoats();
         setNoGravity(false);
         syncState();
     }
 
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-    }
+
 
     @Override
     public InteractionResult interactAt(Player player, Vec3 hit, InteractionHand hand) {
@@ -109,7 +105,7 @@ public final class Mannequin extends LivingEntity {
             return InteractionResult.PASS;
         }
         Vec3 start = player.getEyePosition();
-        Vec3 end = start.add(player.getLookAngle().scale(player.getEntityReach()));
+        Vec3 end = start.add(player.getLookAngle().scale(player.entityInteractionRange()));
         end = level().clip(new ClipContext(start, end, ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE, player)).getLocation();
         Vec3 localStart = start.subtract(position());
@@ -136,7 +132,7 @@ public final class Mannequin extends LivingEntity {
             }
         } else if (held.isEmpty()) {
             if (player instanceof ServerPlayer serverPlayer) {
-                NetworkHooks.openScreen(serverPlayer, new SimpleMenuProvider(
+                serverPlayer.openMenu(new SimpleMenuProvider(
                         (id, inventory, viewer) -> new MannequinMenu(id, inventory, this), getDisplayName()),
                         buffer -> buffer.writeVarInt(getId()));
             }
@@ -157,7 +153,7 @@ public final class Mannequin extends LivingEntity {
             return true;
         }
         if (source.is(DamageTypeTags.IGNITES_ARMOR_STANDS)) {
-            if (!isOnFire()) setSecondsOnFire(5);
+            if (!isOnFire()) igniteForSeconds(5);
             else damageBody(0.15F);
             return true;
         }
@@ -210,7 +206,7 @@ public final class Mannequin extends LivingEntity {
             dropped = true;
             if (dropBody) {
                 ItemStack body = getPickResult();
-                if (hasCustomName()) body.setHoverName(getCustomName());
+                if (hasCustomName()) body.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, getCustomName());
                 spawnAtLocation(body);
             }
             mannequinState.loadout().removeAll().forEach(this::spawnAtLocation);

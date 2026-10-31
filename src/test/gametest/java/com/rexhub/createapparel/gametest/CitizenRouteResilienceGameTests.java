@@ -22,9 +22,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.util.*;
 
 @GameTestHolder(CreateApparel.MOD_ID)
@@ -257,7 +257,7 @@ public final class CitizenRouteResilienceGameTests {
         }
         var players = new ArrayList<ServerPlayer>(); var receivers = new ArrayList<RouteViewTransfer.Receiver>();
         for (int i = 0; i < 16; i++) {
-            var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-view-" + i));
+            var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-view-" + i), net.minecraft.server.level.ClientInformation.createDefault());
             player.setPos(helper.absoluteVec(new Vec3(52, 1, 52))); player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
             players.add(player); receivers.add(new RouteViewTransfer.Receiver());
         }
@@ -299,7 +299,7 @@ public final class CitizenRouteResilienceGameTests {
                             "ROUTE_VIEW_DELTA stage={} offset={} base={} nodes={} edges={} removedNodes={} removedEdges={} loadedRevision={} runtimeRevision={} maintenanceRevision={}",
                             stage[0], offset, packet.baseSnapshot(), packet.nodes().size(), packet.edges().size(),
                             packet.removedNodes().size(), packet.removedEdges().size(), m.loadRevision(), m.runtime().viewRevision(), m.maintenanceRevision());
-                    var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+                    var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
                     try { packet.encode(buffer); bytes[phase][index] += buffer.readableBytes(); }
                     finally { buffer.release(); }
                     receivers.get(index).accept(packet);
@@ -446,7 +446,7 @@ public final class CitizenRouteResilienceGameTests {
     @GameTest(template = "citizen_route_resilience", batch = "citizen_route_resilience")
     public static void phoneUnavailablePlacementLeavesChestDoorAndOtherBlocksAlone(GameTestHelper helper) {
         floor(helper); var pos = helper.absolutePos(new BlockPos(46, 1, 46));
-        var p = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-conflict"));
+        var p = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-conflict"), net.minecraft.server.level.ClientInformation.createDefault());
         p.setGameMode(GameType.SURVIVAL); p.setPos(Vec3.atBottomCenterOf(pos).add(0, 0, -2)); p.setShiftKeyDown(true);
         p.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
         for (var block : List.of(Blocks.CHEST, Blocks.OAK_DOOR, Blocks.LEVER)) {
@@ -466,7 +466,7 @@ public final class CitizenRouteResilienceGameTests {
     public static void serverRechecksPredictedTargetsBeforeConsumingOrDeleting(GameTestHelper helper) {
         floor(helper); var a = marker(helper, 8, 1, 8); var b = marker(helper, 16, 1, 8); var m = manager(helper);
         m.data().link(a.id(), b.id(), false); var edge = m.data().connected(a.id()).get(0);
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-prediction"));
+        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-prediction"), net.minecraft.server.level.ClientInformation.createDefault());
         player.setGameMode(GameType.SURVIVAL); player.setPos(a.center().add(0, 0, -3)); player.setYRot(180); player.setXRot(0); player.setShiftKeyDown(true);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
         var pos = a.pos().north(1); var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false);
@@ -484,7 +484,7 @@ public final class CitizenRouteResilienceGameTests {
         helper.assertTrue(manager.data().marker(a.id()) == null && manager.data().edge(edge.id()) == null, "Support loss cleans persistent references");
         helper.assertTrue(manager.removedEdges().stream().anyMatch(value -> value.id().equals(edge.id())
                 && value.health() == com.rexhub.createapparel.network.RouteViewPacket.Health.REMOVED), "Cut connections remain identifiable as transient diagnostics");
-        var restored = CitizenRouteSavedData.load(manager.data().save(new net.minecraft.nbt.CompoundTag()));
+        var restored = CitizenRouteSavedData.load(manager.data().save(new net.minecraft.nbt.CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         helper.assertTrue(restored.marker(a.id()) == null && restored.edge(edge.id()) == null, "Diagnostics are not persisted as broken edges");
         helper.succeed();
     }

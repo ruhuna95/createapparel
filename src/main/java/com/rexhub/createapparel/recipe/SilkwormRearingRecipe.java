@@ -13,22 +13,20 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 public final class SilkwormRearingRecipe implements Recipe<RecipeWrapper> {
-    private final ResourceLocation id;
     private final Ingredient food;
     private final int foodCount;
     private final ItemStack result;
     private final int processingTime;
 
-    public SilkwormRearingRecipe(ResourceLocation id, Ingredient food, int foodCount,
+    public SilkwormRearingRecipe(Ingredient food, int foodCount,
                                 ItemStack result, int processingTime) {
         if (food.isEmpty() || foodCount < 1 || foodCount > 64 || result.isEmpty()
                 || result.getCount() > result.getMaxStackSize() || processingTime < 1) {
-            throw new JsonSyntaxException("Invalid silkworm rearing recipe: " + id);
+            throw new JsonSyntaxException("Invalid silkworm rearing recipe");
         }
-        this.id = id;
         this.food = food;
         this.foodCount = foodCount;
         this.result = result.copy();
@@ -45,16 +43,14 @@ public final class SilkwormRearingRecipe implements Recipe<RecipeWrapper> {
     }
 
     @Override
-    public ItemStack assemble(RecipeWrapper inventory, RegistryAccess registries) { return result.copy(); }
+    public ItemStack assemble(RecipeWrapper inventory, net.minecraft.core.HolderLookup.Provider registries) { return result.copy(); }
 
     @Override
     public boolean canCraftInDimensions(int width, int height) { return true; }
 
     @Override
-    public ItemStack getResultItem(RegistryAccess registries) { return result.copy(); }
+    public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider registries) { return result.copy(); }
 
-    @Override
-    public ResourceLocation getId() { return id; }
 
     @Override
     public RecipeSerializer<?> getSerializer() { return ModRecipeTypes.SILKWORM_REARING.getSerializer(); }
@@ -71,26 +67,23 @@ public final class SilkwormRearingRecipe implements Recipe<RecipeWrapper> {
     }
 
     public static final class Serializer implements RecipeSerializer<SilkwormRearingRecipe> {
-        @Override
-        public SilkwormRearingRecipe fromJson(ResourceLocation id, JsonObject json) {
-            return new SilkwormRearingRecipe(id, Ingredient.fromJson(json.get("food")),
-                    GsonHelper.getAsInt(json, "food_count", 1),
-                    ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(json, "result")),
-                    GsonHelper.getAsInt(json, "processing_time"));
-        }
+        private static final com.mojang.serialization.MapCodec<SilkwormRearingRecipe> CODEC =
+                com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance -> instance.group(
+                        Ingredient.CODEC_NONEMPTY.fieldOf("food").forGetter(recipe -> recipe.food),
+                        com.mojang.serialization.Codec.intRange(1, 64).optionalFieldOf("food_count", 1).forGetter(recipe -> recipe.foodCount),
+                        ItemStack.STRICT_CODEC.fieldOf("result").forGetter(recipe -> recipe.result),
+                        com.mojang.serialization.Codec.intRange(1, Integer.MAX_VALUE).fieldOf("processing_time").forGetter(recipe -> recipe.processingTime)
+                ).apply(instance, SilkwormRearingRecipe::new));
+        private static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, SilkwormRearingRecipe> STREAM_CODEC =
+                net.minecraft.network.codec.StreamCodec.of((buffer, recipe) -> {
+                    Ingredient.CONTENTS_STREAM_CODEC.encode(buffer, recipe.food);
+                    buffer.writeVarInt(recipe.foodCount);
+                    ItemStack.STREAM_CODEC.encode(buffer, recipe.result);
+                    buffer.writeVarInt(recipe.processingTime);
+                }, buffer -> new SilkwormRearingRecipe(Ingredient.CONTENTS_STREAM_CODEC.decode(buffer),
+                        buffer.readVarInt(), ItemStack.STREAM_CODEC.decode(buffer), buffer.readVarInt()));
 
-        @Override
-        public SilkwormRearingRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buffer) {
-            return new SilkwormRearingRecipe(id, Ingredient.fromNetwork(buffer), buffer.readVarInt(),
-                    buffer.readItem(), buffer.readVarInt());
-        }
-
-        @Override
-        public void toNetwork(FriendlyByteBuf buffer, SilkwormRearingRecipe recipe) {
-            recipe.food.toNetwork(buffer);
-            buffer.writeVarInt(recipe.foodCount);
-            buffer.writeItem(recipe.result);
-            buffer.writeVarInt(recipe.processingTime);
-        }
+        @Override public com.mojang.serialization.MapCodec<SilkwormRearingRecipe> codec() { return CODEC; }
+        @Override public net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, SilkwormRearingRecipe> streamCodec() { return STREAM_CODEC; }
     }
 }

@@ -99,7 +99,7 @@ public final class ClientDistrictTerritory {
         if (!Double.isFinite(y)) return;
         float r = (color >>> 16) / 255F, g = (color >>> 8 & 255) / 255F, b = (color & 255) / 255F;
         float nx = (float) (line.endX() - line.x()), nz = (float) (line.endZ() - line.z());
-        consumer.vertex(pose.pose(), (float) (line.x() - camera.x), (float) (y - camera.y), (float) (line.z() - camera.z)).color(r, g, b, .8F).normal(pose.normal(), nx, 0, nz).endVertex();
-        consumer.vertex(pose.pose(), (float) (line.endX() - camera.x), (float) (y - camera.y), (float) (line.endZ() - camera.z)).color(r, g, b, .8F).normal(pose.normal(), nx, 0, nz).endVertex();
+        consumer.addVertex(pose.pose(), (float) (line.x() - camera.x), (float) (y - camera.y), (float) (line.z() - camera.z)).setColor(r, g, b, .8F).setNormal(pose, nx, 0, nz);
+        consumer.addVertex(pose.pose(), (float) (line.endX() - camera.x), (float) (y - camera.y), (float) (line.endZ() - camera.z)).setColor(r, g, b, .8F).setNormal(pose, nx, 0, nz);
     }
 }

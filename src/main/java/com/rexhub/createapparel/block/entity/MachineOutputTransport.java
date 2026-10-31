@@ -15,9 +15,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 final class MachineOutputTransport {
     private static final Direction[] OUTPUT_DIRECTIONS = Direction.values();
@@ -150,11 +150,8 @@ final class MachineOutputTransport {
         if (blockEntity == null) {
             return stack;
         }
-        IItemHandler handler = blockEntity.getCapability(
-                        ForgeCapabilities.ITEM_HANDLER,
-                        direction.getOpposite()
-                )
-                .orElse(null);
+        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK,
+                sourcePos.relative(direction), direction.getOpposite());
         if (handler == null) {
             return stack;
         }

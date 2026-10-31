@@ -3,15 +3,15 @@ package com.rexhub.createapparel.fashion;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.init.ModItems;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class RetailEvents {
     private RetailEvents() { }
-    @SubscribeEvent public static void leave(net.minecraftforge.event.entity.EntityLeaveLevelEvent event) {
+    @SubscribeEvent public static void leave(net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent event) {
         if (event.getEntity() instanceof com.rexhub.createapparel.entity.Citizen citizen) citizen.fashionController().removed();
         if (event.getEntity() instanceof com.rexhub.createapparel.entity.Mannequin) RetailDisplayIndex.get(event.getLevel()).remove(event.getEntity());
         if (event.getEntity() instanceof com.simibubi.create.content.contraptions.actors.seat.SeatEntity)
@@ -21,28 +21,28 @@ public final class RetailEvents {
         if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)
             { com.rexhub.createapparel.network.RetailInspectionRequestPacket.forget(player); RetailLinkSession.clear(player); }
     }
-    @SubscribeEvent public static void mount(net.minecraftforge.event.entity.EntityMountEvent event) {
+    @SubscribeEvent public static void mount(net.neoforged.neoforge.event.entity.EntityMountEvent event) {
         if (event.getEntityBeingMounted() instanceof com.simibubi.create.content.contraptions.actors.seat.SeatEntity seat)
             RetailInspection.blockChanged(seat.level(), seat.blockPosition());
     }
-    @SubscribeEvent public static void death(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
+    @SubscribeEvent public static void death(net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) {
         if (event.getEntity().getVehicle() instanceof com.simibubi.create.content.contraptions.actors.seat.SeatEntity seat)
             RetailInspection.blockChanged(seat.level(), seat.blockPosition());
     }
-    @SubscribeEvent public static void playerTick(net.minecraftforge.event.TickEvent.PlayerTickEvent event) {
-        if (event.phase == net.minecraftforge.event.TickEvent.Phase.END && event.player instanceof net.minecraft.server.level.ServerPlayer player) {
+    @SubscribeEvent public static void playerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) {
             RetailLinkSession.selected(player);
             com.rexhub.createapparel.network.RetailInspectionRequestPacket.flush(player);
         }
     }
-    @SubscribeEvent public static void logout(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+    @SubscribeEvent public static void logout(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)
             { com.rexhub.createapparel.network.RetailInspectionRequestPacket.forget(player); RetailLinkSession.clear(player); }
     }
-    @SubscribeEvent public static void loadChunk(net.minecraftforge.event.level.ChunkEvent.Load event) {
+    @SubscribeEvent public static void loadChunk(net.neoforged.neoforge.event.level.ChunkEvent.Load event) {
         if (event.getLevel() instanceof net.minecraft.world.level.Level level) RetailInspection.chunkChanged(level, event.getChunk().getPos().toLong());
     }
-    @SubscribeEvent public static void unloadChunk(net.minecraftforge.event.level.ChunkEvent.Unload event) {
+    @SubscribeEvent public static void unloadChunk(net.neoforged.neoforge.event.level.ChunkEvent.Unload event) {
         if (event.getLevel() instanceof net.minecraft.world.level.Level level) RetailInspection.chunkChanged(level, event.getChunk().getPos().toLong());
     }
     @SubscribeEvent public static void unload(LevelEvent.Unload event) {
@@ -53,8 +53,8 @@ public final class RetailEvents {
             if (level instanceof ServerLevel server) RetailStorageLinks.unload(server);
         }
     }
-    @SubscribeEvent public static void tick(net.minecraftforge.event.TickEvent.LevelTickEvent event) {
-        if (event.phase == net.minecraftforge.event.TickEvent.Phase.END && event.level instanceof ServerLevel level) {
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel level) {
             RetailStorageLinks.tick(level);
             RetailInspection.get(level).tick(level);
         }
@@ -76,7 +76,7 @@ public final class RetailEvents {
             var reference = RetailLinkSession.selected(player);
             if (reference == null) return;
             var target = event.getLevel().getBlockEntity(event.getPos());
-            if (target == null || !target.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER).isPresent()) return;
+            if (target == null || event.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, event.getPos(), null) == null) return;
             if (event.getLevel() instanceof ServerLevel level) {
                 var register = reference.resolve(level);
                 if (register == null || !level.mayInteract(player, register.getBlockPos())) return;

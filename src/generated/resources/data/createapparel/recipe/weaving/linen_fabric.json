@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:weaving",
+  "ingredients": [
+    {
+      "tag": "createapparel:threads/linen"
+    }
+  ],
+  "processing_time": 1200,
+  "results": [
+    {
+      "id": "createapparel:linen_fabric"
+    }
+  ]
+}

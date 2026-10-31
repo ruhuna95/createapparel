@@ -12,13 +12,24 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.UUID;
 
-public record GaugeReservationDiscardPacket(ResourceLocation dimension, UUID reservation, int count) {
+public record GaugeReservationDiscardPacket(ResourceLocation dimension, UUID reservation, int count) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<GaugeReservationDiscardPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "gauge_reservation_discard_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, GaugeReservationDiscardPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), GaugeReservationDiscardPacket::decode);
+
+    @Override
+    public Type<GaugeReservationDiscardPacket> type() {
+        return TYPE;
+    }
+
     public GaugeReservationDiscardPacket {
         Objects.requireNonNull(dimension); Objects.requireNonNull(reservation);
         if (count < 1 || count > 64) throw new IllegalArgumentException("Invalid discarded Gauge count");
     }
     @Nullable public static GaugeReservationDiscardPacket fromStack(ItemStack stack) {
-        var tag = stack.getTag();
+        if (stack.isEmpty()) return null;
+        var tag = com.rexhub.createapparel.item.ItemData.read(stack);
         if (!(stack.getItem() instanceof CitizenGaugeItem) || tag == null || !tag.hasUUID("GaugeCenterReservation")) return null;
         var dimension = ResourceLocation.tryParse(tag.getString("GaugeDimension"));
         return dimension == null ? null : new GaugeReservationDiscardPacket(dimension, tag.getUUID("GaugeCenterReservation"), stack.getCount());

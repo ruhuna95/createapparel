@@ -19,7 +19,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public final class ItemGuideTooltipChecks {
         for (String id : ITEMS) {
             var stack = stack(id);
             var guide = ItemGuide.forItem(stack.getItem());
-            var normal = stack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.NORMAL);
+            var normal = stack.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(net.minecraft.client.Minecraft.getInstance().level), Minecraft.getInstance().player, TooltipFlag.NORMAL);
             if (guide.hasExistingSummary()) {
                 String key = guide == ItemGuide.WARDROBE ? "tooltip.createapparel.wardrobe.change_clothes"
                         : "tooltip.createapparel.hanger." + (id.startsWith("clip_") ? "clip" : "normal");
@@ -66,8 +66,8 @@ public final class ItemGuideTooltipChecks {
                     var description = ItemDescription.create(stack.getItem(), FontHelper.Palette.STANDARD_CREATE);
                     require(description != null && description.linesOnShift().size() > normal.size(), "Gauge retains its detailed instructions");
                     var recorded = stack.copy();
-                    recorded.getOrCreateTag().putLong("GaugeCenter", new net.minecraft.core.BlockPos(4, 70, 6).asLong());
-                    require(recorded.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.NORMAL).stream()
+                    com.rexhub.createapparel.item.ItemData.update(recorded, tagData -> tagData.putLong("GaugeCenter", new net.minecraft.core.BlockPos(4, 70, 6).asLong()));
+                    require(recorded.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(net.minecraft.client.Minecraft.getInstance().level), Minecraft.getInstance().player, TooltipFlag.NORMAL).stream()
                             .anyMatch(line -> line.getString().contains("4, 70, 6")), "Recorded gauge center remains visible");
                 }
             }
@@ -80,7 +80,7 @@ public final class ItemGuideTooltipChecks {
             if (!(entry.get() instanceof GarmentItem)) continue;
             for (var garment : List.of(new ItemStack(entry.get()), GarmentCreativePresets.create(entry))) {
                 for (var flag : List.of(TooltipFlag.NORMAL, TooltipFlag.ADVANCED)) {
-                    var lines = garment.getTooltipLines(Minecraft.getInstance().player, flag);
+                    var lines = garment.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(net.minecraft.client.Minecraft.getInstance().level), Minecraft.getInstance().player, flag);
                     require(!hasTranslation(lines, "tooltip.createapparel.garment.fashion_tags"),
                             "Garment tooltips hide fashion tags: " + entry.getId());
                     require(hasTranslation(lines, "tooltip.createapparel.garment.slot"),
@@ -107,7 +107,7 @@ public final class ItemGuideTooltipChecks {
         var lines = new ArrayList<Component>();
         lines.add(stack.getHoverName());
         lines.addAll(description.linesOnShift());
-        stack.getItem().appendHoverText(stack, Minecraft.getInstance().level, lines, TooltipFlag.NORMAL);
+        stack.getItem().appendHoverText(stack, net.minecraft.world.item.Item.TooltipContext.of(Minecraft.getInstance().level), lines, TooltipFlag.NORMAL);
         ApparelItemDescriptions.updateExistingSummary(lines, true);
         return lines;
     }
@@ -153,7 +153,7 @@ public final class ItemGuideTooltipChecks {
     }
 
     private static ItemStack stack(String path) {
-        var item = ForgeRegistries.ITEMS.getValue(ResourceLocation.fromNamespaceAndPath("createapparel", path));
+        var item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("createapparel", path));
         require(item != null, "Missing tooltip fixture: " + path);
         var stack = new ItemStack(item);
         require(!stack.isEmpty(), "Empty tooltip fixture: " + path);
@@ -174,13 +174,13 @@ public final class ItemGuideTooltipChecks {
 
         @Override
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            renderBackground(graphics);
+            renderBackground(graphics, mouseX, mouseY, partialTick);
             var items = page >= 2 ? List.of(List.of("wardrobe", "wall_hanger", "clothing_rack").get(page - 2)) : ITEMS;
             int start = page >= 2 ? 0 : page * 9;
             for (int index = start; index < Math.min(items.size(), start + 9); index++) {
                 int slot = index - start;
                 var item = stack(items.get(index));
-                var lines = page >= 2 ? expandedFurniture(item) : item.getTooltipLines(minecraft.player, TooltipFlag.NORMAL);
+                var lines = page >= 2 ? expandedFurniture(item) : item.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(net.minecraft.client.Minecraft.getInstance().level), minecraft.player, TooltipFlag.NORMAL);
                 graphics.renderTooltip(font, lines, Optional.empty(), 8 + slot % 3 * 210, 24 + slot / 3 * 116);
             }
             graphics.flush();

@@ -30,16 +30,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.CombinedInvWrapper;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -57,7 +54,6 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     private final ItemStackHandler materialInventory;
     private final RecipeInventoryHandler recipeInventory;
     private final SewingMachineInventoryHandler inventoryHandler;
-    private LazyOptional<IItemHandler> itemCapability;
     private FilteringBehaviour patternFilter;
 
     private int remainingProcessingTicks;
@@ -71,7 +67,6 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         materialInventory = createMaterialInventory();
         recipeInventory = new RecipeInventoryHandler();
         inventoryHandler = new SewingMachineInventoryHandler();
-        itemCapability = LazyOptional.of(() -> inventoryHandler);
     }
 
     private ItemStackHandler createMaterialInventory() {
@@ -312,20 +307,20 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
     }
 
     @Override
-    protected void write(CompoundTag compound, boolean clientPacket) {
-        compound.put("MaterialInventory", materialInventory.serializeNBT());
+    protected void write(CompoundTag compound, net.minecraft.core.HolderLookup.Provider registries, boolean clientPacket) {
+        compound.put("MaterialInventory", materialInventory.serializeNBT(registries));
         compound.putInt("ProcessingTicks", remainingProcessingTicks);
         compound.putBoolean("Processing", processing);
-        super.write(compound, clientPacket);
+        super.write(compound, registries, clientPacket);
     }
 
     @Override
-    protected void read(CompoundTag compound, boolean clientPacket) {
+    protected void read(CompoundTag compound, net.minecraft.core.HolderLookup.Provider registries, boolean clientPacket) {
         if (compound.contains("MaterialInventory", CompoundTag.TAG_COMPOUND)) {
-            materialInventory.deserializeNBT(compound.getCompound("MaterialInventory"));
+            materialInventory.deserializeNBT(registries, com.rexhub.createapparel.item.ItemData.upgradeInventory(registries, compound.getCompound("MaterialInventory")));
         } else {
             ItemStackHandler legacyInventory = new ItemStackHandler();
-            legacyInventory.deserializeNBT(compound.getCompound("InputInventory"));
+            legacyInventory.deserializeNBT(registries, com.rexhub.createapparel.item.ItemData.upgradeInventory(registries, compound.getCompound("InputInventory")));
             for (int slot = 0; slot < Math.min(materialInventory.getSlots(), legacyInventory.getSlots()); slot++) {
                 materialInventory.setStackInSlot(slot, legacyInventory.getStackInSlot(slot));
             }
@@ -334,20 +329,10 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         processing = compound.getBoolean("Processing");
         activeRecipe = null;
         recipeCache.invalidate();
-        super.read(compound, clientPacket);
+        super.read(compound, registries, clientPacket);
     }
 
-    @Override
-    public void invalidate() {
-        super.invalidate();
-        itemCapability.invalidate();
-    }
 
-    @Override
-    public void reviveCaps() {
-        super.reviveCaps();
-        itemCapability = LazyOptional.of(() -> inventoryHandler);
-    }
 
     @Override
     public void destroy() {
@@ -357,12 +342,8 @@ public final class SewingMachineBlockEntity extends KineticBlockEntity {
         }
     }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-        if (capability == ForgeCapabilities.ITEM_HANDLER) {
-            return itemCapability.cast();
-        }
-        return super.getCapability(capability, side);
+    public IItemHandler itemHandler() {
+        return inventoryHandler;
     }
 
     private final class SewingMachineInventoryHandler extends CombinedInvWrapper {

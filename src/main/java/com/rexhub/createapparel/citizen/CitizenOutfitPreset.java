@@ -3,7 +3,7 @@ package com.rexhub.createapparel.citizen;
 import com.rexhub.createapparel.entity.CitizenState;
 import com.rexhub.createapparel.apparel.ApparelLoadout;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 public enum CitizenOutfitPreset {
     DEFAULT;
@@ -18,7 +18,7 @@ public enum CitizenOutfitPreset {
     public void equip(CitizenState state) {
         var candidate = new ApparelLoadout();
         CitizenGarmentPreset.builtIn().garments().forEach((slot, entry) -> {
-            ItemStack stack = new ItemStack(ForgeRegistries.ITEMS.getValue(entry.item()));
+            ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(entry.item()));
             entry.appearance().write(stack);
             candidate.setStackInSlot(slot.ordinal(), stack);
         });

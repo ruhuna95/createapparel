@@ -24,11 +24,11 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -63,9 +63,9 @@ public final class CitizenRouteGameTests {
         return citizen;
     }
     private static ServerPlayer player(GameTestHelper helper, Vec3 position) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-test"));
+        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "route-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
         player.setGameMode(GameType.SURVIVAL); player.setPos(position); player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
@@ -80,12 +80,12 @@ public final class CitizenRouteGameTests {
         floor(helper); var node = marker(helper, 10, 10, RouteMarkerType.NORMAL); var level = helper.getLevel(); var state = level.getBlockState(node.pos());
         helper.assertTrue(state.getRenderShape() == net.minecraft.world.level.block.RenderShape.INVISIBLE && !state.canOcclude(), "Invisible and nonoccluding");
         helper.assertTrue(state.getCollisionShape(level, node.pos()).isEmpty() && !state.getShape(level, node.pos()).isEmpty(), "Guide is pickable without collision");
-        helper.assertTrue(state.isPathfindable(level, node.pos(), net.minecraft.world.level.pathfinder.PathComputationType.LAND), "Marker permits standard Navigation");
+        helper.assertTrue(state.isPathfindable(net.minecraft.world.level.pathfinder.PathComputationType.LAND), "Marker permits standard Navigation");
         var citizen = citizen(helper, node.center().add(-3, 0, 0), false);
         var path = citizen.getNavigation().createPath(node.pos().east(3), 0);
         helper.assertTrue(path != null && path.canReach(), "Vanilla path passes through marker");
-        var saved = ((CitizenRouteMarkerBlockEntity) level.getBlockEntity(node.pos())).saveWithFullMetadata();
-        var restored = new CitizenRouteMarkerBlockEntity(node.pos(), state); restored.load(saved);
+        var saved = ((CitizenRouteMarkerBlockEntity) level.getBlockEntity(node.pos())).saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup());
+        var restored = new CitizenRouteMarkerBlockEntity(node.pos(), state); restored.loadWithComponents(saved, com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(node.id().equals(restored.markerId()), "BE keeps persistent UUID");
         var viewer = player(helper, node.center());
         helper.assertTrue(!state.getShape(level, node.pos(), net.minecraft.world.phys.shapes.CollisionContext.of(viewer)).isEmpty(), "Phone permits native pick");
@@ -146,9 +146,9 @@ public final class CitizenRouteGameTests {
         player.setPos(Vec3.atBottomCenterOf(ground).add(0, 1, -2));
         player.lookAt(EntityAnchorArgument.Anchor.EYES, hit.getLocation());
         Consumer<BlockEvent.EntityPlaceEvent> cancel = event -> { if (event.getEntity() == player) event.setCanceled(true); };
-        MinecraftForge.EVENT_BUS.addListener(cancel);
+        NeoForge.EVENT_BUS.addListener(cancel);
         try { helper.assertTrue(!SmartPhoneRouteEditor.place(player, InteractionHand.MAIN_HAND, hit), "Protection event rejects placement"); }
-        finally { MinecraftForge.EVENT_BUS.unregister(cancel); }
+        finally { NeoForge.EVENT_BUS.unregister(cancel); }
         helper.assertTrue(helper.getLevel().isEmptyBlock(ground.above()) && manager(helper).data().at(ground.above()) == null, "Rejected placement leaves no marker");
         helper.assertTrue(SmartPhoneRouteEditor.place(player, InteractionHand.MAIN_HAND, hit), "Top hit places directly above ground");
         helper.assertTrue(player.getMainHandItem().getCount() == 1 && manager(helper).data().at(ground.above()) != null, "Phone not consumed; registry updated");
@@ -187,7 +187,7 @@ public final class CitizenRouteGameTests {
         var a = marker(helper, 10, 10, RouteMarkerType.NORMAL); var p = player(helper, a.center().add(0, 0, -2));
         p.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(ModItems.SMART_PHONE.get())); p.setShiftKeyDown(true);
         p.lookAt(EntityAnchorArgument.Anchor.EYES, a.center().add(0, 0.125, 0));
-        var hit = (BlockHitResult) p.pick(p.getBlockReach(), 0, false);
+        var hit = (BlockHitResult) p.pick(p.blockInteractionRange(), 0, false);
         var first = new PlayerInteractEvent.RightClickBlock(p, InteractionHand.MAIN_HAND, a.pos(), hit);
         SmartPhoneRouteEditor.interact(first);
         helper.assertTrue(first.isCanceled() && p.containerMenu instanceof RouteMarkerMenu, "Sneak opens settings Menu");
@@ -223,18 +223,18 @@ public final class CitizenRouteGameTests {
         SmartPhoneRouteEditor.tick(p);
         helper.assertTrue(RouteMarkerPermissions.holdingPhone(p) && !RouteMarkerPermissions.canEditRoutes(p, InteractionHand.OFF_HAND), "Offhand retains viewing only");
         helper.assertTrue(SmartPhoneRouteEditor.selected(p) == null && !menu.stillValid(p), "Moving phone to offhand clears link and invalidates marker menu");
-        var attack = net.minecraftforge.common.ForgeHooks.onLeftClickBlock(p, a.pos(), Direction.NORTH,
+        var attack = net.neoforged.neoforge.common.CommonHooks.onLeftClickBlock(p, a.pos(), Direction.NORTH,
                 net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
         helper.assertTrue(attack.isCanceled(), "Offhand cannot mine a visible marker");
         for (var gameMode : List.of(GameType.SURVIVAL, GameType.CREATIVE)) {
             p.setGameMode(gameMode);
             var blockBreak = new BlockEvent.BreakEvent(p.level(), a.pos(), p.level().getBlockState(a.pos()), p);
-            MinecraftForge.EVENT_BUS.post(blockBreak);
+            NeoForge.EVENT_BUS.post(blockBreak);
             helper.assertTrue(blockBreak.isCanceled(), "Offhand rejects direct marker destruction in " + gameMode);
         }
         p.setGameMode(GameType.SURVIVAL);
         var groundBreak = new BlockEvent.BreakEvent(p.level(), a.pos().below(), p.level().getBlockState(a.pos().below()), p);
-        MinecraftForge.EVENT_BUS.post(groundBreak);
+        NeoForge.EVENT_BUS.post(groundBreak);
         helper.assertTrue(!groundBreak.isCanceled(), "Offhand read-only restriction does not block normal terrain edits");
         long version = data.version();
         menu.apply(p, packet(menu, version, RouteMarkerActionPacket.Action.REGION, "", 4, 2));
@@ -267,7 +267,7 @@ public final class CitizenRouteGameTests {
         var citizen = citizen(helper, pos, true); citizen.setNoAi(true);
         var p = player(helper, pos.add(0, 0, -2));
         var menu = new com.rexhub.createapparel.menu.CitizenMenu(8, p.getInventory(), citizen); p.containerMenu = menu;
-        var saved = citizen.citizenState().serializeNBT().copy();
+        var saved = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).copy();
         var destination = pos.add(5, 0, 0);
         citizen.routeMovement().requestDestination(destination, CitizenPathfindingScheduler.Priority.PLAYER);
         menu.broadcastChanges();
@@ -277,7 +277,7 @@ public final class CitizenRouteGameTests {
         helper.runAtTickTime(25, () -> {
             menu.broadcastChanges();
             helper.assertTrue(menu.destination() == null, "Menu clears a destination after reset");
-            helper.assertTrue(saved.equals(citizen.citizenState().serializeNBT()), "Destination display does not write persistent state");
+            helper.assertTrue(saved.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Destination display does not write persistent state");
             citizen.discard(); helper.succeed();
         });
     }
@@ -303,9 +303,9 @@ public final class CitizenRouteGameTests {
         p.setServerLevel(otherLevel); packet(menu, current, RouteMarkerActionPacket.Action.REGION, "", 7, 3).handle(p);
         helper.assertTrue(data.version() == current && !menu.stillValid(p), "Origin dimension is required by Menu updates"); p.setServerLevel(origin);
         Consumer<BlockEvent.BreakEvent> protectedRegion = event -> { if (event.getPlayer() == p && event.getPos().equals(a.pos())) event.setCanceled(true); };
-        MinecraftForge.EVENT_BUS.addListener(protectedRegion);
+        NeoForge.EVENT_BUS.addListener(protectedRegion);
         try { packet(menu, current, RouteMarkerActionPacket.Action.DELETE, "CONFIRM", 0, 0).handle(p); }
-        finally { MinecraftForge.EVENT_BUS.unregister(protectedRegion); }
+        finally { NeoForge.EVENT_BUS.unregister(protectedRegion); }
         helper.assertTrue(data.marker(a.id()) != null && data.version() == current, "GUI deletion respects protection events");
         p.setGameMode(GameType.SPECTATOR); packet(menu, current, RouteMarkerActionPacket.Action.DELETE, "CONFIRM", 0, 0).handle(p);
         helper.assertTrue(data.marker(a.id()) != null, "Spectator cannot delete"); p.setGameMode(GameType.SURVIVAL); p.setPos(a.center().add(20, 0, 0));
@@ -338,9 +338,9 @@ public final class CitizenRouteGameTests {
         var p = player(helper, a.center().add(0, 0, -2)); var menu = new RouteMarkerMenu(19, p.getInventory(), a.id(), a.pos()); p.containerMenu = menu;
         long version = data.version();
         Consumer<BlockEvent.BreakEvent> protectedEnd = event -> { if (event.getPlayer() == p && event.getPos().equals(c.pos())) event.setCanceled(true); };
-        MinecraftForge.EVENT_BUS.addListener(protectedEnd);
+        NeoForge.EVENT_BUS.addListener(protectedEnd);
         try { packet(menu, version, RouteMarkerActionPacket.Action.UNPAIR, "", 0, 0).handle(p); }
-        finally { MinecraftForge.EVENT_BUS.unregister(protectedEnd); }
+        finally { NeoForge.EVENT_BUS.unregister(protectedEnd); }
         helper.assertTrue(data.version() == version && data.connected(a.id()).size() == 2, "Legacy clear cannot bypass any protected endpoint or partially mutate the graph");
         packet(menu, version, RouteMarkerActionPacket.Action.UNPAIR, "", 0, 0).handle(p);
         helper.assertTrue(data.connected(a.id()).isEmpty() && data.connected(b.id()).size() == 1 && data.version() == version + 1, "Allowed clear removes only source crossings atomically");
@@ -359,9 +359,9 @@ public final class CitizenRouteGameTests {
         p.setShiftKeyDown(false); new com.rexhub.createapparel.network.RouteEdgeActionPacket(edge.id(), InteractionHand.MAIN_HAND).handle(p);
         helper.assertTrue(data.edge(edge.id()) != null, "Sneak is required"); p.setShiftKeyDown(true);
         Consumer<BlockEvent.BreakEvent> protect = event -> { if (event.getPlayer() == p && event.getPos().equals(b.pos())) event.setCanceled(true); };
-        MinecraftForge.EVENT_BUS.addListener(protect);
+        NeoForge.EVENT_BUS.addListener(protect);
         try { new com.rexhub.createapparel.network.RouteEdgeActionPacket(edge.id(), InteractionHand.MAIN_HAND).handle(p); }
-        finally { MinecraftForge.EVENT_BUS.unregister(protect); }
+        finally { NeoForge.EVENT_BUS.unregister(protect); }
         helper.assertTrue(data.edge(edge.id()) != null, "Protection on the remote endpoint prevents deletion"); SmartPhoneRouteEditor.logout(p.getUUID());
         var wall = helper.absolutePos(new BlockPos(14, 1, 9));
         helper.getLevel().setBlock(wall, Blocks.STONE.defaultBlockState(), 3); helper.getLevel().setBlock(wall.above(), Blocks.STONE.defaultBlockState(), 3);
@@ -457,7 +457,7 @@ public final class CitizenRouteGameTests {
         helper.getLevel().setBlock(target, Blocks.REDSTONE_WIRE.defaultBlockState(), 2);
         helper.getLevel().setBlock(target, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(BlockStateProperties.POWER, 14), 2); menu.sendInfo(p);
         helper.assertTrue(!menu.info().getBoolean("NodeOn"), "GUI state follows current signal without a graph version edit");
-        helper.assertTrue(CitizenRouteSavedData.load(data.save(new CompoundTag())).marker(node.id()).condition().threshold() == 15, "Threshold survives graph save and reload");
+        helper.assertTrue(CitizenRouteSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())).marker(node.id()).condition().threshold() == 15, "Threshold survives graph save and reload");
         helper.succeed();
     }
 
@@ -485,7 +485,7 @@ public final class CitizenRouteGameTests {
         helper.assertTrue(SmartPhoneRouteEditor.connectControl(p, target, InteractionHand.MAIN_HAND), "Selected crossing marker links to an unpowered redstone source");
         helper.assertTrue(data.marker(a.id()).condition().pos().equals(target) && data.marker(a.id()).condition().configured()
                 && data.connected(a.id()).isEmpty() && SmartPhoneRouteEditor.selected(p) == null, "Control is saved separately from walkable graph edges");
-        var restored = CitizenRouteSavedData.load(data.save(new CompoundTag())).marker(a.id());
+        var restored = CitizenRouteSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())).marker(a.id());
         helper.assertTrue(restored.condition().equals(data.marker(a.id()).condition()), "Redstone binding survives save and load");
         helper.assertTrue(!helper.getLevel().getBlockState(target).getValue(BlockStateProperties.POWERED), "Registration never activates the source block");
         helper.assertTrue(CrossingCondition.connectionPoint(helper.getLevel(), target).y < target.getY() + 0.5,
@@ -500,9 +500,9 @@ public final class CitizenRouteGameTests {
         helper.getLevel().setBlock(target, Blocks.REDSTONE_BLOCK.defaultBlockState(), 2);
         SmartPhoneRouteEditor.clickMarker(p, a, InteractionHand.MAIN_HAND); p.lookAt(EntityAnchorArgument.Anchor.EYES, Vec3.atCenterOf(target));
         Consumer<BlockEvent.BreakEvent> protect = event -> { if (event.getPlayer() == p && event.getPos().equals(target)) event.setCanceled(true); };
-        MinecraftForge.EVENT_BUS.addListener(protect);
+        NeoForge.EVENT_BUS.addListener(protect);
         try { helper.assertTrue(!SmartPhoneRouteEditor.connectControl(p, target, InteractionHand.MAIN_HAND), "Protected control block cannot be bound"); }
-        finally { MinecraftForge.EVENT_BUS.unregister(protect); }
+        finally { NeoForge.EVENT_BUS.unregister(protect); }
         p.setPos(a.center().add(0, 0, 1)); p.lookAt(EntityAnchorArgument.Anchor.EYES, Vec3.atCenterOf(target));
         helper.getLevel().setBlock(target.north(), Blocks.STONE.defaultBlockState(), 2);
         helper.getLevel().setBlock(target.north().above(), Blocks.STONE.defaultBlockState(), 2);
@@ -526,9 +526,9 @@ public final class CitizenRouteGameTests {
         new com.rexhub.createapparel.network.RouteEdgeActionPacket(a.id(), InteractionHand.MAIN_HAND).handle(p);
         helper.assertTrue(data.marker(a.id()).condition().configured(), "Wrong target kind cannot clear control"); SmartPhoneRouteEditor.logout(p.getUUID());
         Consumer<BlockEvent.BreakEvent> protect = event -> { if (event.getPlayer() == p && event.getPos().equals(target)) event.setCanceled(true); };
-        MinecraftForge.EVENT_BUS.addListener(protect);
+        NeoForge.EVENT_BUS.addListener(protect);
         try { new com.rexhub.createapparel.network.RouteEdgeActionPacket(a.id(), InteractionHand.MAIN_HAND, true).handle(p); }
-        finally { MinecraftForge.EVENT_BUS.unregister(protect); }
+        finally { NeoForge.EVENT_BUS.unregister(protect); }
         helper.assertTrue(data.marker(a.id()).condition().configured(), "Control deletion respects remote block protection"); SmartPhoneRouteEditor.logout(p.getUUID());
         new com.rexhub.createapparel.network.RouteEdgeActionPacket(a.id(), InteractionHand.MAIN_HAND, true).handle(p);
         helper.assertTrue(!data.marker(a.id()).condition().configured() && data.marker(a.id()).condition().threshold() == 9 && data.connected(a.id()).size() == 1, "Sneak deletion preserves threshold and the walking edge");
@@ -672,7 +672,7 @@ public final class CitizenRouteGameTests {
         var node = RouteMarker.create(UUID.randomUUID(), position, RouteMarkerType.NORMAL); data.put(node); manager(helper).loadChanged();
         long version = data.version(); helper.assertTrue(!manager(helper).loaded(node) && data.marker(node.id()) != null, "Unloaded marker retained in registry");
         helper.assertTrue(!helper.getLevel().getChunkSource().hasChunk(position.getX() >> 4, position.getZ() >> 4), "No chunk forcing");
-        var restored = CitizenRouteSavedData.load(data.save(new CompoundTag())); helper.assertTrue(restored.marker(node.id()) != null && restored.version() == version, "Unloaded data survives save restore");
+        var restored = CitizenRouteSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); helper.assertTrue(restored.marker(node.id()) != null && restored.version() == version, "Unloaded data survives save restore");
         data.remove(node.id()); CitizenActivityScheduler.get(helper.getLevel()).remove(citizen.getUUID()); helper.succeed();
     }
 
@@ -703,7 +703,7 @@ public final class CitizenRouteGameTests {
         floor(helper); var a = marker(helper, 10, 10, RouteMarkerType.GATEWAY); var district = UUID.randomUUID(); var manager = manager(helper);
         manager.data().put(a.withDistrict(district)); a = manager.data().marker(a.id()); var citizen = citizen(helper, a.center(), false); var start = citizen.position();
         helper.assertTrue(!manager.gatewayEnabled(a) && !manager.transitGateway(citizen, a.id(), UUID.randomUUID()) && citizen.position().equals(start), "No Gauge means no virtual transfer");
-        var restored = CitizenRouteSavedData.load(manager.data().save(new CompoundTag())); helper.assertTrue(district.equals(restored.marker(a.id()).districtId()), "District UUID persists without fabricating membership"); helper.succeed();
+        var restored = CitizenRouteSavedData.load(manager.data().save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); helper.assertTrue(district.equals(restored.marker(a.id()).districtId()), "District UUID persists without fabricating membership"); helper.succeed();
     }
 
     @GameTest(template = "citizen_behavior", batch = "citizen_route_timeout", timeoutTicks = 760)
@@ -752,10 +752,10 @@ public final class CitizenRouteGameTests {
             var seen = new HashSet<UUID>();
             for (int i = 0; i < 12; i++) {
                 var citizen = citizen(helper, a.center(), false); citizen.getRandom().setSeed(i * 419L + 7);
-                var saved = citizen.citizenState().serializeNBT();
+                var saved = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
                 helper.assertTrue(manager.transitGateway(citizen, a.id(), target), "A live Gauge adapter link permits one hop");
                 if (b.contains(citizen.position())) seen.add(b.id()); else if (c.contains(citizen.position())) seen.add(c.id()); else helper.fail("Unsafe or unknown arrival");
-                helper.assertTrue(saved.equals(citizen.citizenState().serializeNBT()) && !citizen.routeMovement().gatewayReady(helper.getLevel().getGameTime()), "Transfer preserves saved state and activates cooldown");
+                helper.assertTrue(saved.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())) && !citizen.routeMovement().gatewayReady(helper.getLevel().getGameTime()), "Transfer preserves saved state and activates cooldown");
             }
             helper.assertTrue(seen.size() == 2, "Random arrival uses both loaded safe candidates");
             linked[0] = false; var citizen = citizen(helper, a.center(), false);
@@ -764,7 +764,7 @@ public final class CitizenRouteGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "citizen_behavior", batch = "citizen_route_movement", timeoutTicks = 400)
+    @GameTest(template = "citizen_behavior", batch = "citizen_route_retry", timeoutTicks = 400)
     public static void inaccessibleStartMarkerRetriesAnotherLoadedCandidate(GameTestHelper helper) {
         var chunk = new net.minecraft.world.level.ChunkPos(helper.absolutePos(new BlockPos(20, 1, 20)));
         var chunks = helper.getLevel().getChunkSource();

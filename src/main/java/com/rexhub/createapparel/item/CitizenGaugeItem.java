@@ -17,7 +17,7 @@ public final class CitizenGaugeItem extends BlockItem {
     private static final String CENTER_RESERVATION = "GaugeCenterReservation";
     public CitizenGaugeItem(Block block, Properties properties) { super(block, properties); }
     @Override public int getMaxStackSize(ItemStack stack) {
-        return stack.hasTag() && stack.getTag().contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG) ? 1 : super.getMaxStackSize(stack);
+        return com.rexhub.createapparel.item.ItemData.hasData(stack) && com.rexhub.createapparel.item.ItemData.read(stack).contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG) ? 1 : super.getMaxStackSize(stack);
     }
     @Override public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity, int slot, boolean selected) {
         super.inventoryTick(stack, level, entity, slot, selected);
@@ -31,10 +31,10 @@ public final class CitizenGaugeItem extends BlockItem {
         CitizenPopulationManager.get(server).data().verifyCenter(id, level.dimension().location().toString(), observed, level.getGameTime());
     }
     @Override public boolean isFoil(ItemStack stack) {
-        return stack.hasTag() && stack.getTag().contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG) || super.isFoil(stack);
+        return com.rexhub.createapparel.item.ItemData.hasData(stack) && com.rexhub.createapparel.item.ItemData.read(stack).contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG) || super.isFoil(stack);
     }
     @Nullable public static BlockPos center(ItemStack stack, Level level) {
-        var tag = stack.getTag();
+        var tag = com.rexhub.createapparel.item.ItemData.read(stack);
         return tag != null && tag.contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG)
                 && tag.getString("GaugeDimension").equals(level.dimension().location().toString()) ? BlockPos.of(tag.getLong("GaugeCenter")) : null;
     }
@@ -57,16 +57,17 @@ public final class CitizenGaugeItem extends BlockItem {
                     data.releaseCenter(previous, stack.getCount() - 1);
                 }
                 var remainder = stack.split(stack.getCount() - 1);
-                if (remainder.hasTag()) {
-                    var remainderTag = remainder.getTag();
+                if (com.rexhub.createapparel.item.ItemData.hasData(remainder)) {
+                    var remainderTag = com.rexhub.createapparel.item.ItemData.read(remainder);
                     remainderTag.remove("GaugeCenter"); remainderTag.remove("GaugeDimension"); remainderTag.remove(CENTER_RESERVATION);
-                    if (remainderTag.isEmpty()) remainder.setTag(null);
+                    com.rexhub.createapparel.item.ItemData.write(remainder, remainderTag);
                 }
-                var tag = stack.getOrCreateTag();
+                var tag = com.rexhub.createapparel.item.ItemData.readOrEmpty(stack);
                 tag.putLong("GaugeCenter", context.getClickedPos().asLong());
                 tag.putString("GaugeDimension", context.getLevel().dimension().location().toString());
                 tag.putUUID(CENTER_RESERVATION, id);
                 tag.remove("GaugeOutflow");
+                com.rexhub.createapparel.item.ItemData.write(stack, tag);
                 if (player.isCreative()) player.setItemInHand(context.getHand(), stack.copy());
                 player.getInventory().placeItemBackInInventory(remainder);
                 player.getInventory().setChanged();
@@ -75,7 +76,7 @@ public final class CitizenGaugeItem extends BlockItem {
             }
             return InteractionResult.sidedSuccess(context.getLevel().isClientSide);
         }
-        var tag = context.getItemInHand().getTag();
+        var tag = com.rexhub.createapparel.item.ItemData.read(context.getItemInHand());
         if (tag != null && tag.contains("GaugeCenter") && center(context.getItemInHand(), context.getLevel()) == null) {
             if (!context.getLevel().isClientSide) player.displayClientMessage(Component.translatable("message.createapparel.gauge.dimension"), true);
             return InteractionResult.FAIL;
@@ -89,7 +90,7 @@ public final class CitizenGaugeItem extends BlockItem {
                 && !CitizenPopulationManager.get(server).data().centerAvailable(center, reservation(context.getItemInHand()))) {
             reportCenterUsed(context.getPlayer()); return InteractionResult.FAIL;
         }
-        boolean outflow = context.getItemInHand().hasTag() && context.getItemInHand().getTag().getBoolean("GaugeOutflow");
+        boolean outflow = com.rexhub.createapparel.item.ItemData.hasData(context.getItemInHand()) && com.rexhub.createapparel.item.ItemData.read(context.getItemInHand()).getBoolean("GaugeOutflow");
         if (level.getBlockEntity(pos) instanceof CitizenGaugeBlockEntity entity) {
             var player = context.getPlayer();
             if (player == null || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())
@@ -106,12 +107,12 @@ public final class CitizenGaugeItem extends BlockItem {
         return result;
     }
     @Nullable private static java.util.UUID reservation(ItemStack stack) {
-        var tag = stack.getTag();
+        var tag = com.rexhub.createapparel.item.ItemData.read(stack);
         return tag != null && tag.hasUUID(CENTER_RESERVATION) ? tag.getUUID(CENTER_RESERVATION) : null;
     }
     private static void releasePreviousCenter(net.minecraft.server.level.ServerLevel level, ItemStack stack, @Nullable java.util.UUID reservation, boolean destroyed) {
-        if (reservation == null || stack.getTag() == null) return;
-        var dimension = net.minecraft.resources.ResourceLocation.tryParse(stack.getTag().getString("GaugeDimension"));
+        if (reservation == null || com.rexhub.createapparel.item.ItemData.read(stack) == null) return;
+        var dimension = net.minecraft.resources.ResourceLocation.tryParse(com.rexhub.createapparel.item.ItemData.read(stack).getString("GaugeDimension"));
         if (dimension == null) return;
         var previous = level.getServer().getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, dimension));
         if (previous != null) {
@@ -128,7 +129,7 @@ public final class CitizenGaugeItem extends BlockItem {
         var reservation = reservation(entity.getItem());
         if (reservation == null) return;
         releasePreviousCenter(server, entity.getItem(), reservation, true);
-        entity.getItem().getOrCreateTag().remove(CENTER_RESERVATION);
+        com.rexhub.createapparel.item.ItemData.update(entity.getItem(), customData -> customData.remove(CENTER_RESERVATION));
     }
     public static void releaseDestroyedReservation(net.minecraft.server.level.ServerLevel level, ItemStack stack) {
         if (stack.getItem() instanceof CitizenGaugeItem) releasePreviousCenter(level, stack, reservation(stack), true);
@@ -140,8 +141,9 @@ public final class CitizenGaugeItem extends BlockItem {
         super.onDestroyed(entity, source);
         releaseDestroyedReservation(entity);
     }
-    @Override public void appendHoverText(ItemStack stack, @Nullable Level level, java.util.List<Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
-        var tag = stack.getTag();
+    @Override public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, java.util.List<Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
+        var level = context.level();
+        var tag = com.rexhub.createapparel.item.ItemData.read(stack);
         if (tag != null && tag.contains("GaugeCenter", net.minecraft.nbt.Tag.TAG_LONG))
             tooltip.add(Component.translatable("message.createapparel.gauge.center", BlockPos.of(tag.getLong("GaugeCenter")).toShortString()));
     }

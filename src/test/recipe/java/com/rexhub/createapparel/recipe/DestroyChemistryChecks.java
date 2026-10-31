@@ -1,10 +1,10 @@
 package com.rexhub.createapparel.recipe;
 
-import com.petrolpark.destroy.chemistry.legacy.LegacyElement;
-import com.petrolpark.destroy.chemistry.legacy.LegacyMixture;
-import com.petrolpark.destroy.chemistry.legacy.LegacySpecies;
-import com.petrolpark.destroy.chemistry.legacy.index.DestroyMolecules;
-import com.petrolpark.destroy.chemistry.minecraft.MixtureFluid;
+import petrolpark.mc.destroy.chemistry.legacy.LegacyElement;
+import petrolpark.mc.destroy.chemistry.legacy.LegacyMixture;
+import petrolpark.mc.destroy.chemistry.legacy.LegacySpecies;
+import petrolpark.mc.destroy.chemistry.legacy.index.DestroyMolecules;
+import petrolpark.mc.destroy.chemistry.minecraft.MixtureFluid;
 import com.rexhub.createapparel.compat.destroy.DestroyChemistry;
 import com.rexhub.createapparel.init.ModFluids;
 import com.simibubi.create.AllBlocks;
@@ -17,9 +17,9 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.List;
 
@@ -66,7 +66,7 @@ final class DestroyChemistryChecks {
     }
 
     static void reactions(GameTestHelper helper) {
-        var silverItem = ForgeRegistries.ITEMS.getValue(ResourceLocation.parse("thesilverage:silver_ingot"));
+        var silverItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("thesilverage:silver_ingot"));
         helper.assertTrue(silverItem != null && silverItem != Items.AIR, "Actual test silver ingot is registered");
         var ingot = new ItemStack(silverItem);
         var solution = acid(9f, 9f);
@@ -100,13 +100,13 @@ final class DestroyChemistryChecks {
         var recipe = helper.getLevel().getRecipeManager().byKey(ResourceLocation.parse(
                 "createapparel:mixing/mirror_coating_fluid_from_destroy"));
         if (recipe.isEmpty()) {
-            helper.assertTrue(ForgeRegistries.ITEMS.tags().getTag(net.minecraft.tags.ItemTags.create(
-                            ResourceLocation.parse("forge:ingots/silver"))).isEmpty(),
+            helper.assertTrue(com.rexhub.createapparel.TestRegistries.items(net.minecraft.tags.ItemTags.create(
+                            ResourceLocation.parse("c:ingots/silver"))).isEmpty(),
                     "Destroy finishing recipe is absent only when silver is unavailable");
             helper.succeed();
             return;
         }
-        var mixing = (MixingRecipe) recipe.orElseThrow();
+        var mixing = (MixingRecipe) recipe.orElseThrow().value();
         var ingredient = mixing.getFluidIngredients().get(0);
         helper.assertTrue(ingredient.test(complex(1f, 900)), "Target concentration is accepted");
         helper.assertTrue(ingredient.test(complex(0.9f, 900)) && ingredient.test(complex(1.1f, 900)),
@@ -115,11 +115,12 @@ final class DestroyChemistryChecks {
                 "Concentrations outside the approved tolerance are rejected");
         helper.assertTrue(!ingredient.test(MixtureFluid.of(900, new LegacyMixture().addMolecule(DestroyChemistry.SILVER_ION, 1f))),
                 "Uncomplexed silver solution is not accepted");
-        var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),
+                helper.getLevel().registryAccess(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
         try {
-            ingredient.write(buffer);
-            var restored = com.simibubi.create.foundation.fluid.FluidIngredient.read(buffer);
-            helper.assertTrue(restored.getRequiredAmount() == 900 && restored.test(complex(1f, 900))
+            net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient.STREAM_CODEC.encode(buffer, ingredient);
+            var restored = net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient.STREAM_CODEC.decode(buffer);
+            helper.assertTrue(restored.amount() == 900 && restored.test(complex(1f, 900))
                             && !restored.test(complex(0.899f, 900)) && !restored.test(complex(1.101f, 900)),
                     "Network ingredient round trip preserves counterion handling and strict concentration bounds");
         } finally {
@@ -131,9 +132,9 @@ final class DestroyChemistryChecks {
         helper.getLevel().setBlockAndUpdate(pos, AllBlocks.BASIN.getDefaultState());
         var basin = (BasinBlockEntity) helper.getLevel().getBlockEntity(pos);
         basin.tick();
-        var input = basin.inputTank.getCapability().orElseThrow(IllegalStateException::new);
+        var input = basin.inputTank.getCapability();
         helper.assertTrue(input.fill(complex(1f, 900), IFluidHandler.FluidAction.EXECUTE) == 900, "Basin accepts 900 mB mixture");
-        helper.assertTrue(input.fill(new FluidStack(AllFluids.HONEY.getSource(), 100), IFluidHandler.FluidAction.EXECUTE) == 100,
+        helper.assertTrue(input.fill(new FluidStack((net.minecraft.world.level.material.Fluid) AllFluids.HONEY.getSource(), 100), IFluidHandler.FluidAction.EXECUTE) == 100,
                 "Basin accepts 100 mB honey in a separate input tank");
         helper.assertTrue(BasinRecipe.match(basin, mixing), "Real basin matches finishing recipe: " + input.getFluidInTank(0)
                 + " / " + input.getFluidInTank(1));

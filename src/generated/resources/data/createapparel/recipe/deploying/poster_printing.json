@@ -1,0 +1,17 @@
+{
+  "type": "createapparel:ad_printing",
+  "ingredients": [
+    {
+      "item": "createapparel:poster"
+    },
+    {
+      "item": "createapparel:advertising_photo"
+    }
+  ],
+  "keep_held_item": true,
+  "results": [
+    {
+      "id": "createapparel:poster"
+    }
+  ]
+}

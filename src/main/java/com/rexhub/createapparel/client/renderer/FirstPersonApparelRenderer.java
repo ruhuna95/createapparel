@@ -16,14 +16,14 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.CrossbowItem;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderArmEvent;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.RenderArmEvent;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class FirstPersonApparelRenderer {
     private static PlayerModel<AbstractClientPlayer> classic;
     private static PlayerModel<AbstractClientPlayer> slim;
@@ -53,7 +53,7 @@ public final class FirstPersonApparelRenderer {
         sleeve.copyFrom(arm);
         var parts = snapshot.firstPersonArm(side);
         if (parts.body().isEmpty()) {
-            var vertices = buffer.getBuffer(RenderType.entityTranslucent(player.getSkinTextureLocation()));
+            var vertices = buffer.getBuffer(RenderType.entityTranslucent(player.getSkin().texture()));
             arm.render(poseStack, vertices, light, OverlayTexture.NO_OVERLAY);
             if (player.isModelPartShown(side == HumanoidArm.RIGHT
                     ? PlayerModelPart.RIGHT_SLEEVE : PlayerModelPart.LEFT_SLEEVE)) {

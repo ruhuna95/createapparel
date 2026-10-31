@@ -47,7 +47,7 @@ class FashionResourceTest {
 
     @Test
     void mediaRecipesUsePaperAndPosterWithGlassWithoutManualPrinting() throws Exception {
-        var recipes = Path.of("src/generated/resources/data/createapparel/recipes");
+        var recipes = Path.of("src/generated/resources/data/createapparel/recipe");
         var poster = ProjectResources.json(recipes.resolve("poster.json"));
         assertEquals("minecraft:crafting_shaped", poster.get("type").getAsString());
         assertEquals(List.of("PP", "PP"), java.util.stream.StreamSupport.stream(poster.getAsJsonArray("pattern").spliterator(), false)
@@ -66,9 +66,9 @@ class FashionResourceTest {
     @Test
     void deployerPrintingHasTwoNonConsumingDataRecipes() throws Exception {
         for (var media : List.of("poster", "billboard_panel")) {
-            var recipe = ProjectResources.json(Path.of("src/generated/resources/data/createapparel/recipes/deploying/" + media + "_printing.json"));
+            var recipe = ProjectResources.json(Path.of("src/generated/resources/data/createapparel/recipe/deploying/" + media + "_printing.json"));
             assertEquals("createapparel:ad_printing", recipe.get("type").getAsString());
-            assertTrue(recipe.get("keepHeldItem").getAsBoolean());
+            assertTrue(recipe.get("keep_held_item").getAsBoolean());
             var ingredients = recipe.getAsJsonArray("ingredients");
             assertEquals(2, ingredients.size());
             assertEquals("createapparel:" + media, ingredients.get(0).getAsJsonObject().get("item").getAsString());
@@ -170,7 +170,7 @@ class FashionResourceTest {
         assertFalse(Files.exists(GENERATED.resolve("models/item/blank_photo_card.json")));
         var data = Path.of("src/generated/resources/data/createapparel");
         assertFalse(Files.exists(data.resolve("recipes/blank_photo_card.json")));
-        assertFalse(Files.exists(data.resolve("advancements/recipes/misc/blank_photo_card.json")));
+        assertFalse(Files.exists(data.resolve("advancements/recipe/misc/blank_photo_card.json")));
     }
 
     private static void assertHandwritten(String path) {

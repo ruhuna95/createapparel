@@ -9,7 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -21,9 +21,9 @@ public record AdvertisingPhotoData(UUID photoId, UUID captureId, @Nullable UUID 
         public Garment { appearance = appearance.copy(); }
         @Override public CompoundTag appearance() { return appearance.copy(); }
         public ItemStack stack() {
-            var item = ForgeRegistries.ITEMS.getValue(itemId);
+            var item = BuiltInRegistries.ITEM.get(itemId);
             if (!(item instanceof GarmentItem)) return ItemStack.EMPTY;
-            var stack = new ItemStack(item); stack.setTag(appearance.copy()); return stack;
+            var stack = new ItemStack(item); com.rexhub.createapparel.item.ItemData.write(stack, appearance.copy()); return stack;
         }
     }
     public AdvertisingPhotoData {
@@ -44,7 +44,7 @@ public record AdvertisingPhotoData(UUID photoId, UUID captureId, @Nullable UUID 
             var definition = loadout.definition(slot).orElseThrow();
             var clean = new ItemStack(stack.getItem());
             GarmentAppearance.fromStack(stack, definition).write(clean);
-            result.add(new Garment(slot, definition.id(), clean.getOrCreateTag(), loadout.styleState(slot).normalize(definition, slot)));
+            result.add(new Garment(slot, definition.id(), com.rexhub.createapparel.item.ItemData.readOrEmpty(clean), loadout.styleState(slot).normalize(definition, slot)));
         }
         return result;
     }
@@ -76,7 +76,7 @@ public record AdvertisingPhotoData(UUID photoId, UUID captureId, @Nullable UUID 
         tag.put("Garments", list); return tag;
     }
     @Nullable public static AdvertisingPhotoData read(ItemStack stack) {
-        return stack.hasTag() ? load(stack.getOrCreateTag().getCompound(TAG)) : null;
+        return com.rexhub.createapparel.item.ItemData.hasData(stack) ? load(com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getCompound(TAG)) : null;
     }
     @Nullable public static AdvertisingPhotoData load(CompoundTag tag) {
         try {
@@ -100,5 +100,5 @@ public record AdvertisingPhotoData(UUID photoId, UUID captureId, @Nullable UUID 
                     CitizenAppearance.read(body), CitizenAge.read(body.getString("Age")), garments, pose, PhotoLayout.load(tag.getCompound("Layout")));
         } catch (IllegalArgumentException | NoSuchElementException exception) { return null; }
     }
-    public void write(ItemStack stack) { stack.getOrCreateTag().put(TAG, save()); }
+    public void write(ItemStack stack) { com.rexhub.createapparel.item.ItemData.update(stack, customData -> customData.put(TAG, save())); }
 }

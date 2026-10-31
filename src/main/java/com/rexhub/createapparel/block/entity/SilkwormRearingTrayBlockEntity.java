@@ -22,13 +22,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.CombinedInvWrapper;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -57,7 +54,6 @@ public final class SilkwormRearingTrayBlockEntity extends KineticBlockEntity {
             return slot == 1 ? super.extractItem(slot, amount, simulate) : ItemStack.EMPTY;
         }
     };
-    private LazyOptional<IItemHandler> itemCapability = LazyOptional.of(() -> automation);
     private boolean hasSilkworm;
     private boolean reading;
     private float progress;
@@ -250,22 +246,34 @@ public final class SilkwormRearingTrayBlockEntity extends KineticBlockEntity {
         return true;
     }
 
-    public CompoundTag trayData() {
+    public CompoundTag trayData(net.minecraft.core.HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
         tag.putBoolean("HasSilkworm", hasSilkworm);
-        tag.put("Inventory", inventory.serializeNBT());
+        tag.put("Inventory", inventory.serializeNBT(registries));
         tag.putFloat("Progress", progress);
         tag.putInt("ProcessingTime", processingTime);
-        tag.put("PendingResult", pendingResult.save(new CompoundTag()));
-        tag.put("FedFood", fedFood.save(new CompoundTag()));
+        tag.put("PendingResult", pendingResult.saveOptional(registries));
+        tag.put("FedFood", fedFood.saveOptional(registries));
         tag.putString("State", state.name());
         return tag;
     }
 
     public ItemStack storedItem() {
         ItemStack stack = new ItemStack(ModItems.SILKWORM_REARING_TRAY.get());
-        stack.getOrCreateTagElement("BlockEntityTag").put("TrayData", trayData());
+        CompoundTag tag = new CompoundTag();
+        tag.put("TrayData", trayData(java.util.Objects.requireNonNull(level).registryAccess()));
+        net.minecraft.world.item.BlockItem.setBlockEntityData(stack, getType(), tag);
         return stack;
+    }
+
+    @Override
+    protected void collectImplicitComponents(net.minecraft.core.component.DataComponentMap.Builder components) {
+        super.collectImplicitComponents(components);
+        var data = new CompoundTag();
+        data.put("TrayData", trayData(java.util.Objects.requireNonNull(level).registryAccess()));
+        data.putString("id", java.util.Objects.requireNonNull(net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(getType())).toString());
+        components.set(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA,
+                net.minecraft.world.item.component.CustomData.of(data));
     }
 
     public boolean hasStoredContents() {
@@ -273,24 +281,24 @@ public final class SilkwormRearingTrayBlockEntity extends KineticBlockEntity {
     }
 
     @Override
-    protected void write(CompoundTag tag, boolean clientPacket) {
-        super.write(tag, clientPacket);
-        tag.put("TrayData", trayData());
+    protected void write(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, boolean clientPacket) {
+        super.write(tag, registries, clientPacket);
+        tag.put("TrayData", trayData(registries));
         if (clientPacket) tag.putBoolean("Paused", paused);
     }
 
     @Override
-    protected void read(CompoundTag tag, boolean clientPacket) {
-        super.read(tag, clientPacket);
+    protected void read(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, boolean clientPacket) {
+        super.read(tag, registries, clientPacket);
         CompoundTag data = tag.getCompound("TrayData");
         reading = true;
-        if (data.contains("Inventory")) inventory.deserializeNBT(data.getCompound("Inventory"));
+        if (data.contains("Inventory")) inventory.deserializeNBT(registries, com.rexhub.createapparel.item.ItemData.upgradeInventory(registries, data.getCompound("Inventory")));
         reading = false;
         hasSilkworm = data.getBoolean("HasSilkworm");
         processingTime = Math.max(0, data.getInt("ProcessingTime"));
         progress = Math.max(0, Math.min(processingTime, data.getFloat("Progress")));
-        pendingResult = ItemStack.of(data.getCompound("PendingResult"));
-        fedFood = ItemStack.of(data.getCompound("FedFood"));
+        pendingResult = com.rexhub.createapparel.item.ItemData.load(registries, data.getCompound("PendingResult"));
+        fedFood = com.rexhub.createapparel.item.ItemData.load(registries, data.getCompound("FedFood"));
         try {
             state = State.valueOf(data.getString("State"));
         } catch (IllegalArgumentException ignored) {
@@ -299,20 +307,9 @@ public final class SilkwormRearingTrayBlockEntity extends KineticBlockEntity {
         if (clientPacket) paused = tag.getBoolean("Paused");
     }
 
-    @Override
-    public void invalidate() {
-        super.invalidate();
-        itemCapability.invalidate();
-    }
 
-    @Override
-    public void reviveCaps() {
-        super.reviveCaps();
-        itemCapability = LazyOptional.of(() -> automation);
-    }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-        return capability == ForgeCapabilities.ITEM_HANDLER ? itemCapability.cast() : super.getCapability(capability, side);
+    public IItemHandler itemHandler() {
+        return automation;
     }
 }

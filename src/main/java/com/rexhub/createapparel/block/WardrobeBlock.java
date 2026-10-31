@@ -38,12 +38,24 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public final class WardrobeBlock extends BaseEntityBlock {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
+    public static final com.mojang.serialization.MapCodec<WardrobeBlock> CODEC = simpleCodec(WardrobeBlock::new);
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends WardrobeBlock> codec() {
+        return CODEC;
+    }
+
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
@@ -57,8 +69,9 @@ public final class WardrobeBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, level, tooltip, flag);
+    public void appendHoverText(ItemStack stack, net.minecraft.world.item.Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        var level = context.level();
+        super.appendHoverText(stack, context, tooltip, flag);
         tooltip.add(Component.translatable("tooltip.createapparel.wardrobe.change_clothes").withStyle(ChatFormatting.GRAY));
     }
 
@@ -107,7 +120,7 @@ public final class WardrobeBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide && player.isCreative() && state.getValue(HALF) == DoubleBlockHalf.UPPER) {
             BlockPos lowerPos = pos.below();
             BlockState lowerState = level.getBlockState(lowerPos);
@@ -116,12 +129,12 @@ public final class WardrobeBlock extends BaseEntityBlock {
                 level.levelEvent(player, 2001, lowerPos, Block.getId(lowerState));
             }
         }
-        super.playerWillDestroy(level, pos, state, player);
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
-    @Override
+
     @SuppressWarnings("deprecation")
-    public InteractionResult use(
+    private InteractionResult interact(
             BlockState state,
             Level level,
             BlockPos pos,
@@ -135,7 +148,7 @@ public final class WardrobeBlock extends BaseEntityBlock {
             return InteractionResult.PASS;
         }
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
-            NetworkHooks.openScreen(serverPlayer, wardrobe, lowerPos);
+            serverPlayer.openMenu(wardrobe, lowerPos);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

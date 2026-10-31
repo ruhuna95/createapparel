@@ -10,27 +10,28 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.*;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.item.ItemExpireEvent;
-import net.minecraftforge.event.entity.player.*;
-import net.minecraftforge.event.level.*;
-import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.*;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.item.ItemExpireEvent;
+import net.neoforged.neoforge.event.entity.player.*;
+import net.neoforged.neoforge.event.level.*;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class CitizenPopulationEvents {
     private static final Map<ItemEntity, ItemExpireEvent> EXPIRING_GAUGES = new IdentityHashMap<>();
     private CitizenPopulationEvents() { }
-    @SubscribeEvent public static void serverTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.START) CitizenPopulationManager.beginServerTick();
-        else CitizenPopulationManager.endServerTick();
+    @SubscribeEvent public static void serverTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Pre event) {
+        CitizenPopulationManager.beginServerTick();
     }
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void join(EntityJoinLevelEvent event) {
+    @SubscribeEvent public static void serverTickEnd(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        CitizenPopulationManager.endServerTick();
+    }
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST) public static void join(EntityJoinLevelEvent event) {
         if (!event.isCanceled() && event.getLevel() instanceof ServerLevel level
                 && event.getEntity() instanceof com.simibubi.create.content.contraptions.AbstractContraptionEntity contraption)
             CitizenPopulationManager.get(level).contraptionJoined(contraption);
@@ -43,7 +44,7 @@ public final class CitizenPopulationEvents {
             var expiry = EXPIRING_GAUGES.remove(item); var reason = item.getRemovalReason();
             if (reason == Entity.RemovalReason.KILLED
                     || reason == Entity.RemovalReason.DISCARDED
-                    && (expiry != null && !expiry.isCanceled() || item.getY() < item.level().getMinBuildHeight() - 64))
+                    && (expiry != null && expiry.getExtraLife() <= 0 || item.getY() < item.level().getMinBuildHeight() - 64))
                 CitizenGaugeItem.releaseDestroyedReservation(item);
         }
         if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof Citizen citizen) {
@@ -68,31 +69,31 @@ public final class CitizenPopulationEvents {
         if (!(event.getEntity().level() instanceof ServerLevel level)
                 || !(event.getCrafting().getItem() instanceof CitizenGaugeItem)
                 || !(event.getInventory() instanceof net.minecraft.world.inventory.CraftingContainer inventory)) return;
-        var recipe = level.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, inventory, level);
-        if (recipe.orElse(null) instanceof GaugeResetRecipe)
-            CitizenGaugeItem.releaseCraftedReservation(level, GaugeResetRecipe.input(inventory));
+        var recipe = level.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, inventory.asCraftInput(), level);
+        if (recipe.isPresent() && recipe.get().value() instanceof GaugeResetRecipe)
+            CitizenGaugeItem.releaseCraftedReservation(level, GaugeResetRecipe.input(inventory.asCraftInput()));
     }
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void death(LivingDeathEvent event) {
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST) public static void death(LivingDeathEvent event) {
         if (!event.isCanceled() && event.getEntity() instanceof Citizen citizen && citizen.level() instanceof ServerLevel level) CitizenPopulationManager.get(level).leave(citizen, true);
     }
-    @SubscribeEvent public static void tick(TickEvent.LevelTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel level) {
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel level) {
             EXPIRING_GAUGES.keySet().removeIf(item -> item.level() == level);
             CitizenPopulationManager.get(level).tick();
         }
     }
-    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void interact(PlayerInteractEvent.RightClickBlock event) {
-        if (!event.isCanceled() && event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && GaugeInteractions.active(event.getEntity())) {
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST) public static void interact(PlayerInteractEvent.RightClickBlock event) {
+        if (!event.isCanceled() && event.getUseBlock() != net.neoforged.neoforge.common.util.TriState.FALSE && GaugeInteractions.active(event.getEntity())) {
             event.setCanceled(true); event.setCancellationResult(GaugeInteractions.selectedUse(event.getLevel(), event.getEntity(), event.getHitVec())); return;
         }
         if (!event.isCanceled() && event.getItemStack().getItem() instanceof CitizenGaugeItem
-                && event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY
+                && event.getUseBlock() != net.neoforged.neoforge.common.util.TriState.FALSE
                 && event.getLevel().getBlockState(event.getPos()).getBlock() instanceof CitizenGaugeBlock) {
             event.setCanceled(true); event.setCancellationResult(GaugeInteractions.use(event.getLevel(), event.getPos(), event.getEntity(), event.getHand(), event.getHitVec()));
         }
     }
-    @SubscribeEvent public static void playerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+    @SubscribeEvent public static void playerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
         GaugeInteractions.tick(player);
         if (!GaugeInteractions.observingDistricts(player)) { GaugeViewSynchronization.stopObserving(player.getUUID()); return; }
         if (Math.floorMod(player.level().getGameTime() + player.getId(), 40) == 0) GaugeViewSynchronization.send(player);

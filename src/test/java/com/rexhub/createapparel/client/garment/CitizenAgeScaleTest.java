@@ -139,7 +139,7 @@ class CitizenAgeScaleTest {
             var points = new ArrayList<Vector3f>();
             var vertices = (VertexConsumer) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{VertexConsumer.class},
                     (proxy, method, arguments) -> {
-                        if (method.getName().equals("vertex") && arguments.length == 4) {
+                        if (method.getName().equals("addVertex") && arguments.length == 4) {
                             points.add(new Vector3f((float) arguments[1], (float) arguments[2], (float) arguments[3])
                                     .mulPosition((Matrix4f) arguments[0]));
                         }

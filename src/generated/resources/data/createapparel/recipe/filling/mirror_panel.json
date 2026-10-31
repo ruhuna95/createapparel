@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "minecraft:glass_pane"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "createapparel:mirror_coating_fluid"
+    }
+  ],
+  "results": [
+    {
+      "id": "createapparel:mirror_panel"
+    }
+  ]
+}

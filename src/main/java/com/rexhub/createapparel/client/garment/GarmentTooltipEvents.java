@@ -15,19 +15,19 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderTooltipEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.RenderTooltipEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.fml.common.Mod;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class GarmentTooltipEvents {
     private static final ResourceLocation WATCH_ID = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "watch");
 
@@ -39,7 +39,7 @@ public final class GarmentTooltipEvents {
         if (!(event.getItemStack().getItem() instanceof GarmentItem)) {
             return;
         }
-        var id = ForgeRegistries.ITEMS.getKey(event.getItemStack().getItem());
+        var id = BuiltInRegistries.ITEM.getKey(event.getItemStack().getItem());
         if (id != null) {
             ClientGarmentAssets.getDefinition(id).ifPresent(definition -> {
                 appendSlots(event.getToolTip(), definition);
@@ -67,7 +67,7 @@ public final class GarmentTooltipEvents {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void addWatchUsage(ItemTooltipEvent event) {
-        var id = ForgeRegistries.ITEMS.getKey(event.getItemStack().getItem());
+        var id = BuiltInRegistries.ITEM.getKey(event.getItemStack().getItem());
         if (id != null) appendWatchUsage(event.getToolTip(), id);
     }
 

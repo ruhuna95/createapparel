@@ -11,6 +11,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SewingPatternOrderTest {
+    private static final java.util.Map<SewingRecipe, ResourceLocation> IDS = new java.util.IdentityHashMap<>();
     @Test
     void existingGarmentsFollowCreationOrderRegardlessOfRecipeIdsAndInputOrder() {
         var expected = List.of(
@@ -39,7 +40,7 @@ class SewingPatternOrderTest {
             recipes.add(recipe("addon:recipe_" + (expected.size() - index), "createapparel:" + expected.get(index)));
         }
         Collections.reverse(recipes);
-        recipes.sort(SewingPatternOrder.RECIPES);
+        recipes.sort(SewingPatternOrder.recipes(IDS::get));
         assertEquals(expected, recipes.stream().map(recipe -> recipe.getResultId().getPath()).toList());
     }
 
@@ -49,7 +50,7 @@ class SewingPatternOrderTest {
                 recipe("addon:b", "createapparel:future_garment"),
                 recipe("addon:c", "createapparel:sweater"));
         assertEquals(List.of("createapparel:sweater", "createapparel:future_garment", "other:t_shirt"),
-                recipes.stream().sorted(SewingPatternOrder.RECIPES)
+                recipes.stream().sorted(SewingPatternOrder.recipes(IDS::get))
                         .map(recipe -> recipe.getResultId().toString()).toList());
     }
 
@@ -57,12 +58,14 @@ class SewingPatternOrderTest {
     void recipesForTheSameGarmentHaveStableIdOrder() {
         var recipes = List.of(recipe("addon:z", "createapparel:t_shirt"),
                 recipe("addon:a", "createapparel:t_shirt"));
-        assertEquals(List.of("addon:a", "addon:z"), recipes.stream().sorted(SewingPatternOrder.RECIPES)
-                .map(recipe -> recipe.getId().toString()).toList());
+        assertEquals(List.of("addon:a", "addon:z"), recipes.stream().sorted(SewingPatternOrder.recipes(IDS::get))
+                .map(recipe -> IDS.get(recipe).toString()).toList());
     }
 
     private static SewingRecipe recipe(String id, String garment) {
-        return new SewingRecipe(ResourceLocation.parse(id), null, null,
+        var recipe = new SewingRecipe(null, null,
                 ResourceLocation.parse("createapparel:sewing_pattern"), ResourceLocation.parse(garment));
+        IDS.put(recipe, ResourceLocation.parse(id));
+        return recipe;
     }
 }

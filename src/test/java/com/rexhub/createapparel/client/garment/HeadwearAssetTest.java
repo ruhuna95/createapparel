@@ -329,7 +329,7 @@ class HeadwearAssetTest {
     @Test
     void sewingAndItemModelsExposeAllSixHats() throws IOException {
         for (String id : IDS) {
-            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + id + ".json"));
+            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/" + id + ".json"));
             assertEquals("createapparel:sewing", recipe.get("type").getAsString());
             assertEquals("createapparel:" + id, recipe.getAsJsonObject("result").get("id").getAsString());
             assertEquals(1, recipe.getAsJsonObject("fabric").get("count").getAsInt());

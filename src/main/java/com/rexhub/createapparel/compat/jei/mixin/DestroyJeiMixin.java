@@ -1,8 +1,8 @@
 package com.rexhub.createapparel.compat.jei.mixin;
 
-import com.petrolpark.destroy.compat.jei.DestroyJEI;
-import com.petrolpark.destroy.compat.jei.category.ReactionCategory;
-import com.petrolpark.destroy.core.chemistry.recipe.ReactionRecipe;
+import petrolpark.mc.destroy.compat.jei.DestroyJEI;
+import petrolpark.mc.destroy.compat.jei.category.ReactionCategory;
+import petrolpark.mc.destroy.core.chemistry.recipe.ReactionRecipe;
 import com.rexhub.createapparel.compat.destroy.DestroyChemistry;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;

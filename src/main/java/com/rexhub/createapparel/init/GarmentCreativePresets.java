@@ -8,7 +8,7 @@ import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.Optional;
 
@@ -18,7 +18,7 @@ public final class GarmentCreativePresets {
     private GarmentCreativePresets() {
     }
 
-    public static ItemStack create(RegistryObject<Item> item) {
+    public static ItemStack create(DeferredHolder<Item, ? extends Item> item) {
         ItemStack stack = item.get().getDefaultInstance();
         appearance(item.getId()).ifPresent(appearance -> appearance.write(stack));
         return stack;

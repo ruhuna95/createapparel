@@ -17,7 +17,6 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkHooks;
 
 public final class Citizen extends PathfinderMob {
     private static final EntityDataAccessor<CompoundTag> DATA_STATE =
@@ -86,7 +85,7 @@ public final class Citizen extends PathfinderMob {
                 observedBehavior = citizenState.behavior();
                 com.rexhub.createapparel.citizen.population.CitizenPopulationManager.get((net.minecraft.server.level.ServerLevel) level()).modeChanged(this);
             }
-            entityData.set(DATA_STATE, citizenState.serializeNBT());
+            entityData.set(DATA_STATE, citizenState.serializeNBT(registryAccess()));
         }
     }
 
@@ -127,17 +126,17 @@ public final class Citizen extends PathfinderMob {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        entityData.define(DATA_STATE, new CompoundTag());
-        entityData.define(DATA_STANDING_ON_TRANSPORT, false);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_STATE, new CompoundTag());
+        builder.define(DATA_STANDING_ON_TRANSPORT, false);
     }
 
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
         if (DATA_STATE.equals(key) && level().isClientSide && citizenState != null) {
-            citizenState.deserializeNBT(entityData.get(DATA_STATE));
+            citizenState.deserializeNBT(registryAccess(), entityData.get(DATA_STATE));
             refreshAgeDimensions();
         }
     }
@@ -145,20 +144,19 @@ public final class Citizen extends PathfinderMob {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.merge(citizenState.serializeNBT());
+        tag.merge(citizenState.serializeNBT(registryAccess()));
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        citizenState.deserializeNBT(tag);
+        citizenState.deserializeNBT(registryAccess(), tag);
         if (!level().isClientSide) citizenState.loadout().migrateLegacyCoats();
         setPersistenceRequired();
         syncState();
     }
 
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() { return NetworkHooks.getEntitySpawningPacket(this); }
+
 
     @Override
     protected void registerGoals() {

@@ -32,6 +32,19 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import java.util.List;
 
 public final class CitizenGaugeBlock extends FaceAttachedHorizontalDirectionalBlock implements EntityBlock, IWrenchable {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
+    public static final com.mojang.serialization.MapCodec<CitizenGaugeBlock> CODEC = simpleCodec(CitizenGaugeBlock::new);
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends CitizenGaugeBlock> codec() {
+        return CODEC;
+    }
+
     public CitizenGaugeBlock(Properties properties) { super(properties); registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(FACE, AttachFace.WALL)); }
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(FACING, FACE); }
     @Override @javax.annotation.Nullable public BlockState getStateForPlacement(BlockPlaceContext context) {
@@ -70,7 +83,7 @@ public final class CitizenGaugeBlock extends FaceAttachedHorizontalDirectionalBl
     @Override @SuppressWarnings("deprecation") public VoxelShape getCollisionShape(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos, CollisionContext context) {
         return context instanceof EntityCollisionContext entity && entity.getEntity() == null ? getShape(state, level, pos, context) : Shapes.empty();
     }
-    @Override @SuppressWarnings("deprecation") public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+     @SuppressWarnings("deprecation") private InteractionResult interact(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         return GaugeInteractions.use(level, pos, player, hand, hit);
     }
     @Override public InteractionResult onWrenched(BlockState state, UseOnContext context) { return InteractionResult.PASS; }
@@ -89,7 +102,7 @@ public final class CitizenGaugeBlock extends FaceAttachedHorizontalDirectionalBl
     }
     @Override public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean harvest, net.minecraft.world.level.material.FluidState fluid) {
         if (level.getBlockEntity(pos) instanceof CitizenGaugeBlockEntity entity && entity.panelCount() > 1) {
-            int slot = targetedSlot(pos, state, player.pick(player.getBlockReach() + 1, 1, false).getLocation());
+            int slot = targetedSlot(pos, state, player.pick(player.blockInteractionRange() + 1, 1, false).getLocation());
             if (entity.hasPanel(slot)) {
                 var stack = entity.panelItem(slot); entity.removePanel(slot);
                 if (!level.isClientSide && !player.isCreative()) popResource(level, pos, stack);

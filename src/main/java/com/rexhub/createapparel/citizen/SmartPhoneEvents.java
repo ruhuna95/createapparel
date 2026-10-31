@@ -2,11 +2,11 @@ package com.rexhub.createapparel.citizen;
 
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.item.SmartPhoneItem;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class SmartPhoneEvents {
     private SmartPhoneEvents() { }
 

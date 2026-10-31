@@ -31,8 +31,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 
 import java.util.Optional;
 
@@ -124,19 +123,21 @@ public final class ApparelProductionScenes {
 
     private static void insert(CreateSceneBuilder scene, BlockPos pos, ItemStack item) {
         scene.world().modifyBlockEntity(pos, com.simibubi.create.content.kinetics.base.KineticBlockEntity.class,
-                machine -> machine.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
+                machine -> {
+                    var handler = machine.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, pos, null);
+                    if (handler == null) return;
                     var remaining = item.copy();
                     for (int slot = 0; slot < handler.getSlots() && !remaining.isEmpty(); slot++) {
                         remaining = handler.insertItem(slot, remaining, false);
                     }
-                }));
+                });
     }
 
     private static void clearInput(CreateSceneBuilder scene, SceneBuildingUtil util, BlockPos pos, boolean sewing) {
         scene.world().modifyBlockEntityNBT(util.select().position(pos),
                 com.simibubi.create.content.kinetics.base.KineticBlockEntity.class, tag -> {
                     tag.put(sewing ? "MaterialInventory" : "InputInventory",
-                            new ItemStackHandler(sewing ? 2 : 1).serializeNBT());
+                            new ItemStackHandler(sewing ? 2 : 1).serializeNBT(net.minecraft.client.Minecraft.getInstance().level.registryAccess()));
                     tag.putBoolean("Processing", false);
                 });
         if (!sewing) {
@@ -279,7 +280,7 @@ public final class ApparelProductionScenes {
             var inventory = new ItemStackHandler(2);
             inventory.setStackInSlot(0, food);
             inventory.setStackInSlot(1, output);
-            data.put("Inventory", inventory.serializeNBT());
+            data.put("Inventory", inventory.serializeNBT(net.minecraft.client.Minecraft.getInstance().level.registryAccess()));
             data.putString("State", captured ? "READY" : "EMPTY");
             tag.put("TrayData", data);
         });

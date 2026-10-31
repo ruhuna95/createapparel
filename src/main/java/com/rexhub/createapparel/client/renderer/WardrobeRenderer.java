@@ -116,4 +116,9 @@ public final class WardrobeRenderer extends SafeBlockEntityRenderer<WardrobeBloc
     public boolean shouldRenderOffScreen(WardrobeBlockEntity blockEntity) {
         return true;
     }
+
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(WardrobeBlockEntity blockEntity) {
+        return blockEntity.getRenderBoundingBox();
+    }
 }

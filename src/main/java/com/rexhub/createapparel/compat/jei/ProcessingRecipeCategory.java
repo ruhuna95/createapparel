@@ -40,5 +40,5 @@ final class ProcessingRecipeCategory extends ApparelRecipeCategory<ProcessingRec
     }
 
     @Override
-    public ResourceLocation getRegistryName(ProcessingRecipeDisplay recipe) { return recipe.recipe().getId(); }
+    public ResourceLocation getRegistryName(ProcessingRecipeDisplay recipe) { return recipe.id(); }
 }

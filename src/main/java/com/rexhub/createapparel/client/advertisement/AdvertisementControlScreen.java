@@ -46,7 +46,7 @@ public final class AdvertisementControlScreen extends PhotoSettingsScreen<Advert
     }
     @Override protected AdvertisingPhotoData photo() { return menu.preview(selectedScene); }
     @Override protected void sendSetting(int action) { AdvertisementNetwork.control(menu.containerId, channel == null ? menu.channel() : channel.getValue(), selectedScene, action); }
-    @Override protected void containerTick() { super.containerTick(); if (channel != null) channel.tick(); updateScene(); }
+    @Override protected void containerTick() { super.containerTick(); updateScene(); }
     @Override protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         super.renderBg(graphics, partialTick, mouseX, mouseY);
         if (menu.kind() != AdvertisementControlMenu.Kind.BROADCASTER) return;
@@ -56,9 +56,9 @@ public final class AdvertisementControlScreen extends PhotoSettingsScreen<Advert
     @Override protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         if (menu.kind() == AdvertisementControlMenu.Kind.BROADCASTER) graphics.drawString(font, playerInventoryTitle, 35, 118, 0x404040, false);
     }
-    @Override public boolean mouseScrolled(double x, double y, double delta) {
+    @Override public boolean mouseScrolled(double x, double y, double horizontalScroll, double delta) {
         if (!colorMenuOpen() && scene != null && delta != 0 && scene.isMouseOver(x, y)) { selectScene(delta > 0 ? -1 : 1); return true; }
-        return super.mouseScrolled(x, y, delta);
+        return super.mouseScrolled(x, y, horizontalScroll, delta);
     }
     @Override public boolean keyPressed(int key, int code, int modifiers) {
         if (key != org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && channel != null

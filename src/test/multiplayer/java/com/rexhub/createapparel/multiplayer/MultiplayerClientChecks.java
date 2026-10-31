@@ -15,14 +15,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.nio.file.Files;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class MultiplayerClientChecks {
     private static long started;
     private static int ticks, actionStage = -1, acknowledged = -1;
@@ -34,9 +33,9 @@ public final class MultiplayerClientChecks {
     private MultiplayerClientChecks() { }
 
     @SubscribeEvent
-    public static void tick(TickEvent.ClientTickEvent event) {
+    public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
         var role = System.getProperty("apparel.multiplayer.role");
-        if (role == null || done || event.phase != TickEvent.Phase.END) return;
+        if (role == null || done) return;
         var mc = Minecraft.getInstance();
         try {
             if (started == 0) {
@@ -48,13 +47,17 @@ public final class MultiplayerClientChecks {
             MultiplayerProbe.require(System.nanoTime() - started < 900_000_000_000L, "Multiplayer client timeout: " + waiting);
             MultiplayerProbe.require(!MultiplayerProbe.marked("server-failed"), "Dedicated server failed");
             if (++ticks % 5 != 0 || mc.getOverlay() != null) return;
+            if (mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen onboarding) {
+                onboarding.onClose();
+                return;
+            }
             if (mc.screen instanceof net.minecraft.client.gui.screens.DisconnectedScreen && acknowledged < 0) {
                 MultiplayerProbe.require(++loginRetries <= 3, "Client login failed after three retries");
                 var address = System.getProperty("apparel.multiplayer.address");
                 LogUtils.getLogger().warn("MULTIPLAYER_LOGIN_RETRY role={} attempt={}", role, loginRetries);
                 net.minecraft.client.gui.screens.ConnectScreen.startConnecting(new net.minecraft.client.gui.screens.TitleScreen(), mc,
                         net.minecraft.client.multiplayer.resolver.ServerAddress.parseString(address),
-                        new net.minecraft.client.multiplayer.ServerData("Apparel QA", address, false), false);
+                        new net.minecraft.client.multiplayer.ServerData("Apparel QA", address, net.minecraft.client.multiplayer.ServerData.Type.OTHER), false, null);
                 return;
             }
             if (ticks % 200 == 0 && mc.player == null) {
@@ -65,7 +68,7 @@ public final class MultiplayerClientChecks {
                 }
             }
             if (!Files.isRegularFile(MultiplayerProbe.file("plan.nbt"))) return;
-            var plan = NbtIo.readCompressed(MultiplayerProbe.file("plan.nbt").toFile());
+            var plan = NbtIo.readCompressed(MultiplayerProbe.file("plan.nbt"), net.minecraft.nbt.NbtAccounter.unlimitedHeap());
             int stage = plan.getInt("Stage");
             if (stage == 30) {
                 MultiplayerProbe.mark(role + "-passed", "real client completed " + MultiplayerProbe.SESSION);
@@ -115,12 +118,12 @@ public final class MultiplayerClientChecks {
             }
             var player = level.getPlayerByUUID(expected.getUUID("Id"));
             MultiplayerProbe.require(player != null && !player.isDeadOrDying(), "Player is not tracked or alive");
-            MultiplayerProbe.require(ItemStack.matches(ClientApparelInventories.getStack(player, GarmentSlot.TOP), ItemStack.of(expected.getCompound("Top"))), "Apparel item mismatch");
+            MultiplayerProbe.require(ItemStack.matches(ClientApparelInventories.getStack(player, GarmentSlot.TOP), com.rexhub.createapparel.item.ItemData.load(mc.level.registryAccess(), expected.getCompound("Top"))), "Apparel item mismatch");
             MultiplayerProbe.require(expected.getString("Sleeves").equals(ClientApparelInventories.styleState(player, GarmentSlot.TOP).styles().getOrDefault("sleeves", "")), "Apparel style mismatch");
         }
         if (!plan.getBoolean("Fixtures")) {
             MultiplayerProbe.require(level.getChunkSource().getChunk(MultiplayerServerChecks.BASE.getX() >> 4,
-                    MultiplayerServerChecks.BASE.getZ() >> 4, net.minecraft.world.level.chunk.ChunkStatus.FULL, false) == null,
+                    MultiplayerServerChecks.BASE.getZ() >> 4, net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) == null,
                     "Client still holds the old fixture chunk");
             return;
         }
@@ -128,7 +131,7 @@ public final class MultiplayerClientChecks {
         var expected = plan.getCompound("Fixture");
         for (var entry : java.util.Map.of("Hanger", MultiplayerServerChecks.HANGER, "Rack", MultiplayerServerChecks.RACK).entrySet()) {
             var block = level.getBlockEntity(entry.getValue());
-            MultiplayerProbe.require(block != null && block.getUpdateTag().equals(expected.getCompound(entry.getKey())), entry.getKey() + " BlockEntity mismatch");
+            MultiplayerProbe.require(block != null && block.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()).equals(expected.getCompound(entry.getKey())), entry.getKey() + " BlockEntity mismatch");
         }
         var loom = level.getBlockState(MultiplayerServerChecks.LOOM);
         MultiplayerProbe.require(loom.hasProperty(com.rexhub.createapparel.block.LoomBlock.THREAD_VISIBLE)
@@ -140,9 +143,9 @@ public final class MultiplayerClientChecks {
             if (entity.getUUID().equals(expected.getUUID("Mannequin")) && entity instanceof Mannequin found) mannequin = found;
         }
         MultiplayerProbe.require(citizen != null && mannequin != null, "Display entities are not tracked");
-        MultiplayerProbe.require(ItemStack.matches(citizen.citizenState().loadout().getStack(GarmentSlot.TOP), ItemStack.of(expected.getCompound("CitizenTop")))
+        MultiplayerProbe.require(ItemStack.matches(citizen.citizenState().loadout().getStack(GarmentSlot.TOP), com.rexhub.createapparel.item.ItemData.load(mc.level.registryAccess(), expected.getCompound("CitizenTop")))
                 && citizen.citizenState().age().name().equals(expected.getString("CitizenAge")), "Citizen equipment or age mismatch");
-        MultiplayerProbe.require(mannequin.mannequinState().serializeNBT().equals(expected.getCompound("MannequinState")), "Mannequin state mismatch");
+        MultiplayerProbe.require(mannequin.mannequinState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(expected.getCompound("MannequinState")), "Mannequin state mismatch");
         var nodes = expected.getList("Nodes", CompoundTag.TAG_COMPOUND);
         MultiplayerProbe.require(ClientRouteView.nodes().size() == 3 && ClientRouteView.edges().size() == 2, "Route snapshot size mismatch");
         for (int i = 0; i < nodes.size(); i++) {

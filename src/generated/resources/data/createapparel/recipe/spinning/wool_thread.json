@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:spinning",
+  "ingredients": [
+    {
+      "tag": "minecraft:wool"
+    }
+  ],
+  "processing_time": 400,
+  "results": [
+    {
+      "id": "createapparel:wool_thread"
+    }
+  ]
+}

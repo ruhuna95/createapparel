@@ -24,7 +24,17 @@ import java.util.Arrays;
 import java.util.List;
 
 public record CitizenActionPacket(int containerId, int entityId, @Nullable Action action,
-                                  int index, String category, String value) {
+                                  int index, String category, String value) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<CitizenActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "citizen_action_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, CitizenActionPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), CitizenActionPacket::decode);
+
+    @Override
+    public Type<CitizenActionPacket> type() {
+        return TYPE;
+    }
+
     public enum Action { TAB, STYLE, ARM_PROFILE, CHEST_PROFILE, SKIN_TONE, HAIR_STYLE, HAIR_COLOR, EYE_COLOR,
         BEHAVIOR_MODE, WANDER_RADIUS, POSE_ROTATION_STEP, STAND_LOOK_MODE, POSE_PRESET, POPULATION_FORCE, POPULATION_INDEPENDENT, FORCE_FASHION }
 

@@ -11,7 +11,7 @@ public final class MirrorReflectionCamera extends Camera {
     public void snapshot(BlockGetter level, Entity entity, float partialTick, Camera original) {
         setup(level, entity, true, false, partialTick);
         setPosition(original.getPosition());
-        setRotation(original.getYRot(), original.getXRot());
+        setRotation(original.getYRot(), original.getXRot(), original.getRoll());
         rotation().set(original.rotation());
         getLookVector().set(original.getLookVector());
         getUpVector().set(original.getUpVector());
@@ -25,7 +25,7 @@ public final class MirrorReflectionCamera extends Camera {
         Vec3 up = MirrorReflectionMath.reflectDirection(new Vec3(original.getUpVector()), normal).normalize();
         Vec3 left = up.cross(forward).normalize();
         setRotation((float) Math.toDegrees(Math.atan2(-forward.x, forward.z)),
-                (float) -Math.toDegrees(Math.asin(forward.y)));
+                (float) -Math.toDegrees(Math.asin(forward.y)), 0F);
         var basis = new Matrix3f().setColumn(0, vector(left)).setColumn(1, vector(up)).setColumn(2, vector(forward));
         rotation().setFromNormalized(basis);
         getLookVector().set(vector(forward));

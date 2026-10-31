@@ -13,10 +13,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.BlockSnapshot;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.common.util.BlockSnapshot;
+import net.neoforged.neoforge.event.EventHooks;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -94,7 +93,7 @@ public final class SmartPhoneRouteEditor {
                 message(server, "denied"); event.setCancellationResult(InteractionResult.FAIL); return;
             }
             if (server.isShiftKeyDown()) {
-                NetworkHooks.openScreen(server, new SimpleMenuProvider((id, inventory, viewer) -> new RouteMarkerMenu(id, inventory, node.id(), node.pos()),
+                server.openMenu(new SimpleMenuProvider((id, inventory, viewer) -> new RouteMarkerMenu(id, inventory, node.id(), node.pos()),
                         Component.translatable("container.createapparel.route_marker")), buffer -> { buffer.writeUUID(node.id()); buffer.writeBlockPos(node.pos()); });
             } else clickMarker(server, node, event.getHand());
             event.setCancellationResult(InteractionResult.CONSUME);
@@ -173,8 +172,8 @@ public final class SmartPhoneRouteEditor {
         var pos = hit.getBlockPos().above();
         var snapshot = BlockSnapshot.create(level.dimension(), level, pos);
         if (!level.setBlock(pos, ModBlocks.CITIZEN_ROUTE_MARKER.get().defaultBlockState(), 2)) return false;
-        if (ForgeEventFactory.onBlockPlace(player, snapshot, hit.getDirection())) {
-            snapshot.restore(true, false);
+        if (EventHooks.onBlockPlace(player, snapshot, hit.getDirection())) {
+            snapshot.restore(net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
             CitizenRouteManager.get(level).removeAt(pos);
             return false;
         }

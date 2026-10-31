@@ -22,7 +22,7 @@ public final class CitizenState {
         if (!loading) {
             for (var slot : com.rexhub.createapparel.garment.GarmentSlot.values()) {
                 var stack = loadout.getStack(slot);
-                if (!net.minecraft.world.item.ItemStack.isSameItemSameTags(observedOutfit.getOrDefault(slot, net.minecraft.world.item.ItemStack.EMPTY), stack)) fashion.clearPurchase(slot);
+                if (!net.minecraft.world.item.ItemStack.isSameItemSameComponents(observedOutfit.getOrDefault(slot, net.minecraft.world.item.ItemStack.EMPTY), stack)) fashion.clearPurchase(slot);
                 observedOutfit.put(slot, stack.copy());
             }
             changed();
@@ -66,18 +66,18 @@ public final class CitizenState {
         changeListener.run();
     }
 
-    public CompoundTag serializeNBT() {
+    public CompoundTag serializeNBT(net.minecraft.core.HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
         appearance.write(tag);
         tag.putString("Age", age.getSerializedName());
-        tag.put("ApparelSlots", loadout.serializeNBT());
+        tag.put("ApparelSlots", loadout.serializeNBT(registries));
         behavior.write(tag);
         tag.put("Population", population.save());
         tag.put("Fashion", fashion.save());
         return tag;
     }
 
-    public void deserializeNBT(CompoundTag tag) {
+    public void deserializeNBT(net.minecraft.core.HolderLookup.Provider registries, CompoundTag tag) {
         appearance = CitizenAppearance.read(tag);
         age = CitizenAge.read(tag.getString("Age"));
         behavior = CitizenBehaviorState.read(tag);
@@ -85,7 +85,7 @@ public final class CitizenState {
         fashion.load(tag.getCompound("Fashion"));
         if (tag.contains("ApparelSlots", CompoundTag.TAG_COMPOUND)) {
             loading = true;
-            try { loadout.deserializeNBT(tag.getCompound("ApparelSlots")); } finally { loading = false; }
+            try { loadout.deserializeNBT(registries, tag.getCompound("ApparelSlots")); } finally { loading = false; }
         }
         for (var slot : com.rexhub.createapparel.garment.GarmentSlot.values()) observedOutfit.put(slot, loadout.getStack(slot).copy());
         revision++;

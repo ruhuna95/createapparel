@@ -6,46 +6,44 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.*;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.neoforge.network.*;
 import java.util.*;
 
-@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class AdvertisementNetwork {
-    private static SimpleChannel network;
     private static final Map<UUID, Map<String, Long>> subscriptions = new HashMap<>();
     private static final Map<UUID, Long> nextRequest = new HashMap<>();
     private AdvertisementNetwork() { }
-    public static void initialize() {
-        network = NetworkRegistry.ChannelBuilder.named(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "advertisement"))
-                .networkProtocolVersion(() -> "2").clientAcceptedVersions("2"::equals).serverAcceptedVersions("2"::equals).simpleChannel();
-        network.messageBuilder(Request.class, 0, NetworkDirection.PLAY_TO_SERVER).encoder(Request::encode).decoder(Request::decode)
-                .consumerMainThread((packet, context) -> { var player = context.get().getSender(); if (player != null) packet.handle(player); }).add();
-        network.messageBuilder(Update.class, 1, NetworkDirection.PLAY_TO_CLIENT).encoder(Update::encode).decoder(Update::decode)
-                .consumerMainThread((packet, context) -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
-                        () -> () -> com.rexhub.createapparel.client.advertisement.ClientAdvertisementChannels.accept(packet))).add();
-        network.messageBuilder(Control.class, 2, NetworkDirection.PLAY_TO_SERVER).encoder(Control::encode).decoder(Control::decode)
-                .consumerMainThread((packet, context) -> {
-                    var player = context.get().getSender();
-                    if (player != null && player.containerMenu instanceof AdvertisementControlMenu menu && menu.containerId == packet.containerId())
-                        menu.configure(player, packet.channel(), packet.scene(), packet.action());
-                }).add();
-        network.messageBuilder(MenuState.class, 3, NetworkDirection.PLAY_TO_CLIENT).encoder(MenuState::encode).decoder(MenuState::decode)
-                .consumerMainThread((packet, context) -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
-                        () -> () -> packet.handleClient())).add();
+    public static void register(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
+        var registrar = event.registrar("3");
+        registrar.playToServer(Request.TYPE, Request.STREAM_CODEC, (packet, context) -> packet.handle((ServerPlayer) context.player()));
+        registrar.playToClient(Update.TYPE, Update.STREAM_CODEC,
+                (packet, context) -> com.rexhub.createapparel.client.advertisement.ClientAdvertisementChannels.accept(packet));
+        registrar.playToServer(Control.TYPE, Control.STREAM_CODEC, (packet, context) -> {
+            var player = (ServerPlayer) context.player();
+            if (player.containerMenu instanceof AdvertisementControlMenu menu && menu.containerId == packet.containerId())
+                menu.configure(player, packet.channel(), packet.scene(), packet.action());
+        });
+        registrar.playToClient(MenuState.TYPE, MenuState.STREAM_CODEC, (packet, context) -> packet.handleClient());
     }
-    public static void request(BlockPos pos, long revision) { network.sendToServer(new Request(pos, revision)); }
-    public static void control(int menu, String channel, int scene, int action) { network.sendToServer(new Control(menu, channel, scene, action)); }
+    public static void request(BlockPos pos, long revision) { PacketDistributor.sendToServer(new Request(pos, revision)); }
+    public static void control(int menu, String channel, int scene, int action) { PacketDistributor.sendToServer(new Control(menu, channel, scene, action)); }
     public static void sendMenuState(ServerPlayer player, AdvertisementControlMenu menu) {
-        network.send(PacketDistributor.PLAYER.with(() -> player), new MenuState(menu.containerId, menu.position(), menu.channel(), menu.scenes()));
+        PacketDistributor.sendToPlayer(player, new MenuState(menu.containerId, menu.position(), menu.channel(), menu.scenes()));
     }
     public static void publish(MinecraftServer server, String id, AdvertisementNetworkSavedData.Channel channel) {
         for (var player : server.getPlayerList().getPlayers()) {
             if (subscriptions.getOrDefault(player.getUUID(), Map.of()).getOrDefault(id, -1L) >= server.overworld().getGameTime())
-                network.send(PacketDistributor.PLAYER.with(() -> player), new Update(id, channel.revision(), channel.scenes()));
+                PacketDistributor.sendToPlayer(player, new Update(id, channel.revision(), channel.scenes()));
         }
     }
-    public record Request(BlockPos pos, long revision) {
+    public record Request(BlockPos pos, long revision) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+        public static final Type<Request> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
+                "advertisement_request"));
+        public static final net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, Request> STREAM_CODEC =
+                net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), Request::decode);
+        @Override public Type<Request> type() { return TYPE; }
+
         void encode(FriendlyByteBuf buffer) { buffer.writeBlockPos(pos); buffer.writeLong(revision); }
         static Request decode(FriendlyByteBuf buffer) { return new Request(buffer.readBlockPos(), buffer.readLong()); }
         void handle(ServerPlayer player) {
@@ -61,10 +59,16 @@ public final class AdvertisementNetwork {
             if (watched.size() >= 128 && !watched.containsKey(id)) watched.remove(watched.keySet().iterator().next());
             watched.put(id, now + 1200);
             var channel = AdvertisementNetworkSavedData.get(player.serverLevel()).channel(id);
-            if (channel.revision() != revision) network.send(PacketDistributor.PLAYER.with(() -> player), new Update(id, channel.revision(), channel.scenes()));
+            if (channel.revision() != revision) PacketDistributor.sendToPlayer(player, new Update(id, channel.revision(), channel.scenes()));
         }
     }
-    public record Update(String channel, long revision, List<AdvertisementSnapshot> scenes) {
+    public record Update(String channel, long revision, List<AdvertisementSnapshot> scenes) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+        public static final Type<Update> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
+                "advertisement_update"));
+        public static final net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, Update> STREAM_CODEC =
+                net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), Update::decode);
+        @Override public Type<Update> type() { return TYPE; }
+
         public Update { scenes = AdvertisementScenes.validate(scenes); }
         public Update(String channel, long revision, AdvertisementSnapshot snapshot) { this(channel, revision, List.of(snapshot)); }
         public AdvertisementSnapshot snapshot() { return scenes.get(0); }
@@ -75,11 +79,23 @@ public final class AdvertisementNetwork {
             return new Update(id, revision, AdvertisementScenes.load(tag.getList("Scenes", net.minecraft.nbt.Tag.TAG_COMPOUND)));
         }
     }
-    public record Control(int containerId, String channel, int scene, int action) {
+    public record Control(int containerId, String channel, int scene, int action) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+        public static final Type<Control> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
+                "advertisement_control"));
+        public static final net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, Control> STREAM_CODEC =
+                net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), Control::decode);
+        @Override public Type<Control> type() { return TYPE; }
+
         void encode(FriendlyByteBuf buffer) { buffer.writeVarInt(containerId); buffer.writeUtf(channel, 48); buffer.writeVarInt(scene); buffer.writeVarInt(action); }
         static Control decode(FriendlyByteBuf buffer) { return new Control(buffer.readVarInt(), buffer.readUtf(48), buffer.readVarInt(), buffer.readVarInt()); }
     }
-    public record MenuState(int containerId, BlockPos position, String channel, List<AdvertisementSnapshot> scenes) {
+    public record MenuState(int containerId, BlockPos position, String channel, List<AdvertisementSnapshot> scenes) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+        public static final Type<MenuState> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
+                "advertisement_menu_state"));
+        public static final net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, MenuState> STREAM_CODEC =
+                net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), MenuState::decode);
+        @Override public Type<MenuState> type() { return TYPE; }
+
         void encode(FriendlyByteBuf buffer) {
             buffer.writeVarInt(containerId); buffer.writeBlockPos(position); buffer.writeUtf(channel, 48);
             var tag = new net.minecraft.nbt.CompoundTag(); tag.put("Scenes", AdvertisementScenes.save(scenes)); buffer.writeNbt(tag);
@@ -95,8 +111,8 @@ public final class AdvertisementNetwork {
                 menu.accept(channel, scenes);
         }
     }
-    @net.minecraftforge.eventbus.api.SubscribeEvent public static void logout(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+    @net.neoforged.bus.api.SubscribeEvent public static void logout(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
         subscriptions.remove(event.getEntity().getUUID()); nextRequest.remove(event.getEntity().getUUID());
     }
-    @net.minecraftforge.eventbus.api.SubscribeEvent public static void stop(net.minecraftforge.event.server.ServerStoppedEvent event) { subscriptions.clear(); nextRequest.clear(); }
+    @net.neoforged.bus.api.SubscribeEvent public static void stop(net.neoforged.neoforge.event.server.ServerStoppedEvent event) { subscriptions.clear(); nextRequest.clear(); }
 }

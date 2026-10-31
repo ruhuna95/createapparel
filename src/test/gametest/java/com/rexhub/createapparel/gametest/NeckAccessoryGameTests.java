@@ -18,9 +18,9 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +59,7 @@ public final class NeckAccessoryGameTests {
                         helper.assertTrue(stack.is(ModItems.NECKLACE.get()), "Command produces necklace");
                         helper.assertTrue(new MetalAccessoryData(metal, gem).equals(MetalAccessoryData.fromStack(stack)),
                                 "Command preserves requested metal and gem");
-                        helper.assertTrue(!stack.getOrCreateTag().contains(GarmentData.TAG_NAME), "No fabric NBT");
+                        helper.assertTrue(!com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).contains(GarmentData.TAG_NAME), "No fabric NBT");
                     }
                 }
             }
@@ -91,12 +91,12 @@ public final class NeckAccessoryGameTests {
         var source = player.createCommandSourceStack().withPermission(2).withSuppressedOutput();
         try {
             for (var definition : GarmentDefinitionManager.all()) {
-                var item = ForgeRegistries.ITEMS.getValue(definition.id());
+                var item = BuiltInRegistries.ITEM.get(definition.id());
                 if (item instanceof com.rexhub.createapparel.garment.MetalAccessoryItem) continue;
                 var unconfigured = new ItemStack(item);
                 helper.assertTrue(GarmentData.fromStack(unconfigured, definition).material()
                         == com.rexhub.createapparel.material.FabricMaterial.SYNTHETIC, "Creative fabric default");
-                helper.assertTrue(!unconfigured.hasTag(), "Reading defaults must not write NBT");
+                helper.assertTrue(!com.rexhub.createapparel.item.ItemData.hasData(unconfigured), "Reading defaults must not write NBT");
                 var configured = new GarmentData(com.rexhub.createapparel.material.FabricMaterial.COTTON, "plain",
                         com.rexhub.createapparel.material.FabricColor.WHITE,
                         java.util.Optional.empty(), java.util.Optional.empty());
@@ -142,25 +142,25 @@ public final class NeckAccessoryGameTests {
 
     private static ServerPlayer commandPlayer(GameTestHelper helper) {
         return new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new GameProfile(UUID.randomUUID(), "apparel-command-test"));
+                new GameProfile(UUID.randomUUID(), "apparel-command-test"), net.minecraft.server.level.ClientInformation.createDefault());
     }
 
     @GameTest(template = "apparel_state", batch = "apparel_state")
     public static void appearanceWritesReplaceOnlyTheOtherAppearance(GameTestHelper helper) {
         var definition = GarmentDefinitionManager.get(ModItems.NECKTIE.getId()).orElseThrow();
         var stack = new ItemStack(ModItems.NECKTIE.get());
-        stack.getOrCreateTag().putString("unrelated", "preserve");
+        com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putString("unrelated", "preserve"));
         var fabric = GarmentData.defaultFor(definition);
         var metal = new MetalAccessoryData(MetalAccessoryData.MetalColor.SILVER, MetalAccessoryData.Gem.RUBY);
         for (int index = 0; index < 2; index++) {
             metal.write(stack);
-            helper.assertTrue(!stack.getOrCreateTag().contains(GarmentData.TAG_NAME), "Metal write removes fabric NBT");
+            helper.assertTrue(!com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).contains(GarmentData.TAG_NAME), "Metal write removes fabric NBT");
             helper.assertTrue(metal.equals(MetalAccessoryData.fromStack(stack)), "Metal write preserves appearance");
-            helper.assertTrue("preserve".equals(stack.getOrCreateTag().getString("unrelated")), "Metal preserves unrelated NBT");
+            helper.assertTrue("preserve".equals(com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getString("unrelated")), "Metal preserves unrelated NBT");
             fabric.write(stack);
-            helper.assertTrue(!stack.getOrCreateTag().contains(MetalAccessoryData.TAG_NAME), "Fabric write removes metal NBT");
+            helper.assertTrue(!com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).contains(MetalAccessoryData.TAG_NAME), "Fabric write removes metal NBT");
             helper.assertTrue(fabric.equals(GarmentData.fromStack(stack, definition)), "Fabric write preserves appearance");
-            helper.assertTrue("preserve".equals(stack.getOrCreateTag().getString("unrelated")), "Fabric preserves unrelated NBT");
+            helper.assertTrue("preserve".equals(com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).getString("unrelated")), "Fabric preserves unrelated NBT");
         }
         helper.succeed();
     }
@@ -198,21 +198,21 @@ public final class NeckAccessoryGameTests {
             for (var gem : MetalAccessoryData.Gem.values()) {
                 var id = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID,
                         "deploying/necklace/" + metal.getSerializedName() + "_" + gem.getSerializedName());
-                var recipe = helper.getLevel().getRecipeManager().byKey(id).orElseThrow();
+                var recipe = helper.getLevel().getRecipeManager().byKey(id).orElseThrow().value();
                 ItemStack result = recipe.getResultItem(helper.getLevel().registryAccess()).copy();
                 var expected = new MetalAccessoryData(metal, gem);
                 helper.assertTrue(result.is(ModItems.NECKLACE.get()), "Recipe must produce a necklace");
                 helper.assertTrue(expected.equals(GarmentAppearance.fromStack(result, definition)), "Recipe appearance");
-                helper.assertTrue(!result.getOrCreateTag().contains(GarmentData.TAG_NAME), "No dummy fabric data");
-                result.getOrCreateTag().putString("unrelated", "preserve");
+                helper.assertTrue(!com.rexhub.createapparel.item.ItemData.readOrEmpty(result).contains(GarmentData.TAG_NAME), "No dummy fabric data");
+                com.rexhub.createapparel.item.ItemData.update(result, tagData -> tagData.putString("unrelated", "preserve"));
                 expected.write(result);
-                helper.assertTrue("preserve".equals(result.getOrCreateTag().getString("unrelated")), "Preserve unrelated NBT");
+                helper.assertTrue("preserve".equals(com.rexhub.createapparel.item.ItemData.readOrEmpty(result).getString("unrelated")), "Preserve unrelated NBT");
                 ApparelInventory inventory = new ApparelInventory();
                 helper.assertTrue(inventory.isItemValid(GarmentSlot.NECK.ordinal(), result), "Neck slot accepts necklace");
                 helper.assertTrue(!inventory.isItemValid(GarmentSlot.TOP.ordinal(), result), "Top slot rejects necklace");
                 inventory.setStackInSlot(GarmentSlot.NECK.ordinal(), result);
                 ApparelInventory restored = new ApparelInventory();
-                restored.deserializeNBT(inventory.serializeNBT());
+                restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), inventory.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
                 helper.assertTrue(ItemStack.matches(result, restored.getStack(GarmentSlot.NECK)), "Saved appearance");
             }
         }

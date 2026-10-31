@@ -7,14 +7,14 @@ import net.minecraft.client.particle.TerrainParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.extensions.common.IClientBlockExtensions;
+import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 
 import java.util.Random;
 
 public final class DisplayFurnitureClientExtensions implements IClientBlockExtensions {
     @Override
     public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-        if (!(level instanceof ClientLevel client) || !state.shouldSpawnParticlesOnBreak()) return true;
+        if (!(level instanceof ClientLevel client) || !state.shouldSpawnTerrainParticles()) return true;
         var shape = state.getShape(level, pos);
         var random = new Random(level.random.nextLong());
         var points = shape instanceof FurnitureShape furniture ? DisplayFurnitureParticleLayout.sampleFurniture(furniture, random)

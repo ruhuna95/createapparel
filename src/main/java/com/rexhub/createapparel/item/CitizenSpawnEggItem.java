@@ -10,11 +10,11 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 
 import java.util.Optional;
 
-public final class CitizenSpawnEggItem extends ForgeSpawnEggItem {
+public final class CitizenSpawnEggItem extends DeferredSpawnEggItem {
     public CitizenSpawnEggItem(Properties properties) {
         super(ModEntities.CITIZEN, 0xD7B699, 0x334D68, properties);
     }

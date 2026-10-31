@@ -17,6 +17,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class LoomBlock extends HorizontalShaftMachineBlock implements IBE<LoomBlockEntity> {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
     public static final double STRESS_IMPACT = 8.0;
     public static final BooleanProperty THREAD_VISIBLE = BooleanProperty.create("working");
 
@@ -25,9 +31,9 @@ public final class LoomBlock extends HorizontalShaftMachineBlock implements IBE<
         registerDefaultState(defaultBlockState().setValue(THREAD_VISIBLE, false));
     }
 
-    @Override
+
     @SuppressWarnings("deprecation")
-    public InteractionResult use(
+    private InteractionResult interact(
             BlockState state,
             Level level,
             BlockPos pos,

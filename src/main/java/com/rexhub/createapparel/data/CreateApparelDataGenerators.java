@@ -11,7 +11,7 @@ import com.rexhub.createapparel.data.server.ModLootTableProvider;
 import com.rexhub.createapparel.data.server.ModRecipeProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
-import net.minecraftforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 public final class CreateApparelDataGenerators {
     private CreateApparelDataGenerators() {
@@ -54,12 +54,13 @@ public final class CreateApparelDataGenerators {
                 event.includeClient(),
                 new ModItemModelProvider(output, event.getExistingFileHelper())
         );
-        generator.addProvider(event.includeServer(), ModLootTableProvider.create(output));
+        generator.addProvider(event.includeServer(), ModLootTableProvider.create(output, event.getLookupProvider()));
         generator.addProvider(
                 event.includeServer(),
-                new ModGlobalLootModifierProvider(output)
+                new ModGlobalLootModifierProvider(output, event.getLookupProvider())
         );
-        generator.addProvider(event.includeServer(), new ModRecipeProvider(output));
+        generator.addProvider(event.includeServer(), new ModRecipeProvider(output, event.getLookupProvider()));
+        generator.addProvider(event.includeServer(), new com.rexhub.createapparel.data.server.OptionalIntegrationRecipes(output));
         generator.addProvider(event.includeServer(), new com.rexhub.createapparel.data.server.ModPoiTypeTagProvider(
                 output, event.getLookupProvider(), event.getExistingFileHelper()));
         generator.addProvider(event.includeClient(), new ModLanguageProvider(output));

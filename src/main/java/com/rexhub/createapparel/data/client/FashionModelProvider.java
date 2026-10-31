@@ -3,9 +3,9 @@ package com.rexhub.createapparel.data.client;
 import com.rexhub.createapparel.advertisement.AdvertisementRegistries;
 import com.rexhub.createapparel.advertisement.AdvertisementPanelBlock;
 import net.minecraft.data.PackOutput;
-import net.minecraftforge.client.model.generators.BlockStateProvider;
-import net.minecraftforge.client.model.generators.ConfiguredModel;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
+import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 public final class FashionModelProvider extends BlockStateProvider {
     public FashionModelProvider(PackOutput output, ExistingFileHelper helper) {
@@ -16,7 +16,7 @@ public final class FashionModelProvider extends BlockStateProvider {
     @Override public String getName() { return "Create: Apparel fashion retail and advertisement models"; }
     @Override protected void registerStatesAndModels() {
         for (var block : java.util.List.of(AdvertisementRegistries.BILLBOARD_PANEL.get(), AdvertisementRegistries.SIGNAGE_PANEL.get())) {
-            String name = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(block).getPath();
+            String name = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block).getPath();
             var model = models().getBuilder(name).texture("frame", block == AdvertisementRegistries.SIGNAGE_PANEL.get() ? "minecraft:block/black_concrete" : "minecraft:block/iron_block").texture("particle", "#frame");
             model.element().from(0, 0, 14).to(16, 16, 16).allFaces((direction, face) -> face.texture("#frame")).end();
             getVariantBuilder(block).forAllStatesExcept(state -> ConfiguredModel.builder().modelFile(model)

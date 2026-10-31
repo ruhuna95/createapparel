@@ -27,8 +27,8 @@ import net.minecraft.world.item.DyeItem;
 import com.rexhub.createapparel.citizen.CitizenDyeColors;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.util.Optional;
 
 @GameTestHolder(CreateApparel.MOD_ID)
@@ -71,7 +71,7 @@ public final class CitizenGameTests {
         var loadout = entity.citizenState().loadout();
         ItemStack shirt = new ItemStack(ModItems.SHIRT_LONGSLEEVES.get());
         new GarmentData(FabricMaterial.LINEN, "two_tone_lr", FabricColor.MINT, Optional.of(FabricColor.PLUM), Optional.of(FabricColor.CORAL)).write(shirt);
-        shirt.getOrCreateTag().putString("CitizenTestMetadata", "preserved");
+        com.rexhub.createapparel.item.ItemData.update(shirt, tagData -> tagData.putString("CitizenTestMetadata", "preserved"));
         loadout.setStackInSlot(GarmentSlot.OUTER.ordinal(), shirt.copy());
         helper.assertTrue(loadout.setStyle(GarmentSlot.OUTER, "sleeves", "rolled"), "Style setter shares Player rules");
         loadout.setStackInSlot(GarmentSlot.HEAD.ordinal(), new ItemStack(ModItems.CAP.get()));
@@ -79,13 +79,13 @@ public final class CitizenGameTests {
         var appearance = new CitizenAppearance(SkinTone.DARK, ArmProfile.SLIM, ChestProfile.BUST,
                 ResourceLocation.parse("createapparel:ponytail"), 0xFFFFFF, FabricColor.CERULEAN.tintRgb());
         entity.citizenState().setAppearance(appearance);
-        var before = entity.citizenState().serializeNBT();
+        var before = entity.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         CompoundTag saved = entity.saveWithoutId(new CompoundTag());
         entity.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
         helper.assertTrue(!loadout.getStack(GarmentSlot.OUTER).isEmpty(), "Unload keeps garments");
         var restored = create(helper);
         restored.load(saved);
-        helper.assertTrue(restored.citizenState().serializeNBT().equals(before), "All appearance, stack NBT and styles persist");
+        helper.assertTrue(restored.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(before), "All appearance, stack NBT and styles persist");
         helper.assertTrue(ItemStack.matches(shirt, restored.citizenState().loadout().getStack(GarmentSlot.OUTER)), "Stack data is lossless");
         helper.succeed();
     }
@@ -103,16 +103,18 @@ public final class CitizenGameTests {
         var dirty = entity.getEntityData().packDirty();
         helper.assertTrue(dirty != null && dirty.size() == 1, "Appearance updates one shared EntityData value");
         var state = (CompoundTag) dirty.get(0).value();
-        FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+        net.minecraft.network.RegistryFriendlyByteBuf buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
         try {
-            EntityDataSerializers.COMPOUND_TAG.write(buffer, state);
+            EntityDataSerializers.COMPOUND_TAG.codec().encode(buffer, state);
             CitizenState client = new CitizenState();
-            client.deserializeNBT(EntityDataSerializers.COMPOUND_TAG.read(buffer));
-            helper.assertTrue(client.serializeNBT().equals(entity.citizenState().serializeNBT()), "Wire format restores colors and default loadout");
+            client.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), EntityDataSerializers.COMPOUND_TAG.codec().decode(buffer));
+            helper.assertTrue(client.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(entity.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Wire format restores colors and default loadout");
         } finally { buffer.release(); }
         entity.citizenState().loadout().setStackInSlot(GarmentSlot.HEAD.ordinal(), new ItemStack(ModItems.CAP.get()));
         helper.assertTrue(entity.getEntityData().packDirty() != null, "Loadout updates are synchronized");
-        helper.assertTrue(entity.getAddEntityPacket() != null, "Forge spawn packet available");
+        var broadcast = new java.util.ArrayList<net.minecraft.network.protocol.Packet<?>>();
+        var tracker = new net.minecraft.server.level.ServerEntity(helper.getLevel(), entity, 1, false, broadcast::add);
+        helper.assertTrue(entity.getAddEntityPacket(tracker) != null, "Native spawn packet available");
         helper.succeed();
     }
 

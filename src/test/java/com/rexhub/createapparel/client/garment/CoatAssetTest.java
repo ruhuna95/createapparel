@@ -279,7 +279,7 @@ class CoatAssetTest {
     @Test
     void recipesHaveEightFabricTwoThreadsAndExplicitSynthetic() throws Exception {
         for(String variant:VARIANTS) {
-            var json=JsonParser.parseString(Files.readString(Path.of("src/generated/resources/data/createapparel/recipes/"+variant+"_coat.json"))).getAsJsonObject();
+            var json=JsonParser.parseString(Files.readString(Path.of("src/generated/resources/data/createapparel/recipe/"+variant+"_coat.json"))).getAsJsonObject();
             assertEquals(8,json.getAsJsonObject("fabric").get("count").getAsInt());
             assertEquals(2, json.getAsJsonObject("thread").get("count").getAsInt());
             assertEquals(variant.equals("trench")

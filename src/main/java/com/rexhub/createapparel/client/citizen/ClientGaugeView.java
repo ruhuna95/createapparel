@@ -9,13 +9,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.*;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.*;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class ClientGaugeView {
     private static List<CitizenGauge> gauges = List.of();
     private static String dimension = "";
@@ -62,13 +62,13 @@ public final class ClientGaugeView {
     }
     private static void clearView() { gauges = List.of(); territoryGauges = List.of(); territory = new ClientDistrictTerritory(); dimension = ""; snapshot = null; viewRevision = -1; nextResync = 0; }
     public static void resetRendering() { territory = new ClientDistrictTerritory(); territory.accept(territoryGauges); }
-    @SubscribeEvent public static void unloadChunk(net.minecraftforge.event.level.ChunkEvent.Unload event) {
+    @SubscribeEvent public static void unloadChunk(net.neoforged.neoforge.event.level.ChunkEvent.Unload event) {
         if (event.getLevel().isClientSide()) territory.chunkChanged(event.getChunk().getPos().toLong());
     }
-    @SubscribeEvent public static void loadChunk(net.minecraftforge.event.level.ChunkEvent.Load event) {
+    @SubscribeEvent public static void loadChunk(net.neoforged.neoforge.event.level.ChunkEvent.Load event) {
         if (event.getLevel().isClientSide()) territory.chunkChanged(event.getChunk().getPos().toLong());
     }
-    @SubscribeEvent public static void unloadLevel(net.minecraftforge.event.level.LevelEvent.Unload event) {
+    @SubscribeEvent public static void unloadLevel(net.neoforged.neoforge.event.level.LevelEvent.Unload event) {
         if (event.getLevel().isClientSide()) clearView();
     }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clearView(); selected = null; }
@@ -88,14 +88,13 @@ public final class ClientGaugeView {
         graphics.drawCenteredString(mc.font, net.minecraft.network.chat.Component.translatable("screen.createapparel.gauge.population_summary", status.population(), status.target()),
                 x, y + 12, status.satisfied() ? 0x8DDB74 : 0xE87070);
     }
-    @SubscribeEvent public static void emptyUse(net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty event) {
+    @SubscribeEvent public static void emptyUse(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickEmpty event) {
         if (selected == null || event.getEntity() != Minecraft.getInstance().player) return;
         com.rexhub.createapparel.network.ModNetwork.updateGauge(new com.rexhub.createapparel.network.CitizenGaugeActionPacket(-1, selected.id(), 0,
                 com.rexhub.createapparel.network.CitizenGaugeActionPacket.Action.CANCEL, 0, 0, null));
         selected = null; event.getEntity().getPersistentData().putBoolean("CitizenGaugeSelection", false);
     }
-    @SubscribeEvent public static void tick(net.minecraftforge.event.TickEvent.ClientTickEvent event) {
-        if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) return;
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
         if (!dimension.isEmpty() && !dimension.equals(mc.level.dimension().location().toString())) clearView();

@@ -44,13 +44,13 @@ public final class DistrictGaugeIcon {
     public static void render(PoseStack pose, MultiBufferSource buffers, ResourceLocation texture, int color, int light, int overlay) {
         var vertices = buffers.getBuffer(RenderType.entityCutoutNoCull(texture));
         var transform = pose.last();
-        vertices.vertex(transform.pose(), -.5F, -.5F, 0).color(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
-                .uv(0, 1).overlayCoords(overlay).uv2(light).normal(transform.normal(), 0, 0, 1).endVertex();
-        vertices.vertex(transform.pose(), .5F, -.5F, 0).color(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
-                .uv(1, 1).overlayCoords(overlay).uv2(light).normal(transform.normal(), 0, 0, 1).endVertex();
-        vertices.vertex(transform.pose(), .5F, .5F, 0).color(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
-                .uv(1, 0).overlayCoords(overlay).uv2(light).normal(transform.normal(), 0, 0, 1).endVertex();
-        vertices.vertex(transform.pose(), -.5F, .5F, 0).color(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
-                .uv(0, 0).overlayCoords(overlay).uv2(light).normal(transform.normal(), 0, 0, 1).endVertex();
+        vertices.addVertex(transform.pose(), -.5F, -.5F, 0).setColor(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
+                .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(transform, 0, 0, 1);
+        vertices.addVertex(transform.pose(), .5F, -.5F, 0).setColor(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
+                .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(transform, 0, 0, 1);
+        vertices.addVertex(transform.pose(), .5F, .5F, 0).setColor(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
+                .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(transform, 0, 0, 1);
+        vertices.addVertex(transform.pose(), -.5F, .5F, 0).setColor(color >>> 16 & 255, color >>> 8 & 255, color & 255, 255)
+                .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(transform, 0, 0, 1);
     }
 }

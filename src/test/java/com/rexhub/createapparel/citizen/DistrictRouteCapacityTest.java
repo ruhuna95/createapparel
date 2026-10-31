@@ -93,7 +93,7 @@ class DistrictRouteCapacityTest {
         var b = CitizenGauge.create(new BlockPos(20, 1, 0), new BlockPos(20, 0, 0)); data.put(a); data.put(b);
         var id = UUID.randomUUID(); var state = CitizenPopulationState.DEFAULT.district(a.districtId(), 0);
         data.register(id, state, true); data.register(id, state, true); assertEquals(1, data.walkingPopulation(a.districtId()));
-        data = CitizenPopulationSavedData.load(data.save(new CompoundTag())); assertEquals(1, data.walkingPopulation(a.districtId()));
+        data = CitizenPopulationSavedData.load(data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); assertEquals(1, data.walkingPopulation(a.districtId()));
         data.register(id, state.district(b.districtId(), 0)); assertEquals(0, data.walkingPopulation(a.districtId())); assertEquals(1, data.walkingPopulation(b.districtId()));
         data.walking(id, false); assertEquals(0, data.walkingPopulation(b.districtId()));
         data.walking(id, true); data.remove(b.id()); assertEquals(0, data.walkingPopulation(b.districtId()));

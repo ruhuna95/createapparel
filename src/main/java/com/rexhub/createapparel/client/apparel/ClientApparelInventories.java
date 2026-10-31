@@ -10,7 +10,7 @@ import com.rexhub.createapparel.garment.ApparelContext;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
 import com.rexhub.createapparel.client.garment.RuntimeGarmentTextureCache;
 import com.rexhub.createapparel.client.garment.FlatGarmentGeometry;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import java.util.EnumMap;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -86,7 +86,7 @@ public final class ClientApparelInventories {
         for (GarmentSlot slot : GarmentSlot.values()) {
             ItemStack stack = contents.get(slot.ordinal());
             if (!stack.isEmpty()) {
-                var id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+                var id = BuiltInRegistries.ITEM.getKey(stack.getItem());
                 if (id != null) {
                     ClientGarmentAssets.getDefinition(id).ifPresent(definition -> equipped.put(slot,
                             new ApparelContext.EquippedGarmentView(definition, styles.getOrDefault(slot, EquippedStyleState.EMPTY))));

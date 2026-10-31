@@ -9,6 +9,5 @@ import net.minecraft.world.phys.AABB;
 public final class MirrorBlockEntity extends BlockEntity {
     public MirrorBlockEntity(BlockPos pos, BlockState state) { super(ModMirrors.BLOCK_ENTITY.get(), pos, state); }
 
-    @Override
     public AABB getRenderBoundingBox() { return new AABB(worldPosition).expandTowards(0, 1, 0); }
 }

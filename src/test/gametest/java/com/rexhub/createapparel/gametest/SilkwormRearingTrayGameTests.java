@@ -28,12 +28,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -59,7 +58,7 @@ public final class SilkwormRearingTrayGameTests {
     }
 
     private static IItemHandler handler(SilkwormRearingTrayBlockEntity tray) {
-        return tray.getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(IllegalStateException::new);
+        return java.util.Optional.ofNullable(tray.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, tray.getBlockPos(), null)).orElseThrow(IllegalStateException::new);
     }
 
     private static void speed(SilkwormRearingTrayBlockEntity tray, int rpm) {
@@ -78,13 +77,13 @@ public final class SilkwormRearingTrayGameTests {
     }
 
     private static void output(SilkwormRearingTrayBlockEntity tray, ItemStack stack) {
-        var saved = tray.saveWithFullMetadata();
+        var saved = tray.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup());
         var data = saved.getCompound("TrayData");
         var inventory = new ItemStackHandler(2);
-        inventory.deserializeNBT(data.getCompound("Inventory"));
+        inventory.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), data.getCompound("Inventory"));
         inventory.setStackInSlot(1, stack);
-        data.put("Inventory", inventory.serializeNBT());
-        tray.load(saved);
+        data.put("Inventory", inventory.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
+        tray.loadWithComponents(saved, com.rexhub.createapparel.TestRegistries.lookup());
         speed(tray, 64);
     }
 
@@ -96,7 +95,7 @@ public final class SilkwormRearingTrayGameTests {
     public static void automationFiltersAndSimulationsPreserveInventory(GameTestHelper helper) {
         var tray = place(helper);
         for (Direction side : Direction.values()) {
-            var inventory = tray.getCapability(ForgeCapabilities.ITEM_HANDLER, side).orElseThrow(IllegalStateException::new);
+            var inventory = java.util.Optional.ofNullable(tray.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, tray.getBlockPos(), side)).orElseThrow(IllegalStateException::new);
             helper.assertTrue(!inventory.insertItem(0, new ItemStack(Items.STONE), false).isEmpty(), "Reject non-food");
             helper.assertTrue(!inventory.insertItem(1, new ItemStack(ModItems.COCOON.get()), false).isEmpty(), "Output rejects insertion");
             helper.assertTrue(inventory.insertItem(0, new ItemStack(Items.OAK_LEAVES), true).isEmpty()
@@ -117,20 +116,20 @@ public final class SilkwormRearingTrayGameTests {
         handler(tray).insertItem(0, new ItemStack(Items.OAK_LEAVES, 7), false);
         var held = tray.storedItem();
         held.setCount(2);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.setItemInHand(InteractionHand.MAIN_HAND, held);
         var worm = worm(helper);
         helper.assertTrue(held.getItem().interactLivingEntity(held, player, worm, InteractionHand.MAIN_HAND).consumesAction(), "Capture succeeds");
         helper.assertTrue(worm.isRemoved() && held.getCount() == 1, "Exactly one entity and one tray consumed");
         ItemStack captured = ItemStack.EMPTY;
         for (var stack : player.getInventory().items) {
-            if (stack.is(ModItems.SILKWORM_REARING_TRAY.get()) && stack.getTagElement("BlockEntityTag") != null
-                    && stack.getTagElement("BlockEntityTag").getCompound("TrayData").getBoolean("HasSilkworm")) captured = stack;
+            if (stack.is(ModItems.SILKWORM_REARING_TRAY.get()) && stack.getOrDefault(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag() != null
+                    && stack.getOrDefault(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag().getCompound("TrayData").getBoolean("HasSilkworm")) captured = stack;
         }
         helper.assertTrue(!captured.isEmpty(), "Captured tray returned to inventory");
         var restored = new SilkwormRearingTrayBlockEntity(tray.getBlockPos(), tray.getBlockState());
-        restored.load(captured.getTagElement("BlockEntityTag"));
-        helper.assertTrue(restored.hasSilkworm() && handler(restored).getStackInSlot(0).getCount() == 7,
+        restored.loadWithComponents(captured.getOrDefault(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag(), com.rexhub.createapparel.TestRegistries.lookup());
+        helper.assertTrue(restored.hasSilkworm() && restored.itemHandler().getStackInSlot(0).getCount() == 7,
                 "Capture keeps food already stored in tray");
         var second = worm(helper);
         helper.assertTrue(!captured.getItem().interactLivingEntity(captured, player, second, InteractionHand.MAIN_HAND).consumesAction()
@@ -142,7 +141,7 @@ public final class SilkwormRearingTrayGameTests {
     public static void leashedCaptureReleaseAndObstructedRelease(GameTestHelper helper) {
         var tray = place(helper);
         var worm = worm(helper);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.LEAD));
         worm.setLeashedTo(player, true);
         helper.assertTrue(tray.interact(player, InteractionHand.MAIN_HAND).consumesAction() && tray.hasSilkworm()
@@ -224,7 +223,7 @@ public final class SilkwormRearingTrayGameTests {
         helper.assertTrue(tray.processingState() == SilkwormRearingTrayBlockEntity.State.OUTPUT_BLOCKED
                 && handler(tray).getStackInSlot(0).getCount() == 1, "Mid-cycle blockage keeps result and remaining food");
         helper.assertTrue(tray.completedResult().is(ModItems.COCOON.get()), "Blocked completed cocoon remains visible");
-        var restored = (SilkwormRearingTrayBlockEntity) BlockEntity.loadStatic(tray.getBlockPos(), tray.getBlockState(), tray.saveWithFullMetadata());
+        var restored = (SilkwormRearingTrayBlockEntity) BlockEntity.loadStatic(tray.getBlockPos(), tray.getBlockState(), tray.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         if (restored == null) throw new IllegalStateException("Restored tray missing");
         restored.setLevel(helper.getLevel());
         helper.getLevel().setBlockEntity(restored);
@@ -246,10 +245,10 @@ public final class SilkwormRearingTrayGameTests {
         speed(tray, 64);
         tray.lazyTick();
         ticks(tray, 250);
-        var expected = tray.trayData();
+        var expected = tray.trayData(com.rexhub.createapparel.TestRegistries.lookup());
         var client = new SilkwormRearingTrayBlockEntity(tray.getBlockPos(), tray.getBlockState());
-        client.handleUpdateTag(tray.getUpdateTag());
-        helper.assertTrue(client.trayData().equals(expected), "Client chunk data keeps contents and progress");
+        client.handleUpdateTag(tray.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
+        helper.assertTrue(client.trayData(com.rexhub.createapparel.TestRegistries.lookup()).equals(expected), "Client chunk data keeps contents and progress");
         var pos = tray.getBlockPos();
         helper.getLevel().destroyBlock(pos, true);
         var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2));
@@ -259,13 +258,13 @@ public final class SilkwormRearingTrayGameTests {
                 || entity.getItem().is(ModItems.COCOON.get())), "Contents are not dropped twice");
         var stack = trays.get(0).getItem().copy();
         helper.getLevel().setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         var hit = new BlockHitResult(Vec3.atCenterOf(pos.below()).add(0, 0.5, 0), Direction.UP, pos.below(), false);
         helper.assertTrue(((BlockItem) stack.getItem()).place(new BlockPlaceContext(player, InteractionHand.MAIN_HAND, stack, hit))
                 .consumesAction(), "Saved item places successfully");
         var restored = (SilkwormRearingTrayBlockEntity) helper.getLevel().getBlockEntity(pos);
-        helper.assertTrue(restored != null && restored.trayData().equals(expected), "Item placement restores active cycle and all contents");
+        helper.assertTrue(restored != null && restored.trayData(com.rexhub.createapparel.TestRegistries.lookup()).equals(expected), "Item placement restores active cycle and all contents");
         helper.succeed();
     }
 
@@ -275,10 +274,10 @@ public final class SilkwormRearingTrayGameTests {
         var point = ArmInteractionPoint.create(helper.getLevel(), tray.getBlockPos(), tray.getBlockState());
         helper.assertTrue(point != null && point.isValid(), "Create arm recognizes tray");
         if (point == null) throw new IllegalStateException("Arm point missing");
-        helper.assertTrue(point.insert(new ItemStack(Items.OAK_LEAVES, 4), false).isEmpty(), "Arm can feed tray");
-        helper.assertTrue(point.extract(0, false).isEmpty(), "Arm cannot take food");
+        helper.assertTrue(point.insert(com.rexhub.createapparel.TestArms.create(helper.getLevel()), new ItemStack(Items.OAK_LEAVES, 4), false).isEmpty(), "Arm can feed tray");
+        helper.assertTrue(point.extract(com.rexhub.createapparel.TestArms.create(helper.getLevel()), 0, false).isEmpty(), "Arm cannot take food");
         output(tray, new ItemStack(ModItems.COCOON.get(), 2));
-        helper.assertTrue(point.extract(1, false).getCount() == 2, "Arm can harvest output");
+        helper.assertTrue(point.extract(com.rexhub.createapparel.TestArms.create(helper.getLevel()), 1, false).getCount() == 2, "Arm can harvest output");
         helper.succeed();
     }
 
@@ -287,12 +286,12 @@ public final class SilkwormRearingTrayGameTests {
         var id = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "test/rearing");
         var serializer = new SilkwormRearingRecipe.Serializer();
         var json = JsonParser.parseString("{\"food\":{\"item\":\"minecraft:oak_leaves\"},\"food_count\":3,"
-                + "\"result\":{\"item\":\"createapparel:cocoon\",\"count\":2},\"processing_time\":100}").getAsJsonObject();
-        var recipe = serializer.fromJson(id, json);
-        var buffer = new FriendlyByteBuf(Unpooled.buffer());
+                + "\"result\":{\"id\":\"createapparel:cocoon\",\"count\":2},\"processing_time\":100}").getAsJsonObject();
+        var recipe = serializer.codec().codec().parse(helper.getLevel().registryAccess().createSerializationContext(com.mojang.serialization.JsonOps.INSTANCE), json).getOrThrow();
+        var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
         try {
-            serializer.toNetwork(buffer, recipe);
-            var synced = serializer.fromNetwork(id, buffer);
+            serializer.streamCodec().encode(buffer, recipe);
+            var synced = serializer.streamCodec().decode(buffer);
             helper.assertTrue(synced.foodCount() == 3 && synced.processingTime() == 100
                     && synced.getResultItem(helper.getLevel().registryAccess()).getCount() == 2, "Custom fields survive network");
             var inventory = new ItemStackHandler(2);
@@ -311,9 +310,9 @@ public final class SilkwormRearingTrayGameTests {
     @GameTest(template = "apparel_state", batch = "silkworm_rearing")
     public static void survivalAndCreativePlayerBreakKeepOneOccupiedTray(GameTestHelper helper) {
         var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "rearing-test"));
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "rearing-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override
             public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
@@ -329,7 +328,7 @@ public final class SilkwormRearingTrayGameTests {
             var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, area);
             helper.assertTrue(drops.size() == before + 1, "Both game modes drop exactly one tray with contents");
             helper.assertTrue(drops.stream().allMatch(entity -> entity.getItem().is(ModItems.SILKWORM_REARING_TRAY.get())
-                    && entity.getItem().getTagElement("BlockEntityTag").getCompound("TrayData").getBoolean("HasSilkworm")),
+                    && entity.getItem().getOrDefault(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag().getCompound("TrayData").getBoolean("HasSilkworm")),
                     "Occupied tray NBT survives actual player destruction");
         }
         helper.succeed();
@@ -371,7 +370,7 @@ public final class SilkwormRearingTrayGameTests {
         speed(tray, 64);
         tray.lazyTick();
         ticks(tray, 250);
-        var expected = tray.trayData();
+        var expected = tray.trayData(com.rexhub.createapparel.TestRegistries.lookup());
         var pos = tray.getBlockPos();
         helper.getLevel().removeBlock(pos.west(), false);
         var contraption = new com.simibubi.create.content.contraptions.bearing.BearingContraption(false, Direction.UP);
@@ -384,12 +383,12 @@ public final class SilkwormRearingTrayGameTests {
                 && helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(),
                 "Moving tray does not drop contents");
         contraption.getStorage().initialize();
-        var saved = contraption.writeNBT(false);
+        var saved = contraption.writeNBT(com.rexhub.createapparel.TestRegistries.lookup(), false);
         var moved = com.simibubi.create.content.contraptions.Contraption.fromNBT(helper.getLevel(), saved, false);
         helper.assertTrue(moved.getActorAt(BlockPos.ZERO) == null, "No movement actor can run production while mounted");
         moved.addBlocksToWorld(helper.getLevel(), new com.simibubi.create.content.contraptions.StructureTransform(pos, 0, 0, 0));
         var restored = (SilkwormRearingTrayBlockEntity) helper.getLevel().getBlockEntity(pos);
-        helper.assertTrue(restored != null && restored.trayData().equals(expected), "Disassembly restores the same cycle");
+        helper.assertTrue(restored != null && restored.trayData(com.rexhub.createapparel.TestRegistries.lookup()).equals(expected), "Disassembly restores the same cycle");
         if (restored == null) throw new IllegalStateException("Disassembled tray missing");
         speed(restored, 64);
         ticks(restored, 950);

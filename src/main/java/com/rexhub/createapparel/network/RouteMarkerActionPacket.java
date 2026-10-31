@@ -8,7 +8,17 @@ import java.util.UUID;
 
 public record RouteMarkerActionPacket(int containerId, UUID markerId, long version, Action action,
                                       double radius, double tolerance, String value, BlockPos conditionPos,
-                                      String blockId, String property, String expected, boolean inverted, int page, int sequence, int threshold) {
+                                      String blockId, String property, String expected, boolean inverted, int page, int sequence, int threshold) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<RouteMarkerActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "route_marker_action_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, RouteMarkerActionPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), RouteMarkerActionPacket::decode);
+
+    @Override
+    public Type<RouteMarkerActionPacket> type() {
+        return TYPE;
+    }
+
     public RouteMarkerActionPacket(int containerId, UUID markerId, long version, Action action,
                                    double radius, double tolerance, String value, BlockPos conditionPos,
                                    String blockId, String property, String expected, boolean inverted, int page, int sequence) {

@@ -71,11 +71,11 @@ class DistrictTerritoryTest {
         for (int index = 0; index < 400; index++) routes.put(RouteMarker.create(new UUID(1, index), new BlockPos(index & 15, index >> 8, index >> 4 & 15), RouteMarkerType.NORMAL));
         var sync = new MarkerDistrictSynchronizer(territory, routes);
         assertEquals(MarkerDistrictSynchronizer.MARKER_BUDGET, sync.tick()); assertTrue(sync.pending());
-        routes = CitizenRouteSavedData.load(routes.save(new CompoundTag())); territory = DistrictTerritory.load(territory.save());
+        routes = CitizenRouteSavedData.load(routes.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); territory = DistrictTerritory.load(territory.save());
         sync = new MarkerDistrictSynchronizer(territory, routes); int ticks = 0;
         while (sync.pending()) { assertTrue(sync.tick() <= MarkerDistrictSynchronizer.MARKER_BUDGET); assertTrue(++ticks < 30); }
         assertTrue(routes.markers().stream().allMatch(marker -> A.equals(marker.districtId())));
-        var warm = new MarkerDistrictSynchronizer(DistrictTerritory.load(territory.save()), CitizenRouteSavedData.load(routes.save(new CompoundTag())));
+        var warm = new MarkerDistrictSynchronizer(DistrictTerritory.load(territory.save()), CitizenRouteSavedData.load(routes.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())));
         assertFalse(warm.pending()); assertEquals(0, warm.tick());
         territory.put(new DistrictTerritory.Seed(B, 15, 0, 8));
         assertEquals(MarkerDistrictSynchronizer.MARKER_BUDGET, sync.tick());

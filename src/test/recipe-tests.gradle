@@ -1,0 +1,7 @@
+if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()
+        && providers.gradleProperty('silverEnabled').getOrElse('true').toBoolean()) {
+    dependencies {
+        recipeTestRuntimeOnly 'maven.modrinth:the-silver-age:zKe6RVwW'
+        jeiTestRuntimeOnly 'maven.modrinth:the-silver-age:zKe6RVwW'
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:iron_block"
+    },
+    "P": {
+      "item": "createapparel:mirror_panel"
+    }
+  },
+  "pattern": [
+    "P",
+    "B"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:iron_table_mirror"
+  }
+}

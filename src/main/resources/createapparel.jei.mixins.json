@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "com.rexhub.createapparel.compat.jei.mixin",
+  "plugin": "com.rexhub.createapparel.compat.jei.JeiMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["ScreenHelperMixin"],
+  "injectors": {"defaultRequire": 1}
+}

@@ -40,7 +40,7 @@ class CitizenPresetResourceLintTest {
         Path root = Path.of("src/main/resources/data/createapparel");
         Path generated = Path.of("src/generated/resources/data/createapparel");
         Set<String> lowerCoveringTops = new HashSet<>();
-        read(generated.resolve("tags/items/citizen/lower_covering_tops.json")).getAsJsonArray("values")
+        read(generated.resolve("tags/item/citizen/lower_covering_tops.json")).getAsJsonArray("values")
                 .forEach(value -> lowerCoveringTops.add(value.getAsString()));
         List<String> errors = new ArrayList<>();
         Set<ResourceLocation> outfitIds = new HashSet<>();
@@ -87,7 +87,7 @@ class CitizenPresetResourceLintTest {
                             }
                         });
                         if (entry.fabric().isPresent()) {
-                            var recipe = read(generated.resolve("recipes/" + entry.item().getPath() + ".json"));
+                            var recipe = read(generated.resolve("recipe/" + entry.item().getPath() + ".json"));
                             Set<String> materials = new HashSet<>();
                             recipe.getAsJsonObject("fabric").getAsJsonArray("tag").forEach(tag -> materials.add(tag.getAsString()));
                             String material = entry.fabric().get().material().getSerializedName();

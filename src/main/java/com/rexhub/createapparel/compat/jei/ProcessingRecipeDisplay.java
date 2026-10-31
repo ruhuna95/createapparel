@@ -11,27 +11,27 @@ import net.minecraft.world.item.crafting.Recipe;
 import java.util.Arrays;
 import java.util.List;
 
-public record ProcessingRecipeDisplay(Recipe<?> recipe, List<ItemStack> inputs, ItemStack result,
+public record ProcessingRecipeDisplay(net.minecraft.resources.ResourceLocation id, Recipe<?> recipe, List<ItemStack> inputs, ItemStack result,
                                       int duration, float chance) {
     public ProcessingRecipeDisplay {
         inputs = List.copyOf(inputs);
         result = result.copy();
     }
 
-    public static ProcessingRecipeDisplay spinning(SpinningRecipe recipe, RegistryAccess registries) {
-        return processing(recipe, 1, registries);
+    public static ProcessingRecipeDisplay spinning(net.minecraft.resources.ResourceLocation id, SpinningRecipe recipe, RegistryAccess registries) {
+        return processing(id, recipe, 1, registries);
     }
 
-    public static ProcessingRecipeDisplay weaving(WeavingRecipe recipe, RegistryAccess registries) {
-        return processing(recipe, WeavingRecipe.REQUIRED_INPUT_COUNT, registries);
+    public static ProcessingRecipeDisplay weaving(net.minecraft.resources.ResourceLocation id, WeavingRecipe recipe, RegistryAccess registries) {
+        return processing(id, recipe, WeavingRecipe.REQUIRED_INPUT_COUNT, registries);
     }
 
-    private static ProcessingRecipeDisplay processing(ProcessingRecipe<?> recipe, int count,
+    private static ProcessingRecipeDisplay processing(net.minecraft.resources.ResourceLocation id, ProcessingRecipe<?, ?> recipe, int count,
                                                       RegistryAccess registries) {
         List<ItemStack> inputs = recipe.getIngredients().isEmpty()
                 ? List.of() : inputs(recipe.getIngredients().get(0), count);
         float chance = recipe.getRollableResults().isEmpty() ? 1 : recipe.getRollableResults().get(0).getChance();
-        return new ProcessingRecipeDisplay(recipe, inputs, recipe.getResultItem(registries),
+        return new ProcessingRecipeDisplay(id, recipe, inputs, recipe.getResultItem(registries),
                 recipe.getProcessingDuration(), chance);
     }
 

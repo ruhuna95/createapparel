@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
 import org.joml.Quaternionf;
 import org.joml.Matrix3fc;
 import org.joml.Vector3f;
@@ -28,8 +27,10 @@ public final class WatchHud {
     private WatchHud() {
     }
 
-    public static void render(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
+    public static void render(GuiGraphics graphics, net.minecraft.client.DeltaTracker partialTick) {
         var minecraft = Minecraft.getInstance();
+        int width = minecraft.getWindow().getGuiScaledWidth();
+        int height = minecraft.getWindow().getGuiScaledHeight();
         var player = minecraft.player;
         if (player == null || minecraft.level == null || minecraft.screen != null || minecraft.options.hideGui
                 || !minecraft.options.getCameraType().isFirstPerson()
@@ -52,7 +53,9 @@ public final class WatchHud {
                 var layout = layout(side, width, height);
                 var pose = graphics.pose();
                 graphics.flush();
-                gui.setupOverlayRenderState(true, false);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                RenderSystem.disableDepthTest();
                 pose.pushPose();
                 try {
                     pose.translate(layout.x(), layout.y(), 100);

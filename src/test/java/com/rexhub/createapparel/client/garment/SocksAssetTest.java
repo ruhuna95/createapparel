@@ -123,7 +123,7 @@ class SocksAssetTest {
     @Test
     void eachRecipeUsesOneFabricAndOneThread() throws IOException {
         for (String variant : VARIANTS) {
-            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + variant + "_socks.json"));
+            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/" + variant + "_socks.json"));
             assertEquals(1, recipe.getAsJsonObject("fabric").get("count").getAsInt());
             assertEquals(JsonParser.parseString("[\"createapparel:fabrics/cotton\",\"createapparel:fabrics/wool\",\"createapparel:fabrics/synthetic\"]"),
                     recipe.getAsJsonObject("fabric").get("tag"));

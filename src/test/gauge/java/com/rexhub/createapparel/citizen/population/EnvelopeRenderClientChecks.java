@@ -17,7 +17,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.joml.Matrix4f;
 
 import java.nio.file.Files;
@@ -35,10 +35,10 @@ final class EnvelopeRenderClientChecks {
         var target = new TextureTarget(256, 320, true, Minecraft.ON_OSX);
         var projection = new Matrix4f(RenderSystem.getProjectionMatrix());
         var modelView = RenderSystem.getModelViewStack();
-        modelView.pushPose();
+        modelView.pushMatrix();
         int scenes = 0;
         try {
-            modelView.setIdentity();
+            modelView.identity();
             modelView.translate(0, 0, -2000);
             RenderSystem.applyModelViewMatrix();
             mc.gameRenderer.resetProjectionMatrix(new Matrix4f().setOrtho(0, 256, 320, 0, 1000, 3000));
@@ -70,7 +70,7 @@ final class EnvelopeRenderClientChecks {
             checkTranslucentSupport(target);
             com.mojang.logging.LogUtils.getLogger().info("ENVELOPE_RENDER_QUALITY_PASSED scenes={} vertexAttributesRecorded=true resolution=256x320 profiles=4 poses=6 outfits=7", scenes);
         } finally {
-            modelView.popPose();
+            modelView.popMatrix();
             RenderSystem.applyModelViewMatrix();
             mc.gameRenderer.resetProjectionMatrix(projection);
             target.destroyBuffers();
@@ -93,7 +93,7 @@ final class EnvelopeRenderClientChecks {
                         entity.citizenState().setAppearance(new com.rexhub.createapparel.entity.CitizenAppearance(
                                 SkinTone.values()[outfit % SkinTone.values().length], arm, chest, base.hairStyleId(), base.hairColorRgb(), base.eyeColorRgb()));
                         entity.citizenState().setAge(age);
-                        entity.citizenState().loadout().deserializeNBT(outfit(outfit).serializeNBT());
+                        entity.citizenState().loadout().deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), outfit(outfit).serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
                         entity.citizenState().setBehavior(com.rexhub.createapparel.entity.CitizenBehaviorState.posed(preset));
                         for (int lod = 3; lod >= 0; lod--) {
                             var camera = mc.gameRenderer.getMainCamera().getPosition();
@@ -105,7 +105,7 @@ final class EnvelopeRenderClientChecks {
                 var mannequin = Objects.requireNonNull(entry.getValue().get().create(mc.level));
                 var mannequinRenderer = mc.getEntityRenderDispatcher().getRenderer(mannequin);
                 for (int outfit = 0; outfit < 7; outfit++) {
-                    mannequin.mannequinState().loadout().deserializeNBT(outfit(outfit).serializeNBT());
+                    mannequin.mannequinState().loadout().deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), outfit(outfit).serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
                     captureEntity(target, mannequin, mannequinRenderer, "mannequin-" + entry.getKey() + "-" + outfit);
                 }
             }
@@ -133,7 +133,7 @@ final class EnvelopeRenderClientChecks {
         var mc = Minecraft.getInstance();
         var entity = Objects.requireNonNull(com.rexhub.createapparel.init.ModEntities.CITIZEN.get().create(mc.level));
         entity.setId(900002);
-        entity.citizenState().loadout().deserializeNBT(outfit(0).serializeNBT());
+        entity.citizenState().loadout().deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), outfit(0).serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
         entity.citizenState().setBehavior(com.rexhub.createapparel.entity.CitizenBehaviorState.anchored(
                 com.rexhub.createapparel.entity.CitizenBehaviorMode.WANDER, net.minecraft.core.BlockPos.ZERO, mc.level.dimension(), 0));
         var renderer = (com.rexhub.createapparel.client.renderer.CitizenRenderer) mc.getEntityRenderDispatcher().getRenderer(entity);
@@ -225,7 +225,7 @@ final class EnvelopeRenderClientChecks {
         for (String name : names) {
             var id = ResourceLocation.fromNamespaceAndPath("createapparel", name);
             var definition = GarmentDefinitionManager.get(id).orElseThrow();
-            var stack = new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(id)));
+            var stack = new ItemStack(Objects.requireNonNull(BuiltInRegistries.ITEM.get(id)));
             var data = GarmentData.defaultFor(definition);
             if (scenario == 6) {
                 String design = definition.designs().stream().sorted().reduce((a, b) -> b).orElseThrow();
@@ -284,29 +284,26 @@ final class EnvelopeRenderClientChecks {
                     .replaceAll("\\$\\$Lambda\\$\\d+/0x[0-9a-fA-F]+@[0-9a-fA-F]+", "lambda").hashCode());
             var target = delegate.getBuffer(type);
             return new com.mojang.blaze3d.vertex.VertexConsumer() {
-                @Override public com.mojang.blaze3d.vertex.VertexConsumer vertex(double x, double y, double z) {
-                    values.add(Double.doubleToLongBits(x)); values.add(Double.doubleToLongBits(y)); values.add(Double.doubleToLongBits(z));
-                    target.vertex(x, y, z); return this;
+                @Override public com.mojang.blaze3d.vertex.VertexConsumer addVertex(float x, float y, float z) {
+                    values.add(-1L); values.add(Double.doubleToLongBits(x)); values.add(Double.doubleToLongBits(y)); values.add(Double.doubleToLongBits(z));
+                    target.addVertex(x, y, z); return this;
                 }
-                @Override public com.mojang.blaze3d.vertex.VertexConsumer color(int r, int g, int b, int a) {
-                    values.add((long) (r << 24 | g << 16 | b << 8 | a)); target.color(r, g, b, a); return this;
+                @Override public com.mojang.blaze3d.vertex.VertexConsumer setColor(int r, int g, int b, int a) {
+                    values.add((long) (r << 24 | g << 16 | b << 8 | a)); target.setColor(r, g, b, a); return this;
                 }
-                @Override public com.mojang.blaze3d.vertex.VertexConsumer uv(float u, float v) {
-                    values.add((long) Float.floatToIntBits(u)); values.add((long) Float.floatToIntBits(v)); target.uv(u, v); return this;
+                @Override public com.mojang.blaze3d.vertex.VertexConsumer setUv(float u, float v) {
+                    values.add((long) Float.floatToIntBits(u)); values.add((long) Float.floatToIntBits(v)); target.setUv(u, v); return this;
                 }
-                @Override public com.mojang.blaze3d.vertex.VertexConsumer overlayCoords(int u, int v) {
-                    values.add((long) (u | v << 16)); target.overlayCoords(u, v); return this;
+                @Override public com.mojang.blaze3d.vertex.VertexConsumer setUv1(int u, int v) {
+                    values.add((long) (u | v << 16)); target.setUv1(u, v); return this;
                 }
-                @Override public com.mojang.blaze3d.vertex.VertexConsumer uv2(int u, int v) {
-                    values.add((long) (u | v << 16)); target.uv2(u, v); return this;
+                @Override public com.mojang.blaze3d.vertex.VertexConsumer setUv2(int u, int v) {
+                    values.add((long) (u | v << 16)); target.setUv2(u, v); return this;
                 }
-                @Override public com.mojang.blaze3d.vertex.VertexConsumer normal(float x, float y, float z) {
+                @Override public com.mojang.blaze3d.vertex.VertexConsumer setNormal(float x, float y, float z) {
                     values.add((long) Float.floatToIntBits(x)); values.add((long) Float.floatToIntBits(y)); values.add((long) Float.floatToIntBits(z));
-                    target.normal(x, y, z); return this;
+                    target.setNormal(x, y, z); return this;
                 }
-                @Override public void endVertex() { values.add(-1L); target.endVertex(); }
-                @Override public void defaultColor(int r, int g, int b, int a) { throw new AssertionError("Unexpected default color"); }
-                @Override public void unsetDefaultColor() { throw new AssertionError("Unexpected default color reset"); }
             };
         }
     }

@@ -54,7 +54,7 @@ final class SilkwormRearingCategory extends ApparelRecipeCategory<SilkwormRearin
             silkworm.setYRot(135);
             silkworm.yHeadRot = 135;
             var tilt = Axis.XP.rotationDegrees(25);
-            InventoryScreen.renderEntityInInventory(graphics, 88, 67, 38,
+            InventoryScreen.renderEntityInInventory(graphics, 88, 67, 38, new org.joml.Vector3f(),
                     Axis.ZP.rotationDegrees(180).mul(tilt), tilt, silkworm);
         }
     }

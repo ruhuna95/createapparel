@@ -25,7 +25,7 @@ public final class FashionEvaluator {
             var definition = loadout.definition(stack).orElse(null);
             if (definition == null || !definition.allowedSlots().contains(slot)
                     || !eligible(citizen.citizenState().age(), citizen.citizenState().appearance().chestProfile(), FashionTagResolver.resolve(stack))) return false;
-            if (ItemStack.isSameItemSameTags(loadout.getStack(slot), stack)) return false;
+            if (ItemStack.isSameItemSameComponents(loadout.getStack(slot), stack)) return false;
             var candidate = loadout.copy(); candidate.setStackInSlot(slot.ordinal(), stack.copyWithCount(1));
             return com.rexhub.createapparel.citizen.CitizenCoverage.isCovered(candidate);
         } catch (IllegalArgumentException exception) { return false; }

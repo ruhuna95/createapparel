@@ -41,8 +41,8 @@ class CitizenScaleTest {
             long network = System.nanoTime() - started;
             assertNotNull(data.networks().cached(nodes.get(nodes.size() - 1).id()));
             started = System.nanoTime();
-            var tag = data.save(new CompoundTag());
-            var routeTag = routes.save(new CompoundTag());
+            var tag = data.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup());
+            var routeTag = routes.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup());
             long save = System.nanoTime() - started;
             var bytes = new ByteArrayOutputStream();
             NbtIo.write(tag, new DataOutputStream(bytes)); NbtIo.write(routeTag, new DataOutputStream(bytes));

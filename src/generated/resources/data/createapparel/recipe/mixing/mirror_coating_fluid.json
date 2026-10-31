@@ -1,0 +1,28 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "createapparel:mirror_coating_fallback"
+    }
+  ],
+  "type": "create:mixing",
+  "heat_requirement": "heated",
+  "ingredients": [
+    {
+      "item": "create:zinc_nugget"
+    },
+    {
+      "item": "minecraft:glowstone_dust"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 1000,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "results": [
+    {
+      "amount": 1000,
+      "id": "createapparel:mirror_coating_fluid"
+    }
+  ]
+}

@@ -39,7 +39,7 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
             snapshots.clear();
             snapshotLevel = new java.lang.ref.WeakReference<>(minecraft.level);
         }
-        shadowRadius = 0.35F * entity.getScale();
+        shadowRadius = 0.35F * entity.getScale() * entity.getAgeScale();
         if (!entity.isInvisible()) {
             var state = entity.citizenState();
             var appearance = state.appearance();
@@ -74,7 +74,7 @@ public final class CitizenRenderer extends EntityRenderer<Citizen> {
             var frame = new com.rexhub.createapparel.client.garment.ApparelRenderFrame(snapshot::garment, model, lod);
             poseStack.pushPose();
             poseStack.mulPose(Axis.YP.rotationDegrees(180 - Mth.rotLerp(partialTick, entity.yBodyRotO, entity.yBodyRot)));
-            float scale = CitizenModel.BODY_SCALE * entity.getScale();
+            float scale = CitizenModel.BODY_SCALE * entity.getScale() * entity.getAgeScale();
             poseStack.scale(-scale, -scale, scale);
             poseStack.translate(0, -1.5, 0);
             ClientGarmentAssets.INSTANCE.resolveBody(appearance.armProfile(), appearance.chestProfile()).ifPresent(parts ->

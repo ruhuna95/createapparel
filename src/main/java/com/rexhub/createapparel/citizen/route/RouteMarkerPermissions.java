@@ -42,9 +42,9 @@ public final class RouteMarkerPermissions {
     }
 
     @javax.annotation.Nullable public static BlockHitResult pick(Player player) {
-        if (!com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(player.level(), player.blockPosition(), (int) Math.ceil(player.getBlockReach()))) return null;
+        if (!com.rexhub.createapparel.citizen.CitizenNavigation.hasLoadedRegion(player.level(), player.blockPosition(), (int) Math.ceil(player.blockInteractionRange()))) return null;
         var eye = player.getEyePosition();
-        return player.level().clip(new net.minecraft.world.level.ClipContext(eye, eye.add(player.getLookAngle().scale(player.getBlockReach())),
+        return player.level().clip(new net.minecraft.world.level.ClipContext(eye, eye.add(player.getLookAngle().scale(player.blockInteractionRange())),
                 net.minecraft.world.level.ClipContext.Block.OUTLINE, net.minecraft.world.level.ClipContext.Fluid.NONE, player));
     }
 

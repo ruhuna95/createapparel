@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,16 +109,16 @@ public final class CashRegisterBlockEntity extends BlockEntity implements com.si
         setChanged();
         if (level != null && !level.isClientSide) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
     }
-    @Override public CompoundTag getUpdateTag() { return saveWithoutMetadata(); }
+    @Override public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
     @Override public net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket getUpdatePacket() {
         return net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this);
     }
-    @Override protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag); tag.putUUID("RegisterId", registerId);
+    @Override protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries); tag.putUUID("RegisterId", registerId);
         tag.put("Storages", storageTag());
     }
-    @Override public void load(CompoundTag tag) {
-        super.load(tag);
+    @Override protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         registerId = tag.hasUUID("RegisterId") ? tag.getUUID("RegisterId") : UUID.randomUUID();
         storages.clear();
         var links = tag.getList("Storages", CompoundTag.TAG_COMPOUND);

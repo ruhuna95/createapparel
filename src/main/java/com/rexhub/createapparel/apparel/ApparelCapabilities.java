@@ -1,25 +1,29 @@
 package com.rexhub.createapparel.apparel;
 
+import com.rexhub.createapparel.CreateApparel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.common.util.LazyOptional;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+
+import java.util.Optional;
 
 public final class ApparelCapabilities {
-    public static final Capability<ApparelInventory> PLAYER_APPAREL =
-            CapabilityManager.get(new CapabilityToken<>() {
-            });
+    private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
+            DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, CreateApparel.MOD_ID);
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<ApparelInventory>> PLAYER_APPAREL =
+            ATTACHMENTS.register("apparel_inventory", () -> AttachmentType.serializable(
+                    holder -> ApparelInventoryProvider.create((Player) holder)).copyOnDeath().build());
 
-    private ApparelCapabilities() {
+    private ApparelCapabilities() { }
+
+    public static void register(IEventBus bus) {
+        ATTACHMENTS.register(bus);
     }
 
-    public static void register(RegisterCapabilitiesEvent event) {
-        event.register(ApparelInventory.class);
-    }
-
-    public static LazyOptional<ApparelInventory> get(Player player) {
-        return player.getCapability(PLAYER_APPAREL);
+    public static Optional<ApparelInventory> get(Player player) {
+        return Optional.of(player.getData(PLAYER_APPAREL));
     }
 }

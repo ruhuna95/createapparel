@@ -49,10 +49,10 @@ class CitizenHeadAttachmentTest {
                     var normals = new ArrayList<Vector3f>();
                     var consumer = (VertexConsumer) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{VertexConsumer.class},
                             (proxy, method, arguments) -> {
-                                if (method.getName().equals("vertex") && arguments.length == 4) {
+                                if (method.getName().equals("addVertex") && arguments.length == 4) {
                                     points.add(new Vector3f((float) arguments[1], (float) arguments[2], (float) arguments[3])
                                             .mulPosition((Matrix4f) arguments[0]));
-                                } else if (method.getName().equals("normal") && arguments.length == 4) {
+                                } else if (method.getName().equals("setNormal") && arguments.length == 4) {
                                     normals.add(new Vector3f((float) arguments[1], (float) arguments[2], (float) arguments[3]));
                                 }
                                 return method.getReturnType() == void.class ? null : proxy;

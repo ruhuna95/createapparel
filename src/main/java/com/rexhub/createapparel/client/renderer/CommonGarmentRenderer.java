@@ -303,9 +303,9 @@ public final class CommonGarmentRenderer {
                 if (buffers.normals[n + 3] == 0) continue;
                 for (int i = 0; i < 4; i++) {
                     int corner = face * 4 + i, p = mesh.positionIndex(corner) * 3;
-                    vertices.vertex(buffers.points[p], buffers.points[p + 1], buffers.points[p + 2],
-                            1, 1, 1, 1, mesh.u(corner) / part.textureWidth(), mesh.v(corner) / part.textureHeight(),
-                            packedOverlay, packedLight, buffers.normals[n], buffers.normals[n + 1], buffers.normals[n + 2]);
+                    vertices.addVertex(buffers.points[p], buffers.points[p + 1], buffers.points[p + 2]).setColor(1F, 1F, 1F, 1F)
+                            .setUv(mesh.u(corner) / part.textureWidth(), mesh.v(corner) / part.textureHeight()).setOverlay(packedOverlay).setLight(packedLight)
+                            .setNormal(buffers.normals[n], buffers.normals[n + 1], buffers.normals[n + 2]);
                 }
             }
         } finally {
@@ -333,11 +333,11 @@ public final class CommonGarmentRenderer {
             for (int i = 0; i < 4; i++) {
                 var point = points[i];
                 var uv = quad.uv().get(i);
-                vertices.vertex(pose.pose(), point.x, BODY_HEIGHT - point.y, point.z)
-                        .color(255, 255, 255, 255)
-                        .uv(uv.u() / part.textureWidth(), uv.v() / part.textureHeight())
-                        .overlayCoords(packedOverlay).uv2(packedLight)
-                        .normal(pose.normal(), nx / length, -ny / length, nz / length).endVertex();
+                vertices.addVertex(pose.pose(), point.x, BODY_HEIGHT - point.y, point.z)
+                        .setColor(255, 255, 255, 255)
+                        .setUv(uv.u() / part.textureWidth(), uv.v() / part.textureHeight())
+                        .setOverlay(packedOverlay).setLight(packedLight)
+                        .setNormal(pose, nx / length, -ny / length, nz / length);
             }
         }
         poseStack.popPose();
@@ -480,7 +480,7 @@ public final class CommonGarmentRenderer {
     }
 
     private static void mirrorItemX(PoseStack poseStack) {
-        poseStack.mulPoseMatrix(ITEM_X_REFLECTION);
+        poseStack.mulPose(ITEM_X_REFLECTION);
         poseStack.last().normal().scale(-1.0F, 1.0F, 1.0F);
     }
 
@@ -536,8 +536,9 @@ public final class CommonGarmentRenderer {
                 float nx = buffers.scratch.x, ny = buffers.scratch.y, nz = buffers.scratch.z;
                 for (int i = 0; i < 4; i++) {
                     int corner = face * 4 + i, p = mesh.positionIndex(corner) * 3;
-                    vertices.vertex(buffers.points[p], buffers.points[p + 1], buffers.points[p + 2], red, green, blue, 1,
-                            mesh.u(corner) / textureWidth, mesh.v(corner) / textureHeight, overlay, light, nx, ny, nz);
+                    vertices.addVertex(buffers.points[p], buffers.points[p + 1], buffers.points[p + 2]).setColor(red, green, blue, 1)
+                            .setUv(mesh.u(corner) / textureWidth, mesh.v(corner) / textureHeight).setOverlay(overlay).setLight(light)
+                            .setNormal(nx, ny, nz);
                 }
             }
         } finally { buffers.inUse = false; }
@@ -560,8 +561,9 @@ public final class CommonGarmentRenderer {
                 for (int vertexIndex = 0; vertexIndex < face.vertices().size(); vertexIndex++) {
                     var vertex = face.vertices().get(vertexIndex);
                     pose.pose().transform(buffers.vertex.set(vertex.x(), mapping.humanoid() ? BODY_HEIGHT - vertex.y() : vertex.y(), vertex.z(), 1));
-                    vertices.vertex(buffers.vertex.x, buffers.vertex.y, buffers.vertex.z, red, green, blue, 1,
-                            vertex.u() / textureWidth, vertex.v() / textureHeight, packedOverlay, packedLight, nx, ny, nz);
+                    vertices.addVertex(buffers.vertex.x, buffers.vertex.y, buffers.vertex.z).setColor(red, green, blue, 1)
+                            .setUv(vertex.u() / textureWidth, vertex.v() / textureHeight).setOverlay(packedOverlay).setLight(packedLight)
+                            .setNormal(nx, ny, nz);
                 }
             }
         } finally {

@@ -15,4 +15,9 @@ public final class MirrorBlockEntityRenderer implements BlockEntityRenderer<Mirr
     }
 
     @Override public int getViewDistance() { return 64; }
+
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(MirrorBlockEntity blockEntity) {
+        return blockEntity.getRenderBoundingBox();
+    }
 }

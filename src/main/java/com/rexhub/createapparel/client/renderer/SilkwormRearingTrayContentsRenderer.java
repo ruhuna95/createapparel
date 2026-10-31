@@ -32,7 +32,7 @@ public final class SilkwormRearingTrayContentsRenderer {
         pose.pushPose();
         applyLarvaPose(pose, feeding);
         model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(LARVA_TEXTURE)),
-                light, overlay, 1, 1, 1, 1);
+                light, overlay, -1);
         pose.popPose();
     }
 

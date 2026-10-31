@@ -26,6 +26,16 @@ import java.util.List;
 import java.util.Map;
 
 public final class MirrorFurnitureBlock extends BaseEntityBlock implements MirrorSurfaceProvider {
+    public static final com.mojang.serialization.MapCodec<MirrorFurnitureBlock> CODEC = com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance -> instance.group(
+                propertiesCodec(), com.mojang.serialization.Codec.STRING.xmap(Kind::valueOf, Kind::name)
+                        .fieldOf("kind").forGetter(block -> block.kind)
+        ).apply(instance, MirrorFurnitureBlock::new));
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends MirrorFurnitureBlock> codec() {
+        return CODEC;
+    }
+
     public enum Kind { PANEL, FULL_LENGTH, TABLE }
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
@@ -98,13 +108,13 @@ public final class MirrorFurnitureBlock extends BaseEntityBlock implements Mirro
     }
 
     @Override
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide && player.getAbilities().instabuild && kind == Kind.FULL_LENGTH
                 && state.getValue(HALF) == DoubleBlockHalf.UPPER) {
             BlockPos lower = pos.below();
             if (level.getBlockState(lower).is(this)) level.setBlock(lower, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         }
-        super.playerWillDestroy(level, pos, state, player);
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
     @Nullable @Override

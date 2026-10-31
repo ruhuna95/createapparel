@@ -15,15 +15,21 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class SpinningMachineBlock extends HorizontalShaftMachineBlock
         implements IBE<SpinningMachineBlockEntity> {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
     public static final double STRESS_IMPACT = 4.0;
 
     public SpinningMachineBlock(Properties properties) {
         super(properties);
     }
 
-    @Override
+
     @SuppressWarnings("deprecation")
-    public InteractionResult use(
+    private InteractionResult interact(
             BlockState state,
             Level level,
             BlockPos pos,

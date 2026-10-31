@@ -4,14 +4,23 @@ import com.rexhub.createapparel.garment.EquippedStyleState;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.photo.PhotographyMenu;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-public record PhotographyStylesPacket(int menuId, UUID photoId, Map<GarmentSlot, EquippedStyleState> styles) {
+public record PhotographyStylesPacket(int menuId, UUID photoId, Map<GarmentSlot, EquippedStyleState> styles) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<PhotographyStylesPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "photography_styles_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, PhotographyStylesPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), PhotographyStylesPacket::decode);
+
+    @Override
+    public Type<PhotographyStylesPacket> type() {
+        return TYPE;
+    }
+
     public PhotographyStylesPacket { styles = Map.copyOf(styles); }
 
     public void encode(FriendlyByteBuf buffer) {
@@ -29,10 +38,10 @@ public record PhotographyStylesPacket(int menuId, UUID photoId, Map<GarmentSlot,
     }
 
     public void handleClient() {
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+        {
             var player = net.minecraft.client.Minecraft.getInstance().player;
             if (player != null && player.containerMenu instanceof PhotographyMenu menu
                     && menu.containerId == menuId && menu.photoId().equals(photoId)) menu.acceptStyles(styles);
-        });
+        }
     }
 }

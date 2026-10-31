@@ -30,7 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.LevelResource;
-import net.minecraftforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,8 +43,8 @@ import static com.rexhub.createapparel.compat.jei.JeiClientTestLauncher.check;
 
 @JeiPlugin
 public final class JeiClientChecks implements IModPlugin {
-    private static final RecipeType<com.simibubi.create.content.kinetics.crusher.AbstractCrushingRecipe> CRUSHING =
-            RecipeType.create("create", "crushing", com.simibubi.create.content.kinetics.crusher.AbstractCrushingRecipe.class);
+    private static final RecipeType<net.minecraft.world.item.crafting.RecipeHolder<com.simibubi.create.content.kinetics.crusher.AbstractCrushingRecipe>> CRUSHING =
+            RecipeType.createRecipeHolderType(ResourceLocation.parse("create:crushing"));
     private static IJeiRuntime runtime;
     private static int generation;
     private static int stage;
@@ -148,7 +148,7 @@ public final class JeiClientChecks implements IModPlugin {
             Minecraft.getInstance().setScreen(new TailorClientChecks.PreviewScreen());
         } else if (capture.type == CRUSHING) {
             var recipe = runtime.getRecipeManager().createRecipeLookup(CRUSHING).get()
-                    .filter(value -> value.getId().equals(id("crushing/garments_to_old_cloth"))).findFirst().orElseThrow();
+                    .filter(value -> value.id().equals(id("crushing/garments_to_old_cloth"))).findFirst().orElseThrow();
             runtime.getRecipesGui().showRecipes(runtime.getRecipeManager().getRecipeCategory(CRUSHING), List.of(recipe), List.of());
         } else if (capture.name.startsWith("tooltips-")) {
             int page = capture.name.startsWith("tooltips-shift-wardrobe-") ? 2
@@ -163,7 +163,7 @@ public final class JeiClientChecks implements IModPlugin {
                     List.of(recipe), List.of());
         } else if (capture.type == RecipeTypes.CRAFTING) {
             var recipe = runtime.getRecipeManager().createRecipeLookup(RecipeTypes.CRAFTING).get()
-                    .filter(value -> value.getId().equals(id("photo_copy_manual_only"))).findFirst().orElseThrow();
+                    .filter(value -> value.id().equals(id("photo_copy_manual_only"))).findFirst().orElseThrow();
             runtime.getRecipesGui().showRecipes(runtime.getRecipeManager().getRecipeCategory(RecipeTypes.CRAFTING),
                     List.of(recipe), List.of());
         } else {
@@ -183,7 +183,7 @@ public final class JeiClientChecks implements IModPlugin {
             check(!category.getTitle().getString().startsWith("jei."), "Translated title");
             long count = manager.createRecipeLookup(type).get().count();
             long expected = mc.level.getRecipeManager().getRecipes().stream()
-                    .filter(recipe -> recipe.getType().toString().equals(type.getUid().toString())).count();
+                    .filter(recipe -> recipe.value().getType().toString().equals(type.getUid().toString())).count();
             if (type == ApparelJeiRecipeTypes.SILKWORM_REARING) expected++;
             check(count > 0 && count == expected, "Recipe count " + type + ": " + count + "/" + expected);
             check(manager.createRecipeCatalystLookup(type).get().count() == 1, "One machine catalyst");
@@ -194,30 +194,30 @@ public final class JeiClientChecks implements IModPlugin {
         var factory = new SewingRecipeDisplay.Factory(ClientGarmentAssets::getDefinition);
         for (var display : sewing) {
             var recipe = display.recipe();
-            var rebuilt = factory.create(recipe).orElseThrow();
+            var rebuilt = factory.create(display.id(), recipe).orElseThrow();
             check(rebuilt.fabrics().size() == display.fabrics().size(), "Stable cached candidate count");
             var creativeEntry = ModRegistries.ITEMS.getEntries().stream()
                     .filter(entry -> entry.getId().equals(recipe.getResultId())).findFirst().orElseThrow();
             check(ItemStack.matches(GarmentCreativePresets.create(creativeEntry), display.result()), "Creative garment preview");
-            var patternBefore = display.pattern().save(new net.minecraft.nbt.CompoundTag());
-            for (var stack : display.fabrics()) lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.INPUT, stack, recipe.getId());
-            for (var stack : display.threads()) lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.INPUT, stack, recipe.getId());
-            lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.CATALYST, display.pattern(), recipe.getId());
-            lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.CATALYST, new ItemStack(ModItems.SEWING_PATTERN.get()), recipe.getId());
+            var patternBefore = display.pattern().save(mc.level.registryAccess());
+            for (var stack : display.fabrics()) lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.INPUT, stack, display.id());
+            for (var stack : display.threads()) lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.INPUT, stack, display.id());
+            lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.CATALYST, display.pattern(), display.id());
+            lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.CATALYST, new ItemStack(ModItems.SEWING_PATTERN.get()), display.id());
             var output = display.result().copy();
             var definition = ClientGarmentAssets.getDefinition(recipe.getResultId()).orElseThrow();
             new GarmentData(FabricMaterial.SYNTHETIC, definition.designs().iterator().next(), FabricColor.NAVY,
                     Optional.of(FabricColor.RED), Optional.of(FabricColor.YELLOW)).write(output);
-            lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.OUTPUT, output, recipe.getId());
-            check(display.pattern().save(new net.minecraft.nbt.CompoundTag()).equals(patternBefore), "Pattern NBT unchanged");
+            lookup(ApparelJeiRecipeTypes.SEWING, RecipeIngredientRole.OUTPUT, output, display.id());
+            check(display.pattern().save(mc.level.registryAccess()).equals(patternBefore), "Pattern NBT unchanged");
             var layout = manager.createRecipeLayoutDrawable(manager.getRecipeCategory(ApparelJeiRecipeTypes.SEWING),
                     display, runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup()).orElseThrow();
             check(layout.getRecipeSlotsView().getSlotViews().size() == 4, "Sewing has exactly four slots");
         }
         for (var type : List.of(ApparelJeiRecipeTypes.SPINNING, ApparelJeiRecipeTypes.WEAVING)) {
             for (var display : manager.createRecipeLookup(type).get().toList()) {
-                for (var stack : display.inputs()) lookup(type, RecipeIngredientRole.INPUT, stack, display.recipe().getId());
-                lookup(type, RecipeIngredientRole.OUTPUT, display.result(), display.recipe().getId());
+                for (var stack : display.inputs()) lookup(type, RecipeIngredientRole.INPUT, stack, display.id());
+                lookup(type, RecipeIngredientRole.OUTPUT, display.result(), display.id());
             }
         }
         for (var display : manager.createRecipeLookup(ApparelJeiRecipeTypes.SILKWORM_REARING).get().toList()) {
@@ -229,41 +229,41 @@ public final class JeiClientChecks implements IModPlugin {
             if (!display.tray()) lookup(ApparelJeiRecipeTypes.SILKWORM_REARING, RecipeIngredientRole.CATALYST,
                     new ItemStack(Items.SHEARS), display.id());
         }
-        var mixing = manager.getRecipeType(ResourceLocation.parse("create:mixing"), BasinRecipe.class).orElseThrow();
+        var mixing = RecipeType.<BasinRecipe>createRecipeHolderType(ResourceLocation.parse("create:mixing"));
         var clientRecipes = Minecraft.getInstance().level.getRecipeManager();
         for (String path : List.of("mixing/synthetic_fiber", "mixing/mirror_coating_fluid", "mixing/mirror_coating_fluid_from_destroy")) {
-            check(manager.createRecipeLookup(mixing).get().anyMatch(recipe -> recipe.getId().equals(id(path)))
+            check(manager.createRecipeLookup(mixing).get().anyMatch(recipe -> recipe.id().equals(id(path)))
                             == clientRecipes.byKey(id(path)).isPresent(), "Optional mixing follows synchronized recipes: " + path);
         }
         clientRecipes.byKey(id("mixing/mirror_coating_fluid_from_destroy")).ifPresent(recipe -> {
-            var layout = manager.createRecipeLayoutDrawable(manager.getRecipeCategory(mixing), (BasinRecipe) recipe,
+            var layout = manager.createRecipeLayoutDrawable(manager.getRecipeCategory(mixing), new net.minecraft.world.item.crafting.RecipeHolder<>(recipe.id(), (BasinRecipe) recipe.value()),
                     runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup()).orElseThrow();
             check(layout.getRecipeSlotsView().getSlotViews().size() >= 3, "Native Destroy coating mixing layout");
         });
-        if (net.minecraftforge.fml.ModList.get().isLoaded("destroy")) DestroyJeiChecks.audit(runtime);
+        if (net.neoforged.fml.ModList.get().isLoaded("destroy")) DestroyJeiChecks.audit(runtime);
         var fiberFocus = runtime.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.OUTPUT,
                 VanillaTypes.ITEM_STACK, new ItemStack(ModItems.SYNTHETIC_FIBER.get()));
         check(manager.createRecipeLookup(mixing).limitFocus(List.of(fiberFocus)).get()
-                        .anyMatch(recipe -> recipe.getId().equals(id("mixing/synthetic_fiber")))
+                        .anyMatch(recipe -> recipe.id().equals(id("mixing/synthetic_fiber")))
                         == clientRecipes.byKey(id("mixing/synthetic_fiber")).isPresent(), "Fiber recipe lookup follows synced recipes");
         check(manager.createRecipeLookup(RecipeTypes.CRAFTING).limitFocus(List.of(fiberFocus)).get()
-                        .anyMatch(recipe -> recipe.getId().equals(id("synthetic_fiber_from_nylon")))
+                        .anyMatch(recipe -> recipe.id().equals(id("synthetic_fiber_from_nylon")))
                         == clientRecipes.byKey(id("synthetic_fiber_from_nylon")).isPresent(), "Nylon recipe lookup follows synced recipes");
         for (String recipe : List.of("mixing/dyeing/blue_cotton_fabric", "mixing/dyeing/navy_cotton_fabric", "mixing/decolorizing/cotton_fabric")) {
-            var actual = manager.createRecipeLookup(mixing).get().filter(value -> value.getId().equals(id(recipe)))
+            var actual = manager.createRecipeLookup(mixing).get().filter(value -> value.id().equals(id(recipe)))
                     .findFirst().orElseThrow();
-            check(actual.getFluidIngredients().size() == 1 && actual.getFluidIngredients().get(0).getRequiredAmount() == 250,
+            check(actual.value().getFluidIngredients().size() == 1 && actual.value().getFluidIngredients().get(0).amount() == 250,
                     "Native mixing water quantity: " + recipe);
             var layout = manager.createRecipeLayoutDrawable(manager.getRecipeCategory(mixing), actual,
                     runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup()).orElseThrow();
             check(layout.getRecipeSlotsView().getSlotViews().size() >= 3, "Native mixing slots: " + recipe);
         }
-        long dyeing = manager.createRecipeLookup(mixing).get().filter(recipe -> recipe.getId().getNamespace().equals("createapparel")
-                && recipe.getId().getPath().startsWith("mixing/dyeing/")).count();
+        long dyeing = manager.createRecipeLookup(mixing).get().filter(recipe -> recipe.id().getNamespace().equals("createapparel")
+                && recipe.id().getPath().startsWith("mixing/dyeing/")).count();
         check(dyeing == 231, "All 7 x 33 dyeing recipes");
         for (var color : FabricColor.values()) if (!color.isVanilla()) {
             String path = "apparel_dyes/" + color.getSerializedName() + "_dye";
-            check(manager.createRecipeLookup(RecipeTypes.CRAFTING).get().anyMatch(recipe -> recipe.getId().equals(id(path))), "Native crafting: " + path);
+            check(manager.createRecipeLookup(RecipeTypes.CRAFTING).get().anyMatch(recipe -> recipe.id().equals(id(path))), "Native crafting: " + path);
         }
         check(manager.getRecipeType(id("fabric_dyeing")).isEmpty(), "No duplicate dyeing category");
         Files.write(JeiClientTestLauncher.root().resolve("build/phase23/category-counts.tsv"), rows);
@@ -273,11 +273,11 @@ public final class JeiClientChecks implements IModPlugin {
     private static void auditPhotoCopy(String path) {
         var manager = runtime.getRecipeManager();
         var recipes = manager.createRecipeLookup(RecipeTypes.CRAFTING).get()
-                .filter(PhotoCopyRecipe.class::isInstance).toList();
+                .filter(holder -> holder.value() instanceof PhotoCopyRecipe).toList();
         long expected = Minecraft.getInstance().level.getRecipeManager().getRecipes().stream()
-                .filter(PhotoCopyRecipe.class::isInstance).count();
+                .filter(holder -> holder.value() instanceof PhotoCopyRecipe).count();
         check(recipes.size() == expected && expected > 0, "Photo copy recipes registered exactly once");
-        var recipe = recipes.stream().filter(value -> value.getId().equals(id(path))).findFirst().orElseThrow();
+        var recipe = recipes.stream().filter(value -> value.id().equals(id(path))).findFirst().orElseThrow();
         var category = manager.getRecipeCategory(RecipeTypes.CRAFTING);
         var factory = runtime.getJeiHelpers().getFocusFactory();
         var layout = manager.createRecipeLayoutDrawable(category, recipe, factory.getEmptyFocusGroup()).orElseThrow();
@@ -286,21 +286,21 @@ public final class JeiClientChecks implements IModPlugin {
         var photo = new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get(), 37);
         new AdvertisingPhotoData(UUID.randomUUID(), UUID.randomUUID(), null, CitizenAppearance.DEFAULT,
                 CitizenAge.ADULT, List.of(), PosePreset.STANDING, PhotoLayout.DEFAULT).write(photo);
-        photo.getOrCreateTag().putString("JeiCopyTest", "preserved");
+        com.rexhub.createapparel.item.ItemData.update(photo, tagData -> tagData.putString("JeiCopyTest", "preserved"));
         var before = photo.copy();
         for (var stack : List.of(new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get()), photo)) {
             for (var role : List.of(RecipeIngredientRole.INPUT, RecipeIngredientRole.OUTPUT)) {
                 var focus = factory.createFocus(role, VanillaTypes.ITEM_STACK, stack);
                 check(manager.createRecipeLookup(RecipeTypes.CRAFTING).limitFocus(List.of(focus)).get()
-                        .filter(value -> value.getId().equals(recipe.getId())).count() == 1,
-                        "Photo copy R/U lookup: " + role + " / " + stack.hasTag());
+                        .filter(value -> value.id().equals(recipe.id())).count() == 1,
+                        "Photo copy R/U lookup: " + role + " / " + com.rexhub.createapparel.item.ItemData.hasData(stack));
                 var focused = manager.createRecipeLayoutDrawable(category, recipe, factory.createFocusGroup(List.of(focus)))
                         .orElseThrow();
                 checkPhotoCopySlots(focused.getRecipeSlotsView(), stack);
             }
         }
         check(ItemStack.matches(photo, before), "Photo copy display does not mutate focused photo");
-        LogUtils.getLogger().info("JEI_PHOTO_COPY_PASSED id={} generation={}", recipe.getId(), generation);
+        LogUtils.getLogger().info("JEI_PHOTO_COPY_PASSED id={} generation={}", recipe.id(), generation);
     }
 
     private static void checkPhotoCopySlots(mezz.jei.api.gui.ingredient.IRecipeSlotsView slots, ItemStack photo) {
@@ -315,9 +315,9 @@ public final class JeiClientChecks implements IModPlugin {
     private static <T> void lookup(RecipeType<T> type, RecipeIngredientRole role, ItemStack stack, ResourceLocation id) {
         var focus = runtime.getJeiHelpers().getFocusFactory().createFocus(role, VanillaTypes.ITEM_STACK, stack);
         check(runtime.getRecipeManager().createRecipeLookup(type).limitFocus(List.of(focus)).get().anyMatch(recipe -> {
-            if (recipe instanceof SewingRecipeDisplay sewing) return sewing.recipe().getId().equals(id);
+            if (recipe instanceof SewingRecipeDisplay sewing) return sewing.id().equals(id);
             if (recipe instanceof SilkwormRearingDisplay rearing) return rearing.id().equals(id);
-            return ((ProcessingRecipeDisplay) recipe).recipe().getId().equals(id);
+            return ((ProcessingRecipeDisplay) recipe).id().equals(id);
         }), "JEI reverse lookup: " + id + " / " + stack);
     }
 
@@ -328,16 +328,16 @@ public final class JeiClientChecks implements IModPlugin {
         stage = 4;
         var server = mc.getSingleplayerServer();
         Path pack = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve("phase23_test");
-        write(pack.resolve("pack.mcmeta"), "{\"pack\":{\"pack_format\":15,\"description\":\"Phase23 test\"}}");
-        write(pack.resolve("data/createapparel/recipes/phase23_test.json"),
-                "{\"type\":\"createapparel:spinning\",\"ingredients\":[{\"item\":\"minecraft:stick\"}],\"results\":[{\"item\":\"createapparel:cotton_thread\",\"count\":3}],\"processingTime\":37}");
-        write(pack.resolve("data/createapparel/tags/items/fabrics/cotton.json"),
+        write(pack.resolve("pack.mcmeta"), "{\"pack\":{\"pack_format\":48,\"description\":\"Phase23 test\"}}");
+        write(pack.resolve("data/createapparel/recipe/phase23_test.json"),
+                "{\"type\":\"createapparel:spinning\",\"ingredients\":[{\"item\":\"minecraft:stick\"}],\"results\":[{\"id\":\"createapparel:cotton_thread\",\"count\":3}],\"processing_time\":37}");
+        write(pack.resolve("data/createapparel/tags/item/fabrics/cotton.json"),
                 "{\"replace\":true,\"values\":[\"createapparel:white_cotton_fabric\"]}");
-        write(pack.resolve("data/createapparel/recipes/spinning/cotton_thread.json"),
-                "{\"conditions\":[{\"type\":\"forge:false\"}],\"type\":\"createapparel:spinning\"}");
-        write(pack.resolve("data/createapparel/recipes/photo_copy_manual_only.json"),
-                "{\"conditions\":[{\"type\":\"forge:false\"}],\"type\":\"createapparel:photo_copy\"}");
-        write(pack.resolve("data/createapparel/recipes/phase23_photo_copy.json"), "{\"type\":\"createapparel:photo_copy\"}");
+        write(pack.resolve("data/createapparel/recipe/spinning/cotton_thread.json"),
+                "{\"neoforge:conditions\":[{\"type\":\"neoforge:false\"}],\"type\":\"createapparel:spinning\"}");
+        write(pack.resolve("data/createapparel/recipe/photo_copy_manual_only.json"),
+                "{\"neoforge:conditions\":[{\"type\":\"neoforge:false\"}],\"type\":\"createapparel:photo_copy\"}");
+        write(pack.resolve("data/createapparel/recipe/phase23_photo_copy.json"), "{\"type\":\"createapparel:photo_copy\"}");
         server.execute(() -> {
             server.getPackRepository().reload();
             var packs = new ArrayList<>(server.getPackRepository().getSelectedIds());
@@ -350,15 +350,15 @@ public final class JeiClientChecks implements IModPlugin {
         var manager = runtime.getRecipeManager();
         auditPhotoCopy("phase23_photo_copy");
         check(manager.createRecipeLookup(RecipeTypes.CRAFTING).get()
-                .noneMatch(recipe -> recipe.getId().equals(id("photo_copy_manual_only"))), "Removed photo copy disappears");
-        if (net.minecraftforge.fml.ModList.get().isLoaded("destroy")) DestroyJeiChecks.audit(runtime);
+                .noneMatch(recipe -> recipe.id().equals(id("photo_copy_manual_only"))), "Removed photo copy disappears");
+        if (net.neoforged.fml.ModList.get().isLoaded("destroy")) DestroyJeiChecks.audit(runtime);
         var spinning = manager.createRecipeLookup(ApparelJeiRecipeTypes.SPINNING).get().toList();
-        check(spinning.stream().noneMatch(display -> display.recipe().getId().equals(id("spinning/cotton_thread"))), "Removed recipe disappears");
-        var added = spinning.stream().filter(display -> display.recipe().getId().equals(id("phase23_test"))).findFirst().orElseThrow();
+        check(spinning.stream().noneMatch(display -> display.id().equals(id("spinning/cotton_thread"))), "Removed recipe disappears");
+        var added = spinning.stream().filter(display -> display.id().equals(id("phase23_test"))).findFirst().orElseThrow();
         check(added.duration() == 37 && added.result().getCount() == 3, "New recipe has updated data");
         lookup(ApparelJeiRecipeTypes.SPINNING, RecipeIngredientRole.INPUT, new ItemStack(Items.STICK), id("phase23_test"));
         var tshirt = manager.createRecipeLookup(ApparelJeiRecipeTypes.SEWING).get()
-                .filter(display -> display.recipe().getId().equals(id("t_shirt"))).findFirst().orElseThrow();
+                .filter(display -> display.id().equals(id("t_shirt"))).findFirst().orElseThrow();
         check(tshirt.fabrics().stream().anyMatch(stack -> stack.is(ModItems.dyedFabric(FabricMaterial.COTTON, FabricColor.WHITE).get())), "Retained tag member");
         check(tshirt.fabrics().stream().noneMatch(stack -> stack.is(ModItems.dyedFabric(FabricMaterial.COTTON, FabricColor.RED).get())), "Removed tag member");
         LogUtils.getLogger().info("PHASE23_DATAPACK_RELOAD_PASSED generation={}", generation);

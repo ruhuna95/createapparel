@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.Tags;
+import net.neoforged.neoforge.common.Tags;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -146,7 +146,7 @@ public final class CitizenFashionController {
         return BlockGetter.traverseBlocks(context.getFrom(), context.getTo(), context, (ray, pos) -> {
             if (!level.hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) return false;
             var state = level.getBlockState(pos);
-            if (source.seeThroughGlass() && (state.is(Tags.Blocks.GLASS) || state.is(Tags.Blocks.GLASS_PANES))) return null;
+            if (source.seeThroughGlass() && (state.is(Tags.Blocks.GLASS_BLOCKS) || state.is(Tags.Blocks.GLASS_PANES))) return null;
             var shape = ray.getBlockShape(state, level, pos);
             return level.clipWithInteractionOverride(ray.getFrom(), ray.getTo(), pos, shape, state) == null ? null : false;
         }, ray -> true);

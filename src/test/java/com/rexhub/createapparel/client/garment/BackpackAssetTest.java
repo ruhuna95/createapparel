@@ -94,7 +94,7 @@ class BackpackAssetTest {
                     }
                 }
             }
-            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + id + ".json"));
+            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/" + id + ".json"));
             assertEquals(3, recipe.getAsJsonObject("fabric").get("count").getAsInt());
             assertEquals(2, recipe.getAsJsonObject("thread").get("count").getAsInt());
             var materials = new HashSet<String>();

@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "minecraft:light_gray_dye"
+    },
+    "G": {
+      "item": "minecraft:glass_pane"
+    },
+    "I": {
+      "item": "minecraft:iron_nugget"
+    }
+  },
+  "pattern": [
+    " C ",
+    "GIG"
+  ],
+  "result": {
+    "components": {
+      "minecraft:custom_data": {
+        "GarmentData": {
+          "design": "plain",
+          "material": "synthetic",
+          "primary_color": "light_gray"
+        }
+      }
+    },
+    "count": 1,
+    "id": "createapparel:glasses"
+  }
+}

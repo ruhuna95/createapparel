@@ -40,7 +40,7 @@ public enum ArmProfile implements StringRepresentable {
             for (Property property : gameProfile.getProperties().get("textures")) {
                 try {
                     String decoded = new String(
-                            Base64.getDecoder().decode(property.getValue()),
+                            Base64.getDecoder().decode(property.value()),
                             StandardCharsets.UTF_8
                     );
                     JsonObject root = JsonParser.parseString(decoded).getAsJsonObject();

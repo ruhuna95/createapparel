@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public final class PlayerApparelLayers {
         List<?> layers = ObfuscationReflectionHelper.getPrivateValue(
                 LivingEntityRenderer.class,
                 renderer,
-                "f_115291_"
+                "layers"
         );
         if (layers == null) {
             throw new IllegalStateException("Unable to access player render layers");

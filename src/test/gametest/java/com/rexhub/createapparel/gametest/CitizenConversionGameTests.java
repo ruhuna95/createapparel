@@ -24,9 +24,9 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.util.RandomSource;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.*;
 
@@ -56,7 +56,7 @@ public final class CitizenConversionGameTests {
 
     @GameTest(template = "apparel_state", batch = "citizen")
     public static void phoneConvertsBothAgesAndHandsExactlyOnceWithoutConsumption(GameTestHelper helper) {
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         for (boolean baby : new boolean[]{false, true}) for (InteractionHand hand : InteractionHand.values()) {
             var original = villager(helper, baby);
             for (var existing : nearby(helper, original)) existing.discard();
@@ -64,7 +64,7 @@ public final class CitizenConversionGameTests {
             player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
             ItemStack phone = new ItemStack(ModItems.SMART_PHONE.get());
             player.setItemInHand(hand, phone);
-            CompoundTag before = phone.save(new CompoundTag());
+            var before = phone.save(com.rexhub.createapparel.TestRegistries.lookup(), new net.minecraft.nbt.CompoundTag());
             var otherHand = hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
             var unrelated = new PlayerInteractEvent.EntityInteract(player, otherHand, original);
             SmartPhoneEvents.interact(unrelated);
@@ -83,13 +83,13 @@ public final class CitizenConversionGameTests {
             helper.assertTrue(Objects.equals(citizen.getCustomName(), original.getCustomName()) && citizen.isCustomNameVisible()
                     && citizen.isNoAi() && citizen.isNoGravity(), "Common name and stationary flags preserved");
             helper.assertTrue(CitizenCoverage.isCovered(citizen.citizenState().loadout()), "Clothes cover upper and lower body");
-            helper.assertTrue(phone.save(new CompoundTag()).equals(before) && !phone.isDamageableItem() && phone.getMaxStackSize() == 1,
+            helper.assertTrue(phone.save(com.rexhub.createapparel.TestRegistries.lookup(), new net.minecraft.nbt.CompoundTag()).equals(before) && !phone.isDamageableItem() && phone.getMaxStackSize() == 1,
                     "Phone is unchanged and has no durability");
             CompoundTag saved = citizen.saveWithoutId(new CompoundTag());
             Citizen restored = ModEntities.CITIZEN.get().create(helper.getLevel());
             if (restored == null) throw new IllegalStateException("Citizen factory failed");
             restored.load(saved);
-            helper.assertTrue(restored.citizenState().serializeNBT().equals(citizen.citizenState().serializeNBT()), "NBT round trip preserves full state");
+            helper.assertTrue(restored.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "NBT round trip preserves full state");
             helper.assertTrue(!saved.contains("VillagerData") && !saved.contains("Offers") && !saved.contains("Gossips"), "Villager-specific data excluded");
             citizen.discard();
         }
@@ -170,10 +170,10 @@ public final class CitizenConversionGameTests {
             helper.assertTrue(appearance.hairColorRgb() == color.tintRgb() && appearance.eyeColorRgb() == color.tintRgb(), "Shared RGB " + color);
             var dirty = citizen.getEntityData().packDirty();
             helper.assertTrue(dirty != null && dirty.stream().anyMatch(entry -> entry.value() instanceof CompoundTag tag
-                    && tag.equals(citizen.citizenState().serializeNBT())), "Existing SynchedEntityData contains the complete converted state");
-            var buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+                    && tag.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()))), "Existing SynchedEntityData contains the complete converted state");
+            var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
             try {
-                buffer.writeNbt(citizen.citizenState().serializeNBT());
+                buffer.writeNbt(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
                 CompoundTag wire = buffer.readNbt();
                 helper.assertTrue(wire != null && wire.getInt("HairColor") == color.tintRgb() && wire.getInt("EyeColor") == color.tintRgb(), "Entity CompoundTag wire preserves RGB");
             } finally { buffer.release(); }
@@ -199,7 +199,7 @@ public final class CitizenConversionGameTests {
                 throw new AssertionError("Geometry was incorrectly used as lower coverage");
             } catch (IllegalArgumentException expected) { }
         }
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
         var trader = EntityType.WANDERING_TRADER.create(helper.getLevel());
         if (trader == null) throw new IllegalStateException("Trader factory failed");
@@ -235,8 +235,8 @@ public final class CitizenConversionGameTests {
                 var loadout = live.createLoadout(selected);
                 helper.assertTrue(CitizenCoverage.isCovered(loadout), "Resolved outfit covers both halves: " + pair.getKey());
                 var restored = new com.rexhub.createapparel.apparel.ApparelLoadout();
-                restored.deserializeNBT(loadout.serializeNBT());
-                helper.assertTrue(loadout.serializeNBT().equals(restored.serializeNBT()), "Selected colors, design and styles persist: " + pair.getKey());
+                restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), loadout.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
+                helper.assertTrue(loadout.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(restored.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Selected colors, design and styles persist: " + pair.getKey());
                 for (var entry : selected.garments().entrySet()) {
                     if (entry.getValue().appearance() instanceof com.rexhub.createapparel.garment.GarmentData expected) {
                         var stack = loadout.getStack(entry.getKey());
@@ -330,7 +330,7 @@ public final class CitizenConversionGameTests {
             for (var entry : outfit.garments().entrySet()) {
                 var stack = citizen.citizenState().loadout().getStack(entry.getKey());
                 if (entry.getValue().optional() && stack.isEmpty()) continue;
-                helper.assertTrue(!stack.isEmpty() && entry.getValue().item().equals(net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.getItem())),
+                helper.assertTrue(!stack.isEmpty() && entry.getValue().item().equals(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem())),
                         "Converted school clothes use allowed items: " + id);
                 if (entry.getValue().fabric().isPresent()) {
                     var options = entry.getValue().fabric().get();
@@ -375,8 +375,8 @@ public final class CitizenConversionGameTests {
             var loadout = live.createLoadout(selected);
             helper.assertTrue(CitizenCoverage.isCovered(loadout), "All optional draws retain upper/lower coverage");
             var restored = new com.rexhub.createapparel.apparel.ApparelLoadout();
-            restored.deserializeNBT(loadout.serializeNBT());
-            helper.assertTrue(restored.serializeNBT().equals(loadout.serializeNBT()), "Optional absence and selected styles persist");
+            restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), loadout.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
+            helper.assertTrue(restored.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(loadout.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Optional absence and selected styles persist");
             helper.assertTrue(selected == selected.resolve(random), "Resolved optional equipment cannot reroll");
             masks.add((loadout.getStack(GarmentSlot.BACK).isEmpty() ? 0 : 1) | (loadout.getStack(GarmentSlot.NECK).isEmpty() ? 0 : 2));
             sleeves.add(loadout.styleState(GarmentSlot.TOP).styles().get("sleeves"));
@@ -428,7 +428,7 @@ public final class CitizenConversionGameTests {
         var original = villager(helper, true);
         helper.assertTrue(CitizenConversion.convert(original) == CitizenConversion.Result.SUCCESS, "Convert before reload");
         var citizen = nearby(helper, original).get(0);
-        CompoundTag before = citizen.citizenState().serializeNBT();
+        CompoundTag before = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         var previous = CitizenPresetManager.snapshot();
         var server = helper.getLevel().getServer();
         var reload = server.reloadResources(server.getPackRepository().getSelectedIds());
@@ -439,7 +439,7 @@ public final class CitizenConversionGameTests {
             helper.assertTrue(next != previous && next.garments().equals(previous.garments())
                     && next.materials().equals(previous.materials()) && next.lowerCoveringTops().equals(previous.lowerCoveringTops()),
                     "Atomic new snapshot uses newly staged recipe tags");
-            helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Reload does not reroll existing Citizens");
+            helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Reload does not reroll existing Citizens");
         });
     }
 }

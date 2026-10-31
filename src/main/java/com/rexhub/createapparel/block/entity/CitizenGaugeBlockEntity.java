@@ -80,10 +80,11 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
             if (gauge != null) { center = gauge.center(); outflow = gauge.outflow(); }
         }
         if (center != null && level != null) {
-            stack.getOrCreateTag().putLong("GaugeCenter", center.asLong());
-            stack.getOrCreateTag().putString("GaugeDimension", level.dimension().location().toString());
+            long packedCenter = center.asLong();
+            com.rexhub.createapparel.item.ItemData.update(stack, customData -> customData.putLong("GaugeCenter", packedCenter));
+            com.rexhub.createapparel.item.ItemData.update(stack, customData -> customData.putString("GaugeDimension", level.dimension().location().toString()));
         }
-        if (center == null && outflow) stack.getOrCreateTag().putBoolean("GaugeOutflow", true);
+        if (center == null && outflow) com.rexhub.createapparel.item.ItemData.update(stack, customData -> customData.putBoolean("GaugeOutflow", true));
         return stack;
     }
     public boolean removePanel(int slot) {
@@ -100,7 +101,7 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
         definitions[slot] = gauge;
     }
     public java.util.List<Connection> connections() { return connections; }
-    @Override public net.minecraft.world.phys.AABB getRenderBoundingBox() {
+    public net.minecraft.world.phys.AABB getRenderBoundingBox() {
         var bounds = new net.minecraft.world.phys.AABB(worldPosition);
         for (var connection : connections) bounds = bounds.minmax(new net.minecraft.world.phys.AABB(connection.target()));
         return connections.isEmpty() ? bounds : bounds.inflate(2);
@@ -114,8 +115,8 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
         if (level instanceof ServerLevel server) for (int slot = 0; slot < 4; slot++)
             if (panels[slot]) CitizenPopulationManager.get(server).register(this, slot);
     }
-    @Override protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    @Override protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         tag.put("Panels", writePanels(true));
     }
     private ListTag writePanels(boolean backup) {
@@ -135,8 +136,8 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
         }
         return entries;
     }
-    @Override public void load(CompoundTag tag) {
-        super.load(tag);
+    @Override protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         if (tag.getBoolean("StatusOnly")) {
             for (var raw : tag.getList("Panels", Tag.TAG_COMPOUND)) {
                 var entry = (CompoundTag) raw; int slot = entry.getInt("Slot");
@@ -178,7 +179,7 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
         if (centers[slot] != null && entry.hasUUID("District") && entry.contains("DistrictName", Tag.TAG_STRING))
             districtStatuses[slot] = new DistrictStatus(entry.getUUID("District"), entry.getString("DistrictName"), entry.getInt("Population"), entry.getInt("Target"));
     }
-    @Override public CompoundTag getUpdateTag() {
+    @Override public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) {
         var tag = new CompoundTag(); tag.put("Panels", writePanels(false)); var edges = new ListTag();
         if (level instanceof ServerLevel server) {
             var data = CitizenPopulationManager.get(server).data();
@@ -199,15 +200,15 @@ public final class CitizenGaugeBlockEntity extends BlockEntity {
         tag.put("Connections", edges); return tag;
     }
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket() {
-        var tag = getUpdateTag(); var structure = tag.copy();
+        var tag = getUpdateTag(java.util.Objects.requireNonNull(level).registryAccess()); var structure = tag.copy();
         for (var raw : structure.getList("Panels", Tag.TAG_COMPOUND)) {
             var panel = (CompoundTag) raw; panel.remove("Population"); panel.remove("Target"); panel.remove("DistrictName");
         }
         if (structure.equals(lastUpdateStructure)) {
             var status = new CompoundTag(); status.putBoolean("StatusOnly", true); status.put("Panels", tag.getList("Panels", Tag.TAG_COMPOUND));
-            return ClientboundBlockEntityDataPacket.create(this, ignored -> status);
+            return ClientboundBlockEntityDataPacket.create(this, (ignored, provider) -> status);
         }
         lastUpdateStructure = structure;
-        return ClientboundBlockEntityDataPacket.create(this, ignored -> tag);
+        return ClientboundBlockEntityDataPacket.create(this, (ignored, provider) -> tag);
     }
 }

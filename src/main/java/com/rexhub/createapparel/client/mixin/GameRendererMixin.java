@@ -18,11 +18,12 @@ import java.util.function.Predicate;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
     @Nullable
-    @WrapOperation(method = "pick", at = @At(value = "INVOKE", target =
+    @WrapOperation(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target =
             "Lnet/minecraft/world/entity/projectile/ProjectileUtil;getEntityHitResult(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;D)Lnet/minecraft/world/phys/EntityHitResult;"))
     private EntityHitResult createapparel$pickMannequin(Entity source, Vec3 start, Vec3 end, AABB bounds,
                                                        Predicate<Entity> filter, double distance,
-                                                       Operation<EntityHitResult> original, float partialTick) {
+                                                       Operation<EntityHitResult> original, Entity camera,
+                                                       double blockRange, double entityRange, float partialTick) {
         var otherHit = original.call(source, start, end, bounds,
                 (Predicate<Entity>) target -> !(target instanceof Mannequin) && filter.test(target), distance);
         return MannequinPicking.pick(source, start, end, bounds, filter, distance, otherHit, partialTick);

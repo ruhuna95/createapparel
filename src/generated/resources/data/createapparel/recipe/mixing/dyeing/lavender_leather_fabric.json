@@ -1,0 +1,122 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    [
+      {
+        "item": "createapparel:leather_fabric"
+      },
+      {
+        "item": "createapparel:white_leather_fabric"
+      },
+      {
+        "item": "createapparel:orange_leather_fabric"
+      },
+      {
+        "item": "createapparel:magenta_leather_fabric"
+      },
+      {
+        "item": "createapparel:light_blue_leather_fabric"
+      },
+      {
+        "item": "createapparel:yellow_leather_fabric"
+      },
+      {
+        "item": "createapparel:lime_leather_fabric"
+      },
+      {
+        "item": "createapparel:pink_leather_fabric"
+      },
+      {
+        "item": "createapparel:gray_leather_fabric"
+      },
+      {
+        "item": "createapparel:light_gray_leather_fabric"
+      },
+      {
+        "item": "createapparel:cyan_leather_fabric"
+      },
+      {
+        "item": "createapparel:purple_leather_fabric"
+      },
+      {
+        "item": "createapparel:blue_leather_fabric"
+      },
+      {
+        "item": "createapparel:brown_leather_fabric"
+      },
+      {
+        "item": "createapparel:green_leather_fabric"
+      },
+      {
+        "item": "createapparel:red_leather_fabric"
+      },
+      {
+        "item": "createapparel:black_leather_fabric"
+      },
+      {
+        "item": "createapparel:cream_leather_fabric"
+      },
+      {
+        "item": "createapparel:beige_leather_fabric"
+      },
+      {
+        "item": "createapparel:greige_leather_fabric"
+      },
+      {
+        "item": "createapparel:tan_leather_fabric"
+      },
+      {
+        "item": "createapparel:navy_leather_fabric"
+      },
+      {
+        "item": "createapparel:cerulean_leather_fabric"
+      },
+      {
+        "item": "createapparel:sky_leather_fabric"
+      },
+      {
+        "item": "createapparel:olive_leather_fabric"
+      },
+      {
+        "item": "createapparel:khaki_leather_fabric"
+      },
+      {
+        "item": "createapparel:forest_leather_fabric"
+      },
+      {
+        "item": "createapparel:mint_leather_fabric"
+      },
+      {
+        "item": "createapparel:burgundy_leather_fabric"
+      },
+      {
+        "item": "createapparel:coral_leather_fabric"
+      },
+      {
+        "item": "createapparel:rose_leather_fabric"
+      },
+      {
+        "item": "createapparel:mustard_leather_fabric"
+      },
+      {
+        "item": "createapparel:lavender_leather_fabric"
+      },
+      {
+        "item": "createapparel:plum_leather_fabric"
+      }
+    ],
+    {
+      "item": "createapparel:lavender_dye"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "results": [
+    {
+      "id": "createapparel:lavender_leather_fabric"
+    }
+  ]
+}

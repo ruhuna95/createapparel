@@ -51,7 +51,7 @@ public final class ApparelRetailScenes {
         scene.world().setBlock(seat.below(), AllBlocks.SEATS.get(DyeColor.WHITE).getDefaultState(), false);
         SeatEntity[] cashierSeat = new SeatEntity[1];
         scene.world().createEntity(level -> {
-            var entity = new SeatEntity(level, seat.below());
+            var entity = new SeatEntity(com.simibubi.create.AllEntityTypes.SEAT.get(), level);
             entity.setPos(Vec3.atBottomCenterOf(seat.below()));
             cashierSeat[0] = entity;
             return entity;

@@ -15,7 +15,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkHooks;
 
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,7 @@ public final class AdvertisementControlMenu extends AbstractContainerMenu {
             kind = Kind.BROADCASTER; channel = broadcaster.channel(); scenes = AdvertisementScenes.DEFAULTS;
         } else return;
         int surfaceWidth = width, surfaceHeight = height;
-        NetworkHooks.openScreen(player, new SimpleMenuProvider((id, inventory, viewer) ->
+        player.openMenu(new SimpleMenuProvider((id, inventory, viewer) ->
                 new AdvertisementControlMenu(id, inventory, pos, kind, surfaceWidth, surfaceHeight, channel, scenes),
                 Component.translatable("screen.createapparel.advertisement.control")), buffer -> {
             buffer.writeBlockPos(pos); buffer.writeEnum(kind); buffer.writeVarInt(surfaceWidth); buffer.writeVarInt(surfaceHeight); buffer.writeUtf(channel, 48);

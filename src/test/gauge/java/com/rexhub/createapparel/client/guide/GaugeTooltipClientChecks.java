@@ -16,10 +16,10 @@ public final class GaugeTooltipClientChecks {
     public static void check() {
         var minecraft = Minecraft.getInstance();
         var plain = new ItemStack(ModItems.CITIZEN_GAUGE.get());
-        var district = plain.copy(); district.getOrCreateTag().putLong("GaugeCenter", new net.minecraft.core.BlockPos(4, 70, 6).asLong());
-        var outflow = plain.copy(); outflow.getOrCreateTag().putBoolean("GaugeOutflow", true);
+        var district = plain.copy(); com.rexhub.createapparel.item.ItemData.update(district, tagData -> tagData.putLong("GaugeCenter", new net.minecraft.core.BlockPos(4, 70, 6).asLong()));
+        var outflow = plain.copy(); com.rexhub.createapparel.item.ItemData.update(outflow, tagData -> tagData.putBoolean("GaugeOutflow", true));
         for (var stack : List.of(plain, district, outflow)) {
-            var normal = stack.getTooltipLines(minecraft.player, TooltipFlag.NORMAL);
+            var normal = stack.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(net.minecraft.client.Minecraft.getInstance().level), minecraft.player, TooltipFlag.NORMAL);
             var summary = TooltipHelper.cutStringTextComponent(net.minecraft.client.resources.language.I18n.get(
                     "guide.createapparel.gauge.tooltip.summary"), FontHelper.Palette.STANDARD_CREATE);
             check(normal.size() == summary.size() + (stack == district ? 3 : 2), "Normal gauge tooltip includes its summary and retains recorded coordinates: " + normal);
@@ -37,7 +37,7 @@ public final class GaugeTooltipClientChecks {
         var description = ItemDescription.create(stack.getItem(), FontHelper.Palette.STANDARD_CREATE);
         if (description == null) throw new AssertionError("Gauge Shift description is registered");
         var lines = new ArrayList<Component>(); lines.add(stack.getHoverName()); lines.addAll(description.linesOnShift());
-        stack.getItem().appendHoverText(stack, Minecraft.getInstance().level, lines, TooltipFlag.NORMAL);
+        stack.getItem().appendHoverText(stack, net.minecraft.world.item.Item.TooltipContext.of(Minecraft.getInstance().level), lines, TooltipFlag.NORMAL);
         ApparelItemDescriptions.appendGaugeState(lines, stack);
         check(lines.stream().filter(line -> line.getString().contains("4, 70, 6")).count() <= 1, "Recorded coordinates are not duplicated in Shift details");
         return lines;

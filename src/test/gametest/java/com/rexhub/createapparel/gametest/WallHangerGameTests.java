@@ -22,8 +22,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -47,7 +47,7 @@ public final class WallHangerGameTests {
     @GameTest(template = "apparel_state", batch = "wall_hanger")
     public static void fourWallFacesAndSupportRemoval(GameTestHelper helper) {
         BlockPos pos = position(helper);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         var item = new ItemStack(ModItems.WALL_HANGER.get());
         for (Direction face : Direction.Plane.HORIZONTAL) {
             BlockPos wall = pos.relative(face.getOpposite());
@@ -109,7 +109,7 @@ public final class WallHangerGameTests {
     @GameTest(template = "apparel_state", batch = "wall_hanger")
     public static void filteringInsertionCreativeAndBareHandReturn(GameTestHelper helper) {
         var hanger = place(helper);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         var held = new ItemStack(ModItems.T_SHIRT.get(), 2);
         helper.assertTrue(!hanger.insert(new ItemStack(Items.STONE), false), "Reject ordinary items");
@@ -119,7 +119,7 @@ public final class WallHangerGameTests {
         helper.assertTrue(!hanger.insert(held, false) && held.getCount() == 1, "No replacement");
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         var pos = position(helper);
-        helper.assertTrue(hanger.getBlockState().use(helper.getLevel(), player, InteractionHand.MAIN_HAND,
+        helper.assertTrue(com.rexhub.createapparel.TestInteractions.use(hanger.getBlockState(), helper.getLevel(), player, InteractionHand.MAIN_HAND,
                 new BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false)).consumesAction(), "Bare hand returns garment");
         helper.assertTrue(hanger.garment().isEmpty() && player.getInventory().countItem(ModItems.T_SHIRT.get()) == 1,
                 "Returned exactly one");
@@ -130,7 +130,7 @@ public final class WallHangerGameTests {
     @GameTest(template = "apparel_state", batch = "wall_hanger")
     public static void fullInventoryDropsReturnOnce(GameTestHelper helper) {
         var hanger = place(helper);
-        var player = helper.makeMockPlayer();
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         player.getAbilities().instabuild = false;
         player.setPos(Vec3.atCenterOf(position(helper)));
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++)
@@ -147,18 +147,18 @@ public final class WallHangerGameTests {
     public static void savedChunkDataAndUpdatePacketKeepCompleteStack(GameTestHelper helper) {
         var hanger = place(helper);
         var stack = new ItemStack(ModItems.SHIRT_LONGSLEEVES.get());
-        stack.getOrCreateTag().putString("DisplayTest", "material/colors/design/styles preserved");
+        com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.putString("DisplayTest", "material/colors/design/styles preserved"));
         hanger.insert(stack, true);
-        var saved = hanger.saveWithFullMetadata();
-        var restored = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(position(helper), hanger.getBlockState(), saved);
+        var saved = hanger.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup());
+        var restored = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(position(helper), hanger.getBlockState(), saved, com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(restored instanceof WallHangerBlockEntity
                 && ItemStack.matches(((WallHangerBlockEntity) restored).garment(), stack), "Chunk NBT preserves complete stack");
         var client = new WallHangerBlockEntity(position(helper), hanger.getBlockState());
-        client.handleUpdateTag(hanger.getUpdateTag());
+        client.handleUpdateTag(hanger.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(ItemStack.matches(client.garment(), stack), "Chunk update tag preserves complete stack");
         var packet = hanger.getUpdatePacket();
-        helper.assertTrue(packet.getTag() != null, "Update packet contains display state");
-        client.load(packet.getTag());
+        helper.assertTrue((packet).getTag() != null, "Update packet contains display state");
+        client.loadWithComponents(packet.getTag(), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(ItemStack.matches(client.garment(), stack), "Immediate update packet preserves display state");
         helper.succeed();
     }
@@ -166,9 +166,9 @@ public final class WallHangerGameTests {
     @GameTest(template = "apparel_state", batch = "wall_hanger")
     public static void survivalAndCreativeBreakDropContentsOnce(GameTestHelper helper) {
         var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "hanger-test"));
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "hanger-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override
             public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };

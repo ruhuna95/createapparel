@@ -14,11 +14,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
 public final class ClothingRackBlockEntity extends BlockEntity {
@@ -42,7 +39,6 @@ public final class ClothingRackBlockEntity extends BlockEntity {
         @Override
         protected void onContentsChanged(int slot) { sync(); }
     };
-    private LazyOptional<IItemHandler> itemCapability = LazyOptional.of(() -> inventory);
 
     public ClothingRackBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CLOTHING_RACK.get(), pos, state);
@@ -125,42 +121,30 @@ public final class ClothingRackBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.put("Garments", inventory.serializeNBT());
+    protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.put("Garments", inventory.serializeNBT(registries));
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         CompoundTag garments = tag.getCompound("Garments").copy();
         garments.putInt("Size", 4);
-        inventory.deserializeNBT(garments);
+        inventory.deserializeNBT(registries, com.rexhub.createapparel.item.ItemData.upgradeInventory(registries, garments));
     }
 
     @Override
-    public CompoundTag getUpdateTag() { return saveWithoutMetadata(); }
+    public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-        return !isRemoved() && capability == ForgeCapabilities.ITEM_HANDLER ? itemCapability.cast() : super.getCapability(capability, side);
+    public IItemHandler itemHandler() {
+        return inventory;
     }
 
-    @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        itemCapability.invalidate();
-    }
 
-    @Override
-    public void reviveCaps() {
-        super.reviveCaps();
-        itemCapability = LazyOptional.of(() -> inventory);
-    }
 
-    @Override
     public AABB getRenderBoundingBox() { return new AABB(worldPosition).expandTowards(0, 1, 0).inflate(0.8, 0.6, 0.8); }
 }

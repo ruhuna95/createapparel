@@ -5,10 +5,9 @@ import com.rexhub.createapparel.apparel.ArmProfile;
 import com.rexhub.createapparel.apparel.ChestProfile;
 import com.rexhub.createapparel.apparel.SkinTone;
 import com.rexhub.createapparel.client.apparel.ClientApparelInventories;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +25,17 @@ public record ApparelInventorySyncPacket(
         ArmProfile armProfile,
         ChestProfile chestProfile,
         SkinTone skinTone
-) {
+) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<ApparelInventorySyncPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "apparel_inventory_sync_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, ApparelInventorySyncPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), ApparelInventorySyncPacket::decode);
+
+    @Override
+    public Type<ApparelInventorySyncPacket> type() {
+        return TYPE;
+    }
+
     public ApparelInventorySyncPacket {
         if (contents.size() != ApparelInventory.SLOT_COUNT) {
             throw new IllegalArgumentException("Invalid apparel inventory size: " + contents.size());
@@ -35,10 +44,10 @@ public record ApparelInventorySyncPacket(
         contents = contents.stream().map(ItemStack::copy).toList();
     }
 
-    public void encode(FriendlyByteBuf buffer) {
+    public void encode(RegistryFriendlyByteBuf buffer) {
         buffer.writeVarInt(playerId);
         buffer.writeVarInt(contents.size());
-        contents.forEach(buffer::writeItem);
+        contents.forEach(stack -> ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, stack));
         for (GarmentSlot slot : GarmentSlot.values()) {
             styles.getOrDefault(slot, EquippedStyleState.EMPTY).write(buffer);
         }
@@ -49,7 +58,7 @@ public record ApparelInventorySyncPacket(
         buffer.writeEnum(skinTone);
     }
 
-    public static ApparelInventorySyncPacket decode(FriendlyByteBuf buffer) {
+    public static ApparelInventorySyncPacket decode(RegistryFriendlyByteBuf buffer) {
         int playerId = buffer.readVarInt();
         int size = buffer.readVarInt();
         if (size != ApparelInventory.SLOT_COUNT) {
@@ -57,7 +66,7 @@ public record ApparelInventorySyncPacket(
         }
         List<ItemStack> contents = new ArrayList<>(size);
         for (int slot = 0; slot < size; slot++) {
-            contents.add(buffer.readItem());
+            contents.add(ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
         }
         Map<GarmentSlot, EquippedStyleState> styles = new EnumMap<>(GarmentSlot.class);
         for (GarmentSlot slot : GarmentSlot.values()) {
@@ -79,9 +88,7 @@ public record ApparelInventorySyncPacket(
     }
 
     public void handleClient() {
-        DistExecutor.unsafeRunWhenOn(
-                Dist.CLIENT,
-                () -> () -> ClientApparelInventories.accept(
+        ClientApparelInventories.accept(
                         playerId,
                         contents,
                         styles,
@@ -90,7 +97,6 @@ public record ApparelInventorySyncPacket(
                         armProfile,
                         chestProfile,
                         skinTone
-                )
-        );
+                );
     }
 }

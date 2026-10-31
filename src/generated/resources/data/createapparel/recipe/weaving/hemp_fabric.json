@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:weaving",
+  "ingredients": [
+    {
+      "tag": "createapparel:threads/hemp"
+    }
+  ],
+  "processing_time": 1200,
+  "results": [
+    {
+      "id": "createapparel:hemp_fabric"
+    }
+  ]
+}

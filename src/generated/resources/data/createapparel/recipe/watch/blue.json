@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "minecraft:clock"
+    },
+    "D": {
+      "item": "minecraft:blue_dye"
+    },
+    "I": {
+      "item": "minecraft:iron_nugget"
+    },
+    "P": {
+      "item": "create:precision_mechanism"
+    }
+  },
+  "pattern": [
+    " C ",
+    "IPI",
+    " D "
+  ],
+  "result": {
+    "components": {
+      "minecraft:custom_data": {
+        "GarmentData": {
+          "design": "plain",
+          "material": "synthetic",
+          "primary_color": "blue"
+        }
+      }
+    },
+    "count": 1,
+    "id": "createapparel:watch"
+  }
+}

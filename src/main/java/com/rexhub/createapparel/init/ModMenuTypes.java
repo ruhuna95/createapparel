@@ -2,23 +2,23 @@ package com.rexhub.createapparel.init;
 
 import com.rexhub.createapparel.menu.WardrobeMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraftforge.common.extensions.IForgeMenuType;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 public final class ModMenuTypes {
-    public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.CitizenGaugeMenu>> CITIZEN_GAUGE =
-            ModRegistries.MENU_TYPES.register("citizen_gauge", () -> IForgeMenuType.create(com.rexhub.createapparel.menu.CitizenGaugeMenu::new));
-    public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.RouteMarkerMenu>> ROUTE_MARKER =
-            ModRegistries.MENU_TYPES.register("route_marker", () -> IForgeMenuType.create(com.rexhub.createapparel.menu.RouteMarkerMenu::new));
-    public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.CitizenMenu>> CITIZEN =
+    public static final DeferredHolder<MenuType<?>, MenuType<com.rexhub.createapparel.menu.CitizenGaugeMenu>> CITIZEN_GAUGE =
+            ModRegistries.MENU_TYPES.register("citizen_gauge", () -> IMenuTypeExtension.create(com.rexhub.createapparel.menu.CitizenGaugeMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<com.rexhub.createapparel.menu.RouteMarkerMenu>> ROUTE_MARKER =
+            ModRegistries.MENU_TYPES.register("route_marker", () -> IMenuTypeExtension.create(com.rexhub.createapparel.menu.RouteMarkerMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<com.rexhub.createapparel.menu.CitizenMenu>> CITIZEN =
             ModRegistries.MENU_TYPES.register("citizen",
-                    () -> IForgeMenuType.create(com.rexhub.createapparel.menu.CitizenMenu::new));
-    public static final RegistryObject<MenuType<com.rexhub.createapparel.menu.MannequinMenu>> MANNEQUIN =
+                    () -> IMenuTypeExtension.create(com.rexhub.createapparel.menu.CitizenMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<com.rexhub.createapparel.menu.MannequinMenu>> MANNEQUIN =
             ModRegistries.MENU_TYPES.register("mannequin",
-                    () -> IForgeMenuType.create(com.rexhub.createapparel.menu.MannequinMenu::new));
-    public static final RegistryObject<MenuType<WardrobeMenu>> WARDROBE = ModRegistries.MENU_TYPES.register(
+                    () -> IMenuTypeExtension.create(com.rexhub.createapparel.menu.MannequinMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<WardrobeMenu>> WARDROBE = ModRegistries.MENU_TYPES.register(
             "wardrobe",
-            () -> IForgeMenuType.create(WardrobeMenu::new)
+            () -> IMenuTypeExtension.create(WardrobeMenu::new)
     );
 
     private ModMenuTypes() {

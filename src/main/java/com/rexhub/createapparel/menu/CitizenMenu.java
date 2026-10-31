@@ -10,7 +10,7 @@ import com.rexhub.createapparel.network.ModNetwork;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.rexhub.createapparel.garment.GarmentSlot;
 import com.rexhub.createapparel.init.ModMenuTypes;
 import net.minecraft.network.FriendlyByteBuf;
@@ -20,8 +20,8 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
@@ -134,7 +134,7 @@ public final class CitizenMenu extends ApparelMenu {
         behaviorInfoDelay = 20;
         var target = CitizenFollowTarget.resolve(citizen);
         Component display = target == null ? Component.empty() : target.getDisplayName().copy().append(" (")
-                .append(String.valueOf(ForgeRegistries.ENTITY_TYPES.getKey(target.getType()))).append(")");
+                .append(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getKey(target.getType()))).append(")");
         var position = citizen.routeMovement().currentDestination();
         destination = position == null ? null : net.minecraft.core.BlockPos.containing(position);
         var population = citizen.citizenState().population();

@@ -198,13 +198,13 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     @Override public boolean mouseReleased(double mouseX, double mouseY, int button) {
         return selection.mouseReleased() || super.mouseReleased(mouseX, mouseY, button);
     }
-    @Override public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    @Override public boolean mouseScrolled(double mouseX, double mouseY, double horizontalScroll, double delta) {
         return selection.mouseScrolled(delta) || buttonScroll.mouseScrolled(mouseX, mouseY, delta)
                 || scrollDestinations(mouseX, mouseY, delta)
                 || scrollNumber(radius, mouseX, mouseY, delta, RouteSettings.MIN_RADIUS, RouteSettings.MAX_RADIUS)
                 || scrollNumber(tolerance, mouseX, mouseY, delta, RouteSettings.MIN_VERTICAL_TOLERANCE, RouteSettings.MAX_VERTICAL_TOLERANCE)
                 || scrollThreshold(mouseX, mouseY, delta)
-                || super.mouseScrolled(mouseX, mouseY, delta);
+                || super.mouseScrolled(mouseX, mouseY, horizontalScroll, delta);
     }
 
     private ListTag destinations() { return menu.info().getList("Destinations", Tag.TAG_COMPOUND); }
@@ -239,7 +239,7 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
     }
 
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics); super.render(graphics, mouseX, mouseY, partialTick);
+        renderBackground(graphics, mouseX, mouseY, partialTick); super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY); selection.render(graphics, mouseX, mouseY);
         String districtName = menu.info().getString("DistrictName");
         if (!selection.isOpen() && tab == Tab.SETTINGS && !districtName.isEmpty() && mouseX >= leftPos + 10 && mouseX < leftPos + 328
@@ -319,10 +319,10 @@ public final class RouteMarkerScreen extends AbstractContainerScreen<RouteMarker
             graphics.drawString(font, getMessage(), getX() + getWidth() / 2 - font.width(getMessage()) / 2, getY() + 8,
                     selected || isHoveredOrFocused() ? 0xFFFFFF : 0x404040, selected);
         }
-        @Override public void onClick(double mouseX, double mouseY) { tab = value; selection.close(); updateControls(); }
+        @Override public void onClick(double mouseX, double mouseY, int button) { tab = value; selection.close(); updateControls(); }
         @Override public boolean keyPressed(int key, int scanCode, int modifiers) {
             if (key != GLFW.GLFW_KEY_ENTER && key != GLFW.GLFW_KEY_SPACE) return false;
-            onClick(0, 0); return true;
+            onClick(0, 0, 0); return true;
         }
         @Override protected void updateWidgetNarration(NarrationElementOutput output) { output.add(NarratedElementType.TITLE, getMessage()); }
     }

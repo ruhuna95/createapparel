@@ -19,15 +19,14 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.EntityHitResult;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class ClientRetailView {
     @Nullable private static CashRegisterBlockEntity selected;
     @Nullable private static RetailLinkSessionPacket session;
@@ -55,8 +54,7 @@ public final class ClientRetailView {
         session = packet.register() == null ? null : packet;
     }
 
-    @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance();
         if (session != null && (mc.player == null || mc.level == null || session.register() == null
                 || !mc.level.dimension().location().equals(session.register().dimension())
@@ -177,7 +175,7 @@ public final class ClientRetailView {
         clearOutlines(); clearHovered(); selected = null; bucket = null; revision = -1; sources = Collections.emptyIterator();
     }
 
-    @SubscribeEvent public static void unload(net.minecraftforge.event.level.LevelEvent.Unload event) {
+    @SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event) {
         if (event.getLevel().isClientSide()) { clear(); session = null; }
     }
 }

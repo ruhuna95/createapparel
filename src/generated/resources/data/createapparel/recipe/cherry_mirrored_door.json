@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "minecraft:cherry_door"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    },
+    {
+      "item": "createapparel:mirror_panel"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:cherry_mirrored_door"
+  }
+}

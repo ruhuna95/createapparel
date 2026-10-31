@@ -40,6 +40,7 @@ public final class SewingPatternScreen extends Screen {
 
     private final InteractionHand hand;
     private final PreviewRotation previewRotation = new PreviewRotation();
+    private final java.util.Map<SewingRecipe, ResourceLocation> recipeIds = new java.util.IdentityHashMap<>();
     private List<SewingRecipe> availableRecipes = List.of();
     private List<GarmentSlot> categories = List.of();
     private List<SewingRecipe> recipes = List.of();
@@ -78,12 +79,14 @@ public final class SewingPatternScreen extends Screen {
 
         ItemStack patternStack = minecraft.player.getItemInHand(hand);
         PatternData current = editSession == null ? PatternData.fromStack(patternStack).orElse(null) : selectedPattern();
+        recipeIds.clear();
         availableRecipes = minecraft.level.getRecipeManager()
                 .getAllRecipesFor(SewingRecipe.recipeType())
-                .stream()
+                .stream().peek(holder -> recipeIds.put(holder.value(), holder.id()))
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
                 .filter(recipe -> recipe.matchesPatternItem(patternStack))
                 .filter(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId()).isPresent())
-                .sorted(SewingPatternOrder.RECIPES)
+                .sorted(SewingPatternOrder.recipes(recipeIds::get))
                 .toList();
         categories = availableRecipes.stream()
                 .map(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId()).orElseThrow())
@@ -150,7 +153,7 @@ public final class SewingPatternScreen extends Screen {
 
     private void selectCategory(ResourceLocation recipeId) {
         availableRecipes.stream()
-                .filter(recipe -> recipe.getId().equals(recipeId))
+                .filter(recipe -> recipeIds.get(recipe).equals(recipeId))
                 .findFirst()
                 .flatMap(recipe -> ClientGarmentAssets.getDefinition(recipe.getResultId()))
                 .map(GarmentDefinition::defaultSlot)
@@ -174,7 +177,7 @@ public final class SewingPatternScreen extends Screen {
         recipeIndex = 0;
         if (preferredRecipe != null) {
             for (int index = 0; index < recipes.size(); index++) {
-                if (recipes.get(index).getId().equals(preferredRecipe)) {
+                if (recipeIds.get(recipes.get(index)).equals(preferredRecipe)) {
                     recipeIndex = index;
                     break;
                 }
@@ -354,7 +357,7 @@ public final class SewingPatternScreen extends Screen {
                 .getRequiredColorChannels(recipe.getResultId(), design)
                 .orElse(new ClientGarmentAssets.ColorChannels(false, false));
         return new PatternData(
-                recipe.getId(),
+                recipeIds.get(recipe),
                 design,
                 channels.secondary()
                         ? Optional.of(FabricColor.values()[secondaryColorIndex])
@@ -385,7 +388,7 @@ public final class SewingPatternScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.fill(width / 2, height / 2 - 104, width / 2 + 1, height / 2 + 82, 0x55FFFFFF);
         graphics.drawCenteredString(font, title, leftPanelCenter, height / 2 - 98, 0xFFFFFF);
         if (!recipes.isEmpty()) {
@@ -422,7 +425,7 @@ public final class SewingPatternScreen extends Screen {
         graphics.pose().pushPose();
         try {
             graphics.pose().translate(rightPanelCenter, height / 2.0F - 14.0F, ITEM_RENDER_Z);
-            graphics.pose().mulPoseMatrix(new Matrix4f().scaling(1.0F, -1.0F, 1.0F));
+            graphics.pose().mulPose(new Matrix4f().scaling(1.0F, -1.0F, 1.0F));
             graphics.pose().scale(
                     16.0F * PREVIEW_SCALE * PREVIEW_MODEL_SCALE,
                     16.0F * PREVIEW_SCALE * PREVIEW_MODEL_SCALE,
@@ -500,7 +503,7 @@ public final class SewingPatternScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        return selectionMenu.mouseScrolled(delta) || super.mouseScrolled(mouseX, mouseY, delta);
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalScroll, double delta) {
+        return selectionMenu.mouseScrolled(delta) || super.mouseScrolled(mouseX, mouseY, horizontalScroll, delta);
     }
 }

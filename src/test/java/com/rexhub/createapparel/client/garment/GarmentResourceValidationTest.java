@@ -111,7 +111,7 @@ class GarmentResourceValidationTest {
     @Test
     void everySewingDesignExposesTheUnionOfResolvedTextureColorChannels() throws Exception {
         int recipes = 0;
-        for (Path file : ProjectResources.files("data/createapparel/recipes", ".json")) {
+        for (Path file : ProjectResources.files("data/createapparel/recipe", ".json")) {
             var json = ProjectResources.json(file);
             if (!json.get("type").getAsString().equals("createapparel:sewing")) continue;
             recipes++;

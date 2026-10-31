@@ -17,7 +17,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -34,12 +33,12 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraftforge.common.IForgeShearable;
+import net.neoforged.neoforge.common.IShearable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public final class Silkworm extends PathfinderMob implements IForgeShearable {
+public final class Silkworm extends PathfinderMob implements IShearable {
     public static final int COCOONING_DURATION_TICKS = 20 * 60;
     private static final int COCOONING_PARTICLE_INTERVAL_TICKS = 20;
     private static final int COCOONING_PARTICLE_COUNT = 2;
@@ -72,9 +71,9 @@ public final class Silkworm extends PathfinderMob implements IForgeShearable {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        entityData.define(DATA_STATE, SilkwormState.LARVA.id());
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_STATE, SilkwormState.LARVA.id());
     }
 
     @Override
@@ -177,13 +176,9 @@ public final class Silkworm extends PathfinderMob implements IForgeShearable {
         }
     }
 
-    @Override
-    public MobType getMobType() {
-        return MobType.ARTHROPOD;
-    }
 
     @Override
-    public boolean isShearable(ItemStack item, Level level, BlockPos pos) {
+    public boolean isShearable(@Nullable Player player, ItemStack item, Level level, BlockPos pos) {
         return isAlive() && getSilkwormState() == SilkwormState.COCOONED;
     }
 
@@ -192,8 +187,7 @@ public final class Silkworm extends PathfinderMob implements IForgeShearable {
             @Nullable Player player,
             ItemStack item,
             Level level,
-            BlockPos pos,
-            int fortune
+            BlockPos pos
     ) {
         level.playSound(null, this, SoundEvents.SHEEP_SHEAR, SoundSource.PLAYERS, 1.0F, 1.0F);
         gameEvent(GameEvent.SHEAR, player);

@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-public record SewingRecipeDisplay(SewingRecipe recipe, List<ItemStack> fabrics, List<ItemStack> threads,
+public record SewingRecipeDisplay(ResourceLocation id, SewingRecipe recipe, List<ItemStack> fabrics, List<ItemStack> threads,
                                   ItemStack pattern, ItemStack result) {
     public SewingRecipeDisplay {
         fabrics = List.copyOf(fabrics);
@@ -33,13 +33,13 @@ public record SewingRecipeDisplay(SewingRecipe recipe, List<ItemStack> fabrics, 
 
         public Factory(Function<ResourceLocation, Optional<GarmentDefinition>> definitions) {
             this.definitions = definitions;
-            items = ForgeRegistries.ITEMS.getValues().stream().map(ItemStack::new)
+            items = BuiltInRegistries.ITEM.stream().map(ItemStack::new)
                     .filter(stack -> !stack.isEmpty()).toList();
         }
 
-        public Optional<SewingRecipeDisplay> create(SewingRecipe recipe) {
+        public Optional<SewingRecipeDisplay> create(ResourceLocation id, SewingRecipe recipe) {
             GarmentDefinition definition = definitions.apply(recipe.getResultId()).orElse(null);
-            Item resultItem = ForgeRegistries.ITEMS.getValue(recipe.getResultId());
+            Item resultItem = BuiltInRegistries.ITEM.get(recipe.getResultId());
             if (definition == null || !(resultItem instanceof GarmentItem)) {
                 return Optional.empty();
             }
@@ -53,12 +53,12 @@ public record SewingRecipeDisplay(SewingRecipe recipe, List<ItemStack> fabrics, 
                 return Optional.empty();
             }
             String design = GarmentData.defaultFor(definition).design();
-            new PatternData(recipe.getId(), design, Optional.empty(), Optional.empty()).write(pattern);
+            new PatternData(id, design, Optional.empty(), Optional.empty()).write(pattern);
             ItemStack result = resultItem.getDefaultInstance();
             GarmentCreativePresets.appearance(recipe.getResultId())
                     .filter(appearance -> definition.designs().contains(appearance.design()))
                     .orElseGet(() -> GarmentData.defaultFor(definition)).write(result);
-            return Optional.of(new SewingRecipeDisplay(recipe, fabricCandidates, threadCandidates, pattern, result));
+            return Optional.of(new SewingRecipeDisplay(id, recipe, fabricCandidates, threadCandidates, pattern, result));
         }
 
         private static List<ItemStack> counted(List<ItemStack> candidates, int count) {

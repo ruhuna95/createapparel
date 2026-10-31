@@ -8,8 +8,8 @@ import com.rexhub.createapparel.material.FabricAttribute;
 import com.rexhub.createapparel.material.FabricMaterial;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.common.data.LanguageProvider;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.common.data.LanguageProvider;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -469,7 +469,7 @@ public final class ModLanguageProvider extends LanguageProvider {
         });
     }
 
-    private void add(RegistryObject<? extends Item> item, String translation) {
+    private void add(DeferredHolder<? extends Item, ? extends Item> item, String translation) {
         add(item.get().getDescriptionId(), translation);
     }
 

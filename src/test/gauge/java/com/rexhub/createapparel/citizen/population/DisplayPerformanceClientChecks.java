@@ -24,10 +24,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -35,7 +34,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class DisplayPerformanceClientChecks {
     private static final int[] COUNTS = {0, 32, 128};
     private static final long[] FRAMES = new long[240];
@@ -48,8 +47,8 @@ public final class DisplayPerformanceClientChecks {
     private DisplayPerformanceClientChecks() { }
 
     @SubscribeEvent
-    public static void tick(TickEvent.ClientTickEvent event) {
-        if (!Boolean.getBoolean("apparel.gaugeTest.displayPerformance") || event.phase != TickEvent.Phase.END || stage == 99) return;
+    public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
+        if (!Boolean.getBoolean("apparel.gaugeTest.displayPerformance") || stage == 99) return;
         var mc = Minecraft.getInstance();
         if (mc.getOverlay() != null) return;
         try {
@@ -66,7 +65,7 @@ public final class DisplayPerformanceClientChecks {
                         new LevelSettings("Display performance QA", net.minecraft.world.level.GameType.CREATIVE, false,
                                 net.minecraft.world.Difficulty.PEACEFUL, false, new GameRules(), WorldDataConfiguration.DEFAULT),
                         new WorldOptions(26, false, false), access -> access.registryOrThrow(Registries.WORLD_PRESET)
-                                .getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions());
+                                .getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions(), new net.minecraft.client.gui.screens.TitleScreen());
                 return;
             }
             var server = mc.getSingleplayerServer();
@@ -97,9 +96,8 @@ public final class DisplayPerformanceClientChecks {
     }
 
     @SubscribeEvent
-    public static void frame(TickEvent.RenderTickEvent event) {
+    public static void frame(net.neoforged.neoforge.client.event.RenderFrameEvent.Post event) {
         if (!sampling) return;
-        if (event.phase == TickEvent.Phase.START) return;
         var mc = Minecraft.getInstance();
         try {
             long now = System.nanoTime();
@@ -143,10 +141,14 @@ public final class DisplayPerformanceClientChecks {
     }
 
     @SubscribeEvent
-    public static void serverTick(TickEvent.ServerTickEvent event) {
+    public static void serverTickStart(net.neoforged.neoforge.event.tick.ServerTickEvent.Pre event) {
+        if (sampling) serverStarted = System.nanoTime();
+    }
+
+    @SubscribeEvent
+    public static void serverTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
         if (!sampling) return;
-        if (event.phase == TickEvent.Phase.START) serverStarted = System.nanoTime();
-        else if (serverStarted != 0) { SERVER_TIMES.add(System.nanoTime() - serverStarted); serverStarted = 0; }
+        if (serverStarted != 0) { SERVER_TIMES.add(System.nanoTime() - serverStarted); serverStarted = 0; }
     }
 
     private static BlockPos position(int i) { return new BlockPos(i % 16 * 4, 81, i / 16 * 5); }

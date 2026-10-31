@@ -54,7 +54,7 @@ class AdditionalDyeTest {
         for (var value : colors) {
             var expected = value.getAsJsonObject();
             String id = expected.get("id").getAsString() + "_dye";
-            var actual = json(DATA.resolve("recipes/apparel_dyes/" + id + ".json"));
+            var actual = json(DATA.resolve("recipe/apparel_dyes/" + id + ".json"));
             assertEquals("minecraft:crafting_shapeless", actual.get("type").getAsString());
             var ingredients = actual.getAsJsonArray("ingredients");
             assertEquals(expected.getAsJsonArray("ingredients").size(), ingredients.size(), id);
@@ -62,9 +62,9 @@ class AdditionalDyeTest {
                 assertEquals(expected.getAsJsonArray("ingredients").get(index),
                         ingredients.get(index).getAsJsonObject().get("item"), id);
             }
-            assertEquals("createapparel:" + id, actual.getAsJsonObject("result").get("item").getAsString());
+            assertEquals("createapparel:" + id, actual.getAsJsonObject("result").get("id").getAsString());
             assertEquals(actual.getAsJsonArray("ingredients").size(), actual.getAsJsonObject("result").get("count").getAsInt());
-            var advancement = json(DATA.resolve("advancements/recipes/misc/apparel_dyes/" + id + ".json"));
+            var advancement = json(DATA.resolve("advancement/recipes/misc/apparel_dyes/" + id + ".json"));
             assertTrue(advancement.getAsJsonObject("criteria").has("has_dye"));
         }
         assertEquals(17, colors.size());
@@ -78,7 +78,7 @@ class AdditionalDyeTest {
             ids.add("createapparel:" + suffix);
             for (FabricColor color : FabricColor.values()) ids.add("createapparel:" + color.getSerializedName() + "_" + suffix);
             for (FabricColor color : FabricColor.values()) {
-                var recipe = json(DATA.resolve("recipes/mixing/dyeing/" + color.getSerializedName() + "_" + suffix + ".json"));
+                var recipe = json(DATA.resolve("recipe/mixing/dyeing/" + color.getSerializedName() + "_" + suffix + ".json"));
                 var ingredients = recipe.getAsJsonArray("ingredients");
                 var accepted = new HashSet<String>();
                 ingredients.get(0).getAsJsonArray().forEach(value -> accepted.add(value.getAsJsonObject().get("item").getAsString()));
@@ -87,11 +87,11 @@ class AdditionalDyeTest {
                         ingredients.get(1).getAsJsonObject().get("item").getAsString());
                 assertEquals(250, ingredients.get(2).getAsJsonObject().get("amount").getAsInt());
                 assertEquals("createapparel:" + color.getSerializedName() + "_" + suffix,
-                        recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("item").getAsString());
+                        recipe.getAsJsonArray("results").get(0).getAsJsonObject().get("id").getAsString());
             }
             ids.remove("createapparel:" + suffix);
             var accepted = new HashSet<String>();
-            json(DATA.resolve("recipes/mixing/decolorizing/" + suffix + ".json"))
+            json(DATA.resolve("recipe/mixing/decolorizing/" + suffix + ".json"))
                     .getAsJsonArray("ingredients").get(0).getAsJsonArray()
                     .forEach(value -> accepted.add(value.getAsJsonObject().get("item").getAsString()));
             assertEquals(ids, accepted);
@@ -103,7 +103,7 @@ class AdditionalDyeTest {
         var base = json(ASSETS.resolve("models/item/apparel_dye.json"));
         assertEquals("minecraft:item/generated", base.get("parent").getAsString());
         assertEquals("createapparel:item/apparel_dye_base", base.getAsJsonObject("textures").get("layer0").getAsString());
-        var tag = json(DATA.resolve("tags/items/apparel_dyes.json")).getAsJsonArray("values");
+        var tag = json(DATA.resolve("tags/item/apparel_dyes.json")).getAsJsonArray("values");
         assertEquals(17, tag.size());
         for (int index = 16; index < 33; index++) {
             String id = FabricColor.values()[index].getSerializedName() + "_dye";

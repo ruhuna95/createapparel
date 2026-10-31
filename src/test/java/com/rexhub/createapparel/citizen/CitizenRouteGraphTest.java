@@ -23,7 +23,7 @@ class CitizenRouteGraphTest {
         graph.put(graph.marker(far.id()).withRegion(5, 2)); assertTrue(graph.viewRevision(near.pos(), 64) > revision);
         revision = graph.viewRevision(near.pos(), 64);
         graph.remove(far.id()); assertTrue(graph.viewRevision(near.pos(), 64) > revision); assertTrue(graph.connected(near.id()).isEmpty());
-        assertEquals(1, graph.save(new CompoundTag()).getInt("SchemaVersion"));
+        assertEquals(1, graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getInt("SchemaVersion"));
     }
 
     @Test void removedMarkerDisconnectsIndexedControlReferencesAtomically() {
@@ -34,9 +34,9 @@ class CitizenRouteGraphTest {
         assertEquals(version + 1, graph.version()); assertTrue(graph.connected(source.id()).isEmpty());
         var condition = graph.marker(source.id()).condition();
         assertFalse(condition.configured()); assertTrue(condition.inverted()); assertEquals(7, condition.threshold());
-        var restored = CitizenRouteSavedData.load(graph.save(new CompoundTag()));
+        var restored = CitizenRouteSavedData.load(graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(condition, restored.marker(source.id()).condition());
-        assertEquals(1, graph.save(new CompoundTag()).getInt("SchemaVersion"));
+        assertEquals(1, graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getInt("SchemaVersion"));
     }
 
     @Test void idsEdgesIndexesVersionAndSaveRoundTripStayConsistent() {
@@ -46,7 +46,7 @@ class CitizenRouteGraphTest {
         assertFalse(graph.link(b.id(), a.id(), false)); assertFalse(graph.link(a.id(), a.id(), false)); assertEquals(version, graph.version());
         assertEquals(1, graph.connected(a.id()).size()); assertEquals(1, graph.connected(b.id()).size());
         assertEquals(a, graph.nearby(new BlockPos(-16, 70, -17), 2).get(0));
-        var restored = CitizenRouteSavedData.load(graph.save(new CompoundTag()));
+        var restored = CitizenRouteSavedData.load(graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(version, restored.version()); assertEquals(a, restored.at(a.pos())); assertEquals(java.util.List.copyOf(graph.edges()), java.util.List.copyOf(restored.edges()));
         assertTrue(restored.remove(a.id())); assertTrue(restored.version() > version); assertTrue(restored.connected(b.id()).isEmpty());
         assertTrue(restored.nearby(a.pos(), 4).isEmpty()); assertNull(restored.at(a.pos()));
@@ -95,7 +95,7 @@ class CitizenRouteGraphTest {
         node = node.withRegion(8, 3); graph.put(node);
         assertNotSame(cached, graph.gateways(a)); assertEquals(node, graph.gateways(a).get(0));
         graph.put(node.withDistrict(b)); assertTrue(graph.gateways(a).isEmpty()); assertEquals(1, graph.gateways(b).size());
-        graph = CitizenRouteSavedData.load(graph.save(new CompoundTag())); assertEquals(1, graph.gateways(b).size());
+        graph = CitizenRouteSavedData.load(graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup())); assertEquals(1, graph.gateways(b).size());
         graph.put(graph.marker(node.id()).withType(RouteMarkerType.CROSSING)); assertTrue(graph.gateways(b).isEmpty());
         graph.put(graph.marker(node.id()).withType(RouteMarkerType.GATEWAY)); assertEquals(1, graph.gateways(b).size());
         graph.remove(node.id()); assertTrue(graph.gateways(b).isEmpty());
@@ -116,7 +116,7 @@ class CitizenRouteGraphTest {
     @Test void legacyNormalAndPairDuplicatesMigrateToOneAutomaticallyClassifiedEdge() {
         var graph = new CitizenRouteSavedData(); var a = marker(0, RouteMarkerType.CROSSING); var b = marker(8, RouteMarkerType.CROSSING);
         graph.put(a); graph.put(b); graph.link(a.id(), b.id(), false);
-        var id = graph.edges().iterator().next().id(); var saved = graph.save(new CompoundTag());
+        var id = graph.edges().iterator().next().id(); var saved = graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup());
         var entries = saved.getList("Edges", 10);
         entries.getCompound(0).putBoolean("Conditional", false);
         entries.add(new RouteEdge(UUID.randomUUID(), b.id(), a.id(), true).save());
@@ -124,7 +124,7 @@ class CitizenRouteGraphTest {
         assertEquals(1, restored.edges().size()); assertEquals(id, restored.connected(a.id()).get(0).id());
         assertTrue(restored.connected(b.id()).get(0).conditional());
         assertEquals(graph.version() + 1, restored.version()); assertTrue(restored.isDirty());
-        var secondLoad = CitizenRouteSavedData.load(restored.save(new CompoundTag()));
+        var secondLoad = CitizenRouteSavedData.load(restored.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         assertEquals(restored.version(), secondLoad.version()); assertFalse(secondLoad.isDirty());
     }
 
@@ -140,7 +140,7 @@ class CitizenRouteGraphTest {
 
     @Test void malformedSavedEdgesAreRepairedWithoutOrphanReferences() {
         var graph = new CitizenRouteSavedData(); var a = marker(0, RouteMarkerType.NORMAL); var b = marker(8, RouteMarkerType.NORMAL);
-        graph.put(a); graph.put(b); graph.link(a.id(), b.id(), false); var saved = graph.save(new CompoundTag());
+        graph.put(a); graph.put(b); graph.link(a.id(), b.id(), false); var saved = graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup());
         var edges = saved.getList("Edges", 10); edges.add(new RouteEdge(UUID.randomUUID(), a.id(), UUID.randomUUID(), false).save());
         edges.add(new RouteEdge(UUID.randomUUID(), b.id(), a.id(), false).save());
         var restored = CitizenRouteSavedData.load(saved);
@@ -171,9 +171,9 @@ class CitizenRouteGraphTest {
 
     @Test void legacyLowGraphVersionsStillInvalidateRegionalViewsAfterLoading() {
         var graph = new CitizenRouteSavedData(); var a = marker(0, RouteMarkerType.NORMAL); var b = marker(8, RouteMarkerType.NORMAL);
-        graph.put(a); graph.put(b); var saved = graph.save(new CompoundTag()); saved.putLong("RouteGraphVersion", 0);
+        graph.put(a); graph.put(b); var saved = graph.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()); saved.putLong("RouteGraphVersion", 0);
         var restored = CitizenRouteSavedData.load(saved); long previous = restored.viewRevision(a.pos(), 64);
         restored.put(a.withRegion(4, 2)); assertTrue(restored.viewRevision(a.pos(), 64) > previous);
-        assertEquals(1, restored.save(new CompoundTag()).getInt("SchemaVersion"));
+        assertEquals(1, restored.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()).getInt("SchemaVersion"));
     }
 }

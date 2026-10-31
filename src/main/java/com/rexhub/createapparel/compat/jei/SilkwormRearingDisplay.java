@@ -18,8 +18,8 @@ public record SilkwormRearingDisplay(ResourceLocation id, List<ItemStack> inputs
         result = result.copy();
     }
 
-    public static SilkwormRearingDisplay tray(SilkwormRearingRecipe recipe, RegistryAccess registries) {
-        return new SilkwormRearingDisplay(recipe.getId(), inputs(recipe.getIngredients().get(0), recipe.foodCount()),
+    public static SilkwormRearingDisplay tray(ResourceLocation id, SilkwormRearingRecipe recipe, RegistryAccess registries) {
+        return new SilkwormRearingDisplay(id, inputs(recipe.getIngredients().get(0), recipe.foodCount()),
                 recipe.getResultItem(registries), true);
     }
 

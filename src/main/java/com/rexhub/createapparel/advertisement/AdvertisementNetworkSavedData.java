@@ -18,8 +18,7 @@ public final class AdvertisementNetworkSavedData extends SavedData {
     private final Map<String, Channel> channels = new LinkedHashMap<>();
     private final Map<String, CompoundTag> recoveries = new HashMap<>();
     public static AdvertisementNetworkSavedData get(ServerLevel level) {
-        return level.getServer().overworld().getDataStorage().computeIfAbsent(AdvertisementNetworkSavedData::load,
-                AdvertisementNetworkSavedData::new, "createapparel_advertisements");
+        return level.getServer().overworld().getDataStorage().computeIfAbsent(new net.minecraft.world.level.saveddata.SavedData.Factory<>(AdvertisementNetworkSavedData::new, (tag, registries) -> AdvertisementNetworkSavedData.load(tag)), "createapparel_advertisements");
     }
     public static boolean validChannel(String id) { return id.matches("[a-z0-9_]{1,48}"); }
     public Channel channel(String id) { return channels.getOrDefault(id, UNCONFIGURED); }
@@ -41,7 +40,7 @@ public final class AdvertisementNetworkSavedData extends SavedData {
     public void recovery(String key, CompoundTag state) { recoveries.put(key, state.copy()); setDirty(); }
     @Nullable public CompoundTag recovery(String key) { return recoveries.get(key); }
     public void clearRecovery(String key) { recoveries.remove(key); setDirty(); }
-    @Override public CompoundTag save(CompoundTag tag) {
+    @Override public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         tag.putInt("Version", 2); ListTag list = new ListTag();
         channels.forEach((id, value) -> {
             CompoundTag entry = new CompoundTag(); entry.putString("Id", id); entry.putLong("Revision", value.revision());

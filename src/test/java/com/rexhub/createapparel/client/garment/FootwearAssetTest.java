@@ -378,7 +378,7 @@ class FootwearAssetTest {
     @Test
     void recipesAndItemModelsMatchFootwearCatalog() throws IOException {
         for (String garment : GARMENTS) {
-            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipes/" + garment + ".json"));
+            var recipe = json(Path.of("src/generated/resources/data/createapparel/recipe/" + garment + ".json"));
             assertEquals("createapparel:sewing", recipe.get("type").getAsString());
             assertEquals("createapparel:" + garment, recipe.getAsJsonObject("result").get("id").getAsString());
             assertEquals(2, recipe.getAsJsonObject("fabric").get("count").getAsInt());

@@ -122,14 +122,14 @@ public final class AdvertisementPanelBlockEntity extends BlockEntity {
         com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
         setChanged(); if (level != null && !level.isClientSide) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
     }
-    @Override protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag); tag.putInt("Version", 2); tag.putUUID("Group", groupId); tag.putLong("Controller", controllerPos.asLong());
+    @Override protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries); tag.putInt("Version", 2); tag.putUUID("Group", groupId); tag.putLong("Controller", controllerPos.asLong());
         tag.putInt("Width", width); tag.putInt("Height", height);
         tag.putLong("ControllerOffset", controllerPos.subtract(worldPosition).asLong());
         if (isController()) tag.put("Content", content());
     }
-    @Override public void load(CompoundTag tag) {
-        super.load(tag); groupId = tag.hasUUID("Group") ? tag.getUUID("Group") : UUID.randomUUID();
+    @Override protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries); groupId = tag.hasUUID("Group") ? tag.getUUID("Group") : UUID.randomUUID();
         controllerPos = tag.contains("Controller", CompoundTag.TAG_LONG) ? BlockPos.of(tag.getLong("Controller")) : worldPosition;
         if (tag.contains("ControllerOffset", CompoundTag.TAG_LONG)) controllerPos = worldPosition.offset(BlockPos.of(tag.getLong("ControllerOffset")));
         width = Math.max(1, Math.min(256, tag.getInt("Width"))); height = Math.max(1, Math.min(256, tag.getInt("Height")));
@@ -140,8 +140,8 @@ public final class AdvertisementPanelBlockEntity extends BlockEntity {
         }
         com.rexhub.createapparel.fashion.RetailDisplayIndex.update(this);
     }
-    @Override public CompoundTag getUpdateTag() { return saveWithoutMetadata(); }
-    @Override public net.minecraft.world.phys.AABB getRenderBoundingBox() {
+    @Override public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
+    public net.minecraft.world.phys.AABB getRenderBoundingBox() {
         var right = PanelGroupManager.right(this);
         return new net.minecraft.world.phys.AABB(worldPosition).expandTowards(right.getStepX() * (width - 1), height - 1, right.getStepZ() * (width - 1));
     }

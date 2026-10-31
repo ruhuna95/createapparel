@@ -12,7 +12,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.data.ModelData;
 
 public final class HangerDisplay {
     public static final net.minecraft.resources.ResourceLocation MODEL = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
@@ -28,7 +28,7 @@ public final class HangerDisplay {
                                      HangerType type, RackMountType mount, int slot, Direction facing,
                                      PoseStack poseStack, MultiBufferSource buffer, int overlay) {
         var minecraft = net.minecraft.client.Minecraft.getInstance();
-        var model = HangerBlockModel.rackModel(minecraft.getModelManager().getModel(type == HangerType.CLIP ? CLIP_MODEL : MODEL),
+        var model = HangerBlockModel.rackModel(minecraft.getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(type == HangerType.CLIP ? CLIP_MODEL : MODEL)),
                 type, mount, slot, facing);
         minecraft.getBlockRenderer().getModelRenderer().tesselateBlock(level, model, state, upperPos,
                 poseStack, buffer.getBuffer(RenderType.solid()), false, RANDOM, state.getSeed(upperPos),
@@ -46,7 +46,7 @@ public final class HangerDisplay {
         if (garment.isEmpty()) return;
         poseStack.pushPose();
         poseStack.scale(GARMENT_SCALE, GARMENT_SCALE, GARMENT_SCALE);
-        var id = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(garment.getItem());
+        var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(garment.getItem());
         double lift = id == null ? 0 : com.rexhub.createapparel.client.garment.ClientGarmentAssets.getDefinition(id)
                 .map(com.rexhub.createapparel.garment.HangerGarments::displayLift).orElse(0.0);
         poseStack.translate(0, lift / GARMENT_SCALE, 0);

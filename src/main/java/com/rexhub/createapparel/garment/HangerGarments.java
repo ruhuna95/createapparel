@@ -1,7 +1,7 @@
 package com.rexhub.createapparel.garment;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 public final class HangerGarments {
     private HangerGarments() { }
@@ -16,7 +16,7 @@ public final class HangerGarments {
 
     public static boolean accepts(ItemStack stack, HangerType type) {
         if (stack.isEmpty() || !(stack.getItem() instanceof GarmentItem)) return false;
-        return GarmentDefinitionManager.get(ForgeRegistries.ITEMS.getKey(stack.getItem()))
+        return GarmentDefinitionManager.get(BuiltInRegistries.ITEM.getKey(stack.getItem()))
                 .map(type::accepts).orElse(false);
     }
 

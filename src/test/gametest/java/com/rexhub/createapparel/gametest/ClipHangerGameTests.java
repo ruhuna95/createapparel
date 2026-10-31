@@ -27,9 +27,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -46,7 +45,7 @@ public final class ClipHangerGameTests {
             level.setBlockAndUpdate(pos.above().relative(facing.getOpposite()), Blocks.STONE.defaultBlockState());
         var state = block.defaultBlockState().setValue(ClothingRackBlock.FACING, facing).setValue(ClothingRackBlock.MOUNT, mount);
         level.setBlockAndUpdate(pos, state);
-        block.setPlacedBy(level, pos, state, helper.makeMockPlayer(), new ItemStack(block));
+        block.setPlacedBy(level, pos, state, helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), new ItemStack(block));
         var rack = (ClothingRackBlockEntity) level.getBlockEntity(pos);
         if (rack == null) throw new IllegalStateException("Missing rack");
         return rack;
@@ -54,7 +53,7 @@ public final class ClipHangerGameTests {
 
     private static ClothingRackBlockEntity extend(GameTestHelper helper, ClothingRackBlockEntity source, Item item, Direction face) {
         var pos = source.getBlockPos().above();
-        var context = new BlockPlaceContext(helper.makeMockPlayer(), InteractionHand.MAIN_HAND, new ItemStack(item),
+        var context = new BlockPlaceContext(helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), InteractionHand.MAIN_HAND, new ItemStack(item),
                 new BlockHitResult(Vec3.atCenterOf(pos), face, pos, false));
         helper.assertTrue(((ClothingRackItem) item).place(context).consumesAction(), "Mixed variant extension places");
         var rack = (ClothingRackBlockEntity) helper.getLevel().getBlockEntity(source.getBlockPos().relative(face));
@@ -110,7 +109,7 @@ public final class ClipHangerGameTests {
             var wall = pos.relative(face.getOpposite());
             helper.getLevel().setBlockAndUpdate(wall, Blocks.STONE.defaultBlockState());
             var item = new ItemStack(ModItems.CLIP_WALL_HANGER.get());
-            var context = new BlockPlaceContext(helper.makeMockPlayer(), InteractionHand.MAIN_HAND, item,
+            var context = new BlockPlaceContext(helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE), InteractionHand.MAIN_HAND, item,
                     new BlockHitResult(Vec3.atCenterOf(wall), face, wall, false));
             var state = ModBlocks.CLIP_WALL_HANGER.get().getStateForPlacement(context);
             helper.assertTrue(state != null && state.getValue(WallHangerBlock.FACING) == face, "Clip hanger supports every wall face");
@@ -121,16 +120,16 @@ public final class ClipHangerGameTests {
             helper.assertTrue(!hanger.insert(new ItemStack(ModItems.T_SHIRT.get()), false)
                     && !hanger.insert(new ItemStack(Items.STONE), false), "Clip hanger rejects tops and ordinary items");
             var bottom = new ItemStack(ModItems.DENIM_PANTS.get(), 2);
-            bottom.getOrCreateTag().putString("ClipTest", "preserved style/material/colors");
+            com.rexhub.createapparel.item.ItemData.update(bottom, tagData -> tagData.putString("ClipTest", "preserved style/material/colors"));
             helper.assertTrue(hanger.insert(bottom, false) && bottom.getCount() == 1 && !hanger.insert(bottom, false), "One bottom, no replacement");
-            var restored = (WallHangerBlockEntity) BlockEntity.loadStatic(pos, state, hanger.saveWithFullMetadata());
+            var restored = (WallHangerBlockEntity) BlockEntity.loadStatic(pos, state, hanger.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
             helper.assertTrue(restored != null && ItemStack.matches(restored.garment(), bottom), "Clip NBT preserves complete garment");
             var client = new WallHangerBlockEntity(pos, state);
-            client.handleUpdateTag(hanger.getUpdateTag());
+            client.handleUpdateTag(hanger.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
             helper.assertTrue(ItemStack.matches(client.garment(), bottom), "Clip update tag syncs garment");
             var packet = hanger.getUpdatePacket();
-            helper.assertTrue(packet.getTag() != null, "Clip packet contains garment");
-            client.load(packet.getTag());
+            helper.assertTrue((packet).getTag() != null, "Clip packet contains garment");
+            client.loadWithComponents(packet.getTag(), com.rexhub.createapparel.TestRegistries.lookup());
             helper.assertTrue(ItemStack.matches(client.garment(), bottom), "Clip packet syncs garment");
             int before = drops(helper, ModItems.DENIM_PANTS.get());
             helper.getLevel().removeBlock(wall, false);
@@ -149,21 +148,21 @@ public final class ClipHangerGameTests {
         helper.getLevel().setBlockAndUpdate(pos, ModBlocks.WALL_HANGER.get().defaultBlockState());
         var hanger = (WallHangerBlockEntity) helper.getLevel().getBlockEntity(pos);
         if (hanger == null) throw new IllegalStateException("Missing normal hanger");
-        var wallTag = hanger.getUpdateTag();
-        wallTag.put("Garment", bottom.save(new net.minecraft.nbt.CompoundTag()));
-        hanger.load(wallTag);
-        helper.assertTrue(hanger.take(helper.makeMockPlayer()) && hanger.garment().isEmpty(), "Legacy wall bottom can be returned");
+        var wallTag = hanger.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup());
+        wallTag.put("Garment", bottom.save(com.rexhub.createapparel.TestRegistries.lookup()));
+        hanger.loadWithComponents(wallTag, com.rexhub.createapparel.TestRegistries.lookup());
+        helper.assertTrue(hanger.take(helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE)) && hanger.garment().isEmpty(), "Legacy wall bottom can be returned");
         helper.assertTrue(!hanger.insert(bottom, false), "New bottom insertion remains forbidden on normal hanger");
         helper.getLevel().removeBlock(pos, false);
         var rack = place(helper, pos, ModBlocks.CLOTHING_RACK.get(), Direction.NORTH, RackMountType.FLOOR);
-        var legacy = new net.minecraftforge.items.ItemStackHandler(4);
+        var legacy = new net.neoforged.neoforge.items.ItemStackHandler(4);
         legacy.setStackInSlot(1, bottom);
-        var rackTag = rack.getUpdateTag();
-        rackTag.put("Garments", legacy.serializeNBT());
-        rack.load(rackTag);
+        var rackTag = rack.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup());
+        rackTag.put("Garments", legacy.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
+        rack.loadWithComponents(rackTag, com.rexhub.createapparel.TestRegistries.lookup());
         rack.refreshConnections();
         helper.assertTrue(ItemStack.matches(rack.garment(1), bottom), "Connection refresh does not discard legacy bottom");
-        helper.assertTrue(rack.take(1, helper.makeMockPlayer()) && rack.garment(1).isEmpty(), "Legacy rack bottom can be returned");
+        helper.assertTrue(rack.take(1, helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE)) && rack.garment(1).isEmpty(), "Legacy rack bottom can be returned");
         helper.succeed();
     }
 
@@ -290,24 +289,24 @@ public final class ClipHangerGameTests {
     @GameTest(template = "display_furniture", batch = "clip_hanger")
     public static void clipLogisticsMechanicalArmAndReloadPreserveCompleteStacks(GameTestHelper helper) {
         var rack = place(helper, base(helper), ModBlocks.CLIP_CLOTHING_RACK.get(), Direction.NORTH, RackMountType.FLOOR);
-        var handler = rack.getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(() -> new IllegalStateException("Missing clip handler"));
+        var handler = java.util.Optional.ofNullable(rack.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, rack.getBlockPos(), null)).orElseThrow(() -> new IllegalStateException("Missing clip handler"));
         var bottom = new ItemStack(ModItems.DENIM_PANTS.get());
-        bottom.getOrCreateTag().putString("ClipTest", "full display stack");
+        com.rexhub.createapparel.item.ItemData.update(bottom, tagData -> tagData.putString("ClipTest", "full display stack"));
         helper.assertTrue(!handler.insertItem(0, bottom, false).isEmpty()
                 && !handler.insertItem(3, bottom, false).isEmpty(), "Support positions reject clip logistics");
         helper.assertTrue(!handler.insertItem(1, new ItemStack(ModItems.T_SHIRT.get()), false).isEmpty()
                 && !handler.insertItem(1, new ItemStack(Items.STONE), false).isEmpty(), "Clip logistics reject tops and non garments");
         helper.assertTrue(handler.insertItem(1, bottom, true).isEmpty() && rack.garment(1).isEmpty(), "Insertion simulation has no mutation");
         helper.assertTrue(handler.insertItem(1, bottom, false).isEmpty(), "Clip logistics accept bottom");
-        var restored = (ClothingRackBlockEntity) BlockEntity.loadStatic(base(helper), rack.getBlockState(), rack.saveWithFullMetadata());
+        var restored = (ClothingRackBlockEntity) BlockEntity.loadStatic(base(helper), rack.getBlockState(), rack.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(restored != null && ItemStack.matches(restored.garment(1), bottom), "Clip rack NBT restores complete bottom");
         if (restored == null) throw new IllegalStateException("Missing restored clip rack");
         var client = new ClothingRackBlockEntity(base(helper), rack.getBlockState());
-        client.handleUpdateTag(rack.getUpdateTag());
+        client.handleUpdateTag(rack.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(ItemStack.matches(client.garment(1), bottom), "Clip logistics update display tag");
         var packet = rack.getUpdatePacket();
-        helper.assertTrue(packet.getTag() != null, "Clip logistics provide update packet");
-        client.load(packet.getTag());
+        helper.assertTrue((packet).getTag() != null, "Clip logistics provide update packet");
+        client.loadWithComponents(packet.getTag(), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(ItemStack.matches(client.garment(1), bottom), "Clip logistics packet preserves styles");
         int before = drops(helper, ModItems.DENIM_PANTS.get());
         rack.onChunkUnloaded();
@@ -316,23 +315,23 @@ public final class ClipHangerGameTests {
         helper.getLevel().setBlockEntity(restored);
         restored.onLoad();
         rack = restored;
-        handler = rack.getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(() -> new IllegalStateException("Missing restored clip handler"));
+        handler = java.util.Optional.ofNullable(rack.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, rack.getBlockPos(), null)).orElseThrow(() -> new IllegalStateException("Missing restored clip handler"));
         helper.assertTrue(handler.extractItem(1, 1, false).is(ModItems.DENIM_PANTS.get()), "Clip handler extracts bottom");
         var point = ArmInteractionPoint.create(helper.getLevel(), base(helper), rack.getBlockState());
         helper.assertTrue(point != null, "Mechanical arm recognizes clip variant");
         if (point == null) throw new IllegalStateException("Missing clip arm point");
-        helper.assertTrue(point.insert(bottom, false).isEmpty()
-                && !point.insert(new ItemStack(ModItems.T_SHIRT.get()), false).isEmpty(), "Arm respects clip garment filter");
-        helper.assertTrue(point.extract(1, false).is(ModItems.DENIM_PANTS.get()), "Arm extracts bottom");
+        helper.assertTrue(point.insert(com.rexhub.createapparel.TestArms.create(helper.getLevel()), bottom, false).isEmpty()
+                && !point.insert(com.rexhub.createapparel.TestArms.create(helper.getLevel()), new ItemStack(ModItems.T_SHIRT.get()), false).isEmpty(), "Arm respects clip garment filter");
+        helper.assertTrue(point.extract(com.rexhub.createapparel.TestArms.create(helper.getLevel()), 1, false).is(ModItems.DENIM_PANTS.get()), "Arm extracts bottom");
         helper.succeed();
     }
 
     @GameTest(template = "display_furniture", batch = "clip_hanger")
     public static void clipFurniturePlayerBreakDropsOnceInBothGameModesAndRackHalves(GameTestHelper helper) {
         var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "clip-test"));
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "clip-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
         var pos = base(helper);

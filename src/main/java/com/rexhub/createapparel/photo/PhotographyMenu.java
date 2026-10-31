@@ -13,8 +13,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.SlotItemHandler;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 public final class PhotographyMenu extends AbstractContainerMenu {
     public enum Mode { CAPTURE, EDIT, CONSENT }
@@ -104,7 +103,7 @@ public final class PhotographyMenu extends AbstractContainerMenu {
         buffer.writeEnum(mode); buffer.writeNbt(photo.save()); buffer.writeVarInt(target); buffer.writeVarInt(slot); buffer.writeVarInt(cost);
     }
     public static void openEdit(ServerPlayer player, AdvertisingPhotoData photo, int slot) {
-        NetworkHooks.openScreen(player, new SimpleMenuProvider((id, inventory, viewer) -> new PhotographyMenu(id, inventory, Mode.EDIT, photo, player.getId(), slot, 0),
+        player.openMenu(new SimpleMenuProvider((id, inventory, viewer) -> new PhotographyMenu(id, inventory, Mode.EDIT, photo, player.getId(), slot, 0),
                 Component.translatable("screen.createapparel.photo.edit")), buffer -> writeOpening(buffer, Mode.EDIT, photo, player.getId(), slot, 0));
     }
     public Mode mode() { return mode; }
@@ -131,7 +130,7 @@ public final class PhotographyMenu extends AbstractContainerMenu {
         if (mode == Mode.CONSENT) return player.level().getGameTime() <= expiresAt && player.level().getEntity(targetId) instanceof ServerPlayer requester
                 && requester.distanceToSqr(player) <= 64 && requester.getInventory().getItem(itemSlot).is(PhotoRegistries.CAMERA.get());
         var held = player.getInventory().getItem(itemSlot);
-        if (!ItemStack.isSameItemSameTags(held, heldAtOpen)) return false;
+        if (!(held.isEmpty() && heldAtOpen.isEmpty()) && !ItemStack.isSameItemSameComponents(held, heldAtOpen)) return false;
         return mode == Mode.EDIT || player.level().getEntity(targetId) instanceof net.minecraft.world.entity.LivingEntity target && target.isAlive() && target.distanceToSqr(player) <= 64
                 && (!(target instanceof com.rexhub.createapparel.entity.Citizen citizen) || player.level().isClientSide || citizen.interaction().isViewer(player, this));
     }

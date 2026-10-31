@@ -19,7 +19,7 @@ final class MultiplayerProbe {
     static void write(CompoundTag plan) throws IOException {
         Files.createDirectories(ROOT);
         var temporary = file("plan.tmp");
-        NbtIo.writeCompressed(plan, temporary.toFile());
+        NbtIo.writeCompressed(plan, temporary);
         Files.move(temporary, file("plan.nbt"), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
     }
 

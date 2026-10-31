@@ -18,17 +18,15 @@ class CitizenGaugeAssetTest {
 
     @Test void resetRecipeUsesTheSpecialSerializerAndManualOnlyAutomationGuard() throws IOException {
         var recipe = JsonParser.parseString(Files.readString(Path.of(
-                "src/generated/resources/data/createapparel/recipes/citizen_gauge_reset_manual_only.json"))).getAsJsonObject();
+                "src/generated/resources/data/createapparel/recipe/citizen_gauge_reset_manual_only.json"))).getAsJsonObject();
         assertEquals("createapparel:citizen_gauge_reset", recipe.get("type").getAsString());
         assertEquals("misc", recipe.get("category").getAsString());
     }
 
-    @Test void creativeDiscardPrivateMembersHaveProductionMappings() throws IOException {
-        var refmap = JsonParser.parseString(Files.readString(Path.of("build/generated/mixin/createapparel.refmap.json")))
-                .getAsJsonObject().getAsJsonObject("mappings").getAsJsonObject("com/rexhub/createapparel/client/mixin/CreativeInventoryGaugeMixin");
-        assertTrue(refmap.has("destroyItemSlot"));
-        assertEquals("f_98512_:Lnet/minecraft/world/inventory/Slot;", refmap.get("destroyItemSlot").getAsString());
-        assertEquals("m_98553_(Lnet/minecraft/world/inventory/Slot;)Z", refmap.get("isCreativeSlot").getAsString());
+    @Test void creativeDiscardPrivateMembersUseOfficialNames() throws ReflectiveOperationException {
+        var screen = net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen.class;
+        assertEquals(net.minecraft.world.inventory.Slot.class, screen.getDeclaredField("destroyItemSlot").getType());
+        assertEquals(boolean.class, screen.getDeclaredMethod("isCreativeSlot", net.minecraft.world.inventory.Slot.class).getReturnType());
     }
 
     @Test

@@ -1,489 +1,126 @@
 plugins {
-    id 'eclipse'
-    id 'idea'
+    id 'java-library'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'net.neoforged.moddev' version '2.0.148'
+    id 'idea'
 }
 
 version = mod_version
 group = mod_group_id
-
-base {
-    archivesName = mod_id
-}
-
-// Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+base { archivesName = mod_id }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 sourceSets {
-    gameTest {
-        java.setSrcDirs(['src/test/gametest/java'])
-        resources.setSrcDirs(['src/test/gametest/resources'])
-        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    main.resources {
+        srcDir 'src/generated/resources'
+        exclude '.cache/**', '**/*.bbmodel'
     }
-    routeTest {
-        java.setSrcDirs(['src/test/route/java'])
-        resources.setSrcDirs(['src/test/route/resources'])
-        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
-    }
-    recipeTest {
-        java.setSrcDirs(['src/test/recipe/java'])
-        resources.setSrcDirs(['src/test/recipe/resources'])
-        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
-    }
-    jeiTest {
-        java.setSrcDirs(['src/test/jei/java'])
-        resources.setSrcDirs(['src/test/jei/resources'])
-        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
-    }
-}
-
-
-configurations {
-    destroyClientMods {
-        canBeConsumed = false
-    }
-}
-
-println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-def gameTestDirectory = project.file("run/gametest/${System.currentTimeMillis()}")
-def routeTestDirectory = project.file("run/route-tests/${System.currentTimeMillis()}")
-def recipeTestCase = providers.gradleProperty('recipeTestCase').getOrElse('A')
-def recipeTestFlags = [A: [false, false], B: [true, true], C: [false, false],
-                       D: [true, true], E: [true, false], F: [false, true]]
-if (!recipeTestFlags.containsKey(recipeTestCase)) throw new GradleException('recipeTestCase must be A-F')
-def recipeTestDirectory = project.file('run/phase25/server-' + recipeTestCase + '/' +
-        providers.gradleProperty('recipeTestRunId').getOrElse(System.currentTimeMillis().toString()))
-def optionalIntegrationModsDirectory = project.file(providers.gradleProperty('optionalIntegrationModsDir')
-        .getOrElse('run/phase25/dependencies'))
-def optionalIntegrationMods = [
-        'destroy-1.20.1-0.1.4.jar': 'local.phase25:destroy-1.20.1:0.1.4',
-        'petrolpark-1.20.1-1.4.24.jar': 'local.phase25:petrolpark-1.20.1:1.4.24',
-        'thesilverage-forge-1.20.1-1.3.0.jar': 'local.phase25:thesilverage-forge-1.20.1:1.3.0'
-]
-minecraft {
-    // The mappings can be changed at any time and must be in the following format.
-    // Channel:   Version:
-    // official   MCVersion             Official field/method names from Mojang mapping files
-    // parchment  YYYY.MM.DD-MCVersion  Open community-sourced parameter names and javadocs layered on top of official
-    //
-    // You must be aware of the Mojang license when using the 'official' or 'parchment' mappings.
-    // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
-    //
-    // Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
-    // Additional setup is needed to use their mappings: https://parchmentmc.org/docs/getting-started
-    //
-    // Use non-default mappings at your own risk. They may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: mapping_channel, version: mapping_version
-
-    // When true, this property will have all Eclipse/IntelliJ IDEA run configurations run the "prepareX" task for the given run configuration before launching the game.
-    // In most cases, it is not necessary to enable.
-    // enableEclipsePrepareRuns = true
-    // enableIdeaPrepareRuns = true
-
-    // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
-    // It is REQUIRED to be set to true for this template to function.
-    // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-    copyIdeResources = true
-
-    // When true, this property will add the folder name of all declared run configurations to generated IDE run configurations.
-    // The folder name can be set on a run configuration using the "folderName" property.
-    // By default, the folder name of a run configuration is the name of the Gradle project containing it.
-    // generateRunFolders = true
-
-    // This property enables access transformers for use in development.
-    // They will be applied to the Minecraft artifact.
-    // The access transformer file can be anywhere in the project.
-    // However, it must be at "META-INF/accesstransformer.cfg" in the final mod jar to be loaded by Forge.
-    // This default location is a best practice to automatically put the file in the right place in the final jar.
-    // See https://docs.minecraftforge.net/en/latest/advanced/accesstransformers/ for more information.
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
-    runs {
-        // applies to all the run configs below
-        configureEach {
-            workingDirectory project.file('run')
-
-            // Recommended logging data for a userdev environment
-            // The markers can be added/remove as needed separated by commas.
-            // "SCAN": For mods scan.
-            // "REGISTRIES": For firing of registry events.
-            // "REGISTRYDUMP": For getting the contents of all registries.
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            // Recommended logging level for the console
-            // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-            property 'forge.logging.console.level', 'debug'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            args '--mixin', 'createapparel.mixins.json', '--mixin', 'createapparel.photo.mixins.json', '--mixin', 'createapparel.retail.mixins.json', '--mixin', 'createapparel.destroy.mixins.json',
-                    '--mixin', 'createapparel.destroy_jei.mixins.json'
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        client {
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            workingDirectory project.file('run/client1')
-            property 'forge.enabledGameTestNamespaces', mod_id
-        }
-
-        client2 {
-            parent minecraft.runs.client
-            workingDirectory project.file('run/client2')
-            args '--username', 'Dev2', '--uuid', '00000000-0000-0000-0000-000000000009'
-        }
-
-        destroyClient {
-            parent minecraft.runs.client
-            workingDirectory project.file('run/phase25/client')
-        }
-
-        jeiTestClient {
-            parent minecraft.runs.client
-            workingDirectory project.file('run/phase23-client-' + providers.gradleProperty('jeiEnabled').getOrElse('true'))
-            property 'forge.logging.console.level', 'info'
-            property 'apparel.jeiTest.projectDir', project.projectDir.absolutePath
-            property 'apparel.jeiTest.mirrorFallback', providers.gradleProperty('jeiMirrorFallback').getOrElse('false')
-            mods {
-                "${mod_id}" { source sourceSets.jeiTest }
-            }
-        }
-
-        server {
-            workingDirectory project.file('run/server')
-            property 'forge.enabledGameTestNamespaces', mod_id
-            args '--nogui'
-        }
-
-        // This run config launches GameTestServer and runs all registered gametests, then exits.
-        // By default, the server will crash when no gametests are provided.
-        gameTestServer {
-            workingDirectory gameTestDirectory
-            property 'forge.enabledGameTestNamespaces', mod_id
-            property 'forge.logging.console.level', 'info'
-            mods {
-                "${mod_id}" { source sourceSets.gameTest }
-            }
-        }
-
-        jeiTestServer {
-            parent minecraft.runs.gameTestServer
-            workingDirectory project.file('run/phase23-server')
-            property 'forge.logging.console.level', 'info'
-            property 'apparel.jeiTest.server', 'true'
-            mods {
-                "${mod_id}" { source sourceSets.jeiTest }
-            }
-        }
-
-        routeTestServer {
-            parent minecraft.runs.gameTestServer
-            workingDirectory routeTestDirectory
-            property 'forge.logging.console.level', 'info'
-            property 'apparel.routeTest.names', providers.gradleProperty('routeTests').getOrElse('')
-            mods {
-                "${mod_id}" { source sourceSets.routeTest }
-            }
-        }
-
-        recipeTestServer {
-            parent minecraft.runs.gameTestServer
-            workingDirectory recipeTestDirectory
-            property 'apparel.recipeTest.destroy', providers.gradleProperty('destroyEnabled').getOrElse('false')
-            property 'apparel.recipeTest.silver', providers.gradleProperty('silverEnabled').getOrElse('true')
-            property 'apparel.recipeTest.synthetic', recipeTestFlags[recipeTestCase][0].toString()
-            property 'apparel.recipeTest.mirror', recipeTestFlags[recipeTestCase][1].toString()
-            mods {
-                "${mod_id}" { source sourceSets.recipeTest }
-            }
-        }
-
-        data {
-            // example of overriding the workingDirectory set in configureEach above
-            workingDirectory project.file('run-data')
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/'), '--existing-mod', 'create'
-        }
-    }
-}
-
-// Include resources generated by data generators.
-sourceSets.main.resources {
-    srcDir 'src/generated/resources'
-    exclude '.cache/**'
 }
 
 repositories {
-    flatDir {
-        name = 'OptionalIntegrationTestMods'
-        dirs optionalIntegrationModsDirectory
-        content { includeGroup 'local.phase25' }
-    }
+    mavenCentral()
+    maven { url = 'https://maven.createmod.net' }
+    maven { url = 'https://maven.ithundxr.dev/snapshots' }
     maven {
-        name = 'JEI'
         url = 'https://maven.blamejared.com'
         content { includeGroup 'mezz.jei' }
     }
     maven {
-        name = 'Create'
-        url = 'https://maven.createmod.net'
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
     }
-    maven {
-        name = 'Registrate Mirror'
-        url = 'https://maven.ithundxr.dev/mirror'
+    ivy {
+        name = 'DestroyForkReleases'
+        url = 'https://github.com/NHblock714/Destroy/releases/download'
+        patternLayout { artifact 'v[revision]/[artifact]-1.21.1-[revision].[ext]' }
+        metadataSources { artifact() }
+        content { includeGroup 'io.github.NHblock714' }
     }
 }
+
+configurations { runtimeClasspath.extendsFrom localRuntime }
 
 dependencies {
-    // Specify the version of Minecraft to use.
-    // Any artifact can be supplied so long as it has a "userdev" classifier artifact and is a compatible patcher artifact.
-    // The "userdev" classifier will be requested and setup by ForgeGradle.
-    // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
-    // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
+    implementation "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
+    implementation "com.tterrag.registrate:Registrate:${registrate_version}"
+    compileOnly "dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}"
+    runtimeOnly "dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}"
 
-    implementation fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") {
-        transitive = false
+    compileOnly "io.github.NHblock714:destroy:${destroy_version}"
+    compileOnly "maven.modrinth:petrolpark:${petrolpark_version_id}"
+    compileOnly "maven.modrinth:sable:${sable_version_id}"
+    if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()) {
+        localRuntime "io.github.NHblock714:destroy:${destroy_version}"
+        localRuntime "maven.modrinth:petrolpark:${petrolpark_version_id}"
     }
-    implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
-    implementation fg.deobf("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")
-    compileOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-api-${minecraft_version}:${flywheel_version}")
-    runtimeOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
-    compileOnly annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}")
-    implementation "io.github.llamalad7:mixinextras-forge:${mixin_extras_version}"
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-    compileOnly fg.deobf(optionalIntegrationMods['destroy-1.20.1-0.1.4.jar'])
-    compileOnly fg.deobf(optionalIntegrationMods['petrolpark-1.20.1-1.4.24.jar'])
-
-    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
-    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+    if (providers.gradleProperty('aeronauticsEnabled').getOrElse('false').toBoolean()) {
+        localRuntime "maven.modrinth:create-aeronautics:${aeronautics_version_id}"
+        localRuntime "maven.modrinth:sable:${sable_version_id}"
+    }
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
     if (providers.gradleProperty('jeiEnabled').getOrElse('true').toBoolean()) {
-        runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+        localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     }
-    optionalIntegrationMods.each { name, coordinate ->
-        def dependency = new File(optionalIntegrationModsDirectory, name)
-        if (dependency.isFile()) destroyClientMods fg.deobf(coordinate)
-        if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()
-                && (name != 'thesilverage-forge-1.20.1-1.3.0.jar'
-                || providers.gradleProperty('silverEnabled').getOrElse('true').toBoolean())) {
-            if (!dependency.isFile()) throw new GradleException("Missing optional test mod: ${dependency}")
-            runtimeOnly fg.deobf(coordinate)
-        }
-    }
-
-    // Example mod dependency using a mod jar from ./libs with a flat dir repository
-    // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
-    // The group id is ignored when searching -- in this case, it is "blank"
-    // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
-
-    // For more info:
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
 }
 
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
-// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
-// See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-tasks.named('processResources', ProcessResources).configure {
-    var replaceProperties = [
-            minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-            forge_version: forge_version, forge_version_range: forge_version_range,
-            loader_version_range: loader_version_range,
-            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-            mod_authors: mod_authors, mod_description: mod_description,
-            create_version_range: create_version_range, destroy_version_range: destroy_version_range,
+neoForge {
+    version = neo_version
+    parchment {
+        minecraftVersion = parchment_minecraft_version
+        mappingsVersion = parchment_mappings_version
+    }
+    mods { "${mod_id}" { sourceSet sourceSets.main } }
+    runs {
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            logLevel = org.slf4j.event.Level.INFO
+        }
+        client { client(); gameDirectory = file('run/client1') }
+        client2 {
+            client()
+            gameDirectory = file('run/client2')
+            programArguments.addAll '--username', 'Dev2', '--uuid', '00000000-0000-0000-0000-000000000009'
+        }
+        destroyClient { client(); gameDirectory = file('run/phase25/client') }
+        server { server(); gameDirectory = file('run/server'); programArgument '--nogui' }
+        data {
+            data()
+            gameDirectory = file('run-data')
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').absolutePath,
+                    '--existing', file('src/main/resources/').absolutePath, '--existing-mod', 'create'
+        }
+    }
+}
+
+def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    def replacements = [
+            minecraft_version_range: minecraft_version_range, neo_version: neo_version,
+            loader_version_range: loader_version_range, mod_id: mod_id, mod_name: mod_name,
+            mod_license: mod_license, mod_version: mod_version, mod_authors: mod_authors,
+            mod_description: mod_description, create_version_range: create_version_range,
+            destroy_version_range: destroy_version_range
     ]
-    inputs.properties replaceProperties
-
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
-    }
+    inputs.properties replacements
+    expand replacements
+    from 'src/main/templates'
+    into layout.buildDirectory.dir('generated/sources/modMetadata')
 }
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
 
-// Example for how to get properties into the manifest for reading at runtime.
-tasks.named('jar', Jar).configure {
-    manifest {
-        attributes([
-                'Specification-Title'     : mod_id,
-                'Specification-Vendor'    : mod_authors,
-                'Specification-Version'   : '1', // We are version 1 of ourselves
-                'Implementation-Title'    : project.name,
-                'Implementation-Version'  : project.jar.archiveVersion,
-                'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'MixinConfigs'           : 'createapparel.mixins.json,createapparel.photo.mixins.json,createapparel.retail.mixins.json,createapparel.destroy.mixins.json,createapparel.destroy_jei.mixins.json'
-        ])
-    }
-
-    // This is the preferred method to reobfuscate your jar file
-    finalizedBy 'reobfJar'
+tasks.named('processResources', ProcessResources) {
+    inputs.property 'mod_id', mod_id
+    filesMatching('pack.mcmeta') { expand mod_id: mod_id }
 }
-
-// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing:
-// tasks.named('publish').configure {
-//     dependsOn 'reobfJar'
-// }
-
-// Example configuration to allow publishing using the maven-publish plugin
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
-        }
-    }
-}
-
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    options.encoding = 'UTF-8'
+    options.compilerArgs.addAll '-Xlint:deprecation', '-Xmaxerrs', '1000'
 }
+tasks.named('wrapper', Wrapper) { distributionType = Wrapper.DistributionType.BIN }
+publishing { publications { register('mavenJava', MavenPublication) { from components.java } } }
+idea { module { downloadSources = true; downloadJavadoc = true } }
 
-def mannequinRefmapDirectory = layout.buildDirectory.dir('generated/mixin')
-sourceSets.main.resources.srcDir(mannequinRefmapDirectory)
-
-tasks.named('compileJava', JavaCompile).configure {
-    dependsOn 'createMcpToSrg'
-    def refmap = mannequinRefmapDirectory.get().file('createapparel.refmap.json').asFile
-    outputs.file(refmap)
-    options.compilerArgs += [
-            '-AmappingTypes=tsrg',
-            "-AreobfTsrgFile=${layout.buildDirectory.file('createMcpToSrg/output.tsrg').get().asFile}",
-            "-AoutRefMapFile=${refmap}"
-    ]
-}
-
-tasks.named('processResources', ProcessResources).configure {
-    dependsOn 'compileJava'
-}
-
-tasks.named('test', Test).configure {
-    useJUnitPlatform()
-}
-
-tasks.register('copyDestroyClientMods') {
-    doLast {
-        if (providers.gradleProperty('destroyEnabled').getOrElse('false').toBoolean()) {
-            throw new GradleException('runDestroyClient loads optional mods itself; omit -PdestroyEnabled=true.')
-        }
-        optionalIntegrationMods.keySet().each { name ->
-            def dependency = new File(optionalIntegrationModsDirectory, name)
-            if (!dependency.isFile()) throw new GradleException("Missing optional client mod: ${dependency}")
-        }
-        copy {
-            from configurations.destroyClientMods
-            into 'run/phase25/client/mods'
-        }
-    }
-}
-
-tasks.matching { it.name == 'prepareRunDestroyClient' }.configureEach {
-    dependsOn 'copyDestroyClientMods'
-}
-
-tasks.register('copyGameTestStructures', Copy) {
-    from('src/test/resources/gameteststructures') { into 'gameteststructures' }
-    from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
-    into gameTestDirectory
-    doFirst { logger.lifecycle("GameTest directory: ${gameTestDirectory}") }
-}
-
-tasks.matching { it.name == 'prepareRunGameTestServer' }.configureEach {
-    dependsOn 'copyGameTestStructures'
-}
-
-tasks.register('copyRouteTestStructures', Copy) {
-    from('src/test/resources/gameteststructures') { into 'gameteststructures' }
-    from('src/test/resources/gametest-server.properties') { rename { 'server.properties' } }
-    into routeTestDirectory
-}
-
-tasks.matching { it.name == 'prepareRunRouteTestServer' }.configureEach {
-    dependsOn 'copyRouteTestStructures'
-}
-
-tasks.matching { it.name == 'runRouteTestServer' }.configureEach {
-    doFirst { ext.routeTestStartedAt = System.currentTimeMillis() }
-    doLast {
-        def log = new File(routeTestDirectory, 'logs/latest.log')
-        if (!log.isFile() || log.lastModified() < routeTestStartedAt ||
-                !(log.getText('UTF-8') =~ /All \d+ required tests passed/).find()) {
-            throw new GradleException("Citizen route GameTests did not pass; see ${log}")
-        }
-    }
-}
-
-tasks.register('prepareRecipeTestWorld') {
-    doLast {
-        copy {
-            from 'src/test/resources/gameteststructures'
-            into new File(recipeTestDirectory, 'gameteststructures')
-        }
-        def config = new File(recipeTestDirectory, 'world/serverconfig/createapparel-server.toml')
-        config.parentFile.mkdirs()
-        config.setText("[recipes]\nforceSyntheticFiberFallback = ${recipeTestFlags[recipeTestCase][0]}\n" +
-                "forceMirrorCoatingFallback = ${recipeTestFlags[recipeTestCase][1]}\n", 'UTF-8')
-        logger.lifecycle("Phase25 case ${recipeTestCase}: ${recipeTestDirectory}")
-    }
-}
-
-tasks.matching { it.name == 'prepareRunRecipeTestServer' }.configureEach {
-    dependsOn 'prepareRecipeTestWorld'
-}
-
-tasks.matching { it.name == 'runRecipeTestServer' }.configureEach {
-    doFirst { ext.recipeTestStartedAt = System.currentTimeMillis() }
-    doLast {
-        def log = new File(recipeTestDirectory, 'logs/latest.log')
-        if (!log.isFile() || log.lastModified() < recipeTestStartedAt ||
-                !(log.getText('UTF-8') =~ /All \d+ required tests passed/).find()) {
-            throw new GradleException("Optional recipe GameTests did not pass; see ${log}")
-        }
-    }
-}
-
-tasks.register('copyJeiTestStructures', Copy) {
-    from 'src/test/resources/gameteststructures'
-    into 'run/phase23-server/gameteststructures'
-}
-
-tasks.matching { it.name == 'prepareRunJeiTestServer' }.configureEach {
-    dependsOn 'copyJeiTestStructures'
-}
-
-tasks.matching { it.name == 'runJeiTestClient' }.configureEach {
-    def mode = providers.gradleProperty('jeiEnabled').getOrElse('true').toBoolean() ? 'jei' : 'no_jei'
-    def result = layout.buildDirectory.file("phase23/client-${mode}-passed.txt")
-    doFirst { delete result.get().asFile }
-    doLast {
-        if (!result.get().asFile.exists()) {
-            throw new GradleException('JEI client checks failed; see build/phase23 and the client log.')
-        }
-    }
-}
-
-apply from: 'src/test/citizen-gauge-tests.gradle'
-apply from: 'src/test/fashion-tests.gradle'
-apply from: 'src/test/multiplayer-tests.gradle'
-apply from: 'src/test/escalated-tests.gradle'
+apply from: 'src/test/game-tests.gradle'

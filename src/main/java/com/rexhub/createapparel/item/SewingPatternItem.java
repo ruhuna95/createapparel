@@ -34,11 +34,12 @@ public final class SewingPatternItem extends Item {
     @Override
     public void appendHoverText(
             ItemStack stack,
-            @Nullable Level level,
+            net.minecraft.world.item.Item.TooltipContext context,
             List<Component> tooltip,
             TooltipFlag flag
     ) {
-        super.appendHoverText(stack, level, tooltip, flag);
+        var level = context.level();
+        super.appendHoverText(stack, context, tooltip, flag);
         PatternData.fromStack(stack).ifPresentOrElse(data -> {
             tooltip.add(Component.translatable(
                     "tooltip.createapparel.sewing_pattern.recipe",
@@ -59,7 +60,7 @@ public final class SewingPatternItem extends Item {
         }, () -> tooltip.add(Component.translatable(
                 "tooltip.createapparel.sewing_pattern.unset"
         ).withStyle(ChatFormatting.GRAY)));
-        if (stack.getTagElement(PatternData.TAG_NAME) != null) {
+        if (com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).contains(PatternData.TAG_NAME)) {
             tooltip.add(Component.translatable("itemGroup.createapparel")
                     .withStyle(ChatFormatting.BLUE));
         }
@@ -71,6 +72,7 @@ public final class SewingPatternItem extends Item {
         }
         return PatternData.fromStack(stack)
                 .flatMap(data -> level.getRecipeManager().byKey(data.recipe()))
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
                 .filter(SewingRecipe.class::isInstance)
                 .map(SewingRecipe.class::cast)
                 .map(recipe -> recipe.getResultItem(level.registryAccess()))

@@ -13,16 +13,16 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID, value = Dist.CLIENT)
 public final class RouteMarkerRenderer {
     private static final int CROSSING_COLOR = 0x6BFFCC1A;
     private static final int SELECTED_COLOR = 0x6BFFFFFF;
@@ -171,7 +171,7 @@ public final class RouteMarkerRenderer {
     private static void emit(PoseStack pose, VertexConsumer buffer, List<Quad> quads) {
         for (var quad : quads) {
             for (var vertex : new Vec3[]{quad.a(), quad.b(), quad.c(), quad.d()}) {
-                buffer.vertex(pose.last().pose(), (float) vertex.x, (float) vertex.y, (float) vertex.z).color(quad.color()).endVertex();
+                buffer.addVertex(pose.last().pose(), (float) vertex.x, (float) vertex.y, (float) vertex.z).setColor(quad.color());
             }
         }
     }

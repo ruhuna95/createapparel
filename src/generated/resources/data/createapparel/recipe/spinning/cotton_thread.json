@@ -1,0 +1,14 @@
+{
+  "type": "createapparel:spinning",
+  "ingredients": [
+    {
+      "tag": "createapparel:fibers/plant/cotton"
+    }
+  ],
+  "processing_time": 400,
+  "results": [
+    {
+      "id": "createapparel:cotton_thread"
+    }
+  ]
+}

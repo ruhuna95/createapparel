@@ -4,9 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.rexhub.createapparel.CreateApparel;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.model.generators.BlockModelBuilder;
-import net.minecraftforge.client.model.generators.CustomLoaderBuilder;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.client.model.generators.BlockModelBuilder;
+import net.neoforged.neoforge.client.model.generators.CustomLoaderBuilder;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ public final class MirrorTiltModelBuilder extends CustomLoaderBuilder<BlockModel
     private final Map<Integer, JsonObject> rotations = new LinkedHashMap<>();
     private JsonObject geometry = new JsonObject();
     private MirrorTiltModelBuilder(BlockModelBuilder parent, ExistingFileHelper helper) {
-        super(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mirror_tilt"), parent, helper);
+        super(ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "mirror_tilt"), parent, helper, false);
     }
 
     public static MirrorTiltModelBuilder begin(BlockModelBuilder parent, ExistingFileHelper helper) {

@@ -22,8 +22,8 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,29 +35,32 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
     public static final int PATTERN_SLOT = 2;
     private static final int MAX_TAG_COUNT = 256;
 
-    private final ResourceLocation id;
     private final ItemRequirement fabric;
     private final ItemRequirement thread;
     private final ResourceLocation patternItemId;
     private final ResourceLocation resultId;
+    @javax.annotation.Nullable
+    private ResourceLocation recipeId;
 
     public SewingRecipe(
-            ResourceLocation id,
             ItemRequirement fabric,
             ItemRequirement thread,
             ResourceLocation patternItemId,
             ResourceLocation resultId
     ) {
-        this.id = id;
         this.fabric = fabric;
         this.thread = thread;
         this.patternItemId = patternItemId;
         this.resultId = resultId;
     }
 
+    void bindId(ResourceLocation id) {
+        recipeId = id;
+    }
+
     @Override
     public boolean matches(RecipeWrapper inventory, Level level) {
-        if (inventory.getContainerSize() <= PATTERN_SLOT) {
+        if (inventory.size() <= PATTERN_SLOT) {
             return false;
         }
         ItemStack fabricStack = inventory.getItem(FABRIC_SLOT);
@@ -68,23 +71,23 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
                 && thread.test(threadStack)
                 && matchesPatternItem(patternStack)
                 && PatternData.fromStack(patternStack)
-                .map(data -> data.recipe().equals(id))
+                .map(data -> level.getRecipeManager().byKey(data.recipe()).filter(holder -> holder.value() == this).isPresent())
                 .orElse(false);
     }
 
     @Override
-    public ItemStack assemble(RecipeWrapper inventory, RegistryAccess registryAccess) {
-        if (inventory.getContainerSize() <= PATTERN_SLOT) {
+    public ItemStack assemble(RecipeWrapper inventory, net.minecraft.core.HolderLookup.Provider registryAccess) {
+        if (inventory.size() <= PATTERN_SLOT) {
             return ItemStack.EMPTY;
         }
         FabricAttribute attribute = FabricAttributeMap.get(inventory.getItem(FABRIC_SLOT)).orElse(null);
         PatternData pattern = PatternData.fromStack(inventory.getItem(PATTERN_SLOT)).orElse(null);
         GarmentDefinition definition = GarmentDefinitionManager.get(resultId).orElse(null);
-        Item resultItem = ForgeRegistries.ITEMS.getValue(resultId);
+        Item resultItem = BuiltInRegistries.ITEM.get(resultId);
         if (attribute == null
                 || attribute.color().isEmpty()
                 || pattern == null
-                || !pattern.recipe().equals(id)
+                || !pattern.recipe().equals(recipeId)
                 || definition == null
                 || !definition.designs().contains(pattern.design())
                 || !(resultItem instanceof GarmentItem)) {
@@ -109,15 +112,11 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
     }
 
     @Override
-    public ItemStack getResultItem(RegistryAccess registryAccess) {
-        Item item = ForgeRegistries.ITEMS.getValue(resultId);
+    public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider registryAccess) {
+        Item item = BuiltInRegistries.ITEM.get(resultId);
         return item instanceof GarmentItem ? new ItemStack(item) : ItemStack.EMPTY;
     }
 
-    @Override
-    public ResourceLocation getId() {
-        return id;
-    }
 
     @Override
     public RecipeSerializer<?> getSerializer() {
@@ -168,7 +167,7 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
     }
 
     public boolean matchesPatternItem(ItemStack stack) {
-        Item patternItem = ForgeRegistries.ITEMS.getValue(patternItemId);
+        Item patternItem = BuiltInRegistries.ITEM.get(patternItemId);
         return patternItem != null && stack.is(patternItem);
     }
 
@@ -193,49 +192,37 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
     }
 
     public static final class Serializer implements RecipeSerializer<SewingRecipe> {
-        @Override
-        public SewingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            ItemRequirement fabric = readRequirement(GsonHelper.getAsJsonObject(json, "fabric"), "fabric");
-            ItemRequirement thread = readRequirement(GsonHelper.getAsJsonObject(json, "thread"), "thread");
-            ResourceLocation pattern = readItemId(GsonHelper.getAsString(json, "pattern"), "pattern");
-            JsonObject resultJson = GsonHelper.getAsJsonObject(json, "result");
-            ResourceLocation result = readItemId(GsonHelper.getAsString(resultJson, "id"), "result.id");
-            if (!(ForgeRegistries.ITEMS.getValue(result) instanceof GarmentItem)) {
-                throw new IllegalArgumentException("Sewing recipe result is not a GarmentItem: " + result);
-            }
-            return new SewingRecipe(recipeId, fabric, thread, pattern, result);
-        }
+        private static final com.mojang.serialization.Codec<ResourceLocation> ITEM_ID = ResourceLocation.CODEC.validate(id ->
+                BuiltInRegistries.ITEM.containsKey(id) ? com.mojang.serialization.DataResult.success(id)
+                        : com.mojang.serialization.DataResult.error(() -> "Unknown sewing recipe item: " + id));
+        private static final com.mojang.serialization.Codec<ResourceLocation> GARMENT_ID = ITEM_ID.validate(id ->
+                BuiltInRegistries.ITEM.get(id) instanceof GarmentItem ? com.mojang.serialization.DataResult.success(id)
+                        : com.mojang.serialization.DataResult.error(() -> "Sewing recipe result is not a GarmentItem: " + id));
+        private static final com.mojang.serialization.Codec<ItemRequirement> REQUIREMENT_CODEC =
+                com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+                        TagKey.codec(Registries.ITEM).listOf().validate(tags -> tags.isEmpty()
+                                ? com.mojang.serialization.DataResult.error(() -> "Sewing recipe item tags must not be empty")
+                                : com.mojang.serialization.DataResult.success(tags)).fieldOf("tag").forGetter(ItemRequirement::tags),
+                        com.mojang.serialization.Codec.intRange(1, Integer.MAX_VALUE).fieldOf("count").forGetter(ItemRequirement::count)
+                ).apply(instance, ItemRequirement::new));
+        private static final com.mojang.serialization.MapCodec<SewingRecipe> CODEC =
+                com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance -> instance.group(
+                        REQUIREMENT_CODEC.fieldOf("fabric").forGetter(recipe -> recipe.fabric),
+                        REQUIREMENT_CODEC.fieldOf("thread").forGetter(recipe -> recipe.thread),
+                        ITEM_ID.fieldOf("pattern").forGetter(recipe -> recipe.patternItemId),
+                        GARMENT_ID.fieldOf("id").codec().fieldOf("result").forGetter(recipe -> recipe.resultId)
+                ).apply(instance, SewingRecipe::new));
+        private static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, SewingRecipe> STREAM_CODEC =
+                net.minecraft.network.codec.StreamCodec.of((buffer, recipe) -> {
+                    writeRequirement(buffer, recipe.fabric);
+                    writeRequirement(buffer, recipe.thread);
+                    buffer.writeResourceLocation(recipe.patternItemId);
+                    buffer.writeResourceLocation(recipe.resultId);
+                }, buffer -> new SewingRecipe(readRequirement(buffer), readRequirement(buffer),
+                        buffer.readResourceLocation(), buffer.readResourceLocation()));
 
-        @Override
-        public SewingRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
-            ItemRequirement fabric = readRequirement(buffer);
-            ItemRequirement thread = readRequirement(buffer);
-            ResourceLocation pattern = buffer.readResourceLocation();
-            ResourceLocation result = buffer.readResourceLocation();
-            return new SewingRecipe(recipeId, fabric, thread, pattern, result);
-        }
-
-        @Override
-        public void toNetwork(FriendlyByteBuf buffer, SewingRecipe recipe) {
-            writeRequirement(buffer, recipe.fabric);
-            writeRequirement(buffer, recipe.thread);
-            buffer.writeResourceLocation(recipe.patternItemId);
-            buffer.writeResourceLocation(recipe.resultId);
-        }
-
-        private static ItemRequirement readRequirement(JsonObject json, String field) {
-            JsonArray tagsJson = GsonHelper.getAsJsonArray(json, "tag");
-            List<TagKey<Item>> tags = new ArrayList<>();
-            for (JsonElement element : tagsJson) {
-                String value = GsonHelper.convertToString(element, field + ".tag");
-                ResourceLocation id = ResourceLocation.tryParse(value);
-                if (id == null) {
-                    throw new IllegalArgumentException("Invalid sewing recipe tag: " + value);
-                }
-                tags.add(TagKey.create(Registries.ITEM, id));
-            }
-            return new ItemRequirement(tags, GsonHelper.getAsInt(json, "count"));
-        }
+        @Override public com.mojang.serialization.MapCodec<SewingRecipe> codec() { return CODEC; }
+        @Override public net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, SewingRecipe> streamCodec() { return STREAM_CODEC; }
 
         private static ItemRequirement readRequirement(FriendlyByteBuf buffer) {
             int tagCount = buffer.readVarInt();
@@ -253,14 +240,6 @@ public final class SewingRecipe implements Recipe<RecipeWrapper> {
             buffer.writeVarInt(requirement.tags().size());
             requirement.tags().forEach(tag -> buffer.writeResourceLocation(tag.location()));
             buffer.writeVarInt(requirement.count());
-        }
-
-        private static ResourceLocation readItemId(String value, String field) {
-            ResourceLocation id = ResourceLocation.tryParse(value);
-            if (id == null || !ForgeRegistries.ITEMS.containsKey(id)) {
-                throw new IllegalArgumentException("Unknown item for " + field + ": " + value);
-            }
-            return id;
         }
     }
 }

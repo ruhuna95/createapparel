@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class HandAccessoryAssetTest {
     private static final Path ASSETS = Path.of("src/main/resources/assets/createapparel");
-    private static final Path GENERATED = Path.of("src/generated/resources/data/createapparel/recipes");
+    private static final Path GENERATED = Path.of("src/generated/resources/data/createapparel/recipe");
 
     @Test
     void wristStylesSelectOneHandAndGlovesSelectBothForEveryBodyProfile() throws Exception {
@@ -208,16 +208,16 @@ class HandAccessoryAssetTest {
             var results = recipe.getAsJsonArray("results");
             assertEquals(1, results.size());
             assertEquals("createapparel:" + baseId,
-                    results.get(0).getAsJsonObject().get("item").getAsString());
+                    results.get(0).getAsJsonObject().get("id").getAsString());
         }
     }
 
     @Test
     void silverAccessoryNuggetsKeepIronAndOptionallyIncludeCommonSilver() throws Exception {
-        var tag = json(GENERATED.getParent().resolve("tags/items/silver_accessory_nuggets.json")).getAsJsonArray("values");
+        var tag = json(GENERATED.getParent().resolve("tags/item/silver_accessory_nuggets.json")).getAsJsonArray("values");
         assertEquals(2, tag.size());
         assertEquals("minecraft:iron_nugget", tag.get(0).getAsString());
-        assertEquals("#forge:nuggets/silver", tag.get(1).getAsJsonObject().get("id").getAsString());
+        assertEquals("#c:nuggets/silver", tag.get(1).getAsJsonObject().get("id").getAsString());
         assertFalse(tag.get(1).getAsJsonObject().get("required").getAsBoolean());
     }
 

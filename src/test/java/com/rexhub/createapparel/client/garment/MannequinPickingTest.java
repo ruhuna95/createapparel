@@ -90,15 +90,20 @@ class MannequinPickingTest {
     }
 
     @Test
-    void clientMixinIsRequiredClientOnlyAndShipsRemappedInjectionTargets() throws Exception {
+    void clientMixinIsRequiredClientOnlyAndUsesOfficialInjectionTargets() throws Exception {
         var config = JsonParser.parseString(Files.readString(Path.of("src/main/resources/createapparel.mixins.json"))).getAsJsonObject();
         assertTrue(config.get("required").getAsBoolean());
-        assertEquals("GameRendererMixin", config.getAsJsonArray("client").get(0).getAsString());
+        assertTrue(config.getAsJsonArray("client").asList().stream()
+                .anyMatch(value -> value.getAsString().equals("GameRendererMixin")));
         assertFalse(config.has("mixins"));
         assertFalse(config.has("server"));
-        var refmap = Files.readString(Path.of("build/generated/mixin/createapparel.refmap.json"));
-        assertTrue(refmap.contains("m_109087_(F)V"));
-        assertTrue(refmap.contains("m_37287_("));
+        assertFalse(config.has("refmap"));
+        assertEquals("JAVA_21", config.get("compatibilityLevel").getAsString());
+        assertNotNull(net.minecraft.client.renderer.GameRenderer.class.getDeclaredMethod("pick",
+                net.minecraft.world.entity.Entity.class, double.class, double.class, float.class));
+        assertNotNull(net.minecraft.world.entity.projectile.ProjectileUtil.class.getDeclaredMethod("getEntityHitResult",
+                net.minecraft.world.entity.Entity.class, Vec3.class, Vec3.class, net.minecraft.world.phys.AABB.class,
+                java.util.function.Predicate.class, double.class));
     }
 
     private static Vec3 vec(Vector3f point) { return new Vec3(point.x, point.y, point.z); }

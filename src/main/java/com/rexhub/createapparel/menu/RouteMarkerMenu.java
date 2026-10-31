@@ -15,8 +15,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.BlockEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import java.util.*;
 
 public final class RouteMarkerMenu extends AbstractContainerMenu {
@@ -192,7 +192,7 @@ public final class RouteMarkerMenu extends AbstractContainerMenu {
     }
 
     public static boolean protectedEdit(ServerPlayer player, BlockPos pos) {
-        return RouteMarkerPermissions.canModify(player, pos) && !MinecraftForge.EVENT_BUS.post(
-                new BlockEvent.BreakEvent(player.level(), pos, player.level().getBlockState(pos), player));
+        return RouteMarkerPermissions.canModify(player, pos) && !NeoForge.EVENT_BUS.post(
+                new BlockEvent.BreakEvent(player.level(), pos, player.level().getBlockState(pos), player)).isCanceled();
     }
 }

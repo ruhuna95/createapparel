@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "minecraft:armor_stand"
+    },
+    "D": {
+      "item": "minecraft:white_dye"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "pattern": [
+    " D ",
+    "PAP",
+    "P P"
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:lower_mannequin_white"
+  }
+}

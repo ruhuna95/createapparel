@@ -11,11 +11,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraftforge.common.loot.IGlobalLootModifier;
-import net.minecraftforge.common.loot.LootModifier;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import net.neoforged.neoforge.common.loot.LootModifier;
 
 public final class AddSeedsLootModifier extends LootModifier {
-    public static final Codec<AddSeedsLootModifier> CODEC = RecordCodecBuilder.create(instance -> codecStart(instance)
+    public static final com.mojang.serialization.MapCodec<AddSeedsLootModifier> CODEC = RecordCodecBuilder.mapCodec(instance -> codecStart(instance)
             .and(Codec.floatRange(0.0F, 1.0F).fieldOf("chance").forGetter(modifier -> modifier.chance))
             .apply(instance, AddSeedsLootModifier::new));
 
@@ -36,7 +36,7 @@ public final class AddSeedsLootModifier extends LootModifier {
     }
 
     private static boolean isSeedSource(BlockState state) {
-        return state.is(Blocks.GRASS)
+        return state.is(Blocks.SHORT_GRASS)
                 || state.is(Blocks.TALL_GRASS)
                 || state.is(Blocks.FERN)
                 || state.is(Blocks.LARGE_FERN);
@@ -51,7 +51,7 @@ public final class AddSeedsLootModifier extends LootModifier {
     }
 
     @Override
-    public Codec<? extends IGlobalLootModifier> codec() {
+    public com.mojang.serialization.MapCodec<? extends IGlobalLootModifier> codec() {
         return CODEC;
     }
 }

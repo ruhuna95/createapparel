@@ -7,4 +7,4 @@ Create: Apparel is a modern fashion addon for Create, bringing automated clothin
 - Display your outfits with mannequins, hangers, clothing racks, and mirrors.
 - Bring your town to life with Citizen NPCs, clothing shops, fashion photography, and advertisements.
 
-For Minecraft 1.20.1 with Forge. Requires Create 6.0.8 or later. Create: Destroy is optional and adds synthetic material production routes.
+For Minecraft 1.21.1 with NeoForge. Requires Create 6.0.10 or later. Create: Destroy is optional and adds synthetic material production routes.

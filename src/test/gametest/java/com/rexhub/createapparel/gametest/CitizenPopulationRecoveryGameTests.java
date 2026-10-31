@@ -14,8 +14,8 @@ import net.minecraft.gametest.framework.*;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.util.*;
 
 @GameTestHolder(CreateApparel.MOD_ID)
@@ -39,6 +39,12 @@ public final class CitizenPopulationRecoveryGameTests {
         ModConfigs.COMMON.populationRetryTicks.set(originalRetryTicks);
     }
 
+    @BeforeBatch(batch = "citizen_population_recovery_density")
+    public static void shortenDensityRecovery(ServerLevel level) { shortenRecovery(level); }
+
+    @AfterBatch(batch = "citizen_population_recovery_density")
+    public static void restoreDensityRecovery(ServerLevel level) { restoreRecovery(level); }
+
     private static CitizenPopulationManager population(GameTestHelper helper) { return CitizenPopulationManager.get(helper.getLevel()); }
     private static void room(GameTestHelper helper) { GameTestFixtures.dryRoom(helper, 0, 0, 38); }
     private static CitizenGauge gauge(GameTestHelper helper, int x, int z, boolean source) {
@@ -55,7 +61,14 @@ public final class CitizenPopulationRecoveryGameTests {
         return population(helper).data().gauge(gauge.id());
     }
     private static RouteMarker marker(GameTestHelper helper, BlockPos pos, boolean gateway) {
-        var block = gateway ? ModBlocks.GATEWAY_ROUTE_MARKER.get() : ModBlocks.CITIZEN_ROUTE_MARKER.get();
+        return marker(helper, pos, gateway ? RouteMarkerType.GATEWAY : RouteMarkerType.NORMAL);
+    }
+    private static RouteMarker marker(GameTestHelper helper, BlockPos pos, RouteMarkerType type) {
+        var block = switch (type) {
+            case GATEWAY -> ModBlocks.GATEWAY_ROUTE_MARKER.get();
+            case CROSSING -> ModBlocks.CROSSING_ROUTE_MARKER.get();
+            case NORMAL -> ModBlocks.CITIZEN_ROUTE_MARKER.get();
+        };
         helper.getLevel().setBlock(pos, block.defaultBlockState(), 3);
         var routes = CitizenRouteManager.get(helper.getLevel());
         var marker = routes.register((CitizenRouteMarkerBlockEntity) helper.getLevel().getBlockEntity(pos)).withRegion(.5, 0);
@@ -168,7 +181,7 @@ public final class CitizenPopulationRecoveryGameTests {
         });
     }
 
-    @GameTest(template = "citizen_behavior", batch = "citizen_population_recovery", timeoutTicks = 460)
+    @GameTest(template = "citizen_behavior", batch = "citizen_population_recovery_density", timeoutTicks = 460)
     public static void districtWanderersFillOnlyAvailableRouteDensityAndProtectFlags(GameTestHelper helper) {
         room(helper); var home = gauge(helper, 18, 15, false); var population = population(helper); population.settings(home.id(), 8, 0);
         var a = marker(helper, home.center().west(3), false); var b = marker(helper, home.center().east(3), false);
@@ -187,7 +200,9 @@ public final class CitizenPopulationRecoveryGameTests {
                     + ":walkers=" + population.data().walkingPopulation(home.districtId()));
         });
         helper.runAtTickTime(240, () -> {
-            helper.assertTrue(Math.abs(population.routeCapacity().length(home.districtId()) - 6) < 1.0E-6, "Six meters of edges are cached once per district");
+            helper.assertTrue(Math.abs(population.routeCapacity().length(home.districtId()) - 6) < 1.0E-6,
+                    "Six meters of edges are cached once per district: ready=" + population.routeCapacity().ready()
+                            + " length=" + population.routeCapacity().length(home.districtId()) + " history=" + capacityHistory);
             helper.assertTrue(citizens.stream().filter(c -> c.citizenState().behavior().mode() == CitizenBehaviorMode.WALK).count() == 2
                     && population.data().walkingPopulation(home.districtId()) == 2, "Only two wanderers fill six meters of route capacity: indexed="
                             + population.data().walkingPopulation(home.districtId()) + " citizens=" + citizens.stream().map(c -> c.getUUID() + ":" + c.citizenState().behavior().mode()
@@ -442,15 +457,17 @@ public final class CitizenPopulationRecoveryGameTests {
     @GameTest(template = "citizen_behavior", batch = "citizen_population_recovery", timeoutTicks = 580)
     public static void closedCrossingWaitDoesNotTriggerBaseRecovery(GameTestHelper helper) {
         room(helper); var home = gauge(helper, 8, 8, false); var routes = CitizenRouteManager.get(helper.getLevel());
-        var first = marker(helper, home.center(), false).withType(RouteMarkerType.CROSSING);
-        var second = marker(helper, home.center().offset(8, 0, 0), false).withType(RouteMarkerType.CROSSING);
+        var first = marker(helper, home.center(), RouteMarkerType.CROSSING);
+        var second = marker(helper, home.center().offset(8, 0, 0), RouteMarkerType.CROSSING);
         routes.data().put(first); routes.data().put(second); routes.data().link(first.id(), second.id(), true);
         var citizen = citizen(helper, home, home.center(), CitizenBehaviorMode.WALK); var start = citizen.position();
         boolean[] waited = {false};
         for (int tick = 20; tick <= 520; tick += 20) helper.runAtTickTime(tick, () -> {
             if (citizen.routeMovement().state() == CitizenRouteMovement.State.WAIT_CROSSING) waited[0] = true;
             helper.assertTrue(!citizen.intents().stucked() && citizen.position().distanceToSqr(start) < 1,
-                    "Closed crossing is an intentional wait even beyond the stuck timeout and retries");
+                    "Closed crossing is an intentional wait even beyond the stuck timeout and retries: tick=" + helper.getTick()
+                            + ", start=" + start + ", pos=" + citizen.position() + ", route=" + citizen.routeMovement().state()
+                            + ", stucked=" + citizen.intents().stucked() + ", intent=" + citizen.intents().active());
         });
         helper.runAtTickTime(525, () -> { helper.assertTrue(waited[0], "Citizen actually waits for the crossing"); helper.succeed(); });
     }

@@ -24,17 +24,38 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@net.neoforged.fml.common.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 @GameTestHolder(CreateApparel.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class RetailSetupGameTests {
     private RetailSetupGameTests() { }
+    private static net.minecraft.world.level.block.entity.BlockEntityType<VerticalStorageFixture> fixtureType;
+
+    @net.neoforged.bus.api.SubscribeEvent
+    public static void registerFixture(net.neoforged.neoforge.registries.RegisterEvent event) {
+        event.register(net.minecraft.core.registries.Registries.BLOCK_ENTITY_TYPE, registry -> {
+            fixtureType = net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(
+                    (pos, state) -> new VerticalStorageFixture(pos, pos, state, new net.neoforged.neoforge.items.ItemStackHandler(20)),
+                    Blocks.BARREL, FashionRegistries.CASH_REGISTER.get()).build(null);
+            registry.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "retail_storage_test_fixture"), fixtureType);
+        });
+    }
+
+    @net.neoforged.bus.api.SubscribeEvent
+    public static void registerFixtureCapability(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, fixtureType,
+                (fixture, side) -> {
+                    var root = fixture.getLevel() == null ? null : fixture.getLevel().getBlockEntity(fixture.controller);
+                    return root instanceof VerticalStorageFixture storage ? storage.inventory : null;
+                });
+    }
 
     private static CashRegisterBlockEntity register(GameTestHelper helper) {
         return register(helper, 3);
@@ -65,11 +86,11 @@ public final class RetailSetupGameTests {
 
     private static ServerPlayer player(GameTestHelper helper, java.util.List<net.minecraft.network.chat.Component> messages) {
         var level = helper.getLevel();
-        var player = new ServerPlayer(level.getServer(), level, new GameProfile(UUID.randomUUID(), "retail-test")) {
+        var player = new ServerPlayer(level.getServer(), level, new GameProfile(UUID.randomUUID(), "retail-test"), net.minecraft.server.level.ClientInformation.createDefault()) {
             @Override public void displayClientMessage(net.minecraft.network.chat.Component message, boolean overlay) { messages.add(message); }
         };
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(level.getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
         return player;
@@ -111,7 +132,7 @@ public final class RetailSetupGameTests {
             for (var offset : new int[]{0, -1, 1, -2}) {
                 var seatPos = register.getBlockPos().relative(facing).offset(0, offset, 0);
                 level.setBlockAndUpdate(seatPos, AllBlocks.SEATS.get(DyeColor.WHITE).getDefaultState());
-                var seat = new SeatEntity(level, seatPos);
+                var seat = new SeatEntity(com.simibubi.create.AllEntityTypes.SEAT.get(), level);
                 seat.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(seat);
                 var cashier = Objects.requireNonNull(EntityType.COW.create(level));
                 cashier.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(cashier); cashier.startRiding(seat, true);
@@ -121,7 +142,7 @@ public final class RetailSetupGameTests {
             }
             var back = register.getBlockPos().relative(facing.getOpposite());
             level.setBlockAndUpdate(back, AllBlocks.SEATS.get(DyeColor.WHITE).getDefaultState());
-            var seat = new SeatEntity(level, back); seat.setPos(Vec3.atBottomCenterOf(back)); level.addFreshEntity(seat);
+            var seat = new SeatEntity(com.simibubi.create.AllEntityTypes.SEAT.get(), level); seat.setPos(Vec3.atBottomCenterOf(back)); level.addFreshEntity(seat);
             var cashier = Objects.requireNonNull(EntityType.COW.create(level));
             cashier.setPos(Vec3.atBottomCenterOf(back)); level.addFreshEntity(cashier); cashier.startRiding(seat, true);
             helper.assertTrue(!register.hasCashier(), "A rear cashier is not accepted");
@@ -145,14 +166,14 @@ public final class RetailSetupGameTests {
         helper.assertTrue(event.isCanceled() && register.linkedStoragePositions().contains(pos), "Storage linking still requires sneaking");
         player.setShiftKeyDown(false); event = click(player, register.getBlockPos()); RetailEvents.linkStorage(event);
         helper.assertTrue(event.isCanceled() && !player.getPersistentData().contains("ApparelRegisterLink"), "Normal phone use finishes linking");
-        helper.assertTrue(register.getUpdateTag().getList("Storages", 10).size() == 1 && register.getUpdatePacket() != null, "Storage positions are available to remote clients");
-        var legacy = register.saveWithoutMetadata(); var links = new net.minecraft.nbt.ListTag();
+        helper.assertTrue(register.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()).getList("Storages", 10).size() == 1 && register.getUpdatePacket() != null, "Storage positions are available to remote clients");
+        var legacy = register.saveWithoutMetadata(com.rexhub.createapparel.TestRegistries.lookup()); var links = new net.minecraft.nbt.ListTag();
         var oldLink = new net.minecraft.nbt.CompoundTag(); oldLink.putLong("Pos", pos.asLong()); links.add(oldLink); legacy.put("Storages", links);
-        register.load(legacy);
-        helper.assertTrue(register.storages().size() == 1 && register.getUpdateTag().getList("Storages", 10).getCompound(0).getList("Members", 10).size() == 1, "Legacy coordinate links migrate to member identities");
-        var chest = level.getBlockEntity(pos); var savedChest = chest.saveWithFullMetadata();
+        register.loadWithComponents(legacy, com.rexhub.createapparel.TestRegistries.lookup());
+        helper.assertTrue(register.storages().size() == 1 && register.getUpdateTag(com.rexhub.createapparel.TestRegistries.lookup()).getList("Storages", 10).getCompound(0).getList("Members", 10).size() == 1, "Legacy coordinate links migrate to member identities");
+        var chest = level.getBlockEntity(pos); var savedChest = chest.saveWithFullMetadata(com.rexhub.createapparel.TestRegistries.lookup());
         level.removeBlockEntity(pos);
-        level.setBlockEntity(Objects.requireNonNull(net.minecraft.world.level.block.entity.BlockEntity.loadStatic(pos, Blocks.CHEST.defaultBlockState(), savedChest)));
+        level.setBlockEntity(Objects.requireNonNull(net.minecraft.world.level.block.entity.BlockEntity.loadStatic(pos, Blocks.CHEST.defaultBlockState(), savedChest, com.rexhub.createapparel.TestRegistries.lookup())));
         helper.assertTrue(register.storages().size() == 1, "The saved storage identity survives a block entity reload");
         helper.succeed();
     }
@@ -175,8 +196,7 @@ public final class RetailSetupGameTests {
         var register = register(helper); var level = helper.getLevel();
         var messages = new java.util.ArrayList<net.minecraft.network.chat.Component>();
         var player = player(helper, messages);
-        register.getBlockState().getBlock().use(register.getBlockState(), level, register.getBlockPos(), player, InteractionHand.MAIN_HAND,
-                new BlockHitResult(Vec3.atCenterOf(register.getBlockPos()), Direction.UP, register.getBlockPos(), false));
+        com.rexhub.createapparel.TestInteractions.use(register.getBlockState(), level, player, InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(register.getBlockPos()), Direction.UP, register.getBlockPos(), false));
         helper.assertTrue(messages.isEmpty(), "Normal empty-hand use does not emit shop status messages");
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
         RetailLinkSession.start(player, InteractionHand.MAIN_HAND, register.reference());
@@ -218,8 +238,7 @@ public final class RetailSetupGameTests {
             var child = (AdvertisementPanelBlockEntity) level.getBlockEntity(pos.east());
             var group = UUID.randomUUID(); root.group(group, pos, 2, 1, null); child.group(group, pos, 2, 1, null);
             for (boolean linked : new boolean[]{true, false, true}) {
-                block.use(child.getBlockState(), level, child.getBlockPos(), player, InteractionHand.MAIN_HAND,
-                        new BlockHitResult(Vec3.atCenterOf(child.getBlockPos()), Direction.NORTH, child.getBlockPos(), false));
+                com.rexhub.createapparel.TestInteractions.use(child.getBlockState(), level, player, InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(child.getBlockPos()), Direction.NORTH, child.getBlockPos(), false));
                 helper.assertTrue(register.reference().equals(root.linkedRegister()) == linked, "Using any panel toggles the entire advertisement source");
                 feedback(helper, messages, linked);
                 var bucket = RetailDisplayIndex.get(level).linked(register.reference());
@@ -244,7 +263,7 @@ public final class RetailSetupGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, player.getMainHandItem().copy());
         helper.assertTrue(RetailLinkSession.selected(player) != null, "Synchronizing an identical phone copy preserves the session");
         var replacement = new ItemStack(ModItems.SMART_PHONE.get());
-        replacement.setHoverName(net.minecraft.network.chat.Component.literal("Another phone"));
+        replacement.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Another phone"));
         player.setItemInHand(InteractionHand.MAIN_HAND, replacement);
         helper.assertTrue(RetailLinkSession.selected(player) == null, "A phone with different item data ends the session even in the same slot");
         player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
@@ -279,8 +298,8 @@ public final class RetailSetupGameTests {
                 helper.assertTrue(register.linkedStoragePositions().equals(java.util.List.of(second)), "Breaking the original half preserves the later-added chest link"))
                 .thenExecute(() -> {
                     helper.assertTrue(register.storages().get(0).getSlots() == 27 && !register.storages().get(0).getStackInSlot(0).isEmpty(), "The remaining chest retains its items and inventory access");
-                    var saved = register.saveWithoutMetadata();
-                    register.load(saved);
+                    var saved = register.saveWithoutMetadata(com.rexhub.createapparel.TestRegistries.lookup());
+                    register.loadWithComponents(saved, com.rexhub.createapparel.TestRegistries.lookup());
                     helper.assertTrue(register.storages().size() == 1, "Member identities survive saving and reloading the register");
                     level.removeBlock(second, false);
                     level.setBlockAndUpdate(second, Blocks.CHEST.defaultBlockState());
@@ -389,11 +408,15 @@ public final class RetailSetupGameTests {
     private static final class VerticalStorageFixture extends net.minecraft.world.level.block.entity.BlockEntity implements com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer.Inventory {
         private BlockPos controller;
         private int height = 1;
-        private final net.minecraftforge.items.ItemStackHandler inventory = new net.minecraftforge.items.ItemStackHandler(20);
-        private net.minecraftforge.common.util.LazyOptional<net.minecraftforge.items.IItemHandler> capability = net.minecraftforge.common.util.LazyOptional.of(() -> inventory);
+        private final net.neoforged.neoforge.items.ItemStackHandler inventory;
         private VerticalStorageFixture(BlockPos pos, BlockPos controller) {
-            super(net.minecraft.world.level.block.entity.BlockEntityType.BARREL, pos, Blocks.BARREL.defaultBlockState());
+            this(pos, controller, Blocks.BARREL.defaultBlockState(), new net.neoforged.neoforge.items.ItemStackHandler(20));
+        }
+        private VerticalStorageFixture(BlockPos pos, BlockPos controller, net.minecraft.world.level.block.state.BlockState state,
+                                       net.neoforged.neoforge.items.ItemStackHandler inventory) {
+            super(fixtureType, pos, state);
             this.controller = controller;
+            this.inventory = inventory;
         }
         @Override public BlockPos getController() { return controller; }
         @Override public <T extends net.minecraft.world.level.block.entity.BlockEntity & com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer> T getControllerBE() { return null; }
@@ -408,19 +431,15 @@ public final class RetailSetupGameTests {
         @Override public int getMaxWidth() { return 3; }
         @Override public int getHeight() { return height; }
         @Override public void setHeight(int height) {
-            this.height = height; inventory.setSize(height * 20); capability.invalidate();
-            capability = net.minecraftforge.common.util.LazyOptional.of(() -> inventory); setChanged();
+            this.height = height;
+            inventory.setSize(height * 20);
+            invalidateCapabilities();
+            setChanged();
         }
         @Override public int getWidth() { return 1; }
         @Override public void setWidth(int width) { }
         @Override public boolean hasInventory() { return true; }
-        @Override public <T> net.minecraftforge.common.util.LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> cap, @javax.annotation.Nullable Direction side) {
-            if (cap == net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER) {
-                var root = level == null ? null : level.getBlockEntity(controller);
-                return root instanceof VerticalStorageFixture storage ? storage.capability.cast() : net.minecraftforge.common.util.LazyOptional.empty();
-            }
-            return super.getCapability(cap, side);
-        }
+
     }
 
     @GameTest(template = "apparel_state", batch = "retail_setup", timeoutTicks = 100)
@@ -499,26 +518,14 @@ public final class RetailSetupGameTests {
     public static void inventoryInspectionIsBudgetedCachedAndNonDestructive(GameTestHelper helper) {
         var register = register(helper); var level = helper.getLevel(); var pos = register.getBlockPos().offset(2, 0, 2);
         int[] reads = {0};
-        var handler = new net.minecraftforge.items.ItemStackHandler(1024) {
+        var handler = new net.neoforged.neoforge.items.ItemStackHandler(1024) {
             @Override public ItemStack getStackInSlot(int slot) { reads[0]++; return super.getStackInSlot(slot); }
         };
         handler.setStackInSlot(0, shirt().copyWithCount(3));
-        var capability = net.minecraftforge.common.util.LazyOptional.<net.minecraftforge.items.IItemHandler>of(() -> handler);
-        java.util.function.Consumer<net.minecraftforge.event.AttachCapabilitiesEvent<net.minecraft.world.level.block.entity.BlockEntity>> listener = event -> {
-            if (!event.getObject().getBlockPos().equals(pos)) return;
-            event.addCapability(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "retail_budget_fixture"),
-                    new net.minecraftforge.common.capabilities.ICapabilityProvider() {
-                        @Override public <T> net.minecraftforge.common.util.LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> cap,
-                                                                                                       @javax.annotation.Nullable Direction side) {
-                            return cap == net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER ? capability.cast()
-                                    : net.minecraftforge.common.util.LazyOptional.empty();
-                        }
-                    });
-            event.addListener(capability::invalidate);
-        };
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.addGenericListener(net.minecraft.world.level.block.entity.BlockEntity.class, listener);
-        try { level.setBlockAndUpdate(pos, FashionRegistries.CASH_REGISTER.get().defaultBlockState()); }
-        finally { net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(listener); }
+        var state = FashionRegistries.CASH_REGISTER.get().defaultBlockState();
+        level.setBlockAndUpdate(pos, state);
+        level.removeBlockEntity(pos);
+        level.setBlockEntity(new VerticalStorageFixture(pos, pos, state, handler));
         helper.assertTrue(register.linkStorage(pos), "The bounded large storage fixture connects");
         var display = mannequin(helper, register);
         var service = RetailInspection.get(level);

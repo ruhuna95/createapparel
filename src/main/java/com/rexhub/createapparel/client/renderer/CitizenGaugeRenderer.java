@@ -63,4 +63,9 @@ public final class CitizenGaugeRenderer implements BlockEntityRenderer<CitizenGa
             }
         }
     }
+
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(CitizenGaugeBlockEntity blockEntity) {
+        return blockEntity.getRenderBoundingBox();
+    }
 }

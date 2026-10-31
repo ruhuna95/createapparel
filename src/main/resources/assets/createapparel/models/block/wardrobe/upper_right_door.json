@@ -1,5 +1,5 @@
 {
-  "loader": "forge:obj",
+  "loader": "neoforge:obj",
   "model": "createapparel:models/block/wardrobe/upper_open_doors.obj",
   "flip_v": true,
   "automatic_culling": false,

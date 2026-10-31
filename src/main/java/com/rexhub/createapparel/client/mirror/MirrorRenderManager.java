@@ -20,7 +20,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -140,7 +140,7 @@ public final class MirrorRenderManager {
         private PendingBatch(List<Candidate> candidates, PoseStack view, MirrorReflectionCamera camera,
                              Matrix4f projection, float partialTick, int recursionDepth) {
             this.candidates = List.copyOf(candidates);
-            this.view.mulPoseMatrix(view.last().pose());
+            this.view.mulPose(view.last().pose());
             this.view.last().normal().set(view.last().normal());
             this.camera = camera;
             this.projection = new Matrix4f(projection);
@@ -185,14 +185,14 @@ public final class MirrorRenderManager {
         BlockState state = mirror.getBlockState();
         if (!(state.getBlock() instanceof MirrorSurfaceProvider provider)) return;
         LocalCache cached = localCache.get(mirror);
-        Object owner = com.rexhub.createapparel.client.compat.valkyrienskies.MirrorShipOwner.owner(mirror.getLevel(), mirror.getBlockPos());
+        Object owner = com.rexhub.createapparel.client.compat.aeronautics.MirrorStructureOwner.owner(mirror.getLevel(), mirror.getBlockPos());
         if (cached == null || cached.state != state || !cached.owner.equals(owner)) {
             var geometry = provider.mirrorGeometry(state).stream()
                     .map(surface -> surface.move(Vec3.atLowerCornerOf(mirror.getBlockPos()))).toList();
             cached = new LocalCache(state, owner, geometry);
             localCache.put(mirror, cached);
         }
-        var context = MirrorTransformContext.capture(owner, pose, activeView.inverseView, activeView.mainEye);
+        var context = MirrorTransformContext.capture(owner, pose, RenderSystem.getModelViewMatrix(), activeView.inverseView, activeView.mainEye);
         int index = 0;
         for (var geometry : cached.geometry) {
             int face = index++;
@@ -385,8 +385,8 @@ public final class MirrorRenderManager {
                 mainView.mainEye = originalEye;
                 var minecraft = Minecraft.getInstance();
                 if (minecraft.level != null) {
-                    if (minecraft.level.effects().constantAmbientLight()) Lighting.setupNetherLevel(currentView.last().pose());
-                    else Lighting.setupLevel(currentView.last().pose());
+                    if (minecraft.level.effects().constantAmbientLight()) Lighting.setupNetherLevel();
+                    else Lighting.setupLevel();
                     minecraft.getEntityRenderDispatcher().prepare(minecraft.level, currentCamera, minecraft.crosshairPickEntity);
                     minecraft.getBlockEntityRenderDispatcher().prepare(minecraft.level, currentCamera, minecraft.hitResult);
                 }
@@ -634,7 +634,6 @@ public final class MirrorRenderManager {
         var originalCamera = reflectionCamera;
         var originalTarget = minecraft.getMainRenderTarget();
         var originalProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
-        var inverseRotation = new Matrix3f(RenderSystem.getInverseViewRotationMatrix());
         var modelView = RenderSystem.getModelViewStack();
         int originalFrontFace = GL11.glGetInteger(GL11.GL_FRONT_FACE);
         boolean scissorEnabled = GL11.glIsEnabled(GL11.GL_SCISSOR_TEST);
@@ -659,23 +658,22 @@ public final class MirrorRenderManager {
         activeView.submissions.clear();
         activeView.collecting = MirrorRenderPolicy.canRenderReflection(activeView.depth, recursionDepth);
         minecraft.getProfiler().push("mirror_reflection");
-        modelView.pushPose();
+        modelView.pushMatrix();
         try {
-            modelView.setIdentity();
+            modelView.identity();
             RenderSystem.applyModelViewMatrix();
             cache.target.bindWrite(true);
             int[] scissor = MirrorRenderPolicy.scissor(reflectedBounds, width, height);
             RenderSystem.enableScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
             gameRenderer.resetProjectionMatrix(clipped);
-            RenderSystem.setInverseViewRotationMatrix(new Matrix3f(reflectedView).invert());
             GL11.glFrontFace(originalFrontFace == GL11.GL_CCW ? GL11.GL_CW : GL11.GL_CCW);
             var pose = new PoseStack();
-            pose.mulPoseMatrix(reflectedView);
+            pose.mulPose(reflectedView);
             pose.last().normal().set(new Matrix3f(reflectedView).invert().transpose());
-            renderer.prepareCullFrustum(pose, reflectedEye, cullProjection);
+            renderer.prepareCullFrustum(reflectedEye, reflectedView, cullProjection);
             remainingReflectionPasses--;
             if (originalView.depth == 0) Objects.requireNonNull(captureBudget).start();
-            renderer.renderLevel(pose, partialTick, finishTime, false, captureCamera, gameRenderer, light, clipped);
+            renderer.renderLevel(minecraft.getTimer(), false, captureCamera, gameRenderer, light, reflectedView, clipped);
             if (activeView.collecting) {
                 var portalProjection = MirrorReflectionMath.croppedCullingProjection(clipped, reflectedBounds);
                 if (!finishView(renderer, pose, partialTick, finishTime, captureCamera, gameRenderer, light, portalProjection, captureProjection)) return false;
@@ -707,14 +705,13 @@ public final class MirrorRenderManager {
             RenderSystem.enableScissor(originalScissor[0], originalScissor[1], originalScissor[2], originalScissor[3]);
             if (!scissorEnabled) RenderSystem.disableScissor();
             GL11.glFrontFace(originalFrontFace);
-            modelView.popPose();
+            modelView.popMatrix();
             RenderSystem.applyModelViewMatrix();
             gameRenderer.resetProjectionMatrix(originalProjection);
-            RenderSystem.setInverseViewRotationMatrix(inverseRotation);
             originalTarget.bindWrite(true);
             rendererState.createapparel$endReflection();
-            if (minecraft.level.effects().constantAmbientLight()) Lighting.setupNetherLevel(mainView.last().pose());
-            else Lighting.setupLevel(mainView.last().pose());
+            if (minecraft.level.effects().constantAmbientLight()) Lighting.setupNetherLevel();
+            else Lighting.setupLevel();
             RenderSystem.setShaderFogStart(fogStart);
             RenderSystem.setShaderFogEnd(fogEnd);
             RenderSystem.setShaderFogShape(fogShape);
@@ -756,18 +753,17 @@ public final class MirrorRenderManager {
                 Objects.requireNonNull(shader.getUniform("ReflectionBounds")).set((float) cache.coverage[0], (float) cache.coverage[1],
                         (float) cache.coverage[2], (float) cache.coverage[3]);
                 RenderSystem.setShaderTexture(0, cache.target.getColorTextureId());
-                var buffer = Tesselator.getInstance().getBuilder();
-                buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+                var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
                 for (var quad : candidate.quads) for (var vertex : quad.vertices()) {
                     Vec3 relative = vertex.subtract(activeView.mainEye);
-                    buffer.vertex((float) relative.x, (float) relative.y, (float) relative.z).endVertex();
+                    buffer.addVertex((float) relative.x, (float) relative.y, (float) relative.z);
                 }
                 var modelView = RenderSystem.getModelViewStack();
-                modelView.pushPose();
-                modelView.mulPoseMatrix(view.last().pose());
+                modelView.pushMatrix();
+                modelView.mul(view.last().pose());
                 RenderSystem.applyModelViewMatrix();
-                try { BufferUploader.drawWithShader(buffer.end()); }
-                finally { modelView.popPose(); RenderSystem.applyModelViewMatrix(); }
+                try { BufferUploader.drawWithShader(buffer.buildOrThrow()); }
+                finally { modelView.popMatrix(); RenderSystem.applyModelViewMatrix(); }
             }
         } finally {
             RenderSystem.polygonOffset(offsetFactor, offsetUnits);

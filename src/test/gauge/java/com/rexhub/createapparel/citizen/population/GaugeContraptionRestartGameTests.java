@@ -16,8 +16,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.util.UUID;
 
 @GameTestHolder(CreateApparel.MOD_ID)
@@ -39,7 +39,7 @@ public final class GaugeContraptionRestartGameTests {
     public static void nativeContraptionAndMissingOwnerRecoverAcrossSeparateServerProcesses(GameTestHelper helper) throws Exception {
         var level = helper.getLevel(); var manager = CitizenPopulationManager.get(level); var data = manager.data();
         if (Boolean.getBoolean("apparel.gaugeTest.movingResume")) {
-            var expected = NbtIo.readCompressed(expectedFile(level)); var id = expected.getUUID("Gauge"); var district = expected.getUUID("District");
+            var expected = NbtIo.readCompressed(expectedFile(level).toPath(), net.minecraft.nbt.NbtAccounter.unlimitedHeap()); var id = expected.getUUID("Gauge"); var district = expected.getUUID("District");
             force(level, BlockPos.of(expected.getLong("OwnerPos")), true); force(level, BlockPos.of(expected.getLong("PeerPos")), true); force(level, BlockPos.of(expected.getLong("LostPos")), true);
             helper.succeedWhen(() -> {
                 helper.assertTrue(level.getEntity(expected.getUUID("Owner")) instanceof OrientedContraptionEntity, "Native Contraption entity must restore from the actual entity-region save");
@@ -72,7 +72,7 @@ public final class GaugeContraptionRestartGameTests {
         var expected = new CompoundTag(); expected.putUUID("Gauge", gauge.id()); expected.putUUID("District", gauge.districtId()); expected.putUUID("Peer", peer.gaugeId());
         expected.putUUID("Owner", owner.getUUID()); expected.putUUID("Resident", resident); expected.putUUID("LostGauge", lostGauge.id()); expected.putUUID("LostResident", lostResident);
         expected.putLong("OwnerPos", owner.blockPosition().asLong()); expected.putLong("PeerPos", peerPos.asLong()); expected.putLong("LostPos", lostOwnerPos.asLong());
-        NbtIo.writeCompressed(expected, expectedFile(level)); level.getServer().saveEverything(true, true, true);
+        NbtIo.writeCompressed(expected, expectedFile(level).toPath()); level.getServer().saveEverything(true, true, true);
         LogUtils.getLogger().info("CITIZEN_CONTRAPTION_RESTART_SAVED gauge={} owner={}", gauge.id(), owner.getUUID()); helper.succeed();
     }
 }

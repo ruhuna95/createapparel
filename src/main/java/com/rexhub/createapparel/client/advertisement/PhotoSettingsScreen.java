@@ -71,16 +71,16 @@ public abstract class PhotoSettingsScreen<T extends AbstractContainerMenu> exten
                 0, image.height(), image.width(), -image.height(), image.width(), image.height());
     }
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics); super.render(graphics, mouseX, mouseY, partialTick);
+        renderBackground(graphics, mouseX, mouseY, partialTick); super.render(graphics, mouseX, mouseY, partialTick);
         if (!colors.isOpen()) renderTooltip(graphics, mouseX, mouseY);
         colors.render(graphics, mouseX, mouseY);
     }
-    @Override public boolean mouseScrolled(double x, double y, double delta) {
+    @Override public boolean mouseScrolled(double x, double y, double horizontalScroll, double delta) {
         if (colors.mouseScrolled(delta)) return true;
         if (delta != 0) for (var entry : controls.entrySet()) if (entry.getValue().isMouseOver(x, y)) {
             sendSetting(entry.getKey() + (delta > 0 ? 64 : 0)); return true;
         }
-        return super.mouseScrolled(x, y, delta);
+        return super.mouseScrolled(x, y, horizontalScroll, delta);
     }
     @Override public boolean mouseClicked(double x, double y, int button) { return colors.mouseClicked(x, y, button) || super.mouseClicked(x, y, button); }
     @Override public boolean mouseReleased(double x, double y, int button) {

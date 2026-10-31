@@ -19,9 +19,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,23 +43,23 @@ public final class SewingMachineGoggleGameTests {
             helper.assertTrue(!recipes.isEmpty(), "Sewing recipes must be loaded");
             helper.assertTrue(line(tooltip(machine), "fabric").isEmpty(), "Empty machine hides material rows");
             for (var recipe : recipes) {
-                filter.setFilter(pattern(recipe.getId()));
-                assertQuantity(helper, machine, "fabric", " x0/" + recipe.getFabricCount());
-                assertQuantity(helper, machine, "thread", " x0/" + recipe.getThreadCount());
+                filter.setFilter(pattern(recipe.id()));
+                assertQuantity(helper, machine, "fabric", " x0/" + recipe.value().getFabricCount());
+                assertQuantity(helper, machine, "thread", " x0/" + recipe.value().getThreadCount());
                 helper.assertTrue(!line(tooltip(machine), "pattern").orElseThrow().getString().contains(" x"),
                         "Pattern row must not contain a quantity");
             }
 
-            var inventory = machine.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().orElseThrow();
+            var inventory = java.util.Optional.ofNullable(machine.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, machine.getBlockPos(), null)).orElseThrow();
             helper.assertTrue(inventory.insertItem(SewingRecipe.FABRIC_SLOT,
                     new ItemStack(ModItems.dyedFabric(FabricMaterial.SYNTHETIC, FabricColor.WHITE).get()), false).isEmpty(),
                     "Fabric must be inserted");
             helper.assertTrue(inventory.insertItem(SewingRecipe.THREAD_SLOT,
                     new ItemStack(ModItems.SYNTHETIC_THREAD.get(), 2), false).isEmpty(), "Thread must be inserted");
             for (var recipe : recipes) {
-                filter.setFilter(pattern(recipe.getId()));
-                assertQuantity(helper, machine, "fabric", " x1/" + recipe.getFabricCount());
-                assertQuantity(helper, machine, "thread", " x2/" + recipe.getThreadCount());
+                filter.setFilter(pattern(recipe.id()));
+                assertQuantity(helper, machine, "fabric", " x1/" + recipe.value().getFabricCount());
+                assertQuantity(helper, machine, "thread", " x2/" + recipe.value().getThreadCount());
             }
 
             for (ItemStack invalid : List.of(ItemStack.EMPTY, new ItemStack(ModItems.SEWING_PATTERN.get()),
@@ -82,7 +81,7 @@ public final class SewingMachineGoggleGameTests {
 
     private static List<Component> tooltip(SewingMachineBlockEntity machine) {
         List<Component> tooltip = new ArrayList<>();
-        var inventory = machine.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().orElseThrow();
+        var inventory = java.util.Optional.ofNullable(machine.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, machine.getBlockPos(), null)).orElseThrow();
         FilteringBehaviour filter = BlockEntityBehaviour.get(machine, FilteringBehaviour.TYPE);
         SewingMachineGoggleTooltip.addContents(tooltip,
                 inventory.getStackInSlot(SewingRecipe.FABRIC_SLOT),

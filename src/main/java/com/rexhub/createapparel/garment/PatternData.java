@@ -26,7 +26,7 @@ public record PatternData(
     }
 
     public static Optional<PatternData> fromStack(ItemStack stack) {
-        CompoundTag root = stack.getTag();
+        CompoundTag root = com.rexhub.createapparel.item.ItemData.read(stack);
         if (root == null || !root.contains(TAG_NAME, CompoundTag.TAG_COMPOUND)) {
             return Optional.empty();
         }
@@ -56,7 +56,7 @@ public record PatternData(
         tag.putString("design", design);
         secondaryColor.ifPresent(color -> tag.putString("secondary_color", color.getSerializedName()));
         accentColor.ifPresent(color -> tag.putString("accent_color", color.getSerializedName()));
-        stack.getOrCreateTag().put(TAG_NAME, tag);
+        com.rexhub.createapparel.item.ItemData.update(stack, customData -> customData.put(TAG_NAME, tag));
     }
 
     private static Optional<FabricColor> optionalColor(CompoundTag tag, String key) {

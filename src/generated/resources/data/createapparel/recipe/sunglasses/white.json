@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "minecraft:white_dye"
+    },
+    "G": {
+      "item": "minecraft:black_stained_glass_pane"
+    },
+    "I": {
+      "item": "minecraft:iron_nugget"
+    }
+  },
+  "pattern": [
+    " C ",
+    "GIG"
+  ],
+  "result": {
+    "components": {
+      "minecraft:custom_data": {
+        "GarmentData": {
+          "design": "plain",
+          "material": "synthetic",
+          "primary_color": "white"
+        }
+      }
+    },
+    "count": 1,
+    "id": "createapparel:sunglasses"
+  }
+}

@@ -17,6 +17,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
 public final class SignageBroadcasterBlock extends HorizontalDirectionalBlock implements net.minecraft.world.level.block.EntityBlock {
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+            BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return com.rexhub.createapparel.block.BlockInteractions.itemResult(interact(state, level, pos, player, hand, hit));
+    }
+
+    public static final com.mojang.serialization.MapCodec<SignageBroadcasterBlock> CODEC = simpleCodec(SignageBroadcasterBlock::new);
+
+    @Override
+    protected com.mojang.serialization.MapCodec<? extends SignageBroadcasterBlock> codec() {
+        return CODEC;
+    }
+
     public SignageBroadcasterBlock(Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
@@ -43,7 +56,7 @@ public final class SignageBroadcasterBlock extends HorizontalDirectionalBlock im
     @Override @SuppressWarnings("deprecation") public BlockState mirror(BlockState state, Mirror mirror) {
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
-    @Override @SuppressWarnings("deprecation") public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+     @SuppressWarnings("deprecation") private InteractionResult interact(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!player.getAbilities().mayBuild || !level.mayInteract(player, pos)
                 || !(level.getBlockEntity(pos) instanceof SignageBroadcasterBlockEntity broadcaster) || !broadcaster.mayEdit(player)) return InteractionResult.FAIL;
         if (player instanceof ServerPlayer server) AdvertisementControlMenu.open(server, pos, hand);

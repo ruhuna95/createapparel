@@ -1,11 +1,11 @@
 package com.rexhub.createapparel.recipe;
 
-import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder.ProcessingRecipeParams;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
-public final class SpinningRecipe extends ProcessingRecipe<RecipeWrapper> {
+public final class SpinningRecipe extends StandardProcessingRecipe<RecipeWrapper> {
     public static final int DEFAULT_PROCESSING_DURATION = 400;
 
     public SpinningRecipe(ProcessingRecipeParams params) {

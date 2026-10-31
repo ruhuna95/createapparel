@@ -3,12 +3,10 @@ package com.rexhub.createapparel.garment;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.init.ModItems;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.MissingMappingsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.minecraft.core.registries.BuiltInRegistries;
 
-@Mod.EventBusSubscriber(modid = CreateApparel.MOD_ID)
 public final class SkirtIdMigration {
     private static final ResourceLocation OLD_ID = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "a_line_skirt");
     private static final ResourceLocation KNEE_ID = ResourceLocation.fromNamespaceAndPath(CreateApparel.MOD_ID, "a_line_skirt_knee");
@@ -16,13 +14,8 @@ public final class SkirtIdMigration {
     private SkirtIdMigration() {
     }
 
-    @SubscribeEvent
-    public static void remapItem(MissingMappingsEvent event) {
-        for (var mapping : event.getMappings(ForgeRegistries.Keys.ITEMS, CreateApparel.MOD_ID)) {
-            if (mapping.getKey().equals(OLD_ID)) {
-                mapping.remap(ModItems.A_LINE_SKIRT_KNEE.get());
-            }
-        }
+    public static void registerAliases() {
+        com.rexhub.createapparel.init.ModRegistries.ITEMS.addAlias(OLD_ID, KNEE_ID);
     }
 
     static ResourceLocation recipeId(ResourceLocation id) {

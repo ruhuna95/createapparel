@@ -4,14 +4,13 @@ import com.rexhub.createapparel.entity.Citizen;
 import com.rexhub.createapparel.menu.CitizenMenu;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraftforge.network.NetworkHooks;
 
 import com.rexhub.createapparel.citizen.CitizenConversion;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 
 public final class SmartPhoneItem extends Item {
@@ -27,8 +26,7 @@ public final class SmartPhoneItem extends Item {
                     && citizen.interaction().canBegin(player)) {
                 com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.get(player.serverLevel())
                         .forceActive(citizen, com.rexhub.createapparel.citizen.route.CitizenActivityScheduler.Reason.INTERACTION, 100);
-                NetworkHooks.openScreen(player,
-                        new SimpleMenuProvider((id, inventory, viewer) -> new CitizenMenu(id, inventory, citizen),
+                player.openMenu(new SimpleMenuProvider((id, inventory, viewer) -> new CitizenMenu(id, inventory, citizen),
                                 Component.translatable("container.createapparel.citizen")),
                         buffer -> buffer.writeVarInt(citizen.getId()));
                 event.setCancellationResult(InteractionResult.CONSUME);

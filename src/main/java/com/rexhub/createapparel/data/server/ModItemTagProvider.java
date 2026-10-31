@@ -16,7 +16,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -45,7 +45,7 @@ public final class ModItemTagProvider extends ItemTagsProvider {
                         && item != ModItems.WATCH.get())
                 .forEach(recyclableGarments::add);
         tag(ModTags.Items.SILVER_ACCESSORY_NUGGETS).add(Items.IRON_NUGGET)
-                .addOptionalTag(ResourceLocation.parse("forge:nuggets/silver"));
+                .addOptionalTag(ResourceLocation.parse("c:nuggets/silver"));
         tag(ModTags.Items.CITIZEN_LOWER_COVERING_TOPS).add(
                 ModItems.A_LINE_DRESS_KNEE.get(), ModItems.A_LINE_DRESS_MIDI.get(),
                 ModItems.FIT_AND_FLARE_DRESS_KNEE.get(), ModItems.FIT_AND_FLARE_DRESS_MIDI.get(),
@@ -119,8 +119,8 @@ public final class ModItemTagProvider extends ItemTagsProvider {
         tag(ModTags.Items.GEMS_DIAMOND).add(Items.DIAMOND);
         tag(ModTags.Items.GEMS_EMERALD).add(Items.EMERALD);
         tag(ModTags.Items.GEMS_AMETHYST).add(Items.AMETHYST_SHARD);
-        tag(ModTags.Items.GEMS_RUBY).add(Items.REDSTONE).addOptionalTag(ResourceLocation.parse("forge:gems/ruby"));
-        tag(ModTags.Items.GEMS_SAPPHIRE).add(Items.LAPIS_LAZULI).addOptionalTag(ResourceLocation.parse("forge:gems/sapphire"));
+        tag(ModTags.Items.GEMS_RUBY).add(Items.REDSTONE).addOptionalTag(ResourceLocation.parse("c:gems/ruby"));
+        tag(ModTags.Items.GEMS_SAPPHIRE).add(Items.LAPIS_LAZULI).addOptionalTag(ResourceLocation.parse("c:gems/sapphire"));
         tag(ModTags.Items.GEMS_PEARL).add(Items.QUARTZ);
     }
 

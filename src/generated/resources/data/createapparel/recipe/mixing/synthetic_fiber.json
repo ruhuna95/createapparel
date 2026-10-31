@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "createapparel:synthetic_fiber_fallback"
+    }
+  ],
+  "type": "create:mixing",
+  "heat_requirement": "heated",
+  "ingredients": [
+    {
+      "item": "minecraft:sugar"
+    },
+    {
+      "item": "minecraft:slime_ball"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "results": [
+    {
+      "id": "createapparel:synthetic_fiber"
+    }
+  ]
+}

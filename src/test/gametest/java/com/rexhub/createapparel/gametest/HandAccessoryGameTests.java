@@ -19,8 +19,8 @@ import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 
@@ -52,17 +52,17 @@ public final class HandAccessoryGameTests {
         for (FabricColor color : FabricColor.values()) {
             grid.setItem(7, new ItemStack(ModItems.dye(color)));
             var recipe = (ShapedRecipe) helper.getLevel().getRecipeManager().byKey(
-                    id("watch/" + color.getSerializedName())).orElseThrow();
-            helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Watch ingredients match");
-            var stack = recipe.assemble(grid, helper.getLevel().registryAccess());
+                    id("watch/" + color.getSerializedName())).orElseThrow().value();
+            helper.assertTrue(recipe.matches(grid.asCraftInput(), helper.getLevel()), "Watch ingredients match");
+            var stack = recipe.assemble(grid.asCraftInput(), helper.getLevel().registryAccess());
             helper.assertTrue(stack.is(ModItems.WATCH.get()), "Craft produces watch");
             helper.assertTrue(GarmentData.fromStack(stack, definition).primaryColor() == color, "Dye survives crafting");
             checkEquipment(helper, stack, true);
             grid.setItem(1, new ItemStack(Items.COMPASS));
-            helper.assertTrue(!recipe.matches(grid, helper.getLevel()), "Compass cannot replace clock");
+            helper.assertTrue(!recipe.matches(grid.asCraftInput(), helper.getLevel()), "Compass cannot replace clock");
             grid.setItem(1, new ItemStack(Items.CLOCK));
             grid.setItem(4, new ItemStack(Items.IRON_INGOT));
-            helper.assertTrue(!recipe.matches(grid, helper.getLevel()), "Iron cannot replace precision mechanism");
+            helper.assertTrue(!recipe.matches(grid.asCraftInput(), helper.getLevel()), "Iron cannot replace precision mechanism");
             grid.setItem(4, AllItems.PRECISION_MECHANISM.asStack());
         }
         helper.succeed();
@@ -73,16 +73,16 @@ public final class HandAccessoryGameTests {
         var definition = GarmentDefinitionManager.get(ModItems.BRACELET.getId()).orElseThrow();
         for (var metal : MetalAccessoryData.MetalColor.values()) {
             var baseId = metal == MetalAccessoryData.MetalColor.GOLD ? ModItems.GOLD_BRACELET_BASE : ModItems.SILVER_BRACELET_BASE;
-            var compacting = helper.getLevel().getRecipeManager().byKey(id("compacting/" + baseId.getId().getPath())).orElseThrow();
+            var compacting = helper.getLevel().getRecipeManager().byKey(id("compacting/" + baseId.getId().getPath())).orElseThrow().value();
             helper.assertTrue(compacting.getResultItem(helper.getLevel().registryAccess()).is(baseId.get()), "Correct bracelet base");
             for (var gem : MetalAccessoryData.Gem.values()) {
                 var recipe = helper.getLevel().getRecipeManager().byKey(id("deploying/bracelet/"
-                        + metal.getSerializedName() + "_" + gem.getSerializedName())).orElseThrow();
+                        + metal.getSerializedName() + "_" + gem.getSerializedName())).orElseThrow().value();
                 var stack = recipe.getResultItem(helper.getLevel().registryAccess()).copy();
                 helper.assertTrue(stack.is(ModItems.BRACELET.get()), "Deployer produces bracelet");
                 helper.assertTrue(new MetalAccessoryData(metal, gem).equals(GarmentAppearance.fromStack(stack, definition)),
                         "Metal and gem survive manufacture");
-                helper.assertTrue(!stack.getOrCreateTag().contains(GarmentData.TAG_NAME), "Metal has no fabric NBT");
+                helper.assertTrue(!com.rexhub.createapparel.item.ItemData.readOrEmpty(stack).contains(GarmentData.TAG_NAME), "Metal has no fabric NBT");
                 checkEquipment(helper, stack, true);
             }
         }
@@ -114,7 +114,7 @@ public final class HandAccessoryGameTests {
             helper.assertTrue(!inventory.setStyle(GarmentSlot.HANDS, "wear", "right"), "Gloves always cover both hands");
         }
         var restored = new ApparelInventory();
-        restored.deserializeNBT(inventory.serializeNBT());
+        restored.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), inventory.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
         helper.assertTrue(ItemStack.matches(stack, restored.getStack(GarmentSlot.HANDS)), "Appearance persists");
         helper.assertTrue(inventory.styleState(GarmentSlot.HANDS).equals(restored.styleState(GarmentSlot.HANDS)), "Wrist style persists");
     }

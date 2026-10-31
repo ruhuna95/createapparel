@@ -3,12 +3,21 @@ package com.rexhub.createapparel.network;
 import com.rexhub.createapparel.fashion.PurchasedRegisterRef;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
 
 import javax.annotation.Nullable;
 
-public record RetailLinkSessionPacket(@Nullable PurchasedRegisterRef register, InteractionHand hand, int slot) {
+public record RetailLinkSessionPacket(@Nullable PurchasedRegisterRef register, InteractionHand hand, int slot) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<RetailLinkSessionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+            com.rexhub.createapparel.CreateApparel.MOD_ID, "retail_link_session_packet"));
+    public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, RetailLinkSessionPacket> STREAM_CODEC =
+            net.minecraft.network.codec.StreamCodec.of((buffer, packet) -> packet.encode(buffer), RetailLinkSessionPacket::decode);
+
+    @Override
+    public Type<RetailLinkSessionPacket> type() {
+        return TYPE;
+    }
+
     public RetailLinkSessionPacket {
         if (slot < 0 || slot >= 9) throw new IllegalArgumentException("Invalid selected hotbar slot");
     }
@@ -30,6 +39,6 @@ public record RetailLinkSessionPacket(@Nullable PurchasedRegisterRef register, I
     }
 
     public void handleClient() {
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.rexhub.createapparel.client.fashion.ClientRetailView.accept(this));
+        com.rexhub.createapparel.client.fashion.ClientRetailView.accept(this);
     }
 }

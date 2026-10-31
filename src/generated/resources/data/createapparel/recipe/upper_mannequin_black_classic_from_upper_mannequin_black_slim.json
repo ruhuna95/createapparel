@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "createapparel:upper_mannequin_black_slim"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "createapparel:upper_mannequin_black_classic"
+  }
+}

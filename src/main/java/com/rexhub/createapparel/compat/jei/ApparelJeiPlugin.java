@@ -3,9 +3,6 @@ package com.rexhub.createapparel.compat.jei;
 import com.mojang.logging.LogUtils;
 import com.rexhub.createapparel.CreateApparel;
 import com.rexhub.createapparel.client.garment.ClientGarmentAssets;
-import com.rexhub.createapparel.client.screen.CitizenGaugeScreen;
-import com.rexhub.createapparel.client.screen.CitizenScreen;
-import com.rexhub.createapparel.client.screen.WardrobeScreen;
 import com.rexhub.createapparel.init.ModBlocks;
 import com.rexhub.createapparel.photo.PhotoCopyRecipe;
 import com.rexhub.createapparel.recipe.ModRecipeTypes;
@@ -15,7 +12,6 @@ import com.rexhub.createapparel.recipe.SpinningRecipe;
 import com.rexhub.createapparel.recipe.WeavingRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
@@ -44,18 +40,8 @@ public final class ApparelJeiPlugin implements IModPlugin {
     }
 
     @Override
-    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
-        registration.addGuiScreenHandler(CitizenGaugeScreen.class, screen -> null);
-        registration.addGuiScreenHandler(CitizenScreen.class, screen -> null);
-        registration.addGuiScreenHandler(WardrobeScreen.class, screen -> null);
-        registration.addGuiScreenHandler(com.rexhub.createapparel.client.advertisement.PhotographyScreen.class, screen -> null);
-        registration.addGuiScreenHandler(com.rexhub.createapparel.client.advertisement.PhotoEditScreen.class, screen -> null);
-        registration.addGuiScreenHandler(com.rexhub.createapparel.client.advertisement.AdvertisementControlScreen.class, screen -> null);
-    }
-
-    @Override
     public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
-        registration.getCraftingCategory().addCategoryExtension(PhotoCopyRecipe.class, recipe -> new PhotoCopyRecipeExtension());
+        registration.getCraftingCategory().addExtension(PhotoCopyRecipe.class, new PhotoCopyRecipeExtension());
     }
 
     @Override
@@ -92,13 +78,13 @@ public final class ApparelJeiPlugin implements IModPlugin {
                 .map(AdvertisementPrintingDisplay::create).flatMap(Optional::stream).toList());
         registration.addRecipes(ApparelJeiRecipeTypes.SPINNING,
                 displays(manager, ModRecipeTypes.SPINNING, SpinningRecipe.class,
-                        recipe -> valid(ProcessingRecipeDisplay.spinning(recipe, registries))));
+                        (id, recipe) -> valid(ProcessingRecipeDisplay.spinning(id, recipe, registries))));
         registration.addRecipes(ApparelJeiRecipeTypes.WEAVING,
                 displays(manager, ModRecipeTypes.WEAVING, WeavingRecipe.class,
-                        recipe -> valid(ProcessingRecipeDisplay.weaving(recipe, registries))));
+                        (id, recipe) -> valid(ProcessingRecipeDisplay.weaving(id, recipe, registries))));
         var rearing = new ArrayList<>(
                 displays(manager, ModRecipeTypes.SILKWORM_REARING, SilkwormRearingRecipe.class,
-                        recipe -> Optional.of(SilkwormRearingDisplay.tray(recipe, registries)).filter(SilkwormRearingDisplay::isValid)));
+                        (id, recipe) -> Optional.of(SilkwormRearingDisplay.tray(id, recipe, registries)).filter(SilkwormRearingDisplay::isValid)));
         var silkworm = SilkwormRearingDisplay.silkworm();
         if (silkworm.isValid()) rearing.add(silkworm);
         registration.addRecipes(ApparelJeiRecipeTypes.SILKWORM_REARING, rearing);
@@ -113,21 +99,22 @@ public final class ApparelJeiPlugin implements IModPlugin {
 
     private static <R extends Recipe<?>, D> List<D> displays(RecipeManager manager, ModRecipeTypes type,
                                                             Class<R> recipeClass,
-                                                            Function<R, Optional<D>> factory) {
+                                                            java.util.function.BiFunction<ResourceLocation, R, Optional<D>> factory) {
         LinkedHashMap<ResourceLocation, D> displays = new LinkedHashMap<>();
-        manager.getRecipes().stream().filter(recipe -> recipe.getType() == type.getType())
-                .filter(recipeClass::isInstance).map(recipeClass::cast)
-                .sorted(Comparator.comparing(recipe -> recipe.getId().toString()))
-                .forEach(recipe -> {
+        manager.getRecipes().stream().filter(holder -> holder.value().getType() == type.getType())
+                .filter(holder -> recipeClass.isInstance(holder.value()))
+                .sorted(Comparator.comparing(holder -> holder.id().toString()))
+                .forEach(holder -> {
+                    R recipe = recipeClass.cast(holder.value());
                     try {
-                        Optional<D> display = factory.apply(recipe);
+                        Optional<D> display = factory.apply(holder.id(), recipe);
                         if (display.isPresent()) {
-                            displays.putIfAbsent(recipe.getId(), display.get());
+                            displays.putIfAbsent(holder.id(), display.get());
                         } else {
-                            LOGGER.warn("Skipping JEI recipe with unresolved ingredients or result: {}", recipe.getId());
+                            LOGGER.warn("Skipping JEI recipe with unresolved ingredients or result: {}", holder.id());
                         }
                     } catch (RuntimeException exception) {
-                        LOGGER.warn("Unable to display JEI recipe {}", recipe.getId(), exception);
+                        LOGGER.warn("Unable to display JEI recipe {}", holder.id(), exception);
                     }
                 });
         return List.copyOf(displays.values());

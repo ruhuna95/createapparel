@@ -23,7 +23,8 @@ public final class SilkwormRearingTrayItemRenderer extends BlockEntityWithoutLev
                              MultiBufferSource buffers, int light, int overlay) {
         CachedBuffers.partial(ModPartialModels.REARING_ITEM, ModBlocks.SILKWORM_REARING_TRAY.get().defaultBlockState())
                 .light(light).overlay(overlay).renderInto(pose, buffers.getBuffer(RenderType.cutoutMipped()));
-        CompoundTag blockTag = stack.getTagElement("BlockEntityTag");
+        var blockData = stack.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA);
+        CompoundTag blockTag = blockData == null ? null : blockData.copyTag();
         if (blockTag != null && blockTag.getCompound("TrayData").getBoolean("HasSilkworm")) {
             SilkwormRearingTrayContentsRenderer.renderLarva(pose, buffers, light, overlay, false);
         }

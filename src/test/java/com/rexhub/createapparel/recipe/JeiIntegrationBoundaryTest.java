@@ -27,7 +27,7 @@ class JeiIntegrationBoundaryTest {
             assertFalse(source.contains("mezz.jei."), name);
             assertFalse(source.contains("net.minecraft.client."), name);
         }
-        assertFalse(Files.readString(Path.of("src/main/resources/META-INF/mods.toml")).contains("modId=\"jei\""));
+        assertFalse(Files.readString(Path.of("src/main/templates/META-INF/neoforge.mods.toml")).contains("modId=\"jei\""));
     }
 
     @Test

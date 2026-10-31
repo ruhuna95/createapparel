@@ -12,40 +12,40 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.common.loot.IGlobalLootModifier;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 public final class ModRegistries {
     public static final DeferredRegister<net.minecraft.world.entity.ai.village.poi.PoiType> POI_TYPES =
-            DeferredRegister.create(ForgeRegistries.POI_TYPES, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.POINT_OF_INTEREST_TYPE, CreateApparel.MOD_ID);
     public static final DeferredRegister<net.minecraft.world.entity.npc.VillagerProfession> VILLAGER_PROFESSIONS =
-            DeferredRegister.create(ForgeRegistries.VILLAGER_PROFESSIONS, CreateApparel.MOD_ID);
-    public static final DeferredRegister<net.minecraftforge.fluids.FluidType> FLUID_TYPES =
-            DeferredRegister.create(ForgeRegistries.Keys.FLUID_TYPES, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.VILLAGER_PROFESSION, CreateApparel.MOD_ID);
+    public static final DeferredRegister<net.neoforged.neoforge.fluids.FluidType> FLUID_TYPES =
+            DeferredRegister.create(NeoForgeRegistries.Keys.FLUID_TYPES, CreateApparel.MOD_ID);
     public static final DeferredRegister<net.minecraft.world.level.material.Fluid> FLUIDS =
-            DeferredRegister.create(ForgeRegistries.FLUIDS, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.FLUID, CreateApparel.MOD_ID);
     public static final DeferredRegister<com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType> ARM_INTERACTION_POINT_TYPES =
             DeferredRegister.create(com.simibubi.create.api.registry.CreateRegistries.ARM_INTERACTION_POINT_TYPE, CreateApparel.MOD_ID);
     public static final DeferredRegister<Block> BLOCKS =
-            DeferredRegister.create(ForgeRegistries.BLOCKS, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.BLOCK, CreateApparel.MOD_ID);
     public static final DeferredRegister<Item> ITEMS =
-            DeferredRegister.create(ForgeRegistries.ITEMS, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.ITEM, CreateApparel.MOD_ID);
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
-            DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.ENTITY_TYPE, CreateApparel.MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES =
-            DeferredRegister.create(ForgeRegistries.MENU_TYPES, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.MENU, CreateApparel.MOD_ID);
     public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES =
-            DeferredRegister.create(ForgeRegistries.RECIPE_TYPES, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.RECIPE_TYPE, CreateApparel.MOD_ID);
     public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS =
-            DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.RECIPE_SERIALIZER, CreateApparel.MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
-            DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, CreateApparel.MOD_ID);
+            DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, CreateApparel.MOD_ID);
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateApparel.MOD_ID);
-    public static final DeferredRegister<Codec<? extends IGlobalLootModifier>> GLOBAL_LOOT_MODIFIER_SERIALIZERS =
-            DeferredRegister.create(ForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, CreateApparel.MOD_ID);
+    public static final DeferredRegister<com.mojang.serialization.MapCodec<? extends IGlobalLootModifier>> GLOBAL_LOOT_MODIFIER_SERIALIZERS =
+            DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, CreateApparel.MOD_ID);
 
     private ModRegistries() {
     }
@@ -64,6 +64,7 @@ public final class ModRegistries {
         ModEntities.bootstrap();
         ModLootModifiers.bootstrap();
         ModItems.bootstrap();
+        com.rexhub.createapparel.garment.SkirtIdMigration.registerAliases();
         com.rexhub.createapparel.villager.ModVillagers.bootstrap();
         ModCreativeModeTabs.bootstrap();
 

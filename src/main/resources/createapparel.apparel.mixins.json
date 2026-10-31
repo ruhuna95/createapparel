@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "com.rexhub.createapparel.apparel.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["PlayerApparelMigrationMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

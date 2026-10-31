@@ -32,8 +32,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.UUID;
@@ -60,7 +60,7 @@ public final class CitizenBehaviorGameTests {
     }
 
     private static ServerPlayer player(GameTestHelper helper, Citizen citizen) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "behavior-test"));
+        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "behavior-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.setPos(citizen.position());
         return player;
     }
@@ -73,19 +73,19 @@ public final class CitizenBehaviorGameTests {
     }
 
     private static void rejected(GameTestHelper helper, CommandSourceStack source, Citizen citizen, String command) {
-        var before = citizen.citizenState().serializeNBT();
+        var before = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         try {
             source.getServer().getCommands().getDispatcher().execute(command, source);
             helper.fail("Expected command rejection: " + command);
         } catch (CommandSyntaxException expected) {
-            helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Command failure preserves full state");
+            helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Command failure preserves full state");
         }
     }
 
     @GameTest(template = "apparel_state", batch = "citizen_behavior")
     public static void allModesSaveSyncRestoreAndKeepClothingAppearance(GameTestHelper helper) {
         var citizen = citizen(helper);
-        var original = citizen.citizenState().serializeNBT();
+        var original = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         UUID uuid = UUID.randomUUID();
         for (var behavior : List.of(CitizenBehaviorState.DEFAULT,
                 CitizenBehaviorState.anchored(CitizenBehaviorMode.WANDER, citizen.blockPosition(), helper.getLevel().dimension(), 12),
@@ -95,12 +95,12 @@ public final class CitizenBehaviorGameTests {
             var restored = ModEntities.CITIZEN.get().create(helper.getLevel());
             if (restored == null) throw new IllegalStateException("Citizen factory failed");
             restored.load(saved);
-            helper.assertTrue(restored.citizenState().serializeNBT().equals(citizen.citizenState().serializeNBT()), "Full entity save round trip");
-            var buffer = new FriendlyByteBuf(Unpooled.buffer());
+            helper.assertTrue(restored.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Full entity save round trip");
+            var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
             try {
-                EntityDataSerializers.COMPOUND_TAG.write(buffer, citizen.citizenState().serializeNBT());
+                EntityDataSerializers.COMPOUND_TAG.codec().encode(buffer, citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
                 var client = new CitizenState();
-                client.deserializeNBT(EntityDataSerializers.COMPOUND_TAG.read(buffer));
+                client.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), EntityDataSerializers.COMPOUND_TAG.codec().decode(buffer));
                 helper.assertTrue(client.behavior().equals(behavior), "Behavior survives actual synchronization serializer");
             } finally { buffer.release(); }
             helper.assertTrue(original.getCompound("ApparelSlots").equals(saved.getCompound("ApparelSlots")), "Equipment and styles unchanged");
@@ -186,7 +186,7 @@ public final class CitizenBehaviorGameTests {
         for (int tick = 0; tick < 4; tick++) CitizenActionPacket.step(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, 1).handle(player);
         helper.assertTrue(citizen.citizenState().behavior().mode() == CitizenBehaviorMode.FOLLOW
                 && citizen.citizenState().behavior().followTargetUuid().equals(player.getUUID()), "Fast mode wheel cycles four GUI choices from server state");
-        var before = citizen.citizenState().serializeNBT();
+        var before = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         for (var packet : List.of(CitizenActionPacket.select(menu, CitizenActionPacket.Action.POSE_PRESET, "casual"),
                 CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "pose"),
                 CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "unknown"),
@@ -195,7 +195,7 @@ public final class CitizenBehaviorGameTests {
                 CitizenActionPacket.step(menu, CitizenActionPacket.Action.POSE_ROTATION_STEP, 1),
                 new CitizenActionPacket(999, citizen.getId(), CitizenActionPacket.Action.BEHAVIOR_MODE, 0, "", "stand"),
                 new CitizenActionPacket(menu.containerId, -1, CitizenActionPacket.Action.BEHAVIOR_MODE, 0, "", "stand"))) packet.handle(player);
-        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Invalid action keeps behavior");
+        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Invalid action keeps behavior");
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "wander").handle(player);
         helper.assertTrue(citizen.citizenState().behavior().unlimitedWander(), "GUI initializes unlimited radius");
         for (int index = 0; index < 3; index++) CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, 1).handle(player);
@@ -206,16 +206,16 @@ public final class CitizenBehaviorGameTests {
         CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, 1).handle(player);
         CitizenActionPacket.step(menu, CitizenActionPacket.Action.WANDER_RADIUS, -1).handle(player);
         helper.assertTrue(citizen.citizenState().behavior().unlimitedWander(), "Radius one scrolls down to unlimited");
-        before = citizen.citizenState().serializeNBT();
+        before = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         for (String value : List.of("65", "-1", "bad")) CitizenActionPacket.select(menu, CitizenActionPacket.Action.WANDER_RADIUS, value).handle(player);
-        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Radius range is validated");
+        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Radius range is validated");
         menu.setTab(CitizenMenu.Tab.APPEARANCE);
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "stand").handle(player);
-        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Wrong tab cannot change behavior");
+        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Wrong tab cannot change behavior");
         menu.setTab(CitizenMenu.Tab.BEHAVIOR);
         player.setPos(citizen.position().add(20, 0, 0));
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, "stand").handle(player);
-        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Distance validation remains active");
+        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Distance validation remains active");
         helper.succeed();
     }
 
@@ -340,7 +340,7 @@ public final class CitizenBehaviorGameTests {
             helper.assertTrue(citizen.position().equals(nearby), "Below twelve blocks does not teleport");
             citizen.setPos(target.position().add(-12, 0, 0));
             var start = citizen.position();
-            var saved = citizen.citizenState().serializeNBT();
+            var saved = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
             citizen.getEntityData().packDirty();
             long revision = citizen.citizenState().revision();
             citizen.getRandom().setSeed(20);
@@ -354,7 +354,7 @@ public final class CitizenBehaviorGameTests {
                     "Landing avoids the owner's central two-block area");
             helper.assertTrue(citizen.getYRot() == 47.5F && citizen.getXRot() == 13 && citizen.getNavigation().isDone(),
                     "Teleport preserves rotation and stops navigation");
-            helper.assertTrue(saved.equals(citizen.citizenState().serializeNBT()) && citizen.citizenState().revision() == revision
+            helper.assertTrue(saved.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())) && citizen.citizenState().revision() == revision
                     && citizen.getEntityData().packDirty() == null, "Teleport preserves saved follow and appearance without resending NBT");
             citizen.discard();
         }
@@ -454,8 +454,8 @@ public final class CitizenBehaviorGameTests {
         var citizen = citizen(helper);
         var villager = net.minecraft.world.entity.EntityType.VILLAGER.create(helper.getLevel());
         if (villager == null) throw new IllegalStateException("Villager factory failed");
-        var danger = net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_FIRE;
-        var damage = net.minecraft.world.level.pathfinder.BlockPathTypes.DAMAGE_FIRE;
+        var danger = net.minecraft.world.level.pathfinder.PathType.DANGER_FIRE;
+        var damage = net.minecraft.world.level.pathfinder.PathType.DAMAGE_FIRE;
         helper.assertTrue(citizen.getPathfindingMalus(danger) == 8 && villager.getPathfindingMalus(danger) == 16, "Villager penalizes nearby fire more");
         helper.assertTrue(citizen.getPathfindingMalus(damage) == 16 && villager.getPathfindingMalus(damage) == -1, "Villager blocks direct fire while citizen retains the standard mob cost");
         helper.assertTrue(citizen.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE) == 16
@@ -566,14 +566,14 @@ public final class CitizenBehaviorGameTests {
             citizen.setBehavior(state);
             citizens.add(citizen);
         }
-        var saved = citizens.stream().map(citizen -> citizen.citizenState().serializeNBT()).toList();
+        var saved = citizens.stream().map(citizen -> citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())).toList();
         var server = helper.getLevel().getServer();
         var reload = server.reloadResources(server.getPackRepository().getSelectedIds());
         helper.succeedWhen(() -> {
             helper.assertTrue(reload.isDone(), "Datapack reload finished");
             reload.join();
             for (int index = 0; index < citizens.size(); index++) {
-                helper.assertTrue(saved.get(index).equals(citizens.get(index).citizenState().serializeNBT()), "Reload preserves every behavior and existing state");
+                helper.assertTrue(saved.get(index).equals(citizens.get(index).citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Reload preserves every behavior and existing state");
             }
         });
     }
@@ -621,11 +621,11 @@ public final class CitizenBehaviorGameTests {
         for (int tick = 0; tick < 3; tick++) new CitizenActionPacket(menu.containerId, citizen.getId(),
                 CitizenActionPacket.Action.POSE_ROTATION_STEP, 1, "", "step").handle(player);
         helper.assertTrue(menu.poseRotationStep() == 3 && citizen.getYRot() == Mth.wrapDegrees(menu.sessionBaseYaw() + 67.5F), "Rapid rotation accumulates on server");
-        var before = citizen.citizenState().serializeNBT();
+        var before = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.POSE_PRESET, "left_30").handle(player);
         CitizenActionPacket.step(menu, CitizenActionPacket.Action.POSE_PRESET, 2).handle(player);
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.STAND_LOOK_MODE, "head").handle(player);
-        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Invalid pose and wrong-mode look are rejected");
+        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Invalid pose and wrong-mode look are rejected");
         CitizenActionPacket.step(menu, CitizenActionPacket.Action.BEHAVIOR_MODE, 1).handle(player);
         helper.assertTrue(citizen.citizenState().behavior().mode() == CitizenBehaviorMode.STAND, "Wheel leaves command pose for the first GUI mode");
         CitizenActionPacket.select(menu, CitizenActionPacket.Action.STAND_LOOK_MODE, "head").handle(player);
@@ -672,7 +672,7 @@ public final class CitizenBehaviorGameTests {
         player.setPos(citizen.position().add(3, 0, 0));
         player.setNoGravity(true);
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player);
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE));
         helper.getLevel().addNewPlayer(player);
         var start = citizen.position();
         citizen.setBehavior(CitizenBehaviorState.DEFAULT.withLookMode(CitizenLookMode.HEAD));

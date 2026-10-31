@@ -28,9 +28,9 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.UUID;
@@ -49,7 +49,7 @@ public final class CitizenMenuGameTests {
         citizen.setNoGravity(true);
         helper.getLevel().addFreshEntity(citizen);
         var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
-                new GameProfile(UUID.randomUUID(), "citizen-menu"));
+                new GameProfile(UUID.randomUUID(), "citizen-menu"), net.minecraft.server.level.ClientInformation.createDefault());
         player.setPos(citizen.position());
         var menu = new CitizenMenu(19, player.getInventory(), citizen);
         player.containerMenu = menu;
@@ -59,12 +59,12 @@ public final class CitizenMenuGameTests {
     private static CompoundTag inventory(Fixture fixture) {
         var tag = new CompoundTag();
         tag.put("Items", fixture.player().getInventory().save(new net.minecraft.nbt.ListTag()));
-        tag.put("Carried", fixture.menu().getCarried().save(new CompoundTag()));
+        tag.put("Carried", fixture.menu().getCarried().saveOptional(com.rexhub.createapparel.TestRegistries.lookup()));
         return tag;
     }
 
     private static void unchanged(GameTestHelper helper, Fixture fixture, CompoundTag state, CompoundTag items) {
-        helper.assertTrue(state.equals(fixture.citizen().citizenState().serializeNBT()), "Rejected action keeps Citizen state and styles");
+        helper.assertTrue(state.equals(fixture.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Rejected action keeps Citizen state and styles");
         helper.assertTrue(items.equals(inventory(fixture)), "Rejected action keeps cursor and every player inventory slot");
     }
 
@@ -74,7 +74,7 @@ public final class CitizenMenuGameTests {
         for (GarmentSlot slot : List.of(GarmentSlot.TOP, GarmentSlot.BOTTOM)) {
             for (ClickType type : List.of(ClickType.PICKUP, ClickType.QUICK_MOVE, ClickType.SWAP, ClickType.THROW)) {
                 for (int button : new int[]{0, 1}) {
-                    var before = f.citizen().citizenState().serializeNBT();
+                    var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
                     var items = inventory(f);
                     f.menu().clicked(slot.ordinal(), button, type, f.player());
                     unchanged(helper, f, before, items);
@@ -82,7 +82,7 @@ public final class CitizenMenuGameTests {
             }
         }
         f.player().setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.STONE));
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         var items = inventory(f);
         for (int index : new int[]{-200, 999}) for (ClickType type : ClickType.values()) {
             f.menu().clicked(index, 0, type, f.player());
@@ -100,7 +100,7 @@ public final class CitizenMenuGameTests {
         var f = fixture(helper);
         var previous = f.menu().apparelStack(GarmentSlot.TOP);
         var shirt = new ItemStack(ModItems.SHIRT_LONGSLEEVES.get());
-        shirt.getOrCreateTag().putString("CustomMetadata", "retained");
+        com.rexhub.createapparel.item.ItemData.update(shirt, tagData -> tagData.putString("CustomMetadata", "retained"));
         f.menu().setCarried(shirt.copy());
         long revision = f.citizen().citizenState().revision();
         f.menu().clicked(GarmentSlot.TOP.ordinal(), 0, ClickType.PICKUP, f.player());
@@ -117,7 +117,7 @@ public final class CitizenMenuGameTests {
         helper.assertTrue(ItemStack.matches(shirt, f.menu().apparelStack(GarmentSlot.TOP))
                 && ItemStack.matches(previous, f.player().getOffhandItem()), "Offhand swap uses actual offhand");
         f.menu().setCarried(new ItemStack(Items.STONE));
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         var items = inventory(f);
         f.menu().clicked(GarmentSlot.TOP.ordinal(), 0, ClickType.PICKUP, f.player());
         unchanged(helper, f, before, items);
@@ -142,7 +142,7 @@ public final class CitizenMenuGameTests {
                 && f.player().getInventory().items.stream().filter(stack -> stack.is(ModItems.BRIEFS.get())).mapToInt(ItemStack::getCount).sum() == 1,
                 "Shift removal transfers exactly once");
         for (int i = 0; i < 36; i++) f.player().getInventory().setItem(i, new ItemStack(Items.STONE, 64));
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         var items = inventory(f);
         f.menu().clicked(GarmentSlot.FEET.ordinal(), 0, ClickType.QUICK_MOVE, f.player());
         unchanged(helper, f, before, items);
@@ -152,7 +152,7 @@ public final class CitizenMenuGameTests {
     @GameTest(template = "apparel_state", batch = "citizen")
     public static void taggedDressReplacementAndAutomationRespectCompleteCoverage(GameTestHelper helper) {
         var f = fixture(helper);
-        var item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(net.minecraft.resources.ResourceLocation.parse("createapparel:shirt_dress_midi"));
+        var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("createapparel:shirt_dress_midi"));
         helper.assertTrue(item != null && item != Items.AIR, "Registered lower-covering dress exists");
         f.menu().setCarried(new ItemStack(item));
         f.menu().clicked(GarmentSlot.TOP.ordinal(), 0, ClickType.PICKUP, f.player());
@@ -160,7 +160,7 @@ public final class CitizenMenuGameTests {
         f.menu().clicked(GarmentSlot.BOTTOM.ordinal(), 0, ClickType.PICKUP, f.player());
         helper.assertTrue(!f.menu().getCarried().isEmpty() && CitizenCoverage.isCovered(f.menu().loadout()), "Dress supplies lower coverage without trousers");
         f.menu().setCarried(new ItemStack(ModItems.T_SHIRT.get()));
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         var items = inventory(f);
         f.menu().clicked(GarmentSlot.TOP.ordinal(), 0, ClickType.PICKUP, f.player());
         unchanged(helper, f, before, items);
@@ -169,12 +169,12 @@ public final class CitizenMenuGameTests {
                 && loadout.extractItem(GarmentSlot.TOP.ordinal(), 1, false).isEmpty(), "Automation cannot remove last cover");
         loadout.setStackInSlot(GarmentSlot.TOP.ordinal(), ItemStack.EMPTY);
         loadout.getStack(GarmentSlot.TOP).shrink(1);
-        loadout.getStack(GarmentSlot.TOP).getOrCreateTag().putString("Tamper", "copy");
-        helper.assertTrue(loadout.removeAll().isEmpty() && before.equals(f.citizen().citizenState().serializeNBT()), "Bulk removal and reference mutation cannot bypass coverage");
+        com.rexhub.createapparel.item.ItemData.update(loadout.getStack(GarmentSlot.TOP), tag -> tag.putString("Tamper", "copy"));
+        helper.assertTrue(loadout.removeAll().isEmpty() && before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Bulk removal and reference mutation cannot bypass coverage");
         var legacy = new com.rexhub.createapparel.entity.CitizenState();
         var saved = before.copy();
-        saved.put("ApparelSlots", new com.rexhub.createapparel.apparel.ApparelLoadout().serializeNBT());
-        legacy.deserializeNBT(saved);
+        saved.put("ApparelSlots", new com.rexhub.createapparel.apparel.ApparelLoadout().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()));
+        legacy.deserializeNBT(com.rexhub.createapparel.TestRegistries.lookup(), saved);
         helper.assertTrue(legacy.loadout().getStack(GarmentSlot.TOP).isEmpty(), "Legacy uncovered saves remain loadable");
         helper.succeed();
     }
@@ -188,7 +188,7 @@ public final class CitizenMenuGameTests {
         for (var tab : List.of(CitizenMenu.Tab.APPEARANCE, CitizenMenu.Tab.BEHAVIOR)) {
             CitizenActionPacket.tab(f.menu(), tab).handle(f.player());
             helper.assertTrue(f.menu().slots.stream().noneMatch(net.minecraft.world.inventory.Slot::isActive), "All invisible slots inactive");
-            var before = f.citizen().citizenState().serializeNBT();
+            var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
             var items = inventory(f);
             for (ClickType type : ClickType.values()) for (int index : new int[]{0, GarmentSlot.TOP.ordinal(), CitizenMenu.PLAYER_INVENTORY_START, -999}) {
                 f.menu().clicked(index, 0, type, f.player());
@@ -247,7 +247,7 @@ public final class CitizenMenuGameTests {
         var restored = ModEntities.CITIZEN.get().create(helper.getLevel());
         if (restored == null) throw new IllegalStateException("Citizen factory failed");
         restored.load(saved);
-        helper.assertTrue(restored.citizenState().serializeNBT().equals(f.citizen().citizenState().serializeNBT())
+        helper.assertTrue(restored.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()))
                 && saved.getString("BaseMode").equals("stand"), "Edited child appearance, clothes and read-only behavior persist");
         helper.succeed();
     }
@@ -256,7 +256,7 @@ public final class CitizenMenuGameTests {
     public static void malformedPacketsAndStaleMenusCannotEditCitizen(GameTestHelper helper) {
         var f = fixture(helper);
         CitizenActionPacket.tab(f.menu(), CitizenMenu.Tab.APPEARANCE).handle(f.player());
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         for (var action : CitizenActionPacket.Action.values()) {
             for (String value : List.of("missing", "#FFFFFF", "BLUE", "other:short", "createapparel:missing", "x".repeat(65))) {
                 new CitizenActionPacket(19, f.citizen().getId(), action, -1, "", value).handle(f.player());
@@ -265,12 +265,12 @@ public final class CitizenMenuGameTests {
         for (var packet : List.of(new CitizenActionPacket(20, f.citizen().getId(), CitizenActionPacket.Action.SKIN_TONE, 0, "", "fair"),
                 new CitizenActionPacket(19, f.citizen().getId() + 1, CitizenActionPacket.Action.SKIN_TONE, 0, "", "fair"),
                 new CitizenActionPacket(19, f.citizen().getId(), null, 0, "", "fair"))) packet.handle(f.player());
-        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()), "Malformed fields, entity and menu IDs rejected");
+        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Malformed fields, entity and menu IDs rejected");
         for (var action : List.of(CitizenActionPacket.Action.HAIR_STYLE, CitizenActionPacket.Action.HAIR_COLOR,
                 CitizenActionPacket.Action.EYE_COLOR, CitizenActionPacket.Action.SKIN_TONE)) {
             CitizenActionPacket.select(f.menu(), action, "missing").handle(f.player());
         }
-        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()), "Invalid values with valid indices rejected");
+        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Invalid values with valid indices rejected");
         f.player().getAbilities().mayBuild = false;
         CitizenActionPacket.select(f.menu(), CitizenActionPacket.Action.SKIN_TONE, "fair").handle(f.player());
         f.player().getAbilities().mayBuild = true;
@@ -280,13 +280,13 @@ public final class CitizenMenuGameTests {
         f.player().setPos(f.citizen().position());
         f.player().containerMenu = f.player().inventoryMenu;
         CitizenActionPacket.select(f.menu(), CitizenActionPacket.Action.SKIN_TONE, "fair").handle(f.player());
-        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()), "Permissions, distance and closed menu rejected");
+        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Permissions, distance and closed menu rejected");
         f.player().containerMenu = f.menu();
         f.citizen().setHealth(0);
         helper.assertTrue(!f.menu().stillValid(f.player()), "Death invalidates open menu");
         f.citizen().discard();
         helper.assertTrue(!f.menu().stillValid(f.player()), "Removal invalidates open menu");
-        var buffer = new FriendlyByteBuf(Unpooled.buffer());
+        var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
         try {
             buffer.writeVarInt(Integer.MAX_VALUE);
             var missing = new CitizenMenu(21, f.player().getInventory(), buffer);
@@ -298,18 +298,18 @@ public final class CitizenMenuGameTests {
     @GameTest(template = "apparel_state", batch = "citizen")
     public static void exclusiveMenusRejectOtherPlayersAndPhoneRequiresActualHand(GameTestHelper helper) {
         var f = fixture(helper);
-        var otherPlayer = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "citizen-other"));
+        var otherPlayer = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "citizen-other"), net.minecraft.server.level.ClientInformation.createDefault());
         otherPlayer.setPos(f.citizen().position());
         var other = new CitizenMenu(20, otherPlayer.getInventory(), f.citizen());
         otherPlayer.containerMenu = other;
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         var items = inventory(f);
         other.setCarried(new ItemStack(ModItems.SWEATER.get()));
         other.clicked(GarmentSlot.TOP.ordinal(), 0, ClickType.PICKUP, otherPlayer);
         unchanged(helper, f, before, items);
         helper.assertTrue(!other.stillValid(otherPlayer) && other.getCarried().is(ModItems.SWEATER.get())
                 && f.citizen().interaction().isViewer(f.player(), f.menu()), "A second menu cannot acquire or edit an occupied Citizen");
-        var mock = helper.makeMockPlayer();
+        var mock = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
         for (var hand : InteractionHand.values()) {
             mock.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             mock.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
@@ -333,17 +333,17 @@ public final class CitizenMenuGameTests {
         f.menu().clicked(GarmentSlot.TOP.ordinal(), 0, ClickType.PICKUP, f.player());
         f.menu().setCarried(ItemStack.EMPTY);
         f.menu().loadout().setStyle(GarmentSlot.TOP, "sleeves", "rolled");
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         long revision = f.citizen().citizenState().revision();
         helper.assertTrue(f.menu().slots.get(GarmentSlot.TOP.ordinal()).getMaxStackSize(new ItemStack(ModItems.SHIRT_LONGSLEEVES.get())) == 1,
                 "Capacity query uses fixed apparel limit");
-        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()) && revision == f.citizen().citizenState().revision(),
+        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())) && revision == f.citizen().citizenState().revision(),
                 "Read-only capacity query cannot clear stack, reset style or notify");
         f.menu().clicked(GarmentSlot.TOP.ordinal(), 2, ClickType.CLONE, f.player());
         helper.assertTrue(f.menu().getCarried().isEmpty(), "Survival cannot clone equipment");
         f.player().getAbilities().instabuild = true;
         f.menu().clicked(GarmentSlot.TOP.ordinal(), 2, ClickType.CLONE, f.player());
-        helper.assertTrue(f.menu().getCarried().is(ModItems.SHIRT_LONGSLEEVES.get()) && before.equals(f.citizen().citizenState().serializeNBT()),
+        helper.assertTrue(f.menu().getCarried().is(ModItems.SHIRT_LONGSLEEVES.get()) && before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())),
                 "Creative pick copies equipment without touching Citizen");
         f.menu().setCarried(ItemStack.EMPTY);
         f.player().getAbilities().instabuild = false;
@@ -365,13 +365,13 @@ public final class CitizenMenuGameTests {
         CitizenActionPacket.tab(f.menu(), CitizenMenu.Tab.APPEARANCE).handle(f.player());
         CitizenActionPacket.select(f.menu(), CitizenActionPacket.Action.HAIR_COLOR, "navy").handle(f.player());
         CitizenActionPacket.select(f.menu(), CitizenActionPacket.Action.HAIR_STYLE, "createapparel:bald").handle(f.player());
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         var server = helper.getLevel().getServer();
         var reload = server.reloadResources(server.getPackRepository().getSelectedIds());
         helper.succeedWhen(() -> {
             helper.assertTrue(reload.isDone(), "Reload completed");
             reload.join();
-            helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()) && CitizenCoverage.isCovered(f.menu().loadout()),
+            helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())) && CitizenCoverage.isCovered(f.menu().loadout()),
                     "Reload preserves edited appearance, actual clothes and equipped styles");
         });
     }
@@ -409,17 +409,17 @@ public final class CitizenMenuGameTests {
     public static void appearanceWheelRejectsInvalidDeltasAndHiddenTabsAndHandlesLegacyColors(GameTestHelper helper) {
         var f = fixture(helper);
         CitizenActionPacket.tab(f.menu(), CitizenMenu.Tab.APPEARANCE).handle(f.player());
-        var before = f.citizen().citizenState().serializeNBT();
+        var before = f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         for (int delta : new int[]{0, 2, -2, Integer.MIN_VALUE, Integer.MAX_VALUE}) {
             CitizenActionPacket.step(f.menu(), CitizenActionPacket.Action.HAIR_COLOR, delta).handle(f.player());
         }
         new CitizenActionPacket(19, f.citizen().getId(), CitizenActionPacket.Action.HAIR_COLOR, 1, "", "navy").handle(f.player());
         new CitizenActionPacket(20, f.citizen().getId(), CitizenActionPacket.Action.HAIR_COLOR, 1, "", "").handle(f.player());
-        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()), "Invalid delta, mixed absolute value and stale menu rejected");
+        helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Invalid delta, mixed absolute value and stale menu rejected");
         for (var tab : List.of(CitizenMenu.Tab.GARMENT, CitizenMenu.Tab.BEHAVIOR)) {
             CitizenActionPacket.tab(f.menu(), tab).handle(f.player());
             CitizenActionPacket.step(f.menu(), CitizenActionPacket.Action.HAIR_COLOR, 1).handle(f.player());
-            helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT()), "Hidden appearance buttons cannot change values");
+            helper.assertTrue(before.equals(f.citizen().citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Hidden appearance buttons cannot change values");
         }
         CitizenActionPacket.tab(f.menu(), CitizenMenu.Tab.APPEARANCE).handle(f.player());
         for (int direction : new int[]{1, -1}) {

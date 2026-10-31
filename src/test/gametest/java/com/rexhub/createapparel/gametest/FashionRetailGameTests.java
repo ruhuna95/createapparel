@@ -20,8 +20,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import java.util.*;
 
 @GameTestHolder(CreateApparel.MOD_ID)
@@ -34,9 +34,9 @@ public final class FashionRetailGameTests {
         helper.getLevel().addFreshEntity(citizen); return citizen;
     }
     private static ServerPlayer player(GameTestHelper helper, Citizen citizen) {
-        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "fashion-test"));
+        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "fashion-test"), net.minecraft.server.level.ClientInformation.createDefault());
         player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
-                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND), player) {
+                com.rexhub.createapparel.TestConnections.create(), player, new net.minecraft.server.network.CommonListenerCookie(player.getGameProfile(), 0, net.minecraft.server.level.ClientInformation.createDefault(), false, net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE)) {
             @Override public void send(net.minecraft.network.protocol.Packet<?> packet) { }
         };
         player.setPos(citizen.position()); player.getInventory().selected = 0; player.getInventory().setItem(0, new ItemStack(PhotoRegistries.CAMERA.get())); return player;
@@ -85,7 +85,7 @@ public final class FashionRetailGameTests {
         var panel = (AdvertisementPanelBlockEntity) helper.getLevel().getBlockEntity(pos);
         helper.assertTrue(AdvertisementScenes.DEFAULTS.contains(panel.localSnapshot()), "An empty poster chooses one of the three photo defaults");
         var before = player.containerMenu;
-        var result = state.use(helper.getLevel(), player, net.minecraft.world.InteractionHand.MAIN_HAND,
+        var result = com.rexhub.createapparel.TestInteractions.use(state, helper.getLevel(), player, net.minecraft.world.InteractionHand.MAIN_HAND,
                 new net.minecraft.world.phys.BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false));
         helper.assertTrue(result == net.minecraft.world.InteractionResult.PASS && player.containerMenu == before, "Regular poster use never opens an editor");
         var signage = AdvertisementRegistries.SIGNAGE_PANEL.get().defaultBlockState();
@@ -101,7 +101,7 @@ public final class FashionRetailGameTests {
         helper.assertTrue(broadcaster.channel().isEmpty(), "Broadcasters do not default to a global channel");
         var duplicate = new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get()); AdvertisementScenes.DEFAULTS.get(0).displayPhoto().write(duplicate);
         broadcaster.photos().setItem(2, duplicate.copy()); broadcaster.photos().setItem(8, duplicate.copy());
-        var sparse = new SignageBroadcasterBlockEntity(pos, broadcaster.getBlockState()); sparse.load(broadcaster.saveWithoutMetadata());
+        var sparse = new SignageBroadcasterBlockEntity(pos, broadcaster.getBlockState()); sparse.loadWithComponents(broadcaster.saveWithoutMetadata(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(sparse.photos().getItem(0).isEmpty() && sparse.photos().getItem(2).getCount() == 1
                 && sparse.photos().getItem(8).getCount() == 1, "Sparse and identical photo scenes retain separate slot positions on reload");
         broadcaster.photos().clearContent();
@@ -121,11 +121,11 @@ public final class FashionRetailGameTests {
         helper.assertTrue(published.scenes().size() == 9 && published.owner().equals(player.getUUID()), "Closing publishes nine owned scenes");
         for (int index = 0; index < 9; index++) helper.assertTrue(published.scenes().get(index).photo().save().equals(photos.get(index).save())
                 && Objects.requireNonNull(AdvertisingPhotoData.read(broadcaster.photos().getItem(index))).save().equals(photos.get(index).save()), "Publication preserves both scene values and physical masters");
-        var restored = new SignageBroadcasterBlockEntity(pos, broadcaster.getBlockState()); restored.load(broadcaster.saveWithoutMetadata());
+        var restored = new SignageBroadcasterBlockEntity(pos, broadcaster.getBlockState()); restored.loadWithComponents(broadcaster.saveWithoutMetadata(com.rexhub.createapparel.TestRegistries.lookup()), com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(restored.channel().equals("nine_scene_test") && restored.photos().getContainerSize() == 9
                 && ItemStack.matches(restored.photos().getItem(8), broadcaster.photos().getItem(8)), "Photo storage and channel survive NBT reload");
         var loader = AdvertisementNetworkSavedData.class.getDeclaredMethod("load", CompoundTag.class); loader.setAccessible(true);
-        var restoredNetwork = (AdvertisementNetworkSavedData) loader.invoke(null, network.save(new CompoundTag()));
+        var restoredNetwork = (AdvertisementNetworkSavedData) loader.invoke(null, network.save(new CompoundTag(), com.rexhub.createapparel.TestRegistries.lookup()));
         helper.assertTrue(restoredNetwork.channel("nine_scene_test").equals(published), "All nine scenes, revision and channel owner survive saved data reload");
         var stranger = player(helper, citizen);
         helper.assertTrue(!network.publish(stranger, "nine_scene_test", AdvertisementScenes.DEFAULTS), "Another player cannot replace this playlist");
@@ -175,21 +175,21 @@ public final class FashionRetailGameTests {
         helper.assertTrue(restored.channel("legacy_scene").scenes().size() == 1 && restored.channel("legacy_scene").snapshot().photo().save().equals(photo.save())
                 && restored.channel("legacy_scene").revision() == 5, "Single-scene broadcasts retain their photo, owner and revision");
         var pos = helper.absolutePos(new BlockPos(2, 2, 2)); var state = AdvertisementRegistries.SIGNAGE_PANEL.get().defaultBlockState();
-        var panel = new AdvertisementPanelBlockEntity(pos, state); var tag = panel.saveWithoutMetadata(); tag.putInt("Version", 1);
-        tag.getCompound("Content").putString("Channel", "global"); panel.load(tag);
+        var panel = new AdvertisementPanelBlockEntity(pos, state); var tag = panel.saveWithoutMetadata(com.rexhub.createapparel.TestRegistries.lookup()); tag.putInt("Version", 1);
+        tag.getCompound("Content").putString("Channel", "global"); panel.loadWithComponents(tag, com.rexhub.createapparel.TestRegistries.lookup());
         helper.assertTrue(panel.channel().isEmpty() && panel.currentScenes().size() == 3, "Legacy implicit global signage becomes an unconfigured three-photo loop");
         helper.succeed();
     }
     @GameTest(template = "apparel_state", batch = "fashion")
     public static void citizenPhotographyChargesOnceAndPreservesModelAndOwnedItems(GameTestHelper helper) {
-        var citizen = citizen(helper); var player = player(helper, citizen); var before = citizen.citizenState().serializeNBT();
+        var citizen = citizen(helper); var player = player(helper, citizen); var before = citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup());
         int quote = PhotographyService.quote(citizen); helper.assertTrue(quote == PhotographyService.quote(citizen), "Daily quote is stable");
         player.getInventory().setItem(1, new ItemStack(Items.EMERALD, quote));
         var menu = PhotographyMenu.capture(15, player.getInventory(), PhotographyService.snapshot(citizen), citizen.getId(), 0, quote); player.containerMenu = menu;
         menu.clicked(PhotographyMenu.INVENTORY_START + 28, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, player);
         helper.assertTrue(PhotographyService.issue(player, menu), "Photography succeeds");
         helper.assertTrue(menu.getSlot(PhotographyMenu.PAYMENT_SLOT).getItem().isEmpty(), "Exact model fee consumed from the input slot");
-        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT()), "Model apparel unchanged");
+        helper.assertTrue(before.equals(citizen.citizenState().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Model apparel unchanged");
         ItemStack photo = player.getInventory().items.stream().filter(stack -> stack.is(PhotoRegistries.ADVERTISING_PHOTO.get())).findFirst().orElseThrow();
         var data = Objects.requireNonNull(AdvertisingPhotoData.read(photo));
         helper.assertTrue(data.playerId() == null && !data.garments().isEmpty(), "Citizen appearance stored without entity reference");
@@ -272,11 +272,11 @@ public final class FashionRetailGameTests {
     @GameTest(template = "apparel_state", batch = "fashion")
     public static void photographyClothingDragAndDropIsTemporaryAndPreservesPaidPhotos(GameTestHelper helper) {
         var citizen = citizen(helper); var player = player(helper, citizen);
-        var modelTop = new ItemStack(ModItems.SWEATER.get()); modelTop.getOrCreateTag().putString("TrialOwner", "model");
-        var ownedTop = new ItemStack(ModItems.T_SHIRT.get()); ownedTop.getOrCreateTag().putString("TrialOwner", "photographer");
+        var modelTop = new ItemStack(ModItems.SWEATER.get()); com.rexhub.createapparel.item.ItemData.update(modelTop, tagData -> tagData.putString("TrialOwner", "model"));
+        var ownedTop = new ItemStack(ModItems.T_SHIRT.get()); com.rexhub.createapparel.item.ItemData.update(ownedTop, tagData -> tagData.putString("TrialOwner", "photographer"));
         citizen.citizenState().loadout().setStackInSlot(GarmentSlot.TOP.ordinal(), modelTop.copy());
         player.getInventory().setItem(9, ownedTop.copy());
-        var originalOutfit = citizen.citizenState().loadout().serializeNBT().copy();
+        var originalOutfit = citizen.citizenState().loadout().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).copy();
         int quote = PhotographyService.quote(citizen);
         var menu = PhotographyMenu.capture(28, player.getInventory(), PhotographyService.snapshot(citizen), citizen.getId(), 0, quote);
         player.containerMenu = menu;
@@ -300,7 +300,7 @@ public final class FashionRetailGameTests {
         menu.removed(player);
         helper.assertTrue(menu.getCarried().isEmpty() && ItemStack.matches(player.getInventory().getItem(9), ownedTop)
                 && player.getInventory().getItem(10).isEmpty(), "Closing with borrowed clothing on the cursor restores the real inventory without copies");
-        helper.assertTrue(originalOutfit.equals(citizen.citizenState().loadout().serializeNBT()), "The real model outfit never changes");
+        helper.assertTrue(originalOutfit.equals(citizen.citizenState().loadout().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "The real model outfit never changes");
         helper.assertTrue(player.getInventory().items.stream().filter(stack -> stack.is(Items.EMERALD)).mapToInt(ItemStack::getCount).sum() == 3,
                 "Closing preserves photo payment and refunds only the unused emeralds");
         helper.assertTrue(player.getInventory().items.stream().filter(stack -> stack.is(PhotoRegistries.ADVERTISING_PHOTO.get())).count() == 1,
@@ -333,7 +333,7 @@ public final class FashionRetailGameTests {
     @GameTest(template = "apparel_state", batch = "fashion")
     public static void photographyTrialClothingCannotEscapeAndTracksExternalInventoryChanges(GameTestHelper helper) {
         var citizen = citizen(helper); var player = player(helper, citizen);
-        var ownedTop = new ItemStack(ModItems.T_SHIRT.get()); ownedTop.getOrCreateTag().putInt("Preserved", 7);
+        var ownedTop = new ItemStack(ModItems.T_SHIRT.get()); com.rexhub.createapparel.item.ItemData.update(ownedTop, tagData -> tagData.putInt("Preserved", 7));
         citizen.citizenState().loadout().setStackInSlot(GarmentSlot.TOP.ordinal(), new ItemStack(ModItems.SWEATER.get()));
         player.getInventory().setItem(9, ownedTop.copy());
         var menu = PhotographyMenu.capture(29, player.getInventory(), PhotographyService.snapshot(citizen), citizen.getId(), 0, PhotographyService.quote(citizen));
@@ -370,7 +370,7 @@ public final class FashionRetailGameTests {
     public static void photographyTrialClothingCannotEnterOrExtractRealBundleContents(GameTestHelper helper) {
         var citizen = citizen(helper); var player = player(helper, citizen);
         var bundle = new ItemStack(Items.BUNDLE); var contents = new net.minecraft.nbt.ListTag();
-        contents.add(new ItemStack(ModItems.T_SHIRT.get()).save(new CompoundTag())); bundle.getOrCreateTag().put("Items", contents);
+        contents.add(new ItemStack(ModItems.T_SHIRT.get()).save(com.rexhub.createapparel.TestRegistries.lookup(), new net.minecraft.nbt.CompoundTag())); com.rexhub.createapparel.item.ItemData.update(bundle, tagData -> tagData.put("Items", contents));
         player.getInventory().setItem(9, bundle.copy());
         var emptyBundle = new ItemStack(Items.BUNDLE); player.getInventory().setItem(11, emptyBundle.copy());
         var menu = PhotographyMenu.capture(31, player.getInventory(), PhotographyService.snapshot(citizen), citizen.getId(), 0, PhotographyService.quote(citizen));
@@ -402,7 +402,7 @@ public final class FashionRetailGameTests {
             outfit.setStackInSlot(GarmentSlot.TOP.ordinal(), new ItemStack(ModItems.SHIRT_LONGSLEEVES.get()));
             helper.assertTrue(outfit.setStyle(GarmentSlot.TOP, "tuck", "tucked") && outfit.setStyle(GarmentSlot.TOP, "sleeves", "rolled")
                     && outfit.setStyle(GarmentSlot.TOP, "open", "opened"), "Models wear a non-default style before photography");
-            var worn = outfit.serializeNBT().copy();
+            var worn = outfit.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).copy();
             var expected = outfit.styleState(GarmentSlot.TOP);
             var snapshot = Objects.requireNonNull(AdvertisingPhotoData.load(PhotographyService.snapshot(target).save()));
             helper.assertTrue(snapshot.loadout(GarmentDefinitionManager::get).styleState(GarmentSlot.TOP).equals(expected), "The opening snapshot retains worn styles");
@@ -415,7 +415,7 @@ public final class FashionRetailGameTests {
             var photo = Objects.requireNonNull(AdvertisingPhotoData.read(menu.takePhoto(player, false)));
             helper.assertTrue(photo.loadout(GarmentDefinitionManager::get).styleState(GarmentSlot.TOP).equals(expected), "An unedited photo captures the original worn styles");
             menu.setCarried(ItemStack.EMPTY); menu.removed(player);
-            helper.assertTrue(outfit.serializeNBT().equals(worn), "Photography does not change the real model's styles");
+            helper.assertTrue(outfit.serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).equals(worn), "Photography does not change the real model's styles");
         }
         player.discard(); helper.succeed();
     }
@@ -423,7 +423,7 @@ public final class FashionRetailGameTests {
     public static void photographyStylesAreTemporaryAndCapturedInThePhoto(GameTestHelper helper) {
         var citizen = citizen(helper); var player = player(helper, citizen);
         citizen.citizenState().loadout().setStackInSlot(GarmentSlot.TOP.ordinal(), new ItemStack(ModItems.T_SHIRT.get()));
-        var before = citizen.citizenState().loadout().serializeNBT().copy();
+        var before = citizen.citizenState().loadout().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup()).copy();
         int quote = PhotographyService.quote(citizen);
         var menu = PhotographyMenu.capture(42, player.getInventory(), PhotographyService.snapshot(citizen), citizen.getId(), 0, quote);
         player.containerMenu = menu;
@@ -440,7 +440,7 @@ public final class FashionRetailGameTests {
         helper.assertTrue("tucked".equals(photo.loadout(GarmentDefinitionManager::get).styleState(GarmentSlot.TOP).styles().get("tuck")), "The paid photo retains the trial garment style");
         menu.setCarried(ItemStack.EMPTY);
         menu.removed(player);
-        helper.assertTrue(before.equals(citizen.citizenState().loadout().serializeNBT()), "Closing never changes the real model styles");
+        helper.assertTrue(before.equals(citizen.citizenState().loadout().serializeNBT(com.rexhub.createapparel.TestRegistries.lookup())), "Closing never changes the real model styles");
         var next = PhotographyMenu.capture(43, player.getInventory(), PhotographyService.snapshot(citizen), citizen.getId(), 0, quote);
         player.containerMenu = next;
         helper.assertTrue(!menu.clickMenuButton(player, PhotographyMenu.STYLE_ACTION), "Replaced menus cannot change styles");
@@ -524,7 +524,7 @@ public final class FashionRetailGameTests {
         config.photographyBaseCost.set(100); config.photographyExtra.set(0);
         try {
             var citizen = citizen(helper); var player = player(helper, citizen);
-            var emeralds = new ItemStack(Items.EMERALD, 64); emeralds.setHoverName(net.minecraft.network.chat.Component.literal("Refundable deposit"));
+            var emeralds = new ItemStack(Items.EMERALD, 64); emeralds.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Refundable deposit"));
             player.getInventory().setItem(1, emeralds.copy());
             var menu = PhotographyMenu.capture(22, player.getInventory(), PhotographyService.snapshot(citizen), citizen.getId(), 0, PhotographyService.quote(citizen));
             player.containerMenu = menu;
@@ -586,15 +586,17 @@ public final class FashionRetailGameTests {
         var storagePos = pos.east(); level.setBlockAndUpdate(storagePos, Blocks.CHEST.defaultBlockState());
         var chest = (net.minecraft.world.level.block.entity.ChestBlockEntity) level.getBlockEntity(storagePos);
         var garment = new ItemStack(ModItems.T_SHIRT.get(), 2); GarmentData.defaultFor(GarmentDefinitionManager.get(ModItems.T_SHIRT.getId()).orElseThrow()).write(garment);
-        chest.setItem(0, garment); helper.assertTrue(register.linkStorage(storagePos) && !register.isOpen(), "Storage alone stays closed");
+        chest.setItem(0, garment.copyWithCount(1)); chest.setItem(1, garment.copyWithCount(1));
+        helper.assertTrue(register.linkStorage(storagePos) && !register.isOpen(), "Storage alone stays closed");
         var seatPos = pos.north(); level.setBlockAndUpdate(seatPos, com.simibubi.create.AllBlocks.SEATS.get(net.minecraft.world.item.DyeColor.WHITE).getDefaultState());
-        var seat = new com.simibubi.create.content.contraptions.actors.seat.SeatEntity(level, seatPos); seat.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(seat);
+        var seat = new com.simibubi.create.content.contraptions.actors.seat.SeatEntity(com.simibubi.create.AllEntityTypes.SEAT.get(), level); seat.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(seat);
         var cow = Objects.requireNonNull(net.minecraft.world.entity.EntityType.COW.create(level)); cow.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(cow); cow.startRiding(seat, true);
         var citizen = citizen(helper);
         helper.assertTrue(register.isOpen(), "Cow seated on Create Seat opens register");
         var candidate = RetailPurchase.select(citizen, register, GarmentSlot.TOP, false);
         helper.assertTrue(candidate != null && RetailPurchase.purchase(citizen, register, candidate), "Purchase succeeds");
-        helper.assertTrue(chest.getItem(0).getCount() == 1 && ItemStack.isSameItemSameTags(citizen.citizenState().loadout().getStack(GarmentSlot.TOP), garment), "One real garment extracted and worn");
+        helper.assertTrue(chest.getItem(0).getCount() + chest.getItem(1).getCount() == 1
+                && ItemStack.isSameItemSameComponents(citizen.citizenState().loadout().getStack(GarmentSlot.TOP), garment), "One real garment extracted and worn");
         helper.assertTrue(reference.equals(citizen.citizenState().fashion().purchasedRegister(GarmentSlot.TOP)), "Purchase origin recorded");
         citizen.citizenState().fashion().setForceFashion(true);
         helper.assertTrue(RetailPurchase.select(citizen, register, GarmentSlot.TOP, false) == null, "Locked Citizen does not purchase");
@@ -616,7 +618,7 @@ public final class FashionRetailGameTests {
         for (var pos : PanelGroupManager.members(controller)) {
             var member = (AdvertisementPanelBlockEntity) level.getBlockEntity(pos);
             helper.assertTrue(member.groupId().equals(group), "One group identity");
-            helper.assertTrue(member.isController() == member.saveWithoutMetadata().contains("Content"), "Only controller saves content");
+            helper.assertTrue(member.isController() == member.saveWithoutMetadata(com.rexhub.createapparel.TestRegistries.lookup()).contains("Content"), "Only controller saves content");
         }
         var removed = controller.getBlockPos(); level.destroyBlock(removed, false);
         for (int x = 0; x < 2; x++) for (int y = 0; y < 2; y++) {
@@ -765,7 +767,7 @@ public final class FashionRetailGameTests {
             var center = (AdvertisementPanelBlockEntity) level.getBlockEntity(origin.west().above()); PanelGroupManager.merge(level, center);
             var controller = Objects.requireNonNull(center.controller());
             helper.assertTrue(controller.width() == 3 && controller.height() == 3 && controller.mergeFamily().equals(family), "A full rectangle tiled without any pairwise rectangular union still joins as one surface");
-            var saved = controller.saveWithoutMetadata(); controller.load(saved);
+            var saved = controller.saveWithoutMetadata(com.rexhub.createapparel.TestRegistries.lookup()); controller.loadWithComponents(saved, com.rexhub.createapparel.TestRegistries.lookup());
             helper.assertTrue(controller.mergeFamily().equals(family), "Merge family survives NBT round-trip");
             level.destroyBlock(origin.west().above(), false);
             var edited = Objects.requireNonNull(((AdvertisementPanelBlockEntity) level.getBlockEntity(origin.above())).controller());
@@ -803,7 +805,7 @@ public final class FashionRetailGameTests {
         var level = helper.getLevel(); var citizen = citizen(helper); var player = player(helper, citizen);
         var origin = helper.absolutePos(new BlockPos(4, 2, 2));
         var snapshot = AdvertisementSnapshot.photo(PhotographyService.snapshot(citizen));
-        var printed = new ItemStack(AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get()); printed.getOrCreateTag().put("Advertisement", snapshot.save());
+        var printed = new ItemStack(AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get()); com.rexhub.createapparel.item.ItemData.update(printed, tagData -> tagData.put("Advertisement", snapshot.save()));
         for (int x = 0; x < 3; x++) {
             var pos = origin.west(x); var state = AdvertisementRegistries.BILLBOARD_PANEL.get().defaultBlockState();
             level.setBlockAndUpdate(pos, state); state.getBlock().setPlacedBy(level, pos, state, player,
@@ -818,11 +820,11 @@ public final class FashionRetailGameTests {
             var drop = drops.get(0).getItem();
             helper.assertTrue(drop.hasFoil() == (x == 2), "Only the final collected panel has a photo and glint");
             if (x < 2) {
-                helper.assertTrue(!drop.hasTag(), "Earlier panels are completely blank and reusable");
+                helper.assertTrue(!com.rexhub.createapparel.item.ItemData.hasData(drop), "Earlier panels are completely blank and reusable");
                 var remaining = (AdvertisementPanelBlockEntity) level.getBlockEntity(origin.west(x + 1));
                 helper.assertTrue(remaining.isController() && remaining.width() == 2 - x && remaining.height() == 1
                         && remaining.localSnapshot().save().equals(snapshot.save()), "The remaining rectangle inherits the photograph");
-            } else helper.assertTrue(AdvertisementSnapshot.load(drop.getOrCreateTag().getCompound("Advertisement")).save().equals(snapshot.save()), "The final item preserves the original photo");
+            } else helper.assertTrue(AdvertisementSnapshot.load(com.rexhub.createapparel.item.ItemData.readOrEmpty(drop).getCompound("Advertisement")).save().equals(snapshot.save()), "The final item preserves the original photo");
             drops.forEach(net.minecraft.world.entity.Entity::discard);
         }
         helper.succeed();
@@ -840,7 +842,7 @@ public final class FashionRetailGameTests {
             var blank = new ItemStack(AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get(), 2); player.setItemInHand(hand, blank);
             var side = facing.getCounterClockWise();
             var hit = new net.minecraft.world.phys.BlockHitResult(Vec3.atCenterOf(origin), side, origin, false);
-            helper.assertTrue(state.use(level, player, hand, hit) == net.minecraft.world.InteractionResult.PASS,
+            helper.assertTrue(com.rexhub.createapparel.TestInteractions.use(state, level, player, hand, hit) == net.minecraft.world.InteractionResult.PASS,
                     "Holding another panel places it instead of opening the advertisement settings");
             var placed = ((net.minecraft.world.item.BlockItem) blank.getItem()).place(new net.minecraft.world.item.context.BlockPlaceContext(player, hand, blank, hit));
             var nextPos = origin.relative(side);
@@ -934,7 +936,7 @@ public final class FashionRetailGameTests {
     public static void deployerPrintingCopiesActualPhotoAndDoesNotConsumeTheMaster(GameTestHelper helper) {
         var level = helper.getLevel(); var citizen = citizen(helper);
         var photo = new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get(), 7); PhotographyService.snapshot(citizen).write(photo);
-        photo.getOrCreateTag().putString("PrintMaster", "preserved"); var before = photo.copy();
+        com.rexhub.createapparel.item.ItemData.update(photo, tagData -> tagData.putString("PrintMaster", "preserved")); var before = photo.copy();
         var pos = helper.absolutePos(new BlockPos(2, 5, 2));
         level.setBlockAndUpdate(pos, com.simibubi.create.AllBlocks.DEPLOYER.getDefaultState()
                 .setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING, Direction.DOWN));
@@ -943,14 +945,14 @@ public final class FashionRetailGameTests {
         var depot = (com.simibubi.create.content.logistics.depot.DepotBlockEntity) level.getBlockEntity(pos.below(2)); depot.initialize();
         deployer.getPlayer().setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, photo);
         for (var media : java.util.List.of(AdvertisementRegistries.POSTER_ITEM, AdvertisementRegistries.BILLBOARD_PANEL_ITEM)) {
-            var blank = new ItemStack(media.get(), 3); blank.getOrCreateTag().putString("MediaMetadata", "keep");
+            var blank = new ItemStack(media.get(), 3); com.rexhub.createapparel.item.ItemData.update(blank, tagData -> tagData.putString("MediaMetadata", "keep"));
             var recipe = deployer.getRecipe(blank);
-            helper.assertTrue(recipe instanceof com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe application && application.shouldKeepHeldItem(), "Native deployer search finds a non-consuming print recipe");
+            helper.assertTrue(recipe.value() instanceof com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe application && application.shouldKeepHeldItem(), "Native deployer search finds a non-consuming print recipe");
             var transported = new com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack(blank.copy());
             depot.getBehaviour(com.simibubi.create.content.logistics.depot.DepotBehaviour.TYPE).setHeldItem(transported);
             var handler = depot.getBehaviour(com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TYPE);
-            com.simibubi.create.content.kinetics.deployer.BeltDeployerCallbacks.activate(transported, handler, deployer, recipe);
-            var inventory = depot.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER).orElseThrow(AssertionError::new);
+            com.simibubi.create.content.kinetics.deployer.BeltDeployerCallbacks.activate(transported, handler, deployer, recipe.value());
+            var inventory = java.util.Optional.ofNullable(depot.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, depot.getBlockPos(), null)).orElseThrow(AssertionError::new);
             int blanks = 0, prints = 0;
             for (int slot = 0; slot < inventory.getSlots(); slot++) {
                 var output = inventory.getStackInSlot(slot);
@@ -958,18 +960,18 @@ public final class FashionRetailGameTests {
                 helper.assertTrue(output.is(media.get()), "Printing does not change media type");
                 if (output.hasFoil()) {
                     prints += output.getCount();
-                    helper.assertTrue(AdvertisementSnapshot.load(output.getOrCreateTag().getCompound("Advertisement")).photo().save()
+                    helper.assertTrue(AdvertisementSnapshot.load(com.rexhub.createapparel.item.ItemData.readOrEmpty(output).getCompound("Advertisement")).photo().save()
                             .equals(Objects.requireNonNull(AdvertisingPhotoData.read(photo)).save()), "The actual master values, not a placeholder photo, are printed");
-                    helper.assertTrue(output.getOrCreateTag().getString("MediaMetadata").equals("keep") && deployer.getRecipe(output) == null, "Media metadata survives and already printed items cannot be overwritten");
+                    helper.assertTrue(com.rexhub.createapparel.item.ItemData.readOrEmpty(output).getString("MediaMetadata").equals("keep") && deployer.getRecipe(output) == null, "Media metadata survives and already printed items cannot be overwritten");
                 } else blanks += output.getCount();
             }
             helper.assertTrue(blanks == 2 && prints == 1 && ItemStack.matches(before, deployer.getPlayer().getMainHandItem()), "One media is printed per operation and the whole photo stack is untouched");
             for (int slot = 0; slot < inventory.getSlots(); slot++) inventory.extractItem(slot, 64, false);
-            var registered = (AdPrintingDeployerRecipe) level.getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.parse("createapparel:deploying/" + media.getId().getPath() + "_printing")).orElseThrow();
-            var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+            var registered = (AdPrintingDeployerRecipe) level.getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.parse("createapparel:deploying/" + media.getId().getPath() + "_printing")).orElseThrow().value();
+            var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), com.rexhub.createapparel.TestRegistries.lookup(), net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
             try {
-                AdvertisementRegistries.AD_PRINTING.get().toNetwork(buffer, registered);
-                var synced = AdvertisementRegistries.AD_PRINTING.get().fromNetwork(registered.getId(), buffer);
+                AdvertisementRegistries.AD_PRINTING.get().streamCodec().encode(buffer, registered);
+                var synced = AdvertisementRegistries.AD_PRINTING.get().streamCodec().decode(buffer);
                 helper.assertTrue(synced != null && synced.shouldKeepHeldItem() && synced.getSerializer() == AdvertisementRegistries.AD_PRINTING.get(), "Printing recipes retain their custom serializer and non-consumption after sync");
             } finally { buffer.release(); }
         }
@@ -985,7 +987,7 @@ public final class FashionRetailGameTests {
         for (var facing : Direction.Plane.HORIZONTAL) {
             var wall = origin.relative(facing.getOpposite());
             var stack = new ItemStack(AdvertisementRegistries.POSTER_ITEM.get(), 2);
-            stack.getOrCreateTag().put("Advertisement", AdvertisementSnapshot.photo(PhotographyService.snapshot(citizen)).save());
+            com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.put("Advertisement", AdvertisementSnapshot.photo(PhotographyService.snapshot(citizen)).save()));
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, stack);
             java.util.function.Supplier<net.minecraft.world.item.context.BlockPlaceContext> context = () -> new net.minecraft.world.item.context.BlockPlaceContext(player,
                     net.minecraft.world.InteractionHand.MAIN_HAND, stack, new net.minecraft.world.phys.BlockHitResult(Vec3.atCenterOf(wall), facing, wall, false));
@@ -1015,19 +1017,19 @@ public final class FashionRetailGameTests {
         var billboard = level.getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.parse("createapparel:billboard_panel")).orElseThrow();
         for (int index = 0; index < 4; index++) grid.setItem(index, new ItemStack(Items.PAPER));
         var type = net.minecraft.world.item.crafting.RecipeType.CRAFTING;
-        var recipe = level.getRecipeManager().getRecipeFor(type, grid, level).orElseThrow();
-        var output = recipe.assemble(grid, level.registryAccess());
-        helper.assertTrue(recipe.getId().equals(poster.getId()) && output.is(AdvertisementRegistries.POSTER_ITEM.get()) && output.getCount() == 1, "Four papers make one poster in the player grid");
+        var recipe = level.getRecipeManager().getRecipeFor(type, grid.asCraftInput(), level).orElseThrow();
+        var output = recipe.value().assemble(grid.asCraftInput(), level.registryAccess());
+        helper.assertTrue(recipe.id().equals(poster.id()) && output.is(AdvertisementRegistries.POSTER_ITEM.get()) && output.getCount() == 1, "Four papers make one poster in the player grid");
         grid.setItem(3, ItemStack.EMPTY);
-        helper.assertTrue(level.getRecipeManager().getRecipeFor(type, grid, level).isEmpty(), "Three papers cannot make a poster");
+        helper.assertTrue(level.getRecipeManager().getRecipeFor(type, grid.asCraftInput(), level).isEmpty(), "Three papers cannot make a poster");
         grid.clearContent(); grid.setItem(0, new ItemStack(AdvertisementRegistries.POSTER_ITEM.get())); grid.setItem(3, new ItemStack(Items.GLASS_PANE));
-        recipe = level.getRecipeManager().getRecipeFor(type, grid, level).orElseThrow(); output = recipe.assemble(grid, level.registryAccess());
-        helper.assertTrue(recipe.getId().equals(billboard.getId()) && output.is(AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get()) && output.getCount() == 2, "A poster and glass pane make the existing two-panel output");
-        grid.setItem(3, new ItemStack(Items.GLASS)); helper.assertTrue(level.getRecipeManager().getRecipeFor(type, grid, level).isEmpty(), "Glass blocks cannot replace glass panes");
+        recipe = level.getRecipeManager().getRecipeFor(type, grid.asCraftInput(), level).orElseThrow(); output = recipe.value().assemble(grid.asCraftInput(), level.registryAccess());
+        helper.assertTrue(recipe.id().equals(billboard.id()) && output.is(AdvertisementRegistries.BILLBOARD_PANEL_ITEM.get()) && output.getCount() == 2, "A poster and glass pane make the existing two-panel output");
+        grid.setItem(3, new ItemStack(Items.GLASS)); helper.assertTrue(level.getRecipeManager().getRecipeFor(type, grid.asCraftInput(), level).isEmpty(), "Glass blocks cannot replace glass panes");
         var photo = new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get()); PhotographyService.snapshot(citizen).write(photo);
         for (var media : java.util.List.of(AdvertisementRegistries.POSTER_ITEM, AdvertisementRegistries.BILLBOARD_PANEL_ITEM)) {
             grid.clearContent(); grid.setItem(0, photo); grid.setItem(1, new ItemStack(media.get()));
-            helper.assertTrue(level.getRecipeManager().getRecipeFor(type, grid, level).isEmpty(), "Crafting photos with either media is no longer supported");
+            helper.assertTrue(level.getRecipeManager().getRecipeFor(type, grid.asCraftInput(), level).isEmpty(), "Crafting photos with either media is no longer supported");
         }
         helper.assertTrue(level.getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.parse("createapparel:ad_print_manual_only")).isEmpty(), "The manual printing recipe is absent");
         helper.succeed();
@@ -1038,22 +1040,22 @@ public final class FashionRetailGameTests {
         var input = new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get()); data.write(input);
         var menu = new net.minecraft.world.inventory.CraftingMenu(18, player.getInventory());
         var grid = new net.minecraft.world.inventory.TransientCraftingContainer(menu, 3, 3);
-        input.getOrCreateTag().putString("CustomPhotoMetadata", "preserve exactly");
+        com.rexhub.createapparel.item.ItemData.update(input, tagData -> tagData.putString("CustomPhotoMetadata", "preserve exactly"));
         grid.setItem(0, input);
-        var recipe = new PhotoCopyRecipe(net.minecraft.resources.ResourceLocation.parse("createapparel:test_photo_copy"), net.minecraft.world.item.crafting.CraftingBookCategory.MISC);
-        helper.assertTrue(recipe.matches(grid, helper.getLevel()), "Manual table supported");
-        var a = recipe.assemble(grid, helper.getLevel().registryAccess()); var b = recipe.assemble(grid, helper.getLevel().registryAccess());
-        helper.assertTrue(ItemStack.isSameItemSameTags(a, b), "Preview does not generate random UUIDs");
-        helper.assertTrue(a.getCount() == 2 && ItemStack.isSameItemSameTags(a, input), "One input yields two photos with exactly the original NBT");
-        helper.assertTrue(recipe.getRemainingItems(grid).stream().allMatch(ItemStack::isEmpty), "Copying does not return a third master photo");
-        a.getOrCreateTag().putString("CustomPhotoMetadata", "edited copy");
-        helper.assertTrue("preserve exactly".equals(input.getOrCreateTag().getString("CustomPhotoMetadata")), "Copy NBT is independent of the input");
+        var recipe = new PhotoCopyRecipe( net.minecraft.world.item.crafting.CraftingBookCategory.MISC);
+        helper.assertTrue(recipe.matches(grid.asCraftInput(), helper.getLevel()), "Manual table supported");
+        var a = recipe.assemble(grid.asCraftInput(), helper.getLevel().registryAccess()); var b = recipe.assemble(grid.asCraftInput(), helper.getLevel().registryAccess());
+        helper.assertTrue(ItemStack.isSameItemSameComponents(a, b), "Preview does not generate random UUIDs");
+        helper.assertTrue(a.getCount() == 2 && ItemStack.isSameItemSameComponents(a, input), "One input yields two photos with exactly the original NBT");
+        helper.assertTrue(recipe.getRemainingItems(grid.asCraftInput()).stream().allMatch(ItemStack::isEmpty), "Copying does not return a third master photo");
+        com.rexhub.createapparel.item.ItemData.update(a, tagData -> tagData.putString("CustomPhotoMetadata", "edited copy"));
+        helper.assertTrue("preserve exactly".equals(com.rexhub.createapparel.item.ItemData.readOrEmpty(input).getString("CustomPhotoMetadata")), "Copy NBT is independent of the input");
         grid.setItem(1, new ItemStack(Items.PAPER));
-        helper.assertTrue(!recipe.matches(grid, helper.getLevel()), "Extra ingredients are rejected");
+        helper.assertTrue(!recipe.matches(grid.asCraftInput(), helper.getLevel()), "Extra ingredients are rejected");
         grid.setItem(1, new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get()));
-        helper.assertTrue(!recipe.matches(grid, helper.getLevel()), "Multiple photo slots are rejected");
+        helper.assertTrue(!recipe.matches(grid.asCraftInput(), helper.getLevel()), "Multiple photo slots are rejected");
         grid.setItem(1, new ItemStack(AdvertisementRegistries.POSTER_ITEM.get()));
-        helper.assertTrue(helper.getLevel().getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, grid, helper.getLevel()).isEmpty(),
+        helper.assertTrue(helper.getLevel().getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, grid.asCraftInput(), helper.getLevel()).isEmpty(),
                 "Advertising photos cannot be printed onto media in a crafting grid");
         helper.succeed();
     }
@@ -1084,7 +1086,7 @@ public final class FashionRetailGameTests {
                     new ItemStack(AdvertisementRegistries.SIGNAGE_BROADCASTER_ITEM.get()), hit);
             var state = Objects.requireNonNull(block.getStateForPlacement(context));
             helper.assertTrue(state.getValue(HorizontalDirectionalBlock.FACING) == facing, "The front points back toward the placing player");
-            helper.assertTrue(state.rotate(net.minecraft.world.level.block.Rotation.CLOCKWISE_90)
+            helper.assertTrue(state.rotate(helper.getLevel(), pos, net.minecraft.world.level.block.Rotation.CLOCKWISE_90)
                     .getValue(HorizontalDirectionalBlock.FACING) == facing.getClockWise(), "Rotation follows the front");
             helper.assertTrue(state.mirror(net.minecraft.world.level.block.Mirror.LEFT_RIGHT)
                     .getValue(HorizontalDirectionalBlock.FACING) == (facing.getAxis() == Direction.Axis.Z ? facing.getOpposite() : facing), "Mirroring preserves directional front semantics");
@@ -1111,7 +1113,7 @@ public final class FashionRetailGameTests {
                             com.rexhub.createapparel.citizen.population.CitizenIntent.DestinationType.POSITION, destination, null, now, now + 40, 0);
                     helper.assertTrue(citizen.intents().request(intent), "Original movement intent accepted");
                     player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(ModItems.SMART_PHONE.get()));
-                    var interaction = new net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract(
+                    var interaction = new net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteract(
                             player, net.minecraft.world.InteractionHand.MAIN_HAND, citizen);
                     ((com.rexhub.createapparel.item.SmartPhoneItem) ModItems.SMART_PHONE.get()).interact(interaction);
                     helper.assertTrue(player.containerMenu instanceof com.rexhub.createapparel.menu.CitizenMenu && citizen.interaction().active(), "Phone opens a paused session");
@@ -1173,7 +1175,7 @@ public final class FashionRetailGameTests {
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(camera ? PhotoRegistries.CAMERA.get() : ModItems.SMART_PHONE.get()));
         if (camera) PhotographyService.open(player, citizen, net.minecraft.world.InteractionHand.MAIN_HAND);
         else ((com.rexhub.createapparel.item.SmartPhoneItem) ModItems.SMART_PHONE.get()).interact(
-                new net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract(player, net.minecraft.world.InteractionHand.MAIN_HAND, citizen));
+                new net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteract(player, net.minecraft.world.InteractionHand.MAIN_HAND, citizen));
     }
 
     @GameTest(template = "apparel_state", batch = "fashion")
@@ -1268,7 +1270,7 @@ public final class FashionRetailGameTests {
         var photo = PhotographyService.snapshot(citizen); var origin = helper.absolutePos(new BlockPos(1, 2, 1));
         for (var facing : Direction.Plane.HORIZONTAL) for (int part = 0; part < 2; part++) for (boolean legacy : new boolean[]{false, true}) {
             var state = AdvertisementRegistries.POSTER.get().defaultBlockState().setValue(AdvertisementPanelBlock.FACING, facing);
-            var stack = new ItemStack(AdvertisementRegistries.POSTER_ITEM.get()); stack.getOrCreateTag().put("Advertisement", AdvertisementSnapshot.photo(photo).save());
+            var stack = new ItemStack(AdvertisementRegistries.POSTER_ITEM.get()); com.rexhub.createapparel.item.ItemData.update(stack, tagData -> tagData.put("Advertisement", AdvertisementSnapshot.photo(photo).save()));
             level.setBlockAndUpdate(origin, state);
             if (!legacy) state.getBlock().setPlacedBy(level, origin, state, player, stack);
             var other = origin.above();
@@ -1276,7 +1278,7 @@ public final class FashionRetailGameTests {
                 other = origin.relative(facing.getCounterClockWise());
                 level.setBlockAndUpdate(other, state.setValue(AdvertisementPanelBlock.PART, 1));
                 var controller = (AdvertisementPanelBlockEntity) level.getBlockEntity(origin);
-                controller.initialize(player, stack.getOrCreateTag());
+                controller.initialize(player, com.rexhub.createapparel.item.ItemData.readOrEmpty(stack));
                 var content = controller.content(); var id = controller.groupId();
                 controller.group(id, origin, 2, 1, content);
                 ((AdvertisementPanelBlockEntity) level.getBlockEntity(other)).group(id, origin, 2, 1, null);
@@ -1286,7 +1288,7 @@ public final class FashionRetailGameTests {
             var drops = level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(origin).inflate(3),
                     item -> item.getItem().is(AdvertisementRegistries.POSTER_ITEM.get()));
             helper.assertTrue(drops.stream().mapToInt(item -> item.getItem().getCount()).sum() == 1, "Exactly one poster dropped");
-            var snapshot = AdvertisementSnapshot.load(drops.get(0).getItem().getOrCreateTag().getCompound("Advertisement"));
+            var snapshot = AdvertisementSnapshot.load(com.rexhub.createapparel.item.ItemData.readOrEmpty(drops.get(0).getItem()).getCompound("Advertisement"));
             helper.assertTrue(snapshot.photo() != null && snapshot.photo().save().equals(photo.save()), "Printed content preserved on drop");
             drops.forEach(net.minecraft.world.entity.Entity::discard);
         }
@@ -1318,7 +1320,7 @@ public final class FashionRetailGameTests {
             player.containerMenu = menu;
             var grid = (net.minecraft.world.inventory.CraftingContainer) menu.getSlot(1).container;
             var input = new ItemStack(PhotoRegistries.ADVERTISING_PHOTO.get(), 2); data.write(input);
-            input.getOrCreateTag().putString("CustomPhotoMetadata", "keep");
+            com.rexhub.createapparel.item.ItemData.update(input, tagData -> tagData.putString("CustomPhotoMetadata", "keep"));
             var master = input.copy();
             grid.setItem(0, input);
             for (int iteration = 0; iteration < 2; iteration++) {
@@ -1326,13 +1328,13 @@ public final class FashionRetailGameTests {
                 else {
                     menu.clicked(0, 0, net.minecraft.world.inventory.ClickType.PICKUP, player);
                     helper.assertTrue(menu.getCarried().getCount() == (iteration + 1) * 2
-                            && ItemStack.isSameItemSameTags(menu.getCarried(), master), "Normal pickup creates two identical-NBT photos per consumed input");
+                            && ItemStack.isSameItemSameComponents(menu.getCarried(), master), "Normal pickup creates two identical-NBT photos per consumed input");
                 }
             }
             if (shift) {
                 var copies = player.getInventory().items.stream().filter(stack -> stack.is(PhotoRegistries.ADVERTISING_PHOTO.get())).toList();
                 helper.assertTrue(copies.stream().mapToInt(ItemStack::getCount).sum() == 4, "Shift turns two inputs into four outputs");
-                helper.assertTrue(copies.stream().allMatch(stack -> ItemStack.isSameItemSameTags(stack, master)), "Every Shift output keeps the entire NBT");
+                helper.assertTrue(copies.stream().allMatch(stack -> ItemStack.isSameItemSameComponents(stack, master)), "Every Shift output keeps the entire NBT");
             }
             helper.assertTrue(grid.getItem(0).isEmpty(), "Both source photos are consumed without a remainder");
         }
@@ -1350,7 +1352,7 @@ public final class FashionRetailGameTests {
         menu.clicked(0, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, player);
         helper.assertTrue(ItemStack.matches(before, grid.getItem(0)), "A failed Shift transfer keeps the source stack and NBT unchanged");
         helper.assertTrue(menu.getSlot(0).getItem().getCount() == 2
-                && ItemStack.isSameItemSameTags(before, menu.getSlot(0).getItem()), "The unchanged two-photo preview remains available");
+                && ItemStack.isSameItemSameComponents(before, menu.getSlot(0).getItem()), "The unchanged two-photo preview remains available");
         helper.succeed();
     }
     @GameTest(template = "apparel_state", batch = "fashion")
@@ -1382,7 +1384,7 @@ public final class FashionRetailGameTests {
         GarmentData.defaultFor(GarmentDefinitionManager.get(ModItems.SWEATER.getId()).orElseThrow()).write(garment);
         chest.setItem(0, garment.copy()); register.linkStorage(pos.east());
         var seatPos = pos.south(); level.setBlockAndUpdate(seatPos, com.simibubi.create.AllBlocks.SEATS.get(net.minecraft.world.item.DyeColor.WHITE).getDefaultState());
-        var seat = new com.simibubi.create.content.contraptions.actors.seat.SeatEntity(level, seatPos); seat.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(seat);
+        var seat = new com.simibubi.create.content.contraptions.actors.seat.SeatEntity(com.simibubi.create.AllEntityTypes.SEAT.get(), level); seat.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(seat);
         var cow = Objects.requireNonNull(net.minecraft.world.entity.EntityType.COW.create(level)); cow.setPos(Vec3.atBottomCenterOf(seatPos)); level.addFreshEntity(cow); cow.startRiding(seat, true);
         var observer = citizen(helper); observer.setPos(Vec3.atBottomCenterOf(pos.south(2))); observer.setOnGround(true);
         var source = citizen(helper); source.setPos(observer.position().add(1, 0, 0)); source.setNoAi(true); source.setNoGravity(true);
@@ -1395,7 +1397,7 @@ public final class FashionRetailGameTests {
         config.observationTicks.set(20); config.otherCitizenPoints.set(1000.0); config.pointScale.set(1.0); config.shoppingChance.set(0.0);
         helper.runAfterDelay(220, () -> {
             try {
-                helper.assertTrue(ItemStack.isSameItemSameTags(observer.citizenState().loadout().getStack(GarmentSlot.TOP), garment),
+                helper.assertTrue(ItemStack.isSameItemSameComponents(observer.citizenState().loadout().getStack(GarmentSlot.TOP), garment),
                         "Observer purchased and wore the advertised garment: position=" + observer.position() + " intent=" + observer.intents().active()
                                 + " desired=" + observer.citizenState().fashion().desiredRegister() + " state=" + observer.routeMovement().state()
                                 + " failures=" + observer.routeMovement().consecutiveFailures() + " open=" + register.isOpen());
