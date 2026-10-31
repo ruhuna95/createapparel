@@ -173,6 +173,16 @@ JEI有効の`runFashionTestClient`はCreate標準デプロイヤーでの写真U
 通常の`runClient`／`runServer`には読み込まないため、そこで既存GameTestを`/test`から実行する構成ではない。
 以下のコマンドはすべてプロジェクトルートで実行する。
 
+## 製造設備のファンネル搬出
+
+`MachineFunnelGameTests`は実Createのファンネル・デポ・駆動ベルト・Creative Motorを使い、4設備の通常ファンネル搬出、PUSHING形状の真鍮ファンネル、Photoと同じRETRACTED形状の安山岩ファンネルを水平4方向で検査する。ベルト反転時の搬入／搬出切替、縫製品データと型紙保持、Filter・Redstone・満杯、養蚕台の保存済み出力・再試行・二重搬出防止も確認する。PULLINGは搬入用なので搬出しない。
+
+```powershell
+.\gradlew.bat runRouteTestServer -PjeiEnabled=false '-ProuteTests=completedProductsLeaveNormalFunnelsForEveryMachineAndDirection,completedProductsReachBeltFunnelsForEveryMachineAndDirection,photoAndesiteFunnelsExportOntoMovingBeltsInEveryDirection,photoAndesiteFunnelKeepsTrayOutputWhenBeltReverses,trayKeepsSavedOutputUntilBeltFunnelCanAcceptAndNeverDuplicates,beltFunnelDirectionFilterAndPowerDoNotAcceptRejectedProducts' --offline
+```
+
+全GameTestにも含まれる。機械の加工・停止・Recipe再解決は`MachineRecipeCacheGameTests`、養蚕台の出力詰まり・保存・物流は`SilkwormRearingTrayGameTests`で継続して確認する。搬出口に動力源を置かないよう、ミシンの向きとMotor接続側を別々に設定する。
+
 ## 一括検証
 
 Minecraft 1.20.1 / Forge 47.4.10 / Java 17を使用する。PowerShellでは事前にJava 17の`JAVA_HOME`を設定する。
